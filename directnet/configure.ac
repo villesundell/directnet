@@ -166,6 +166,61 @@ AC_SUBST(UI_DIR)
 AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
 
 
+# Check for encryption to use
+AC_ARG_ENABLE(enc,
+[  --enable-enc[=fake]
+                set the encryption (currently the only encryption is "fake")],
+[case "$enableval" in
+        fake) enc=fake ;;
+        gpg) enc=gpg ;;
+        *) AC_MSG_ERROR([Invalid encryption chosen.]) ;;
+esac], [enc=determine])
+
+AS_MESSAGE([checking which encryption to use...])
+
+found_enc=no
+
+if test "x$enc" = "xfake" || test "x$enc" = "xdetermine"
+then
+        ENC_CFLAGS=
+        ENC_CPPFLAGS=
+        ENC_CXXFLAGS=
+        ENC_CXX=false
+        ENC_LIBS=
+        ENC_LDFLAGS=
+        ENC_DIR=enc-fake
+        found_enc=yes
+        enc=fake
+        AS_MESSAGE([Using fake encryption])
+fi
+
+if test "x$enc" = "xgpg" || ( test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
+then
+        ENC_CFLAGS=
+        ENC_CPPFLAGS=
+        ENC_CXXFLAGS=
+        ENC_CXX=false
+        ENC_LIBS=
+        ENC_LDFLAGS=
+        ENC_DIR=enc-gpg
+        found_enc=yes
+        enc=gpg
+        AS_MESSAGE([Using GPG encryption])
+fi
+
+if test "x$found_enc" = "xno"
+then
+        AC_MSG_ERROR([Couldn't find a working encryption library.])
+fi
+
+AC_SUBST(ENC_CFLAGS)
+AC_SUBST(ENC_CPPFLAGS)
+AC_SUBST(ENC_CXXFLAGS)
+AC_SUBST(ENC_LIBS)
+AC_SUBST(ENC_LDFLAGS)
+AC_SUBST(ENC_DIR)
+
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT

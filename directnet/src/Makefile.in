@@ -55,22 +55,20 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am__directnet_SOURCES_DIST = client.c connection.c directnet.c \
-	gpg-fake.c hash.c lock.c server.c
+am__directnet_SOURCES_DIST = client.c connection.c directnet.c hash.c \
+	lock.c server.c
 @UI_CXX_FALSE@am_directnet_OBJECTS = directnet-client.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-connection.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-directnet.$(OBJEXT) \
-@UI_CXX_FALSE@	directnet-gpg-fake.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-hash.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-lock.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-server.$(OBJEXT)
 directnet_OBJECTS = $(am_directnet_OBJECTS)
-am__directnetx_SOURCES_DIST = client.c connection.c directnet.c \
-	gpg-fake.c hash.c lock.c server.c fake.cc
+am__directnetx_SOURCES_DIST = client.c connection.c directnet.c hash.c \
+	lock.c server.c fake.cc
 @UI_CXX_TRUE@am_directnetx_OBJECTS = directnetx-client.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-connection.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-directnet.$(OBJEXT) \
-@UI_CXX_TRUE@	directnetx-gpg-fake.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-hash.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-lock.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-server.$(OBJEXT) \
@@ -126,6 +124,12 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENC_CFLAGS = @ENC_CFLAGS@
+ENC_CPPFLAGS = @ENC_CPPFLAGS@
+ENC_CXXFLAGS = @ENC_CXXFLAGS@
+ENC_DIR = @ENC_DIR@
+ENC_LDFLAGS = @ENC_LDFLAGS@
+ENC_LIBS = @ENC_LIBS@
 EXEEXT = @EXEEXT@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -213,33 +217,31 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = @UI_DIR@
+SUBDIRS = @UI_DIR@ @ENC_DIR@
 @UI_CXX_TRUE@directnetx_SOURCES = client.c \
 @UI_CXX_TRUE@connection.c \
 @UI_CXX_TRUE@directnet.c \
-@UI_CXX_TRUE@gpg-fake.c \
 @UI_CXX_TRUE@hash.c \
 @UI_CXX_TRUE@lock.c \
 @UI_CXX_TRUE@server.c \
 @UI_CXX_TRUE@fake.cc
 
-@UI_CXX_TRUE@directnetx_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@
-@UI_CXX_TRUE@directnetx_CXXFLAGS = @PTHREAD_CFLAGS@ @UI_CXXFLAGS@
-@UI_CXX_TRUE@directnetx_LDFLAGS = @UI_LDFLAGS@
-@UI_CXX_TRUE@directnetx_DEPENDENCIES = @UI_DIR@/libui.a
-@UI_CXX_TRUE@directnetx_LDADD = @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @UI_LIBS@
+@UI_CXX_TRUE@directnetx_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
+@UI_CXX_TRUE@directnetx_CXXFLAGS = @PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
+@UI_CXX_TRUE@directnetx_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@
+@UI_CXX_TRUE@directnetx_DEPENDENCIES = @UI_DIR@/libui.a  @ENC_DIR@/libenc.a
+@UI_CXX_TRUE@directnetx_LDADD = @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @UI_LIBS@ @ENC_LIBS@
 @UI_CXX_FALSE@directnet_SOURCES = client.c \
 @UI_CXX_FALSE@connection.c \
 @UI_CXX_FALSE@directnet.c \
-@UI_CXX_FALSE@gpg-fake.c \
 @UI_CXX_FALSE@hash.c \
 @UI_CXX_FALSE@lock.c \
 @UI_CXX_FALSE@server.c
 
-@UI_CXX_FALSE@directnet_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@
-@UI_CXX_FALSE@directnet_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@
-@UI_CXX_FALSE@directnet_DEPENDENCIES = @UI_DIR@/libui.a
-@UI_CXX_FALSE@directnet_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @UI_LIBS@
+@UI_CXX_FALSE@directnet_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
+@UI_CXX_FALSE@directnet_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
+@UI_CXX_FALSE@directnet_DEPENDENCIES = @UI_DIR@/libui.a @ENC_DIR@/libenc.a
+@UI_CXX_FALSE@directnet_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @UI_LIBS@ @ENC_LIBS@
 all: all-recursive
 
 .SUFFIXES:
@@ -312,7 +314,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-connection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-directnet.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-gpg-fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-hash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-server.Po@am__quote@
@@ -320,7 +321,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-connection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-fake.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-gpg-fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-hash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-server.Po@am__quote@
@@ -380,20 +380,6 @@ directnet-directnet.obj: directnet.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnet-directnet.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
-
-directnet-gpg-fake.o: gpg-fake.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-gpg-fake.o -MD -MP -MF "$(DEPDIR)/directnet-gpg-fake.Tpo" -c -o directnet-gpg-fake.o `test -f 'gpg-fake.c' || echo '$(srcdir)/'`gpg-fake.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-gpg-fake.Tpo" "$(DEPDIR)/directnet-gpg-fake.Po"; else rm -f "$(DEPDIR)/directnet-gpg-fake.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gpg-fake.c' object='directnet-gpg-fake.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-gpg-fake.o `test -f 'gpg-fake.c' || echo '$(srcdir)/'`gpg-fake.c
-
-directnet-gpg-fake.obj: gpg-fake.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-gpg-fake.obj -MD -MP -MF "$(DEPDIR)/directnet-gpg-fake.Tpo" -c -o directnet-gpg-fake.obj `if test -f 'gpg-fake.c'; then $(CYGPATH_W) 'gpg-fake.c'; else $(CYGPATH_W) '$(srcdir)/gpg-fake.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-gpg-fake.Tpo" "$(DEPDIR)/directnet-gpg-fake.Po"; else rm -f "$(DEPDIR)/directnet-gpg-fake.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gpg-fake.c' object='directnet-gpg-fake.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-gpg-fake.obj `if test -f 'gpg-fake.c'; then $(CYGPATH_W) 'gpg-fake.c'; else $(CYGPATH_W) '$(srcdir)/gpg-fake.c'; fi`
 
 directnet-hash.o: hash.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-hash.o -MD -MP -MF "$(DEPDIR)/directnet-hash.Tpo" -c -o directnet-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
@@ -478,20 +464,6 @@ directnetx-directnet.obj: directnet.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetx-directnet.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -c -o directnetx-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
-
-directnetx-gpg-fake.o: gpg-fake.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -MT directnetx-gpg-fake.o -MD -MP -MF "$(DEPDIR)/directnetx-gpg-fake.Tpo" -c -o directnetx-gpg-fake.o `test -f 'gpg-fake.c' || echo '$(srcdir)/'`gpg-fake.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetx-gpg-fake.Tpo" "$(DEPDIR)/directnetx-gpg-fake.Po"; else rm -f "$(DEPDIR)/directnetx-gpg-fake.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gpg-fake.c' object='directnetx-gpg-fake.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -c -o directnetx-gpg-fake.o `test -f 'gpg-fake.c' || echo '$(srcdir)/'`gpg-fake.c
-
-directnetx-gpg-fake.obj: gpg-fake.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -MT directnetx-gpg-fake.obj -MD -MP -MF "$(DEPDIR)/directnetx-gpg-fake.Tpo" -c -o directnetx-gpg-fake.obj `if test -f 'gpg-fake.c'; then $(CYGPATH_W) 'gpg-fake.c'; else $(CYGPATH_W) '$(srcdir)/gpg-fake.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetx-gpg-fake.Tpo" "$(DEPDIR)/directnetx-gpg-fake.Po"; else rm -f "$(DEPDIR)/directnetx-gpg-fake.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gpg-fake.c' object='directnetx-gpg-fake.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -c -o directnetx-gpg-fake.obj `if test -f 'gpg-fake.c'; then $(CYGPATH_W) 'gpg-fake.c'; else $(CYGPATH_W) '$(srcdir)/gpg-fake.c'; fi`
 
 directnetx-hash.o: hash.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -MT directnetx-hash.o -MD -MP -MF "$(DEPDIR)/directnetx-hash.Tpo" -c -o directnetx-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
