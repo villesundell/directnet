@@ -872,7 +872,6 @@ Optional Packages:
   --with-wx-prefix=PREFIX   Prefix where wxWindows is installed (optional)
   --with-wx-exec-prefix=PREFIX Exec prefix where wxWindows is installed (optional)
   --with-wx-config=CONFIG   wx-config script to use (optional)
-  --with-sco              Use this to turn on SCO-specific code
   --with-sunos-curses     Used to force SunOS 4.x curses
   --with-osf1-curses      Used to force OSF/1 curses
   --with-vcurses=incdir Used to force SysV curses
@@ -4824,21 +4823,6 @@ echo "${ECHO_T}$ac_cv_prog_egrep" >&6
 
 
 
-# Check whether --with-sco or --without-sco was given.
-if test "${with_sco+set}" = set; then
-  withval="$with_sco"
-
-	  if test x$withval = xyes; then
-		cat >>confdefs.h <<\_ACEOF
-#define SCO_FLAVOR 1
-_ACEOF
-
-		CFLAGS="$CFLAGS -D_SVID3"
-	  fi
-
-fi;
-
-
 # Check whether --with-sunos-curses or --without-sunos-curses was given.
 if test "${with_sunos_curses+set}" = set; then
   withval="$with_sunos_curses"
@@ -5207,7 +5191,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5210 "configure"
+#line 5194 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
