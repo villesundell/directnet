@@ -6,7 +6,7 @@ x Away (simple autoresponse)
 Mac OS X support (borked, loads from console, not from finder?)
 
 Todo by ALPHA 0.5:
-Another non-dumb UI
+Another non-dumb UI (curses)
 Encryption
 - Identifiable uniqueness
 Buddy list (auto-find list)
