@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 #ifdef WIN32
-#define pipe(a) _pipe((a), 0, _O_BINARY )
+#define pipe(phandles)	_pipe ( phandles, 4096, _O_BINARY )
 
 #include <glib-object.h>
 #include <glib/gtypes.h>
@@ -180,6 +180,7 @@ int chatByName(char *name)
 }
 
 int ipcpipe[2];
+char ipcnewdata = 0;
 pthread_mutex_t ipclock;
 #define IPC_MSG 1
 struct ipc_msg {
@@ -211,8 +212,9 @@ void ipc_got_im(char *who, char *msg)
     a->from = strdup(who);
     a->msg = strdup(msg);
     pthread_mutex_lock(&ipclock);
-    sprintf(buf, "%c%p\n", IPC_MSG, a);
-    write(ipcpipe[1], buf, strlen(buf));
+    ipcnewdata = 1;
+    sprintf(buf, "%c%p", IPC_MSG, a);
+    write(ipcpipe[1], buf, strlen(buf) + 1);
 }
 
 void ipc_set_state(char *who, int state)
@@ -222,8 +224,9 @@ void ipc_set_state(char *who, int state)
     a->who = strdup(who);
     a->state = state;
     pthread_mutex_lock(&ipclock);
-    sprintf(buf, "%c%p\n", IPC_STATE, a);
-    write(ipcpipe[1], buf, strlen(buf));
+    ipcnewdata = 1;
+    sprintf(buf, "%c%p", IPC_STATE, a);
+    write(ipcpipe[1], buf, strlen(buf) + 1);
 }
 
 void ipc_chat_msg(int id, char *who, char *chan, char *msg)
@@ -235,8 +238,9 @@ void ipc_chat_msg(int id, char *who, char *chan, char *msg)
     a->chan = strdup(chan);
     a->msg = strdup(msg);
     pthread_mutex_lock(&ipclock);
-    sprintf(buf, "%c%p\n", IPC_CHAT_MSG, a);
-    write(ipcpipe[1], buf, strlen(buf));
+    ipcnewdata = 1;
+    sprintf(buf, "%c%p", IPC_CHAT_MSG, a);
+    write(ipcpipe[1], buf, strlen(buf) + 1);
 }
 
 void ipc_chat_join(int id, char *chan)
@@ -246,8 +250,9 @@ void ipc_chat_join(int id, char *chan)
     a->id = id;
     a->chan = strdup(chan);
     pthread_mutex_lock(&ipclock);
-    sprintf(buf, "%c%p\n", IPC_CHAT_JOIN, a);
-    write(ipcpipe[1], buf, strlen(buf));
+    ipcnewdata = 1;
+    sprintf(buf, "%c%p", IPC_CHAT_JOIN, a);
+    write(ipcpipe[1], buf, strlen(buf) + 1);
 }
 
 static void init_plugin(GaimPlugin *plugin)
@@ -382,7 +387,7 @@ static GList *gp_awaystates(GaimConnection *gc)
     return m;
 }
 
-static void gp_callback(gpointer data, gint source, GaimInputCondition condition)
+static gboolean gp_callback(gpointer data)
 {
     /* grab our input line */
     char inpline[1024];
@@ -392,14 +397,13 @@ static void gp_callback(gpointer data, gint source, GaimInputCondition condition
     struct ipc_chat_msg *cma;
     struct ipc_chat_join *cja;
     
-    while (!uiLoaded) sleep(0);
+    // if there's no new data, don't try to get any
+    if (!ipcnewdata) return;
+    ipcnewdata = 0;
     
     for (i = 0; i < 1023; i++) {
-        printf("Start read\n");
         read(ipcpipe[0], inpline + i, 1);
-        printf("End read: %c\n", inpline[i]);
-        if (inpline[i] == '\n') {
-            inpline[i+1] = '\0';
+        if (inpline[i] == '\0') {
             i = 1023;
         }
     }
@@ -454,7 +458,7 @@ static void gp_login(GaimAccount *account)
     // Prepare the IPC pipe
     pipe(ipcpipe);
     pthread_mutex_init(&ipclock, NULL);
-    gaim_input_add(ipcpipe[0], GAIM_INPUT_READ, gp_callback, gc);
+    gaim_timeout_add(50, gp_callback, gc);
     
     /* call "main" */
     pluginMain(1, argv, environ);
