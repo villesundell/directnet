@@ -38,7 +38,7 @@ StatusWindow::StatusWindow(int cols, int row_anchor)
     cur_nick=""; 
     cur_target=""; 
     ncols = cols;
-    redrawStatus();
+    repaint();
 }
 
 StatusWindow::~StatusWindow() 
@@ -49,13 +49,13 @@ StatusWindow::~StatusWindow()
 void StatusWindow::setNick(string s) 
 {
     cur_nick=s;
-    redrawStatus();
+    repaint();
 }
 
 void StatusWindow::setTarget(string s) 
 {
     cur_target=s;
-    redrawStatus();
+    repaint();
 }
 
 string StatusWindow::getNick()
@@ -68,7 +68,7 @@ string StatusWindow::getTarget()
     return cur_target;
 }
 
-void StatusWindow::redrawStatus()
+void StatusWindow::repaint()
 {
     int y, x;  
     

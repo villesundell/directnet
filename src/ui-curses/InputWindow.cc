@@ -59,3 +59,15 @@ string InputWindow::getInput()
     string input(buf); 
     return input;
 }
+
+void InputWindow::repaint()
+{
+    int y, x;  
+    
+    getsyx( y,x);  // save cursor position so we can put it back
+    wmove (win, 0, 0); 
+    
+    wnoutrefresh(win); 
+    setsyx( y, x); 
+    doupdate(); 
+}
