@@ -8,8 +8,8 @@ class BuddyWindow {open
   } {
     Fl_Window buddyWindow {
       label DirectNet
-      callback mainWinClosed open
-      xywh {320 143 255 400} type Double color 0 resizable visible
+      callback mainWinClosed open selected
+      xywh {320 143 255 430} type Double color 0 resizable visible
     } {
       Fl_Browser onlineList {
         label {  Route list:}
@@ -32,8 +32,18 @@ class BuddyWindow {open
       }
       Fl_Input chatJoin {
         label {  Join or create chat:}
-        callback estCht selected
+        callback estCht
         xywh {0 375 255 25} labelcolor 7 align 5 when 8
+      }
+      Fl_Button bSetAway {
+        label Away
+        callback fSetAway
+        xywh {0 405 125 25}
+      }
+      Fl_Button bBack {
+        label Back
+        callback fBack
+        xywh {130 405 125 25}
       }
     }
   }

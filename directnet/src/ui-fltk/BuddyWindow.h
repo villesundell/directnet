@@ -12,6 +12,8 @@ extern void talkTo(Fl_Button*, void*);
 extern void estConn(Fl_Input*, void*);
 extern void estFnd(Fl_Input*, void*);
 extern void estCht(Fl_Input*, void*);
+extern void fSetAway(Fl_Button*, void*);
+extern void fBack(Fl_Button*, void*);
 
 class BuddyWindow {
 public:
@@ -22,5 +24,7 @@ public:
   Fl_Input *connectInput;
   Fl_Input *findUser;
   Fl_Input *chatJoin;
+  Fl_Button *bSetAway;
+  Fl_Button *bBack;
 };
 #endif

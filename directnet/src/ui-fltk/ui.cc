@@ -33,6 +33,7 @@ extern "C" {
 
 #include <iostream>
 
+#include "AwayWindow.h"
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
 #include "NameWindow.h"
@@ -258,6 +259,25 @@ void sendInput(Fl_Input *w, void *ignore)
     }
     
     dn_unlock(&displayLock);
+}
+
+void fSetAway(Fl_Button *w, void *ignore)
+{
+    awayWindow();
+    awayMWin->show();
+}
+
+void fAwayMsg(Fl_Input *w, void *ignore)
+{
+    char *am = strdup(w->value());
+    setAway(am);
+    awayMWin->hide();
+    free(am);
+}
+
+void fBack(Fl_Button *w, void *ignore)
+{
+    setAway(NULL);
 }
 
 void flDispMsg(char *window, char *from, char *msg)
