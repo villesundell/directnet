@@ -55,7 +55,8 @@ AR = ar
 ARFLAGS = cru
 libui_a_AR = $(AR) $(ARFLAGS)
 libui_a_LIBADD =
-am_libui_a_OBJECTS = libui_a-ui.$(OBJEXT)
+am_libui_a_OBJECTS = libui_a-DisplayWindow.$(OBJEXT) \
+	libui_a-InputWindow.$(OBJEXT) libui_a-ui.$(OBJEXT)
 libui_a_OBJECTS = $(am_libui_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -189,7 +190,10 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_LIBRARIES = libui.a
-libui_a_SOURCES = ui.cc
+libui_a_SOURCES = DisplayWindow.cc \
+InputWindow.cc \
+ui.cc
+
 libui_a_CFLAGS = @UI_CFLAGS@ -I..
 libui_a_CXXFLAGS = @UI_CXXFLAGS@ -I..
 all: all-am
@@ -239,6 +243,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-DisplayWindow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-InputWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-ui.Po@am__quote@
 
 .cc.o:
@@ -254,6 +260,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+libui_a-DisplayWindow.o: DisplayWindow.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-DisplayWindow.o -MD -MP -MF "$(DEPDIR)/libui_a-DisplayWindow.Tpo" -c -o libui_a-DisplayWindow.o `test -f 'DisplayWindow.cc' || echo '$(srcdir)/'`DisplayWindow.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libui_a-DisplayWindow.Tpo" "$(DEPDIR)/libui_a-DisplayWindow.Po"; else rm -f "$(DEPDIR)/libui_a-DisplayWindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='DisplayWindow.cc' object='libui_a-DisplayWindow.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-DisplayWindow.o `test -f 'DisplayWindow.cc' || echo '$(srcdir)/'`DisplayWindow.cc
+
+libui_a-DisplayWindow.obj: DisplayWindow.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-DisplayWindow.obj -MD -MP -MF "$(DEPDIR)/libui_a-DisplayWindow.Tpo" -c -o libui_a-DisplayWindow.obj `if test -f 'DisplayWindow.cc'; then $(CYGPATH_W) 'DisplayWindow.cc'; else $(CYGPATH_W) '$(srcdir)/DisplayWindow.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libui_a-DisplayWindow.Tpo" "$(DEPDIR)/libui_a-DisplayWindow.Po"; else rm -f "$(DEPDIR)/libui_a-DisplayWindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='DisplayWindow.cc' object='libui_a-DisplayWindow.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-DisplayWindow.obj `if test -f 'DisplayWindow.cc'; then $(CYGPATH_W) 'DisplayWindow.cc'; else $(CYGPATH_W) '$(srcdir)/DisplayWindow.cc'; fi`
+
+libui_a-InputWindow.o: InputWindow.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-InputWindow.o -MD -MP -MF "$(DEPDIR)/libui_a-InputWindow.Tpo" -c -o libui_a-InputWindow.o `test -f 'InputWindow.cc' || echo '$(srcdir)/'`InputWindow.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libui_a-InputWindow.Tpo" "$(DEPDIR)/libui_a-InputWindow.Po"; else rm -f "$(DEPDIR)/libui_a-InputWindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='InputWindow.cc' object='libui_a-InputWindow.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-InputWindow.o `test -f 'InputWindow.cc' || echo '$(srcdir)/'`InputWindow.cc
+
+libui_a-InputWindow.obj: InputWindow.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-InputWindow.obj -MD -MP -MF "$(DEPDIR)/libui_a-InputWindow.Tpo" -c -o libui_a-InputWindow.obj `if test -f 'InputWindow.cc'; then $(CYGPATH_W) 'InputWindow.cc'; else $(CYGPATH_W) '$(srcdir)/InputWindow.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libui_a-InputWindow.Tpo" "$(DEPDIR)/libui_a-InputWindow.Po"; else rm -f "$(DEPDIR)/libui_a-InputWindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='InputWindow.cc' object='libui_a-InputWindow.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-InputWindow.obj `if test -f 'InputWindow.cc'; then $(CYGPATH_W) 'InputWindow.cc'; else $(CYGPATH_W) '$(srcdir)/InputWindow.cc'; fi`
 
 libui_a-ui.o: ui.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-ui.o -MD -MP -MF "$(DEPDIR)/libui_a-ui.Tpo" -c -o libui_a-ui.o `test -f 'ui.cc' || echo '$(srcdir)/'`ui.cc; \
