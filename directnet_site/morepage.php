@@ -27,9 +27,13 @@ function morepage($page, $frame) {
         }
     }
     
-    if ($page == "download") {
+    if ($page == "download-s" || $page == "download-b") {
         // Include linked-in downloads
-        $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135053", "r");        
+        if ($page == "download-s") {
+            $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135053", "r");
+        } else {
+            $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135808", "r");
+        }
         $mode = 0;
         while (!feof($handle)) {
             $line = trim(fgets($handle, 2048));
