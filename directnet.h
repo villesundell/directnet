@@ -27,7 +27,6 @@ extern int *fds, onfd, onpthread;
 extern pthread_t *pthreads;
 
 extern pthread_t *fnd_pthreads;
-extern char *fnd_locks;
 extern char *weakRoutes[1024];
 
 extern char dn_name[1024];

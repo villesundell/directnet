@@ -16,7 +16,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <arpa/inet.h>
 #include <errno.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +27,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "client.h"
 #include "connection.h"
 #include "directnet.h"
 #include "gpg.h"
@@ -130,7 +134,35 @@ void handleMsg(char *inbuf, int fdnum)
     }
     
     // Current protocol commands
-    if (!strncmp(command, "fnd", 3) &&
+    if ((!strncmp(command, "dcr", 3) &&
+        inbuf[3] == 1 && inbuf[4] == 1) ||
+        (!strncmp(command, "dce", 3) &&
+        inbuf[3] == 1 && inbuf[4] == 1)) {
+        REQ_PARAMS(3);
+        
+        if (!strncmp(command, "dcr", 3) &&
+            inbuf[3] == 1 && inbuf[4] == 1) {
+            char *outParams[50], hostbuf[256];
+            struct hostent *he;
+            
+            memset(outParams, 0, 50 * sizeof(char *));
+            
+            // First, echo
+            outParams[0] = hashSGet(dn_routes, params[1]);
+            if (outParams[0] == NULL) {
+                return;
+            }
+            outParams[1] = dn_name;
+            gethostname(hostbuf, 128);
+            he = gethostbyname(hostbuf);
+            outParams[2] = inet_ntoa(*((struct in_addr *)he->h_addr));
+            
+            handleRoutedMsg("dce", 1, 1, outParams);
+        }
+        
+        // Then, attempt the connection
+        establishClient(params[2]);
+    } else if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
         char newroute[32256], ostrlen, outbuf[65536];;
@@ -169,6 +201,8 @@ void handleMsg(char *inbuf, int fdnum)
             }
             
             if (!fnd_pthreads[fdnum]) {
+                pthread_attr_t ptattr;
+                
                 // This is the first fnd received, but ignore it if we already have a route
                 if (dn_route_by_num[fdnum]) {
                     return;
@@ -206,10 +240,59 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 uiDispMsg(params[1], "Route established.");
                 
-                // FIXME : this should start up the harvesting pthread
+                pthread_attr_init(&ptattr);
+                pthread_create(&fnd_pthreads[fdnum], &ptattr, fndPthread, NULL);
             } else {
-                /* FIXME : this should compare the current weak-checking route to the just-received
-                   route */
+                char oldWRoute[32256];
+                char *newRouteElements[50];
+                int onRE, x, y, ostrlen;
+                
+                memset(newRouteElements, 0, 50 * sizeof(char *));
+                
+                // If there is no current weakroute, just copy in the current route
+                if (!weakRoutes[fdnum]) {
+                    char *curroute;
+                    
+                    curroute = dn_route_by_num[fdnum];
+                    if (curroute == NULL) {
+                        return;
+                    }
+                    
+                    weakRoutes[fdnum] = (char *) malloc(32256 * sizeof(char));
+                    strncpy(weakRoutes[fdnum], curroute, 32256);
+                }
+                
+                strncpy(oldWRoute, weakRoutes[fdnum], 32256);
+                
+                newRouteElements[0] = oldWRoute;
+                onRE = 1;
+                
+                ostrlen = strlen(oldWRoute);
+                for (x = 0; x < ostrlen; x++) {
+                    if (oldWRoute[x] == '\n') {
+                        oldWRoute[x] = '\0';
+                        
+                        if (oldWRoute[x+1] != '\0') {
+                            newRouteElements[onRE] = oldWRoute+x+1;
+                            onRE++;
+                        }
+                    }
+                }
+                
+                // Now compare the two into a new one
+                weakRoutes[fdnum][0] = '\0';
+                
+                for (x = 0; newRouteElements[x] != NULL; x++) {
+                    for (y = 0; routeElement[y] != NULL; y++) {
+                        if (!strncmp(newRouteElements[x], routeElement[y], 24)) {
+                            // It's a match, copy it in.
+                            ostrlen = strlen(weakRoutes[fdnum]);
+                            strncpy(weakRoutes[fdnum]+ostrlen, routeElement[y], 32256-ostrlen);
+                            ostrlen += strlen(routeElement[y]);
+                            strncpy(weakRoutes[fdnum]+ostrlen, "\n", 32256-ostrlen);
+                        }
+                    }
+                }
             }
             
             return;
@@ -402,13 +485,16 @@ void *fndPthread(void *fdnum_voidptr)
     
     // If it's weak, send a dcr (direct connect request)
     {
-        char outbuf[65536];
+        char outbuf[65536], hostbuf[128];
+        struct hostent *he;
         
         buildCmd(outbuf, "dcr", 1, 1, dn_route_by_num[fdnum]);
         addParam(outbuf, dn_name);
-        addParam(outbuf, "0.0.0.0"); // FIXME
+        gethostname(hostbuf, 128);
+        he = gethostbyname(hostbuf);
+        addParam(outbuf, inet_ntoa(*((struct in_addr *)he->h_addr)));
         
-        //sendCmd(fdnum, outbuf);
+        sendCmd(fdnum, outbuf);
         
         return NULL;
     }

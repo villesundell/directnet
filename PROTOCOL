@@ -16,7 +16,7 @@ dcr(1)(1) (direct connect request)
         parameters:
                 route
                 local name
-                local IP
+                local IP/hostname
 
 dce(1)(1) (direct connect request echo)
         purpose: Same as dcr, but is an echo to dcr (in case connection is only possible one way)
@@ -24,7 +24,7 @@ dce(1)(1) (direct connect request echo)
         parameters:
                 route
                 local name
-                local IP
+                local IP/hostname
 
 fnd(1)(1) (find)
         purpose: Find a user by name
