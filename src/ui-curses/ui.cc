@@ -30,6 +30,8 @@ extern "C" {
 #endif
 
 #include <unistd.h>
+#include <lock.h> 
+#include <directnet.h>
 }
 
 #include <string>
@@ -39,26 +41,50 @@ using std::string;
 #include "StatusWindow.h"
 #include "InputWindow.h"
 
+DisplayWindow *displayWin; 
+StatusWindow *statusWin; 
+InputWindow *inputWin; 
+
+
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
     // Enter curses mode
     initscr();
     // noecho()  // For when we do our own character input handling
     cbreak(); 
-   
-    // Get the screen dimensions.  Probably this should all move into a "screen" object.
+    
+    // Initialize the lock for output
+    dn_lockInit(&displayLock); 
+    
+    // initialize the screen 
     int max_y, max_x; // in curses, y is always first, so get used to it. 
     getmaxyx(stdscr, max_y, max_x);
-    DisplayWindow displayWin(max_y -5, max_x);
-    StatusWindow statusWin(max_x, max_y-4); 
-    InputWindow inputWin(3, max_x, max_y-3); 
+    displayWin = new DisplayWindow(max_y -4, max_x);
+    statusWin = new StatusWindow(max_x, max_y-4); 
+    inputWin = new InputWindow(3, max_x, max_y-3); 
+    uiLoaded = 1; // Set the UI flag as ready to go.
     
-    string sbuf = "Enter your nickname"; 
-    displayWin.displayMsg(sbuf); 
-    sbuf = inputWin.getInput();
-    statusWin.setNick(sbuf); 
-    sbuf = "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat."; 
-    displayWin.displayMsg(sbuf); 
+    string sbuf = "Enter your nickname.  (No spaces)"; 
+    dn_lock ( &displayLock); 
+    displayWin->displayMsg(sbuf);
+    dn_unlock (&displayLock); 
+    
+    sbuf = inputWin->getInput();
+    // trim leading and trailing whitespace here
+    statusWin->setNick(sbuf); 
+    sbuf = "\nYou haven't chosen a chat partner!  \nType '/t <username>' to initiate a chat."; 
+    dn_lock (&displayLock); 
+    displayWin->displayMsg(sbuf); 
+    dn_unlock (&displayLock); 
+    
+    // We're ready to grab input and process it.  
+    
+    while (1) { 
+        sbuf = inputWin->getInput(); 
+        
+        
+    }
+        
     
     //
     sleep(5);
@@ -68,24 +94,60 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
 
 extern "C" void uiDispMsg(char *from, char *msg)
 {
+    while (!uiLoaded) sleep(0); // Better way to do this?  Better place?
+    dn_lock ( &displayLock); 
+    string f = from; 
+    string m = msg; 
+    displayWin->displayRecvdMsg(m, f); 
+    dn_unlock (&displayLock); 
 }
 
 extern "C" void uiEstConn(char *from)
 {
+    while (!uiLoaded) sleep(0);
+    dn_lock ( &displayLock);
+    string f = from;
+    string msg = "System: Connection to " + f + "established.";
+    displayWin->displayMsg(msg); 
+    dn_unlock (&displayLock);
 }
 
 extern "C" void uiEstRoute(char *from)
 {
+    while (!uiLoaded) sleep(0);
+    dn_lock ( &displayLock); 
+    string f = from; 
+    string msg = "System: Route established to " + f; 
+    displayWin->displayMsg(msg); 
+    dn_unlock (&displayLock);
 }
 
 extern "C" void uiLoseConn(char *from)
 {
+    while (!uiLoaded) sleep(0);
+    dn_lock ( &displayLock); 
+    string f = from; 
+    string msg = "System: Lost connection to " + f; 
+    displayWin->displayMsg(msg); 
+    dn_unlock (&displayLock);
 }
 
 extern "C" void uiLoseRoute(char *from)
 {
+    while (!uiLoaded) sleep(0);
+    dn_lock ( &displayLock); 
+    string f = from; 
+    string msg = "System: Lost route to " + f; 
+    displayWin->displayMsg(msg); 
+    dn_unlock (&displayLock);
 }
 
 extern "C" void uiNoRoute(char *to)
 {
+    while (!uiLoaded) sleep(0);
+    dn_lock ( &displayLock); 
+    string t = to; 
+    string msg = "System: No route to " + t; 
+    displayWin->displayMsg(msg); 
+    dn_unlock (&displayLock);
 }

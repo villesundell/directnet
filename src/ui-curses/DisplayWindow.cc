@@ -81,6 +81,7 @@ void DisplayWindow::displayMsg(string msg)
     getsyx( y,x);  // save cursor position so we can put it back
     scroll(win); 
     wmove (win, nRows-1, 0); 
+    // wprintw (win, "Rows: %d     Cols: %d\n", nRows, nCols); 
     wprintw (win, "%s", msg.c_str()); 
     wnoutrefresh(win); 
     setsyx( y, x); 
