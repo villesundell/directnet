@@ -136,6 +136,8 @@ extern char **environ;
 #include "gaim-plugin.h"
 #include "gpg.h"
 #include "hash.h"
+// Make sure we get DN server.h, not Gaim server.h
+#include "../server.h"
 #include "ui.h"
 
 static GaimPlugin *my_protocol = NULL;
@@ -555,7 +557,7 @@ static void gp_login(GaimAccount *account)
 static void gp_close(GaimConnection *gc)
 {
     struct BuddyList *cur, *next;
-    int i;
+    int i, curfd;
     
     if (gc == my_gc) {
         /* OK, try to free and delete everything we can */
@@ -568,7 +570,7 @@ static void gp_close(GaimConnection *gc)
         }
         
         my_protocol = NULL;
-        my_account = NULL; /* only allow one login - icky :-P */
+        my_account = NULL;
         my_gc = NULL;
         
         close(ipcpipe[0]);
@@ -578,6 +580,17 @@ static void gp_close(GaimConnection *gc)
     
         for (i = 0; i < onpthread; i++) {
             pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
+        }
+        
+        if (close(server_sock) < 0) {
+            perror("close");
+        }
+        
+        for (curfd = 0; curfd < DN_MAX_CONNS && curfd < onfd; curfd++)
+        {
+            if (fds[curfd]) {
+                close(fds[curfd]);
+            }
         }
     
         free(fds);

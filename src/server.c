@@ -48,7 +48,7 @@ void *serverAcceptLoop(void *ignore);
 
 void sigterm_handler(int sig)
 {
-    exit(0);
+    pthread_exit(0);
 }
 
 pthread_t *establishServer()
