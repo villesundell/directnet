@@ -201,11 +201,25 @@ extern "C" void uiEstRoute(char *from)
     putOutput(cw, "Route established.\n");
 }
 
+void removeFromList(char *name)
+{
+    int i;
+    
+    for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+        if (!strcmp(bw->onlineList->text(i), name)) {
+            bw->onlineList->remove(i);
+            i--;
+        }
+    }
+}
+
 extern "C" void uiLoseConn(char *from)
 {
     ChatWindow *cw;
     
     while (!uiLoaded) sleep(0);
+    
+    removeFromList(from);
     
     cw = getWindow(from);
     putOutput(cw, "Connection lost.\n");
@@ -216,6 +230,8 @@ extern "C" void uiLoseRoute(char *from)
     ChatWindow *cw;
     
     while (!uiLoaded) sleep(0);
+    
+    removeFromList(from);
     
     cw = getWindow(from);
     putOutput(cw, "Route lost.\n");
