@@ -4532,6 +4532,7 @@ then
         UI_CFLAGS=
         UI_CPPFLAGS=
         UI_CXXFLAGS=
+        UI_CXX=false
         UI_LIBS=
         UI_LDFLAGS=
         UI_DIR=ui-dumb
@@ -4765,13 +4766,12 @@ The wx-config script could not be found.
    { (exit 1); exit 1; }; }
                 fi
         else
-                CC=$CXX
-
                 if test "x$ui" != "xwx-static"
                 then
                         UI_CFLAGS=$WX_CFLAGS
                         UI_CPPFLAGS=$WX_CPPFLAGS
                         UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_CXX=true
                         UI_LIBS=$WX_LIBS
                         UI_LDFLAGS=
                         UI_DIR=ui-wx
@@ -4783,6 +4783,7 @@ echo "$as_me: Using wx UI" >&6;}
                         UI_CFLAGS=$WX_CFLAGS
                         UI_CPPFLAGS=$WX_CPPFLAGS
                         UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_CXX=true
                         UI_LIBS=$WX_LIBS_STATIC
                         UI_LDFLAGS=
                         UI_DIR=ui-wx
@@ -5206,7 +5207,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5209 "configure"
+#line 5210 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
@@ -5268,6 +5269,7 @@ The appropriate libraries could not be found.
                 UI_CFLAGS=$CURSES_INCLUDEDIR
                 UI_CPPFLAGS=
                 UI_CXXFLAGS=
+                UI_CXX=false
                 UI_LIBS=$CURSES_LIBS
                 UI_LDFLAGS=
                 UI_DIR=ui-curses

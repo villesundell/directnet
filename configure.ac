@@ -60,6 +60,7 @@ then
         UI_CFLAGS=
         UI_CPPFLAGS=
         UI_CXXFLAGS=
+        UI_CXX=false
         UI_LIBS=
         UI_LDFLAGS=
         UI_DIR=ui-dumb
@@ -88,6 +89,7 @@ The wx-config script could not be found.
                         UI_CFLAGS=$WX_CFLAGS
                         UI_CPPFLAGS=$WX_CPPFLAGS
                         UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_CXX=true
                         UI_LIBS=$WX_LIBS
                         UI_LDFLAGS=
                         UI_DIR=ui-wx
@@ -98,6 +100,7 @@ The wx-config script could not be found.
                         UI_CFLAGS=$WX_CFLAGS
                         UI_CPPFLAGS=$WX_CPPFLAGS
                         UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_CXX=true
                         UI_LIBS=$WX_LIBS_STATIC
                         UI_LDFLAGS=
                         UI_DIR=ui-wx
@@ -125,6 +128,7 @@ The appropriate libraries could not be found.
                 UI_CFLAGS=$CURSES_INCLUDEDIR
                 UI_CPPFLAGS=
                 UI_CXXFLAGS=
+                UI_CXX=false
                 UI_LIBS=$CURSES_LIBS
                 UI_LDFLAGS=
                 UI_DIR=ui-curses

@@ -6,12 +6,27 @@ AM_CFLAGS=@PTHREAD_CFLAGS@
 AM_LDFLAGS=@PTHREAD_LIBS@
 
 bin_PROGRAMS=directnet
+
+if UI_CXX
+
+directnet_SOURCES=client.c \
+connection.c \
+directnet.c \
+gpg-fake.c \
+hash.c \
+server.c \
+fake.cc
+
+else
+
 directnet_SOURCES=client.c \
 connection.c \
 directnet.c \
 gpg-fake.c \
 hash.c \
 server.c
+
+endif
 
 directnet_CFLAGS=@UI_CFLAGS@
 directnet_LDFLAGS=@UI_LDFLAGS@
