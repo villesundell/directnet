@@ -36,13 +36,16 @@ AC_SUBST(PTHREAD_LIBS)
 
 # On solaris, we need -lnsl and -lsocket
 AC_CHECK_LIB([c], [socket],
-        AS_MESSAGE([This is not a Solaris system.]),
-        AC_CHECK_LIB([socket], [socket])
+        AS_MESSAGE([This is not a Solaris or Win32 system.]),
+	AC_CHECK_LIB([socket], [socket])
 )
 AC_CHECK_LIB([c], [gethostbyname],
-        AS_MESSAGE([This is not a Solaris system.]),
-        AC_CHECK_LIB([nsl], [gethostbyname])
+        AS_MESSAGE([This is not a Solaris or Win32 system.]),
+	AC_CHECK_LIB([nsl], [gethostbyname])
 )
+
+# If we have libwsock32, we probably want it
+AC_CHECK_LIB([wsock32], [main])
 
 
 # Figure out what UI to use
@@ -271,7 +274,7 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC # This test breaks on MingW
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([dup2 gethostbyname gethostname inet_ntoa memset mkdir socket])
