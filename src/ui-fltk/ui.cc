@@ -34,14 +34,13 @@ extern "C" {
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
 
+BuddyWindow *bw;
 ChatWindow *cws[1024];
 
 using namespace std;
 
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
-    BuddyWindow *w;
-    
     /* get the name */
     strcpy(dn_name, "Gregor");
     
@@ -49,9 +48,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
 
     /* make the buddy window */
-    w = new BuddyWindow();
-    w->make_window();
-    w->buddyWindow->show();
+    bw = new BuddyWindow();
+    bw->make_window();
+    bw->buddyWindow->show();
 
     uiLoaded = 1;
     
@@ -60,7 +59,7 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     return 0;
 }
 
-ChatWindow *getWindow(char *name)
+ChatWindow *getWindow(const char *name)
 {
     int i;
     
@@ -73,7 +72,7 @@ ChatWindow *getWindow(char *name)
     
     cws[i] = new ChatWindow();
     cws[i]->make_window();
-    cws[i]->chatWindow->label(name);
+    cws[i]->chatWindow->label(strdup(name));
     cws[i]->chatWindow->show();
     
     return cws[i];
@@ -87,6 +86,11 @@ void estConn(Fl_Input *w, void *ignore)
     w->value("");
     establishConnection(connTo);
     free(connTo);
+}
+
+void talkTo(Fl_Button *b, void *ignore)
+{
+    getWindow(bw->onlineList->text());
 }
 
 void sendInput(Fl_Input *w, void *ignore)
@@ -143,6 +147,8 @@ extern "C" void uiEstRoute(char *from)
     ChatWindow *cw;
     
     while (!uiLoaded) sleep(0);
+    
+    bw->onlineList->add(from);
     
     cw = getWindow(from);
     cw->textOut->insert("Route established.\n");
