@@ -42,6 +42,9 @@ ChatWindow *cws[1024];
 
 using namespace std;
 
+static int uiQuit = 0;
+ChatWindow *showcw = NULL;
+
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
     /* blank our array of windows */
@@ -52,7 +55,14 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     nw->make_window();
     nw->nameWindow->show();
     
-    Fl::run();
+    /*Fl::run();*/
+    while (!uiQuit) {
+        if (showcw) {
+            showcw->chatWindow->show();
+            showcw = NULL;
+        }
+        Fl::wait(1);
+    }
 
     return 0;
 }
@@ -63,7 +73,9 @@ ChatWindow *getWindow(const char *name)
     
     for (i = 0; cws[i] != NULL; i++) {
         if (!strcmp(cws[i]->chatWindow->label(), name)) {
-            cws[i]->chatWindow->show();
+            /*cws[i]->chatWindow->show();*/
+            while (showcw) sleep(0);
+            showcw = cws[i];
             return cws[i];
         }
     }
@@ -71,7 +83,9 @@ ChatWindow *getWindow(const char *name)
     cws[i] = new ChatWindow();
     cws[i]->make_window();
     cws[i]->chatWindow->label(strdup(name));
-    cws[i]->chatWindow->show();
+    /*cws[i]->chatWindow->show();*/
+    while (showcw) sleep(0);
+    showcw = cws[i];
     
     return cws[i];
 }
@@ -108,6 +122,8 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
     }
     
     w->hide();
+    
+    uiQuit = 1;
 }
 
 void estConn(Fl_Input *w, void *ignore)
