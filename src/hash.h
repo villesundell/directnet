@@ -25,38 +25,52 @@
 
 #define DN_HASH_INTLIKE_H(htype, hshortn) \
 struct hashKey##hshortn { \
-    char key[24]; \
+    char *key; \
     htype value; \
+    struct hashKey##hshortn *next; \
 }; \
-struct hashKey##hshortn **hash##hshortn##Create(int count); \
-void hash##hshortn##Destroy(struct hashKey##hshortn **hash); \
-htype hash##hshortn##Get(struct hashKey##hshortn **hash, char *key); \
-char *hash##hshortn##RevGet(struct hashKey##hshortn **hash, htype value); \
-void hash##hshortn##Set(struct hashKey##hshortn **hash, char *key, htype value);
+struct hash##hshortn { \
+    struct hashKey##hshortn *head; \
+}; \
+struct hash##hshortn *hash##hshortn##Create(); \
+void hash##hshortn##Destroy(struct hash##hshortn *hash); \
+htype hash##hshortn##Get(struct hash##hshortn *hash, char *key); \
+char *hash##hshortn##RevGet(struct hash##hshortn *hash, htype value); \
+void hash##hshortn##Set(struct hash##hshortn *hash, char *key, htype value);
 
-DN_HASH_INTLIKE_H(int, )
+DN_HASH_INTLIKE_H(int, I)
 DN_HASH_INTLIKE_H(pthread_t, P)
 
 struct hashKeyS {
-    char key[24];
+    char *key;
     char *value;
+    struct hashKeyS *next;
+};
+
+struct hashS {
+    struct hashKeyS *head;
 };
 
 struct hashKeyL {
-    char key[24];
+    char *key;
     DN_LOCK value;
+    struct hashKeyL *next;
 };
 
-struct hashKeyS **hashSCreate(int count);
-void hashSDestroy(struct hashKeyS **hash);
-char *hashSGet(struct hashKeyS **hash, char *key);
-char *hashSRevGet(struct hashKeyS **hash, char *value);
-void hashSSet(struct hashKeyS **hash, char *key, char *value);
-void hashSDelKey(struct hashKeyS **hash, char *key);
+struct hashL {
+    struct hashKeyL *head;
+};
 
-struct hashKeyL **hashLCreate(int count);
-void hashLDestroy(struct hashKeyL **hash);
-DN_LOCK *hashLGet(struct hashKeyL **hash, char *key);
+struct hashS *hashSCreate();
+void hashSDestroy(struct hashS *hash);
+char *hashSGet(struct hashS *hash, char *key);
+char *hashSRevGet(struct hashS *hash, char *value);
+void hashSSet(struct hashS *hash, char *key, char *value);
+void hashSDelKey(struct hashS *hash, char *key);
+
+struct hashL *hashLCreate();
+void hashLDestroy(struct hashL *hash);
+DN_LOCK *hashLGet(struct hashL *hash, char *key);
 
 /*struct hashKey {
     char key[24];

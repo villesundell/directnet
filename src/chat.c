@@ -18,11 +18,15 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "globals.h"
 #include "hash.h"
 #include "lock.h"
 
-struct hashKeyS **dn_chats;
+struct hashS *dn_chats;
 DN_LOCK dn_chat_lock;
 
 char chatOnChannel(char *channel)
