@@ -1,3 +1,10 @@
+Before reading the following, try typing 'make help'
+It should allow you to compile on most platforms.
+
+
+
+
+
 GNU/Linux:
 The Makefile was made for GNU/Linux, just 'make'
 
