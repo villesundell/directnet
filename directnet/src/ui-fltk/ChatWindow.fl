@@ -1,0 +1,23 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+class ChatWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window chatWindow {
+      label User open
+      xywh {372 89 360 290} type Double visible
+    } {
+      Fl_Text_Display textOut {
+        label User
+        xywh {0 15 360 250}
+      }
+      Fl_Input textIn {
+        user_data sendInput selected
+        xywh {0 265 360 25} when 8
+      }
+    }
+  }
+} 
