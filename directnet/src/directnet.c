@@ -47,18 +47,18 @@ int pipes[DN_MAX_CONNS][2];
 DN_LOCK *pipe_locks;
 
 DN_LOCK recFndHashLock; // Lock on the following hash
-struct hashKeyL **recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
-struct hashKeyP **recFndPthreads;
-struct hashKeyS **weakRoutes; // List of weak routes
+struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
+struct hashP *recFndPthreads;
+struct hashS *weakRoutes; // List of weak routes
 
 char dn_name[DN_NAME_LEN];
 char dn_name_set = 0;
-struct hashKey **dn_fds;
+struct hashI *dn_fds;
 
-struct hashKeyS **dn_routes;
-struct hashKeyS **dn_iRoutes;
+struct hashS *dn_routes;
+struct hashS *dn_iRoutes;
 
-struct hashKey **dn_trans_keys;
+struct hashI *dn_trans_keys;
 int currentTransKey;
 
 char uiLoaded;
@@ -83,7 +83,7 @@ int pluginMain(int argc, char **argv, char **envp)
             } else if (!strncmp(argv[i], "-p", 2)) {
                 i++;
                 if (!argv[i]) {
-                    sprintf(stderr, "-p must have an argument\n");
+                    fprintf(stderr, "-p must have an argument\n");
                     exit(1);
                 }
                 serv_port = atoi(argv[i]);
@@ -115,29 +115,29 @@ int pluginMain(int argc, char **argv, char **envp)
     
     // these are described above
     dn_lockInit(&recFndHashLock);
-    recFndLocks = hashLCreate(DN_MAX_ROUTES);
-    recFndPthreads = hashPCreate(DN_MAX_ROUTES);
+    recFndLocks = hashLCreate();
+    recFndPthreads = hashPCreate();
     
     /* Upon receiving a fnd, the node then continues to accept alternate fnds.  Every time it
        receives one, it goes through the current route and new route and only keeps the ones that
        appear in both.  That way, it ends up with a list of nodes that have no backup.  If there
        are any such nodes, it needs to attempt a direct connection to strengthen the network. */
-    weakRoutes = hashSCreate(DN_MAX_ROUTES);
+    weakRoutes = hashSCreate();
     
     // This stores fd numbers by name
-    dn_fds = hashCreate(DN_MAX_CONNS);
+    dn_fds = hashICreate();
     
     // This stores routes by name
-    dn_routes = hashSCreate(DN_MAX_ROUTES);
+    dn_routes = hashSCreate();
     // This stores intermediate routes, for response on broken routes
-    dn_iRoutes = hashSCreate(DN_MAX_ROUTES);
+    dn_iRoutes = hashSCreate();
     
     // This hash stores the state of all nonrepeating unrouted messages
-    dn_trans_keys = hashCreate(65536);
+    dn_trans_keys = hashICreate();
     currentTransKey = 0;
     
     // This hash stores whether we're in certain chats
-    dn_chats = hashSCreate(1024);
+    dn_chats = hashSCreate();
     // And this locks that hash
     dn_lockInit(&dn_chat_lock);
     
@@ -198,6 +198,6 @@ char *findHome(char **envp)
 void newTransKey(char *into)
 {
     sprintf(into, "%s%d", dn_name, currentTransKey);
-    hashSet(dn_trans_keys, into, 1);
+    hashISet(dn_trans_keys, into, 1);
     currentTransKey++;
 }

@@ -41,18 +41,18 @@ extern DN_LOCK dn_fd_lock;
 extern DN_LOCK *pipe_locks;
 
 extern DN_LOCK recFndHashLock; // Lock on the following hash
-extern struct hashKeyL **recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
-extern struct hashKeyP **recFndPthreads; // And the pthreads themselves
-extern struct hashKeyS **weakRoutes; // List of weak routes
+extern struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
+extern struct hashP *recFndPthreads; // And the pthreads themselves
+extern struct hashS *weakRoutes; // List of weak routes
 
 extern char dn_name[DN_NAME_LEN];
 extern char dn_name_set;
-extern struct hashKey **dn_fds;
+extern struct hashI *dn_fds;
 
-extern struct hashKeyS **dn_routes;
-extern struct hashKeyS **dn_iRoutes;
+extern struct hashS *dn_routes;
+extern struct hashS *dn_iRoutes;
 
-extern struct hashKey **dn_trans_keys;
+extern struct hashI *dn_trans_keys;
 extern int currentTransKey;
 
 extern DN_LOCK displayLock;

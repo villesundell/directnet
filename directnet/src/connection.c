@@ -34,6 +34,7 @@
 #include "connection.h"
 #include "directnet.h"
 #include "gpg.h"
+#include "hash.h"
 #include "ui.h"
 
 char *awayMsg = NULL;
@@ -83,11 +84,11 @@ void *communicator(void *fdnum_voidptr)
             }
             
             // Disconnect
-            name = hashRevGet(dn_fds, fdnum);
+            name = hashIRevGet(dn_fds, fdnum);
             if (name != NULL) {
                 uiLoseConn(name);
                 hashSDelKey(dn_routes, name);
-                hashSet(dn_fds, name, -1);
+                hashISet(dn_fds, name, -1);
             }
             
             close(fds[fdnum]);
@@ -215,8 +216,8 @@ void handleMsg(char *inbuf, int fdnum)
             int i;
             
             // Should we just ignore it?
-            if (hashGet(dn_trans_keys, params[1]) == -1) {
-                hashSet(dn_trans_keys, params[1], 1);
+            if (hashIGet(dn_trans_keys, params[1]) == -1) {
+                hashISet(dn_trans_keys, params[1], 1);
             } else {
                 return;
             }
@@ -465,7 +466,7 @@ void handleMsg(char *inbuf, int fdnum)
         addParam(outbuf, params[3]);
         
         // Do I have a connection to this person?
-        remfd = hashGet(dn_fds, params[2]);
+        remfd = hashIGet(dn_fds, params[2]);
         if (remfd != -1) {
             sendCmd(remfd, outbuf);
             return;
@@ -559,7 +560,7 @@ void handleMsg(char *inbuf, int fdnum)
         
         REQ_PARAMS(2);
         
-        hashSet(dn_fds, params[0], fdnum);
+        hashISet(dn_fds, params[0], fdnum);
         
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
@@ -608,7 +609,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
     params[0][i] = '\0';
     newroute = params[0]+i+1;
     
-    sendfd = hashGet(dn_fds, params[0]);
+    sendfd = hashIGet(dn_fds, params[0]);
         
     if (sendfd == -1) {
         // We need to tell the other side that this route is dead!
@@ -690,11 +691,11 @@ int handleNLUnroutedMsg(char **params)
 int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params)
 {
     // This part of handleUnroutedMsg decides whether to just delete it
-    if (hashGet(dn_trans_keys, params[0]) == -1) {
+    if (hashIGet(dn_trans_keys, params[0]) == -1) {
         char outbuf[DN_CMD_LEN];
         int i;
         
-        hashSet(dn_trans_keys, params[0], 1);
+        hashISet(dn_trans_keys, params[0], 1);
         
         // Continue the transmission
         buildCmd(outbuf, command, vera, verb, params[0]);
@@ -864,41 +865,47 @@ void sendFnd(char *to)
 
 void joinChat(char *chat)
 {
+    struct hashKeyS *cur;
+    
     // Add to the hash
     chatJoin(chat);
     
     // Send a cjo to everybody we have a route to
     char *outParams[4];
-    int i;
     
     memset(outParams, 0, 4 * sizeof(char *));
     outParams[1] = chat;
     outParams[2] = dn_name;
     
-    for (i = 0; dn_routes[i]; i++) {
-        outParams[0] = dn_routes[i]->value;
+    cur = dn_routes->head;
+    while (cur) {
+        outParams[0] = cur->value;
         
         handleRoutedMsg("cjo", 1, 1, outParams);
+        cur = cur->next;
     }
 }
 
 void leaveChat(char *chat)
 {
+    struct hashKeyS *cur;
+    
     // Remove from the hash
     chatLeave(chat);
     
     // Send a clv to everybody we have a route to
     char *outParams[4];
-    int i;
     
     memset(outParams, 0, 4 * sizeof(char *));
     outParams[1] = chat;
     outParams[2] = dn_name;
     
-    for (i = 0; dn_routes[i]; i++) {
-        outParams[0] = dn_routes[i]->value;
+    cur = dn_routes->head;
+    while (cur) {
+        outParams[0] = cur->value;
         
         handleRoutedMsg("clv", 1, 1, outParams);
+        cur = cur->next;
     }
 }
 

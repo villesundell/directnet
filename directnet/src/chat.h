@@ -23,7 +23,7 @@
 
 #include "lock.h"
 
-extern struct hashKeyS **dn_chats;
+extern struct hashS *dn_chats;
 extern DN_LOCK dn_chat_lock;
 
 char chatOnChannel(const char *channel);
