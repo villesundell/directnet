@@ -40,3 +40,19 @@ semiclean:
 
 clean: semiclean
 	rm -fr gpgtest directnet
+
+
+# Platforms
+help:
+	cat compilehelp
+
+gnulinux: directnet
+
+hpux:
+	$(MAKE) directnet
+
+macosx:
+	$(MAKE) directnet CFLAGS="-DMACOSX"
+
+solaris:
+	$(MAKE) directnet CFLAGS="-lsocket -lnsl"

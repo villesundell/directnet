@@ -1,0 +1,11 @@
+
+HELP COMPILING:
+To make for a specific platform, type'make <platform>'
+For example: make gnulinux
+A default 'make' should work on GNU/Linux and HPUX (with GNU make and GNU cc).
+
+Supported platforms:
+gnulinux
+hpux
+macosx
+solaris
