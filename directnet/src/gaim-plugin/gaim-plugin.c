@@ -18,10 +18,8 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
-
 #ifdef WIN32
-#define pipe(phandles)	_pipe ( phandles, 4096, _O_BINARY )
+#define pipe(a) _pipe((a), 0, _O_BINARY | _O_NOINHERIT)
 
 #include <glib-object.h>
 #include <glib/gtypes.h>
@@ -35,6 +33,7 @@
 
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -180,7 +179,7 @@ int chatByName(char *name)
 }
 
 int ipcpipe[2];
-char ipcnewdata = 0;
+FILE *ipcin, *ipcout;
 pthread_mutex_t ipclock;
 #define IPC_MSG 1
 struct ipc_msg {
@@ -208,51 +207,43 @@ struct ipc_chat_join {
 void ipc_got_im(char *who, char *msg)
 {
     struct ipc_msg *a = (struct ipc_msg *) malloc(sizeof(struct ipc_msg));
-    char buf[128];
     a->from = strdup(who);
     a->msg = strdup(msg);
     pthread_mutex_lock(&ipclock);
-    ipcnewdata = 1;
-    sprintf(buf, "%c%p", IPC_MSG, a);
-    write(ipcpipe[1], buf, strlen(buf) + 1);
+    fprintf(ipcout, "%c%p\n", IPC_MSG, a);
+    fflush(ipcout);
 }
 
 void ipc_set_state(char *who, int state)
 {
     struct ipc_state *a = (struct ipc_state *) malloc(sizeof(struct ipc_state));
-    char buf[128];
     a->who = strdup(who);
     a->state = state;
     pthread_mutex_lock(&ipclock);
-    ipcnewdata = 1;
-    sprintf(buf, "%c%p", IPC_STATE, a);
-    write(ipcpipe[1], buf, strlen(buf) + 1);
+    fprintf(ipcout, "%c%p\n", IPC_STATE, a);
+    fflush(ipcout);
 }
 
 void ipc_chat_msg(int id, char *who, char *chan, char *msg)
 {
     struct ipc_chat_msg *a = (struct ipc_chat_msg *) malloc(sizeof(struct ipc_chat_msg));
-    char buf[128];
     a->id = id;
     a->who = strdup(who);
     a->chan = strdup(chan);
     a->msg = strdup(msg);
     pthread_mutex_lock(&ipclock);
-    ipcnewdata = 1;
-    sprintf(buf, "%c%p", IPC_CHAT_MSG, a);
-    write(ipcpipe[1], buf, strlen(buf) + 1);
+    fprintf(ipcout, "%c%p\n", IPC_CHAT_MSG, a);
+    fflush(ipcout);
 }
 
 void ipc_chat_join(int id, char *chan)
 {
     struct ipc_chat_join *a = (struct ipc_chat_join *) malloc(sizeof(struct ipc_chat_join));
-    char buf[128];
     a->id = id;
     a->chan = strdup(chan);
     pthread_mutex_lock(&ipclock);
-    ipcnewdata = 1;
-    sprintf(buf, "%c%p", IPC_CHAT_JOIN, a);
-    write(ipcpipe[1], buf, strlen(buf) + 1);
+    fprintf(ipcout, "%c%p\n", IPC_CHAT_JOIN, a);
+    fflush(ipcout);
 }
 
 static void init_plugin(GaimPlugin *plugin)
@@ -387,27 +378,20 @@ static GList *gp_awaystates(GaimConnection *gc)
     return m;
 }
 
-static gboolean gp_callback(gpointer data)
+static void gp_callback(gpointer data, gint source, GaimInputCondition condition)
 {
     /* grab our input line */
     char inpline[1024];
-    int i;
     struct ipc_msg *ma;
     struct ipc_state *sa;
     struct ipc_chat_msg *cma;
     struct ipc_chat_join *cja;
     
-    // if there's no new data, don't try to get any
-    if (!ipcnewdata) return;
-    ipcnewdata = 0;
+    while (!uiLoaded) sleep(0);
     
-    for (i = 0; i < 1023; i++) {
-        read(ipcpipe[0], inpline + i, 1);
-        if (inpline[i] == '\0') {
-            i = 1023;
-        }
-    }
     inpline[1023] = '\0';
+    
+    fgets(inpline, 1023, ipcin);
     
     switch (inpline[0]) {
         case IPC_MSG:
@@ -457,8 +441,10 @@ static void gp_login(GaimAccount *account)
 
     // Prepare the IPC pipe
     pipe(ipcpipe);
+    ipcin = fdopen(ipcpipe[0], "r");
+    ipcout = fdopen(ipcpipe[1], "w");
     pthread_mutex_init(&ipclock, NULL);
-    gaim_timeout_add(50, gp_callback, gc);
+    gaim_input_add(ipcpipe[0], GAIM_INPUT_READ, gp_callback, gc);
     
     /* call "main" */
     pluginMain(1, argv, environ);
