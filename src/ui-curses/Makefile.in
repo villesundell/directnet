@@ -56,7 +56,8 @@ ARFLAGS = cru
 libui_a_AR = $(AR) $(ARFLAGS)
 libui_a_LIBADD =
 am_libui_a_OBJECTS = libui_a-DisplayWindow.$(OBJEXT) \
-	libui_a-InputWindow.$(OBJEXT) libui_a-ui.$(OBJEXT)
+	libui_a-InputWindow.$(OBJEXT) libui_a-StatusWindow.$(OBJEXT) \
+	libui_a-ui.$(OBJEXT)
 libui_a_OBJECTS = $(am_libui_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -192,6 +193,7 @@ target_alias = @target_alias@
 noinst_LIBRARIES = libui.a
 libui_a_SOURCES = DisplayWindow.cc \
 InputWindow.cc \
+StatusWindow.cc \
 ui.cc
 
 libui_a_CFLAGS = @UI_CFLAGS@ -I..
@@ -245,6 +247,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-DisplayWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-InputWindow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-StatusWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libui_a-ui.Po@am__quote@
 
 .cc.o:
@@ -288,6 +291,20 @@ libui_a-InputWindow.obj: InputWindow.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='InputWindow.cc' object='libui_a-InputWindow.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-InputWindow.obj `if test -f 'InputWindow.cc'; then $(CYGPATH_W) 'InputWindow.cc'; else $(CYGPATH_W) '$(srcdir)/InputWindow.cc'; fi`
+
+libui_a-StatusWindow.o: StatusWindow.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-StatusWindow.o -MD -MP -MF "$(DEPDIR)/libui_a-StatusWindow.Tpo" -c -o libui_a-StatusWindow.o `test -f 'StatusWindow.cc' || echo '$(srcdir)/'`StatusWindow.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libui_a-StatusWindow.Tpo" "$(DEPDIR)/libui_a-StatusWindow.Po"; else rm -f "$(DEPDIR)/libui_a-StatusWindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='StatusWindow.cc' object='libui_a-StatusWindow.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-StatusWindow.o `test -f 'StatusWindow.cc' || echo '$(srcdir)/'`StatusWindow.cc
+
+libui_a-StatusWindow.obj: StatusWindow.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-StatusWindow.obj -MD -MP -MF "$(DEPDIR)/libui_a-StatusWindow.Tpo" -c -o libui_a-StatusWindow.obj `if test -f 'StatusWindow.cc'; then $(CYGPATH_W) 'StatusWindow.cc'; else $(CYGPATH_W) '$(srcdir)/StatusWindow.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/libui_a-StatusWindow.Tpo" "$(DEPDIR)/libui_a-StatusWindow.Po"; else rm -f "$(DEPDIR)/libui_a-StatusWindow.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='StatusWindow.cc' object='libui_a-StatusWindow.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -c -o libui_a-StatusWindow.obj `if test -f 'StatusWindow.cc'; then $(CYGPATH_W) 'StatusWindow.cc'; else $(CYGPATH_W) '$(srcdir)/StatusWindow.cc'; fi`
 
 libui_a-ui.o: ui.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libui_a_CXXFLAGS) $(CXXFLAGS) -MT libui_a-ui.o -MD -MP -MF "$(DEPDIR)/libui_a-ui.Tpo" -c -o libui_a-ui.o `test -f 'ui.cc' || echo '$(srcdir)/'`ui.cc; \
