@@ -32,19 +32,32 @@ extern "C" {
 #include <unistd.h>
 #include <lock.h> 
 #include <directnet.h>
+#include <connection.h>
+#include "ui.h"
+
 }
 
 #include <string>
+#include <vector>
+#include <stdio.h>
+
 using std::string; 
+using std::vector;
 // #include "Message.h"
 #include "DisplayWindow.h" 
 #include "StatusWindow.h"
 #include "InputWindow.h"
+#include "InputParser.h"
+
 
 DisplayWindow *displayWin; 
 StatusWindow *statusWin; 
 InputWindow *inputWin; 
 
+// Later we'll have a vector of these with multiple panes for each active chat
+// Until then, we are just ui-dumb in curses, so do it this way
+string currentPartner = "";
+string ldn_name = ""; 
 
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
@@ -66,26 +79,84 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     displayWin->displayMsg(sbuf);
     dn_unlock (&displayLock); 
     
-    sbuf = inputWin->getInput();
-    // trim leading and trailing whitespace here
+    bool nameok = false;
+    while (!nameok) { 
+        sbuf = inputWin->getInput();
+        if (sbuf.length() > 0) { 
+            if (sbuf.find(" ",0) == string::npos) { 
+                snprintf(dn_name, DN_NAME_LEN-1, "%s", sbuf.c_str());
+                dn_name[DN_NAME_LEN - 1] = NULL; 
+                sbuf = dn_name;  // In case we shortened it
+                ldn_name=sbuf;   // save off the name to a c++ string locally.
+                nameok = true; 
+            } else { 
+                sbuf = "Which part of \"no spaces\" did you not get?"; 
+                dn_lock ( &displayLock); 
+                displayWin->displayMsg(sbuf);
+                dn_unlock (&displayLock);  
+            }
+        }            
+    }
+            
+    
+    dn_name_set = (char) 1; 
     statusWin->setNick(sbuf); 
-    sbuf = "\nYou haven't chosen a chat partner!  \nType '/t <username>' to initiate a chat."; 
+    sbuf = "/c <host> or <ip> to connect to another machine.\n'/t <username>' to initiate a chat."; 
     dn_lock (&displayLock); 
     displayWin->displayMsg(sbuf); 
     dn_unlock (&displayLock); 
     
     // We're ready to grab input and process it.  
-    
-    while (1) { 
+    InputParser inparse;
+    bool quitting=false;
+    while (!quitting) { 
         sbuf = inputWin->getInput(); 
-        
+        if (sbuf.length() > 0) {
+            inparse.setInput(sbuf); 
+            
+            if ( inparse.isCommand() ) {
+#ifdef DEBUG
+                string tmp = "saw a command"; 
+                displayWin->displayMsg(tmp); 
+#endif
+                switch ( inparse.getCommand() ) { 
+                    case CONNECT:
+                        establishConnection(inparse.getParam(1).c_str());
+                        break;
+                    case TALK: 
+                        currentPartner = inparse.getParam(1); 
+                        statusWin->setTarget(inparse.getParam(1)); 
+                        break;
+                    case FORCEROUTE:
+                        break;
+                    case CHAT:
+                        break;
+                    case QUIT:
+                        quitting = true;
+                        break;
+                    case AWAY: 
+                        break;
+                        
+                }
+            } else { // not a command - check for chats later
+                if (currentPartner.length() == 0) { 
+                    sbuf = "\nYou haven't chosen a chat partner!\nType '/t <username>' to initiate a chat.\n";
+                } else { 
+                    if ( sendMsg(currentPartner.c_str(), inparse.getInput().c_str()) ) { 
+                        uiDispMsg(ldn_name.c_str(), inparse.getInput().c_str() ); 
+                    }
+                }
+                        
+            }
+        }
         
     }
-        
     
-    //
-    sleep(5);
-    endwin();
+    
+    endwin(); 
+    delete displayWin;
+    delete statusWin;
+    delete inputWin;
     return 0;
 }
 
@@ -96,6 +167,8 @@ extern "C" void uiDispMsg(char *from, char *msg)
     string f = from; 
     string m = msg; 
     displayWin->displayRecvdMsg(m, f); 
+    statusWin->repaint();
+    inputWin->repaint();
     dn_unlock (&displayLock); 
 }
 

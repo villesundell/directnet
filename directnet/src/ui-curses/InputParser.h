@@ -25,6 +25,7 @@ const int TALK         = 1;
 const int FORCEROUTE   = 2;
 const int CHAT         = 3;
 const int QUIT         = 4;
+const int AWAY         = 5;
 
 // Max number of params for longest command
 const int MAX_COMMAND_TOKENS = 2;
@@ -41,6 +42,7 @@ class InputParser {
     bool isChat();
     int  getCommand();  
     void setInput(string ins); 
+    string getInput(); // Return the input being processed now
     string getParam(int which); 
 }; 
 

@@ -25,8 +25,9 @@ class StatusWindow {
     string cur_nick; 
     string cur_target;
     int ncols; 
-    void redrawStatus();
+    
     public: 
+    void repaint();
     StatusWindow(int cols, int row_anchor); 
     ~StatusWindow(); 
     void setNick(string s); 

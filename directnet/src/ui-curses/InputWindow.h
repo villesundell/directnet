@@ -27,6 +27,7 @@ class InputWindow {
     InputWindow(int nLines, int nCols, int orig_y); 
     ~InputWindow(); 
     string getInput(); 
+    void repaint(); 
     
 }; 
 

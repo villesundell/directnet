@@ -57,7 +57,7 @@ void DisplayWindow::displayRecvdMsg(string msg, string from)
     wmove (win, nRows-1, 0); 
     wprintw (win, "%s: %s", from.c_str(), msg.c_str()); 
     wnoutrefresh(win); 
-    setsyx( y, x); 
+    // setsyx( y, x); 
     doupdate(); 
 } 
 
@@ -70,7 +70,7 @@ void DisplayWindow::displaySentMsg(string msg, string to)
     wmove (win, nRows-1, 0); 
     wprintw (win, "To %s: %s", to.c_str(), msg.c_str()); 
     wnoutrefresh(win); 
-    setsyx( y, x); 
+    //setsyx( y, x); 
     doupdate(); 
 }
 
@@ -84,6 +84,6 @@ void DisplayWindow::displayMsg(string msg)
     // wprintw (win, "Rows: %d     Cols: %d\n", nRows, nCols); 
     wprintw (win, "%s", msg.c_str()); 
     wnoutrefresh(win); 
-    setsyx( y, x); 
+    setsyx( y, x);
     doupdate(); 
 }
