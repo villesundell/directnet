@@ -60,7 +60,13 @@ int establishClient(char *destination)
     }
 
     dn_lock(&dn_fd_lock);
-    for (curfd = 0; fds[curfd]; curfd++);
+    for (curfd = 0; curfd < DN_MAX_CONNS && fds[curfd]; curfd++);
+    if (curfd == DN_MAX_CONNS) {
+	    /* no more room! */
+	    dn_unlock(&dn_fd_lock);
+	    return 0;
+    }
+    
     fds[curfd] = socket(AF_INET, SOCK_STREAM, 0);
     if (fds[curfd] == -1) {
         fds[curfd] = 0;
