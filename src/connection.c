@@ -97,28 +97,25 @@ void *communicator(void *fdnum_voidptr)
 // Start building a command into a buffer
 void buildCmd(char *into, char *command, char vera, char verb, char *param)
 {
-    sprintf(into, "%s%c%c%s", command, vera, verb, param);
-    /*int cpied;
-    strncpy(into, command, 65534);
-    cpied = strlen(command);
-    
-    into[cpied+1] = vera;
-    into[cpied+2] = verb;
-    cpied += 2;
-    
-    strncpy(into + cpied, param, 65536 - cpied);*/
+    /*sprintf(into, "%s%c%c%s", command, vera, verb, param);*/
+    int cpied;
+    SF_strncpy(into, command, 3);
+    into[3] = vera;
+    into[4] = verb;
+    SF_strncpy(into + 5, param, DN_CMD_LEN - cpied);
 }
 
 // Add a parameter into a command buffer
 void addParam(char *into, char *newparam)
 {
-    sprintf(into+strlen(into), ";%s", newparam);
-    /*int cpied = strlen(into);
+    /*sprintf(into+strlen(into), ";%s", newparam);*/
+    into[DN_CMD_LEN - 2] = '\0';
+    int cpied = strlen(into);
     
     into[cpied] = ';';
     cpied++;
     
-    strncpy(into + cpied, newparam, 65536-cpied);*/
+    strncpy(into + cpied, newparam, DN_CMD_LEN - cpied);
 }
 
 // Send a command
@@ -279,14 +276,14 @@ void handleMsg(char *inbuf, int fdnum)
                 reverseRoute[0] = '\0';
                 for (i = onRE; i >= 0; i--) {
                     ostrlen = strlen(reverseRoute);
-                    SF_strncpy(reverseRoute+ostrlen, routeElement[i], DN_ROUTE_LEN-ostrlen);
+                    SF_strncpy(reverseRoute + ostrlen, routeElement[i], DN_ROUTE_LEN - ostrlen);
                     ostrlen += strlen(routeElement[i]);
-                    SF_strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+                    SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
                 }
                 ostrlen = strlen(reverseRoute);
-                SF_strncpy(reverseRoute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
+                SF_strncpy(reverseRoute + ostrlen, params[1], DN_ROUTE_LEN - ostrlen);
                 ostrlen += strlen(params[1]);
-                SF_strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+                SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
                 
                 // Add his route,
                 hashSSet(dn_routes, params[1], reverseRoute);
@@ -359,9 +356,9 @@ void handleMsg(char *inbuf, int fdnum)
                         if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
                             // It's a match, copy it in.
                             ostrlen = strlen(curWRoute);
-                            SF_strncpy(curWRoute+ostrlen, routeElement[y], DN_ROUTE_LEN-ostrlen);
+                            SF_strncpy(curWRoute + ostrlen, routeElement[y], DN_ROUTE_LEN - ostrlen);
                             ostrlen += strlen(routeElement[y]);
-                            SF_strncpy(curWRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+                            SF_strncpy(curWRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
                         }
                     }
                 }
@@ -377,9 +374,9 @@ void handleMsg(char *inbuf, int fdnum)
         // Add myself to the route
         SF_strncpy(newroute, params[0], DN_ROUTE_LEN);
         ostrlen = strlen(newroute);
-        SF_strncpy(newroute+ostrlen, dn_name, DN_ROUTE_LEN-ostrlen);
+        SF_strncpy(newroute + ostrlen, dn_name, DN_ROUTE_LEN - ostrlen);
         ostrlen = strlen(newroute);
-        SF_strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+        SF_strncpy(newroute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
 
         buildCmd(outbuf, "fnd", 1, 1, newroute);
         addParam(outbuf, params[1]);
@@ -448,7 +445,7 @@ void handleMsg(char *inbuf, int fdnum)
             }
             
             ostrlen = strlen(newroute);
-            SF_strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
+            SF_strncpy(newroute + ostrlen, params[1], DN_ROUTE_LEN - ostrlen);
             
             // And add that route
             hashSSet(dn_iRoutes, params[1], newroute);
@@ -462,9 +459,9 @@ void handleMsg(char *inbuf, int fdnum)
             SF_strncpy(newroute, params[2], DN_ROUTE_LEN);
             
             ostrlen = strlen(newroute);
-            SF_strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
+            SF_strncpy(newroute + ostrlen, params[1], DN_ROUTE_LEN - ostrlen);
             ostrlen += strlen(params[1]);
-            SF_strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+            SF_strncpy(newroute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
             
             hashSSet(dn_routes, params[1], newroute);
             
@@ -785,7 +782,7 @@ void leaveChat(char *chat)
 void sendChat(char *to, char *msg)
 {
     char outbuf[DN_CMD_LEN];
-    char key[DN_NAME_LEN + 10];
+    char key[DN_TRANSKEY_LEN];
     
     // Build the output
     newTransKey(key);

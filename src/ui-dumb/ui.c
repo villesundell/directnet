@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005 Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -59,7 +59,7 @@ int uiInit(int argc, char ** argv, char **envp)
     printf("%s\n", gpgCreateKey());
     
     // You start in a conversation with nobody
-    currentPartner = (char *) malloc(256 * sizeof(char));
+    currentPartner = (char *) malloc(DN_NAME_LEN * sizeof(char));
     currentPartner[0] = '\0';
     
     // OK, the UI is ready
@@ -127,7 +127,7 @@ int handleUInput(char *inp)
                 return 0;
             }
         
-            strncpy(currentPartner, params[1], 256);
+            strncpy(currentPartner, params[1], DN_NAME_LEN);
             
             if (currentPartner[0] == '#') {
                 // Join the chat
