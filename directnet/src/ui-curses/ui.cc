@@ -99,6 +99,10 @@ extern "C" void uiDispMsg(char *from, char *msg)
     dn_unlock (&displayLock); 
 }
 
+extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)
+{
+}
+
 extern "C" void uiEstConn(char *from)
 {
     while (!uiLoaded) sleep(0);
