@@ -209,7 +209,7 @@ void handleMsg(char *inbuf, int fdnum)
                 int *onfd_ptr;
                 
                 // This is the first fnd received, but ignore it if we already have a route
-                if (dn_route_by_num[fdnum]) {
+                if (hashSGet(dn_routes, params[1])) {
                     return;
                 }
                 
