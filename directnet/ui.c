@@ -157,6 +157,8 @@ int handleUInput(char *inp)
         outparams[2] = gpgTo(dn_name, currentPartner, inp);
         handleRoutedMsg("msg", 1, 1, outparams);
         
+        free(outparams[0]);
+        
         printf("to %s: %s\n", currentPartner, inp);
     }
     
