@@ -137,7 +137,7 @@ int handleUInput(char *inp)
         char *outparams[50], *route;
         
         if (currentPartner[0] == '\0') {
-            printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n> ");
+            printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n");
             fflush(stdout);
             return 0;
         }
@@ -154,6 +154,8 @@ int handleUInput(char *inp)
         outparams[1] = dn_name;
         outparams[2] = gpgTo(dn_name, currentPartner, inp);
         handleRoutedMsg("msg", 1, 1, outparams);
+        
+        printf("to %s: %s\n", currentPartner, inp);
     }
     
     return 0;
