@@ -31,4 +31,6 @@ extern struct hashKeyS **dn_routes;
 extern struct hashKey **dn_trans_keys;
 int currentTransKey;
 
+void newTransKey(char *into);
+
 #endif // DN_DIRECTNET_H
