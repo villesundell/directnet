@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "chat.h"
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
@@ -161,19 +162,84 @@ void handleMsg(char *inbuf, int fdnum)
     }
     
     // Current protocol commands
-    if ((!strncmp(command, "cms", 3) &&
+    if ((!strncmp(command, "cjo", 3) &&
+         inbuf[3] == 1 && inbuf[4] == 1) ||
+        (!strncmp(command, "con", 3) &&
          inbuf[3] == 1 && inbuf[4] == 1)) {
-        REQ_PARAMS(4);
+        REQ_PARAMS(3);
         
-        // Before letting it continue, check if we're on the chat
-        if (hashGet(dn_chats, params[1]) != 1) {
+        // "I'm on this chat"
+        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+            // Are we even on this chat?
+            if (!chatOnChannel(params[1])) {
+                return;
+            }
+            
+            // OK, this person is on our list for this chat
+            chatAddUser(params[1], params[2]);
+            
+            // Should we echo?
+            if (!strncmp(command, "cjo", 3)) {
+                char *outParams[DN_MAX_PARAMS];
+                
+                memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
+            
+                outParams[0] = hashSGet(dn_routes, params[2]);
+                if (outParams[0] == NULL) {
+                    return;
+                }
+                outParams[1] = params[1];
+                outParams[2] = dn_name;
+            
+                handleRoutedMsg("con", 1, 1, outParams);
+            }
+        }
+        
+    } else if ((!strncmp(command, "cms", 3) &&
+         inbuf[3] == 1 && inbuf[4] == 1)) {
+        REQ_PARAMS(5);
+        
+        // Should we just ignore it?
+        if (hashGet(dn_trans_keys, params[1]) == -1) {
+            hashSet(dn_trans_keys, params[1], 1);
+        } else {
             return;
         }
         
-        if (handleNRUnroutedMsg(fdnum, command, inbuf[3], inbuf[4], params)) {
-            // Display the message
-            uiDispChatMsg(params[1], params[2], params[3]);
+        // a chat message
+        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+            char **users;
+            char *outParams[DN_MAX_PARAMS];
+            int i;
+            
+            // Are we on this chat?
+            if (!chatOnChannel(params[2])) {
+                return;
+            }
+            
+            // Yay, chat for us!
+            uiDispChatMsg(params[2], params[3], params[4]);
+            
+            // Pass it on
+            users = chatUsers(params[2]);
+            
+            memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
+            outParams[1] = params[1];
+            outParams[2] = params[2];
+            outParams[3] = params[3];
+            outParams[4] = params[4];
+            
+            for (i = 0; users[i]; i++) {
+                outParams[0] = hashSGet(dn_routes, users[i]);
+                if (outParams[0] == NULL) {
+                    continue;
+                }
+                
+                
+                handleRoutedMsg("cms", 1, 1, outParams);
+            }
         }
+        
     } else if ((!strncmp(command, "dcr", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) ||
         (!strncmp(command, "dce", 3) &&
@@ -776,25 +842,68 @@ void sendFnd(char *to)
 
 void joinChat(char *chat)
 {
-    hashSet(dn_chats, chat, 1);
+    // Add to the hash
+    chatJoin(chat);
+    
+    // Send a cjo to everybody we have a route to
+    char *outParams[4];
+    int i;
+    
+    memset(outParams, 0, 4 * sizeof(char *));
+    outParams[1] = chat;
+    outParams[2] = dn_name;
+    
+    for (i = 0; dn_routes[i]; i++) {
+        outParams[0] = dn_routes[i]->value;
+        
+        handleRoutedMsg("cjo", 1, 1, outParams);
+    }
 }
 
 void leaveChat(char *chat)
 {
-    hashSet(dn_chats, chat, -1);
+    // Remove from the hash
+    chatLeave(chat);
+    
+    // Send a clv to everybody we have a route to
+    char *outParams[4];
+    int i;
+    
+    memset(outParams, 0, 4 * sizeof(char *));
+    outParams[1] = chat;
+    outParams[2] = dn_name;
+    
+    for (i = 0; dn_routes[i]; i++) {
+        outParams[0] = dn_routes[i]->value;
+        
+        handleRoutedMsg("clv", 1, 1, outParams);
+    }
 }
 
 void sendChat(char *to, char *msg)
 {
-    char outbuf[DN_CMD_LEN];
-    char key[DN_TRANSKEY_LEN];
+    char **users;
+    char *outParams[DN_MAX_PARAMS], key[DN_TRANSKEY_LEN];
+    int i;
     
-    // Build the output
+    memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
+    
     newTransKey(key);
-    buildCmd(outbuf, "cms", 1, 1, key);
-    addParam(outbuf, to);
-    addParam(outbuf, dn_name);
-    addParam(outbuf, msg);
     
-    emitUnroutedMsg(-1, outbuf);
+    outParams[1] = key;
+    outParams[2] = to;
+    outParams[3] = dn_name;
+    outParams[4] = msg;
+    
+    users = chatUsers(to);
+            
+    for (i = 0; users[i]; i++) {
+        outParams[0] = hashSGet(dn_routes, users[i]);
+        if (outParams[0] == NULL) {
+            continue;
+        }
+        
+                
+        handleRoutedMsg("cms", 1, 1, outParams);
+    }
 }

@@ -27,6 +27,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "chat.h"
 #include "directnet.h"
 #include "globals.h"
 #include "gpg.h"
@@ -57,8 +58,6 @@ struct hashKeyS **dn_iRoutes;
 
 struct hashKey **dn_trans_keys;
 int currentTransKey;
-
-struct hashKey **dn_chats;
 
 char uiLoaded;
 DN_LOCK displayLock; // Only one thread writing at a time.
@@ -129,7 +128,9 @@ int main(int argc, char **argv, char **envp)
     currentTransKey = 0;
     
     // This hash stores whether we're in certain chats
-    dn_chats = hashCreate(1024);
+    dn_chats = hashSCreate(1024);
+    // And this locks that hash
+    dn_lockInit(&dn_chat_lock);
     
     /* Set uiLoaded to 0 - this is merely a convenience for UIs that need to monitor whether
        they're loaded yet */

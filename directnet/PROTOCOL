@@ -10,14 +10,39 @@ Nonlooping unrouted messages contain a parameter for the route that they have ta
 the current node, andy any other parameters.  Nonrepeating unrouted messages contain a parameter
 for the transmission key (so that they are not retransmitted), and any other necessary parameters.
 
+cjo(1)(1) (chat join
+        purpose: Join a chat
+        type: routed
+        parameters:
+                route
+                channel
+                local name
+
+clv(1)(1) (chat leave)
+        purpose: Leave a chat
+        type: routed
+        parameters:
+                route
+                channel
+                local name
+
 cms(1)(1) (chat message)
         purpose: Send a message on a chat channel
-        type: nonrepeating unrouted
+        type: routed
         parameters:
+                route
                 transmission key
                 channel
                 local name
                 unencrypted message
+
+con(1)(1) (chat on)
+        purpose: Echo to cjo
+        type: routed
+        parameters:
+                route
+                channel
+                local name
 
 dcr(1)(1) (direct connect request)
         purpose: Attempt to directly connect to a remote user (also causes a dce)

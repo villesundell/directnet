@@ -18,22 +18,19 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_CONNECTION_H
-#define DN_CONNECTION_H
+#ifndef DN_CHAT_H
+#define DN_CHAT_H
 
-void establishConnection(char *to);
-int sendMsg(char *to, char *msg);
-void sendFnd(char *to);
-void joinChat(char *chat);
-void leaveChat(char *chat);
-void sendChat(char *to, char *msg);
+#include "lock.h"
 
-void buildCmd(char *into, char *command, char vera, char verb, char *param);
-void addParam(char *into, char *newparam);
-void sendCmd(int fdnum, char *buf);
-int handleRoutedMsg(char *command, char vera, char verb, char **params);
-void emitUnroutedMsg(int fromfd, char *outbuf);
+extern struct hashKeyS **dn_chats;
+extern DN_LOCK dn_chat_lock;
 
-void *communicator(void *fdnum_voidptr);
+char chatOnChannel(const char *channel);
+void chatAddUser(const char *channel, const char *name);
+void chatRemUser(const char *channel, const char *name);
+char **chatUsers(const char *channel);
+void chatJoin(const char *channel);
+void chatLeave(const char *channel);
 
-#endif // DN_CONNECTION_H
+#endif

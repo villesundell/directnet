@@ -10,7 +10,8 @@ else
 bin_PROGRAMS=directnet
 endif
 
-directnet_SOURCES=client.c \
+directnet_SOURCES=chat.c \
+client.c \
 connection.c \
 directnet.c \
 hash.c \
@@ -32,7 +33,8 @@ else
 bin_PROGRAMS=directnetd
 endif
 
-directnetd_SOURCES=client.c \
+directnetd_SOURCES=chat.c \
+client.c \
 connection.c \
 directnet.c \
 hash.c \
@@ -49,7 +51,8 @@ endif
 
 if MAKE_HUB
 
-directnethub_SOURCES=client.c \
+directnethub_SOURCES=chat.c \
+client.c \
 connection.c \
 directnet.c \
 hash.c \
