@@ -8,6 +8,9 @@ It should allow you to compile on most platforms.
 GNU/Linux:
 The Makefile was made for GNU/Linux, just 'make'
 
+AIX (AIX cc):
+make all CC=cc CFLAGS_ALL="-qcpluscmt -DAIX"
+
 HPUX (ansi c):
 NOTE: this will compile with ANSI C, but NOT ANSI C++!!!
 make all CC=cc CFLAGS_ALL=""

@@ -352,14 +352,27 @@ void handleMsg(char *inbuf, int fdnum)
         }
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
+#ifndef AIX
         char route[strlen(params[0])+2];
+#else
+        char *route;
+#endif
         
         REQ_PARAMS(2);
+        
+#ifdef AIX
+        route = (char *) malloc((strlen(params[0])+2) * sizeof(char));
+#endif
         
         hashSet(dn_fds, params[0], fdnum);
         
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
+        dn_route_by_num[fdnum] = hashSGet(dn_routes, params[0]);
+        
+#ifdef AIX
+        free(route);
+#endif
         
         gpgImportKey(params[1]);
         
