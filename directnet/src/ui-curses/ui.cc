@@ -32,11 +32,33 @@ extern "C" {
 #include <unistd.h>
 }
 
+#include "Message.h"
+#include "DisplayWindow.h" 
+#include "StatusWindow.h"
+#include "InputWindow.h"
+
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
+    // Enter curses mode
     initscr();
-    addstr("Hello World!\n");
-    refresh();
+    // noecho()  // For when we do our own character input handling
+    cbreak(); 
+   
+    // Get the screen dimensions.  Probably this should all move into a "screen" object.
+    int max_y, max_x; // in curses, y is always first, so get used to it. 
+    getmaxyx(stdscr, max_y, max_x);
+    DisplayWindow displayWin(max_y -5, max_x);
+    StatusWindow statusWin(max_x, max_y-4); 
+    InputWindow inputWin(3, max_x, max_y-3); 
+    
+    string sbuf = "Enter your nickname"; 
+    displayWin.displayMsg(sbuf); 
+    sbuf = inputWin.getInput();
+    statusWin.setNick(sbuf); 
+    sbuf = "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat."; 
+    displayWin.displayMsg(sbuf); 
+    
+    //
     sleep(5);
     endwin();
     return 0;
