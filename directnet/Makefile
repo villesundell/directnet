@@ -15,8 +15,8 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 CC=gcc
-CFLAGS=-Wall
-LIBS=-lpthread
+CFLAGS_ALL=$(CFLAGS) -Wall
+LIBS=$(LDFLAGS) -lpthread
 
 OBJS=client.o \
 connection.o \
@@ -30,7 +30,7 @@ all: directnet
 
 directnet: $(OBJS)
 	rm -fr directnet
-	$(CC) $(CFLAGS) $(LIBS) $(OBJS) -o $@
+	$(CC) $(CFLAGS_ALL) $(LIBS) $(OBJS) -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -55,4 +55,4 @@ macosx:
 	$(MAKE) directnet CFLAGS="-DMACOSX"
 
 solaris:
-	$(MAKE) directnet CFLAGS="-lsocket -lnsl"
+	$(MAKE) directnet LDFLAGS="-lsocket -lnsl"
