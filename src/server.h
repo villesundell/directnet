@@ -23,6 +23,6 @@
 
 #include <pthread.h>
 
-pthread_t establishServer();
+pthread_t *establishServer();
 
 #endif // DN_SERVER_H

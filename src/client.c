@@ -18,15 +18,20 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef WIN32
 #include <arpa/inet.h>
-#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#else
+#include <winsock.h>
+#endif
+
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 
 #include "connection.h"
 #include "directnet.h"
@@ -95,7 +100,8 @@ int establishClient(char *destination)
     onfd_ptr = malloc(sizeof(int));
     *onfd_ptr = curfd;
     pthread_attr_init(&ptattr);
-    pthreadres = pthread_create(&pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
+    pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
+    pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
 
     onpthread++;
     
