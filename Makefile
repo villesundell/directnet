@@ -21,7 +21,7 @@ LIBS=-lpthread
 OBJS=client.o \
 connection.o \
 directnet.o \
-gpg.o \
+gpg-fake.o \
 hash.o \
 server.o \
 ui.o
