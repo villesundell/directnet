@@ -1,0 +1,3 @@
+The following files are generated, and should not be edited by hand:
+aclocal.m4 autom4te.cache/ config.h config.h.in configure
+All files named 'Makefile.in' or 'Makefile'
