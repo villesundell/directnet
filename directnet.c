@@ -37,6 +37,7 @@ char dn_name[1024];
 struct hashKey **dn_fds;
 struct hashKeyS **dn_routes;
 struct hashKey **dn_trans_keys;
+int currentTransKey;
 
 /*void sigchld_handler(int s)
 {
@@ -91,4 +92,10 @@ char *findHome(char **envp)
     
     fprintf(stderr, "Couldn't find your HOME directory.\n");
     exit(-1);
+}
+
+void newTransKey(char *into)
+{
+    sprintf(into, "%s%d", dn_name, currentTransKey);
+    hashSet(dn_trans_keys, into, 1);
 }

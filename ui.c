@@ -91,6 +91,21 @@ int handleUInput(char *inp)
             return 0;
         }
         establishClient(params[1]);
+    } else if (!strncmp(params[0], "find", 4)) {
+        char outbuf[65536], newtkey[256];
+        
+        if (params[1] == NULL) {
+            return 0;
+        }
+        
+        newTransKey(newtkey);
+        buildCmd(outbuf, "fnd", 1, 1, newtkey);
+        addParam(outbuf, dn_name);
+        addParam(outbuf, params[1]);
+        addParam(outbuf, "");
+        addParam(outbuf, gpgExportKey());
+        
+        emitUnroutedMsg(-1, outbuf);
     } else if (!strncmp(params[0], "say", 3)) {
         char *outparams[50], *route;
         
