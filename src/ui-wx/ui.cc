@@ -26,6 +26,10 @@
 
 #include "wx/wx.h" 
 
+#ifdef __WXX11__
+#include "gtk.hh"
+#endif
+
 class MyApp: public wxApp
 {
     virtual bool OnInit();
