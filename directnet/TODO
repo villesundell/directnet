@@ -1,15 +1,12 @@
-Todo by ALPHA 0.3:
-x Separate UI and connection code properly
-x dcr in UI
-
 Todo by ALPHA 0.4:
-One non-dumb UI
+x One non-dumb UI (FLTK)
+Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
+Away (simple autoresponse)
 
 Todo ... sometime:
 Transfer files
 Another non-dumb UI
 Buddy list (sorta)
-Chat rooms (sorta)
 Generic service commands (video chat, audio chat, etc through external programs)
 
 
