@@ -78,6 +78,7 @@ void *communicator(void *fdnum_voidptr)
             if (name != NULL) {
                 uiLoseConn(name);
                 hashSDelKey(dn_routes, name);
+                hashSet(dn_fds, name, -1);
             }
             
             close(fds[fdnum]);
@@ -267,7 +268,6 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 // Add his route,
                 hashSSet(dn_routes, params[1], reverseRoute);
-                dn_route_by_num[fdnum] = hashSGet(dn_routes, params[1]);
             
                 // and public key,
                 gpgImportKey(params[3]);
@@ -398,7 +398,6 @@ void handleMsg(char *inbuf, int fdnum)
             
             // And add an intermediate route
             hashSSet(dn_iRoutes, endu, params[0]);
-            printf("Intermediate route to %s:\n%s\n\n", endu, params[0]);
             
             // Then figure out the route from here back
             /*i = strncpy(myn, dn_name, 256);
@@ -431,7 +430,6 @@ void handleMsg(char *inbuf, int fdnum)
             
             // And add that route
             hashSSet(dn_iRoutes, params[1], newroute);
-            printf("Intermediate route to %s:\n%s\n\n", params[1], newroute);
         } else {
             char newroute[32256];
             int ostrlen;
@@ -471,7 +469,6 @@ void handleMsg(char *inbuf, int fdnum)
         
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
-        dn_route_by_num[fdnum] = hashSGet(dn_routes, params[0]);
         
 #ifdef AIX
         free(route);
@@ -480,6 +477,11 @@ void handleMsg(char *inbuf, int fdnum)
         gpgImportKey(params[1]);
         
         uiEstRoute(params[0]);
+    } else if (!strncmp(command, "lst", 3) &&
+               inbuf[3] == 1 && inbuf[4] == 1) {
+        REQ_PARAMS(2);
+        
+        uiLoseRoute(params[1]);
     } else if (!strncmp(command, "msg", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         REQ_PARAMS(3);
@@ -508,6 +510,36 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
     sendfd = hashGet(dn_fds, params[0]);
         
     if (sendfd == -1) {
+        // We need to tell the other side that this route is dead!
+        if (strncmp(command, "lst", 3)) {
+            char *newparams[50], *endu, *iroute;
+            // Bouncing a lost could end up in an infinite loop, so don't
+            
+            // Fix our params[0]
+            for (i = 0; params[0][i] != '\0'; i++);
+            params[0][i] = '\n';
+            
+            // Who's the end user?
+            params[0][strlen(params[0])-1] = '\0';
+            
+            for (i = strlen(params[0])-1; params[0][i] != '\n'; i--);
+            endu = params[0]+i+1;
+            
+            // If this is me, don't send the command, just display it
+            if (!strncmp(params[1], dn_name, 24)) {
+                uiLoseRoute(endu);
+            } else {
+                // Do we have an intermediate route?
+                iroute = hashSGet(dn_iRoutes, params[1]);
+                if (iroute == NULL) return 0;
+            
+                // Send the command
+                newparams[0] = iroute;
+                newparams[1] = endu;
+                handleRoutedMsg("lst", 1, 1, newparams);
+            }
+        }
+        
         return 0;
     }
     

@@ -51,7 +51,6 @@ char dn_name[1024];
 struct hashKey **dn_fds;
 
 struct hashKeyS **dn_routes;
-char *dn_route_by_num[1024];
 struct hashKeyS **dn_iRoutes;
 
 struct hashKey **dn_trans_keys;
@@ -108,8 +107,6 @@ int main(int argc, char **argv, char **envp)
     
     // This stores routes by name
     dn_routes = hashSCreate(1024);
-    // And routes by number
-    memset(dn_route_by_num, 0, 1024 * sizeof(char *));
     // This stores intermediate routes, for response on broken routes
     dn_iRoutes = hashSCreate(1024);
     
