@@ -48,6 +48,9 @@ help:
 
 gnulinux: directnet
 
+aix:
+	$(MAKE) directnet CC=cc CFLAGS_ALL="-qcpluscmt -DAIX"
+
 hpux:
 	$(MAKE) directnet CC=cc CFLAGS_ALL=""
 

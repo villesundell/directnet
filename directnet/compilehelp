@@ -6,6 +6,7 @@ A default 'make' should work on GNU/Linux and HPUX (with GNU make and GNU cc).
 
 Supported platforms:
 gnulinux
+aix
 hpux
 hpux-gcc
 macosx
