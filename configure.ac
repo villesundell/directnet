@@ -77,7 +77,7 @@ fi
 
 if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
-        AM_PATH_FLTK(1.1, fltk=1)
+        AMX_PATH_FLTK([1.1], [fltk=1])
 
         if test "x$fltk" != x1
         then
