@@ -1,7 +1,28 @@
 /*
+ * Copyright 2004 Gregor Richards
+ *
+ * This file is part of DirectNet.
+ *
+ *    DirectNet is free software; you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation; either version 2 of the License, or
+ *    (at your option) any later version.
+ *
+ *    DirectNet is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with DirectNet; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+/*
  * hworld.cpp
  * Hello world sample by Robert Roebling
  */
+/* The copyright on this code is uncertain, but it's only temporary, a placeholder */
 
 #include "wx/wx.h" 
 
@@ -12,7 +33,7 @@ class MyApp: public wxApp
 
 class MyFrame: public wxFrame
 {
-public:
+    public:
 
     MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
 
@@ -25,12 +46,12 @@ public:
 enum
 {
     ID_Quit = 1,
-    ID_About,
+        ID_About,
 };
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
-    EVT_MENU(ID_Quit, MyFrame::OnQuit)
-    EVT_MENU(ID_About, MyFrame::OnAbout)
+EVT_MENU(ID_Quit, MyFrame::OnQuit)
+EVT_MENU(ID_About, MyFrame::OnAbout)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP_NO_MAIN(MyApp)
@@ -69,7 +90,7 @@ void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxMessageBox("This is a wxWindows Hello world sample",
-        "About Hello World", wxOK | wxICON_INFORMATION, this);
+                 "About Hello World", wxOK | wxICON_INFORMATION, this);
 }
 
 extern "C" int uiInit(int argc, char **argv, char **envp)

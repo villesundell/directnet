@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Found some version of curses that we're going to use */
+#undef HAS_CURSES
+
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
@@ -96,6 +99,13 @@
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
+/* Set to reflect version of ncurses 0 = version 1.* 1 = version 1.9.9g 2 =
+   version 4.0/4.1 */
+#undef NCURSES_970530
+
+/* If you Curses does not have color define this one */
+#undef NO_COLOR_CURSES
+
 /* Name of package */
 #undef PACKAGE
 
@@ -121,8 +131,20 @@
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 
+/* Define if you want to turn on SCO-specific code */
+#undef SCO_FLAVOR
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Use Ncurses? */
+#undef USE_NCURSES
+
+/* Use SunOS SysV curses? */
+#undef USE_SUNOS_CURSES
+
+/* Use SystemV curses? */
+#undef USE_SYSV_CURSES
 
 /* Version number of package */
 #undef VERSION
