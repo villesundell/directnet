@@ -18,31 +18,15 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_DIRECTNET_H
-#define DN_DIRECTNET_H
+#ifndef DN_LOCK_H
+#define DN_LOCK_H
 
-#include <pthread.h>
+#define DN_LOCK sem_t
 
-#include "hash.h"
-#include "lock.h"
+#include <semaphore.h>
 
-extern int *fds, *pipe_fds, onfd, onpthread;
-extern pthread_t *pthreads;
+void dn_lockInit(DN_LOCK *lockVal);
+void dn_lock(DN_LOCK *lockVal);
+void dn_unlock(DN_LOCK *lockVal);
 
-extern DN_LOCK *pipe_locks;
-
-extern pthread_t *fnd_pthreads;
-extern char *weakRoutes[1024];
-
-extern char dn_name[1024];
-extern struct hashKey **dn_fds;
-
-extern struct hashKeyS **dn_routes;
-extern char *dn_route_by_num[1024];
-
-extern struct hashKey **dn_trans_keys;
-extern int currentTransKey;
-
-void newTransKey(char *into);
-
-#endif // DN_DIRECTNET_H
+#endif // DN_LOCK_H

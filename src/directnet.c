@@ -30,11 +30,15 @@
 #include "directnet.h"
 #include "gpg.h"
 #include "hash.h"
+#include "lock.h"
 #include "server.h"
 #include "ui.h"
 
-int *fds, onfd, onpthread;
+int *fds, *pipe_fds, onfd, onpthread;
 pthread_t *pthreads;
+
+int pipes[1024][2];
+DN_LOCK *pipe_locks;
 
 pthread_t *fnd_pthreads;
 char *weakRoutes[1024];
@@ -64,7 +68,12 @@ int main(int argc, char **argv, char **envp)
     
     // fds is an array containing every file descriptor.  fdnums are indexes into this array
     fds = (int *) malloc(1024 * sizeof(int));
+    // pipe_fds is an equivilant array for the output pipes that throttle bandwidth
+    pipe_fds = (int *) malloc(1024 * sizeof(int));
     onfd = 0;
+    
+    pipe_locks = (DN_LOCK *) malloc(1024 * sizeof(DN_LOCK));
+    memset(pipe_locks, 0, 1024 * sizeof(DN_LOCK));
     
     // pthreads is an array of every active connection's pthread_t
     pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
@@ -110,6 +119,11 @@ int main(int argc, char **argv, char **envp)
         pthreads[i] ? pthread_kill(pthreads[i], SIGTERM) : 0;
         //waitpid(pids[i], NULL, 0);
     }
+    
+    free(fds);
+    free(pipe_fds);
+    free(pthreads);
+    free(fnd_pthreads);
     
     pthread_exit(NULL);
     

@@ -54,21 +54,23 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__directnet_SOURCES_DIST = client.c connection.c directnet.c \
-	gpg-fake.c hash.c server.c
+	gpg-fake.c hash.c lock.c server.c
 @UI_CXX_FALSE@am_directnet_OBJECTS = directnet-client.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-connection.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-directnet.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-gpg-fake.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-hash.$(OBJEXT) \
+@UI_CXX_FALSE@	directnet-lock.$(OBJEXT) \
 @UI_CXX_FALSE@	directnet-server.$(OBJEXT)
 directnet_OBJECTS = $(am_directnet_OBJECTS)
 am__directnetx_SOURCES_DIST = client.c connection.c directnet.c \
-	gpg-fake.c hash.c server.c fake.cc
+	gpg-fake.c hash.c lock.c server.c fake.cc
 @UI_CXX_TRUE@am_directnetx_OBJECTS = directnetx-client.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-connection.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-directnet.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-gpg-fake.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-hash.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetx-lock.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetx-server.$(OBJEXT) fake.$(OBJEXT)
 directnetx_OBJECTS = $(am_directnetx_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -215,6 +217,7 @@ AM_LDFLAGS = @PTHREAD_LIBS@
 @UI_CXX_TRUE@directnet.c \
 @UI_CXX_TRUE@gpg-fake.c \
 @UI_CXX_TRUE@hash.c \
+@UI_CXX_TRUE@lock.c \
 @UI_CXX_TRUE@server.c \
 @UI_CXX_TRUE@fake.cc
 
@@ -227,6 +230,7 @@ AM_LDFLAGS = @PTHREAD_LIBS@
 @UI_CXX_FALSE@directnet.c \
 @UI_CXX_FALSE@gpg-fake.c \
 @UI_CXX_FALSE@hash.c \
+@UI_CXX_FALSE@lock.c \
 @UI_CXX_FALSE@server.c
 
 @UI_CXX_FALSE@directnet_CFLAGS = @UI_CFLAGS@
@@ -307,12 +311,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-gpg-fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-connection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-gpg-fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetx-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fake.Po@am__quote@
 
@@ -400,6 +406,20 @@ directnet-hash.obj: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
 
+directnet-lock.o: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-lock.o -MD -MP -MF "$(DEPDIR)/directnet-lock.Tpo" -c -o directnet-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-lock.Tpo" "$(DEPDIR)/directnet-lock.Po"; else rm -f "$(DEPDIR)/directnet-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnet-lock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
+
+directnet-lock.obj: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-lock.obj -MD -MP -MF "$(DEPDIR)/directnet-lock.Tpo" -c -o directnet-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-lock.Tpo" "$(DEPDIR)/directnet-lock.Po"; else rm -f "$(DEPDIR)/directnet-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnet-lock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
+
 directnet-server.o: server.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-server.o -MD -MP -MF "$(DEPDIR)/directnet-server.Tpo" -c -o directnet-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-server.Tpo" "$(DEPDIR)/directnet-server.Po"; else rm -f "$(DEPDIR)/directnet-server.Tpo"; exit 1; fi
@@ -483,6 +503,20 @@ directnetx-hash.obj: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetx-hash.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -c -o directnetx-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
+
+directnetx-lock.o: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -MT directnetx-lock.o -MD -MP -MF "$(DEPDIR)/directnetx-lock.Tpo" -c -o directnetx-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetx-lock.Tpo" "$(DEPDIR)/directnetx-lock.Po"; else rm -f "$(DEPDIR)/directnetx-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetx-lock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -c -o directnetx-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
+
+directnetx-lock.obj: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -MT directnetx-lock.obj -MD -MP -MF "$(DEPDIR)/directnetx-lock.Tpo" -c -o directnetx-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetx-lock.Tpo" "$(DEPDIR)/directnetx-lock.Po"; else rm -f "$(DEPDIR)/directnetx-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetx-lock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -c -o directnetx-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
 
 directnetx-server.o: server.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetx_CFLAGS) $(CFLAGS) -MT directnetx-server.o -MD -MP -MF "$(DEPDIR)/directnetx-server.Tpo" -c -o directnetx-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
