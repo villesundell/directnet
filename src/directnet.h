@@ -38,6 +38,7 @@ extern struct hashKeyP **recFndPthreads; // And the pthreads themselves
 extern struct hashKeyS **weakRoutes; // List of weak routes
 
 extern char dn_name[DN_NAME_LEN];
+extern char dn_name_set;
 extern struct hashKey **dn_fds;
 
 extern struct hashKeyS **dn_routes;

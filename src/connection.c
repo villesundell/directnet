@@ -49,7 +49,8 @@ void *communicator(void *fdnum_voidptr)
     
     dn_lockInit(pipe_locks+fdnum);
     
-    // Immediately send our key
+    // Immediately send our name and key unless it's not set
+    while (!dn_name_set) sleep(0);
     buildCmd(buf, "key", 1, 1, dn_name);
     addParam(buf, gpgExportKey());
     sendCmd(fdnum, buf);
