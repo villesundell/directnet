@@ -55,7 +55,8 @@ AR = ar
 ARFLAGS = cru
 libui_a_AR = $(AR) $(ARFLAGS)
 libui_a_LIBADD =
-am_libui_a_OBJECTS = BuddyWindow.$(OBJEXT) ui.$(OBJEXT)
+am_libui_a_OBJECTS = BuddyWindow.$(OBJEXT) ChatWindow.$(OBJEXT) \
+	ui.$(OBJEXT)
 libui_a_OBJECTS = $(am_libui_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -195,6 +196,7 @@ AM_CXXFLAGS = @UI_CFLAGS@ -I..
 AM_LDFLAGS = @UI_LDFLAGS@
 noinst_LIBRARIES = libui.a
 libui_a_SOURCES = BuddyWindow.cc \
+ChatWindow.cc \
 ui.cc
 
 all: all-am
@@ -245,6 +247,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuddyWindow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ChatWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ui.Po@am__quote@
 
 .cc.o:
