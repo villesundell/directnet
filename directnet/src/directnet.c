@@ -93,6 +93,7 @@ int main(int argc, char **argv, char **envp)
     
     // fds is an array containing every file descriptor.  fdnums are indexes into this array
     fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));
+    memset(fds, 0, DN_MAX_CONNS * sizeof(int));
     // pipe_fds is an equivilant array for the output pipes that throttle bandwidth
     pipe_fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));
     onfd = 0;
