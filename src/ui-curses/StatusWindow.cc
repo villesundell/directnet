@@ -30,31 +30,52 @@ extern "C" {
 #include <string>
 using std::string;
 
-#include "InputWindow.h" 
+#include "StatusWindow.h" 
 
-
-InputWindow::InputWindow(int nLines, int nCols, int orig_y) 
+StatusWindow::StatusWindow(int cols, int row_anchor)
 {
-    win = newwin(nLines, nCols, orig_y, 0); 
-    scrollok(win, TRUE);
+    win = newwin( 1, cols, row_anchor, 0); 
+    cur_nick=""; 
+    cur_target=""; 
 }
 
-InputWindow::~InputWindow()
-{
-    delwin(win);
+StatusWindow::~StatusWindow() { 
+    delwin(win); 
 }
 
-string InputWindow::getInput() 
-{ 
-    char buf[8192]; 
-    wclear(win);  
-    wmove(win, 0,0);
-    wrefresh(win);
-    wgetnstr(win, buf, 8192); 
-    wclear(win); 
-    wmove(win, 0,0);
-    wrefresh(win); 
+StatusWindow::setNick(string s) 
+{
+    cur_nick=s;
+}
+
+void StatusWindow::setTarget(string s) 
+{
+    cur_target=s;
+}
+
+void string StatusWindow::getNick()
+{
+    return cur_nick;
+}
+
+string StatusWindow::getTarget()
+{
+    return cur_target;
+}
+
+void StatusWindow::redrawStatus()
+{
+    int y, x;  
     
-    string input(buf); 
-    return input;
+    getsyx( y,x);  // save cursor position so we can put it back
+    wmove (win, 0, 0); 
+    
+    string buf = "---(" + cur_target + ")"; 
+    for (int i = buf.length(); i < cols; i++) { 
+        buf += "-"; 
+    }
+    wprintw (win, "%s", buf.c_str()); 
+    wnoutrefresh(win); 
+    setsyx( y, x); 
+    doupdate(); 
 }

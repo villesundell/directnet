@@ -32,7 +32,7 @@ extern "C" {
 #include <unistd.h>
 }
 
-#include "Message.h"
+// #include "Message.h"
 #include "DisplayWindow.h" 
 #include "StatusWindow.h"
 #include "InputWindow.h"
