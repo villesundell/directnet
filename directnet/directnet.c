@@ -35,7 +35,6 @@ int *fds, onfd, onpthread;
 pthread_t *pthreads;
 
 pthread_t *fnd_pthreads;
-char *fnd_locks;
 char *weakRoutes[1024];
 
 char dn_name[1024];
