@@ -382,20 +382,23 @@ void handleMsg(char *inbuf, int fdnum)
         handleit = handleRoutedMsg(command, inbuf[3], inbuf[4], params);
         
         if (!handleit) {
-            // Don't continue the route, but do add intermediate routes
-            int i;
-            char *newroute, *endu, myn[256];
+            // This isn't our route, but do add intermediate routes
+            int i, ostrlen;
+            char endu[256], myn[256], newroute[32256];
             char checknext, usenext;
             
-            // Figure out the route from here to the end user
-            for (i = 0; params[0][i] != '\n'; i++);
-            newroute = params[0]+i+1;
+            // Fix our pararms[0]
+            for (i = 0; params[0][i] != '\0'; i++);
+            params[0][i] = '\n';
             
-            for (i = strlen(params[0])-2; params[0][i] != '\n'; i--);
-            endu = params[0]+i+1;
+            // Who's the end user?
+            for (i = strlen(params[0])-2; params[0][i] != '\n' && params[0][i] != '\0' && i >= 0; i--);
+            strncpy(endu, params[0]+i+1, 256);
+            endu[strlen(endu)-1] = '\0';
             
             // And add an intermediate route
-            hashSSet(dn_iRoutes, endu, newroute);
+            hashSSet(dn_iRoutes, endu, params[0]);
+            printf("Intermediate route to %s:\n%s\n\n", endu, params[0]);
             
             // Then figure out the route from here back
             /*i = strncpy(myn, dn_name, 256);
@@ -416,17 +419,19 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 if (params[2][i] == '\n') {
                     if (usenext) {
-                        newroute = params[2]+i+1;
+                        strncpy(newroute, params[2]+i+1, 32256);
                         break;
                     }
+                    checknext = 1;
                 }
             }
             
-            for (i = strlen(params[2])-2; params[2][i] != '\n'; i--);
-            endu = params[2]+i+1;
+            ostrlen = strlen(newroute);
+            strncpy(newroute+ostrlen, params[1], 32256-ostrlen);
             
             // And add that route
-            hashSSet(dn_iRoutes, endu, newroute);
+            hashSSet(dn_iRoutes, params[1], newroute);
+            printf("Intermediate route to %s:\n%s\n\n", params[1], newroute);
         } else {
             char newroute[32256];
             int ostrlen;
