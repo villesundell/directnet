@@ -1,0 +1,23 @@
+This is DirectNet, the serverless instant messaging system.
+
+NOTE: THIS VERSION DOES NOT SUPPORT ENCRYPTION!  ALL MESSAGES TRANSMITTED ARE SENT IN CLEAR TEXT
+TO ANYONE IN YOUR ROUTE ON THE NETWORK!
+
+Here's a quick overview of the commands:
+
+connect <host>
+        Connect to another user running DirectNet by hostname or IP address, and establish a route
+       to the user.
+        Example: connect 192.168.1.1
+
+say <name> <message>
+        Send a message to a user that you've established a route with.
+        Example: say Gregor Hello!
+
+find <name>
+        Establish a route to someone you don't have a direct connection to.
+        Example: find Gregor
+
+
+If that's not enough, wait for a future version of the client - this is, after all, an alpha
+release.
