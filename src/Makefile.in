@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-SOURCES = $(directnet_SOURCES) $(directnetd_SOURCES)
+SOURCES = $(directnet_SOURCES) $(directnetd_SOURCES) $(directnethub_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -38,8 +38,12 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@UI_CXX_FALSE@bin_PROGRAMS = directnetd$(EXEEXT)
-@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT)
+@MAKE_HUB_FALSE@@UI_CXX_FALSE@bin_PROGRAMS = directnetd$(EXEEXT)
+@MAKE_HUB_FALSE@@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT)
+@MAKE_HUB_TRUE@@UI_CXX_FALSE@bin_PROGRAMS = directnetd$(EXEEXT) \
+@MAKE_HUB_TRUE@@UI_CXX_FALSE@	directnethub$(EXEEXT)
+@MAKE_HUB_TRUE@@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT) \
+@MAKE_HUB_TRUE@@UI_CXX_TRUE@	directnethub$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -73,6 +77,16 @@ am__directnetd_SOURCES_DIST = client.c connection.c directnet.c hash.c \
 @UI_CXX_FALSE@	directnetd-lock.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetd-server.$(OBJEXT)
 directnetd_OBJECTS = $(am_directnetd_OBJECTS)
+am__directnethub_SOURCES_DIST = client.c connection.c directnet.c \
+	hash.c lock.c server.c
+@MAKE_HUB_TRUE@am_directnethub_OBJECTS =  \
+@MAKE_HUB_TRUE@	directnethub-client.$(OBJEXT) \
+@MAKE_HUB_TRUE@	directnethub-connection.$(OBJEXT) \
+@MAKE_HUB_TRUE@	directnethub-directnet.$(OBJEXT) \
+@MAKE_HUB_TRUE@	directnethub-hash.$(OBJEXT) \
+@MAKE_HUB_TRUE@	directnethub-lock.$(OBJEXT) \
+@MAKE_HUB_TRUE@	directnethub-server.$(OBJEXT)
+directnethub_OBJECTS = $(am_directnethub_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
 am__depfiles_maybe = depfiles
@@ -85,9 +99,11 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(directnet_SOURCES) $(directnetd_SOURCES)
+SOURCES = $(directnet_SOURCES) $(directnetd_SOURCES) \
+	$(directnethub_SOURCES)
 DIST_SOURCES = $(am__directnet_SOURCES_DIST) \
-	$(am__directnetd_SOURCES_DIST)
+	$(am__directnetd_SOURCES_DIST) \
+	$(am__directnethub_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -133,6 +149,8 @@ EXEEXT = @EXEEXT@
 FLTK_CFLAGS = @FLTK_CFLAGS@
 FLTK_CONFIG = @FLTK_CONFIG@
 FLTK_LIBS = @FLTK_LIBS@
+HUB_DIR = @HUB_DIR@
+HUB_NAME = @HUB_NAME@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -142,6 +160,8 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MAKE_HUB_FALSE = @MAKE_HUB_FALSE@
+MAKE_HUB_TRUE = @MAKE_HUB_TRUE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -219,7 +239,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = @UI_DIR@ @ENC_DIR@
+SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@
 @UI_CXX_TRUE@directnet_SOURCES = client.c \
 @UI_CXX_TRUE@connection.c \
 @UI_CXX_TRUE@directnet.c \
@@ -244,6 +264,17 @@ SUBDIRS = @UI_DIR@ @ENC_DIR@
 @UI_CXX_FALSE@directnetd_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
 @UI_CXX_FALSE@directnetd_DEPENDENCIES = @UI_DIR@/libui.a @ENC_DIR@/libenc.a
 @UI_CXX_FALSE@directnetd_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+@MAKE_HUB_TRUE@directnethub_SOURCES = client.c \
+@MAKE_HUB_TRUE@connection.c \
+@MAKE_HUB_TRUE@directnet.c \
+@MAKE_HUB_TRUE@hash.c \
+@MAKE_HUB_TRUE@lock.c \
+@MAKE_HUB_TRUE@server.c
+
+@MAKE_HUB_TRUE@directnethub_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@
+@MAKE_HUB_TRUE@directnethub_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@
+@MAKE_HUB_TRUE@directnethub_DEPENDENCIES = @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a
+@MAKE_HUB_TRUE@directnethub_LDADD = @PTHREAD_LIBS@ @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a @ENC_LIBS@
 all: all-recursive
 
 .SUFFIXES:
@@ -306,6 +337,9 @@ directnet$(EXEEXT): $(directnet_OBJECTS) $(directnet_DEPENDENCIES)
 directnetd$(EXEEXT): $(directnetd_OBJECTS) $(directnetd_DEPENDENCIES) 
 	@rm -f directnetd$(EXEEXT)
 	$(LINK) $(directnetd_LDFLAGS) $(directnetd_OBJECTS) $(directnetd_LDADD) $(LIBS)
+directnethub$(EXEEXT): $(directnethub_OBJECTS) $(directnethub_DEPENDENCIES) 
+	@rm -f directnethub$(EXEEXT)
+	$(LINK) $(directnethub_LDFLAGS) $(directnethub_OBJECTS) $(directnethub_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -326,6 +360,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-hash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-connection.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-directnet.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-lock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-server.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -508,6 +548,90 @@ directnetd-server.obj: server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetd-server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
+
+directnethub-client.o: client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-client.o -MD -MP -MF "$(DEPDIR)/directnethub-client.Tpo" -c -o directnethub-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-client.Tpo" "$(DEPDIR)/directnethub-client.Po"; else rm -f "$(DEPDIR)/directnethub-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnethub-client.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+
+directnethub-client.obj: client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-client.obj -MD -MP -MF "$(DEPDIR)/directnethub-client.Tpo" -c -o directnethub-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-client.Tpo" "$(DEPDIR)/directnethub-client.Po"; else rm -f "$(DEPDIR)/directnethub-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnethub-client.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
+
+directnethub-connection.o: connection.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-connection.o -MD -MP -MF "$(DEPDIR)/directnethub-connection.Tpo" -c -o directnethub-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-connection.Tpo" "$(DEPDIR)/directnethub-connection.Po"; else rm -f "$(DEPDIR)/directnethub-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnethub-connection.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c
+
+directnethub-connection.obj: connection.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-connection.obj -MD -MP -MF "$(DEPDIR)/directnethub-connection.Tpo" -c -o directnethub-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-connection.Tpo" "$(DEPDIR)/directnethub-connection.Po"; else rm -f "$(DEPDIR)/directnethub-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnethub-connection.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`
+
+directnethub-directnet.o: directnet.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-directnet.o -MD -MP -MF "$(DEPDIR)/directnethub-directnet.Tpo" -c -o directnethub-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-directnet.Tpo" "$(DEPDIR)/directnethub-directnet.Po"; else rm -f "$(DEPDIR)/directnethub-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnethub-directnet.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
+
+directnethub-directnet.obj: directnet.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-directnet.obj -MD -MP -MF "$(DEPDIR)/directnethub-directnet.Tpo" -c -o directnethub-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-directnet.Tpo" "$(DEPDIR)/directnethub-directnet.Po"; else rm -f "$(DEPDIR)/directnethub-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnethub-directnet.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
+
+directnethub-hash.o: hash.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-hash.o -MD -MP -MF "$(DEPDIR)/directnethub-hash.Tpo" -c -o directnethub-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-hash.Tpo" "$(DEPDIR)/directnethub-hash.Po"; else rm -f "$(DEPDIR)/directnethub-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnethub-hash.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+
+directnethub-hash.obj: hash.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-hash.obj -MD -MP -MF "$(DEPDIR)/directnethub-hash.Tpo" -c -o directnethub-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-hash.Tpo" "$(DEPDIR)/directnethub-hash.Po"; else rm -f "$(DEPDIR)/directnethub-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnethub-hash.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
+
+directnethub-lock.o: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-lock.o -MD -MP -MF "$(DEPDIR)/directnethub-lock.Tpo" -c -o directnethub-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-lock.Tpo" "$(DEPDIR)/directnethub-lock.Po"; else rm -f "$(DEPDIR)/directnethub-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnethub-lock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
+
+directnethub-lock.obj: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-lock.obj -MD -MP -MF "$(DEPDIR)/directnethub-lock.Tpo" -c -o directnethub-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-lock.Tpo" "$(DEPDIR)/directnethub-lock.Po"; else rm -f "$(DEPDIR)/directnethub-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnethub-lock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
+
+directnethub-server.o: server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-server.o -MD -MP -MF "$(DEPDIR)/directnethub-server.Tpo" -c -o directnethub-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-server.Tpo" "$(DEPDIR)/directnethub-server.Po"; else rm -f "$(DEPDIR)/directnethub-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnethub-server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
+
+directnethub-server.obj: server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-server.obj -MD -MP -MF "$(DEPDIR)/directnethub-server.Tpo" -c -o directnethub-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-server.Tpo" "$(DEPDIR)/directnethub-server.Po"; else rm -f "$(DEPDIR)/directnethub-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnethub-server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

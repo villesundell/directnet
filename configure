@@ -311,7 +311,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB build build_cpu build_vendor build_os host host_cpu host_vendor host_os acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS WX_CONFIG_PATH WX_CPPFLAGS WX_CFLAGS WX_CXXFLAGS WX_CFLAGS_ONLY WX_CXXFLAGS_ONLY WX_LIBS WX_LIBS_STATIC WX_VERSION CURSES_LIBS CURSES_INCLUDEDIR EGREP READLINE_LIBS READLINE_INCLUDES UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB build build_cpu build_vendor build_os host host_cpu host_vendor host_os acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS WX_CONFIG_PATH WX_CPPFLAGS WX_CFLAGS WX_CXXFLAGS WX_CFLAGS_ONLY WX_CXXFLAGS_ONLY WX_LIBS WX_LIBS_STATIC WX_VERSION CURSES_LIBS CURSES_INCLUDEDIR EGREP READLINE_LIBS READLINE_INCLUDES UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE HUB_NAME HUB_DIR MAKE_HUB_TRUE MAKE_HUB_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -863,8 +863,10 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
-  --enable-ui=dumb
+  --enable-ui[=dumb]
                 set the UI (currently the only UI is "dumb")
+  --enable-hub=name
+                enable hub mode - name is the name of the hub "user"
   --enable-enc=fake
                 set the encryption (currently the only encryption is "fake")
 
@@ -1783,7 +1785,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
           ac_config_headers="$ac_config_headers config.h"
 
 
-                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-wx/Makefile"
+                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-wx/Makefile"
 
 
 # Checks for programs.
@@ -5321,7 +5323,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5324 "configure"
+#line 5326 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
@@ -5540,6 +5542,36 @@ if test "x$UI_CXX" = "xtrue"; then
 else
   UI_CXX_TRUE='#'
   UI_CXX_FALSE=
+fi
+
+
+
+# Check if we should enable the hub
+# Check whether --enable-hub or --disable-hub was given.
+if test "${enable_hub+set}" = set; then
+  enableval="$enable_hub"
+  HUB_NAME=$enableval
+else
+  HUB_NAME=no
+fi;
+
+if test "x$HUB_NAME" != "xno"
+then
+        HUB_DIR=hub
+else
+        HUB_DIR=
+fi
+
+
+
+
+
+if test "x$hub" != "xno"; then
+  MAKE_HUB_TRUE=
+  MAKE_HUB_FALSE='#'
+else
+  MAKE_HUB_TRUE='#'
+  MAKE_HUB_FALSE=
 fi
 
 
@@ -7304,6 +7336,13 @@ echo "$as_me: error: conditional \"UI_CXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${MAKE_HUB_TRUE}" && test -z "${MAKE_HUB_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"MAKE_HUB\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"MAKE_HUB\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 : ${CONFIG_STATUS=./config.status}
 ac_clean_files_save=$ac_clean_files
@@ -7752,6 +7791,7 @@ do
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/enc-fake/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-fake/Makefile" ;;
   "src/enc-gpg/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-gpg/Makefile" ;;
+  "src/hub/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/hub/Makefile" ;;
   "src/ui-curses/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-curses/Makefile" ;;
   "src/ui-dumb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
   "src/ui-fltk/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-fltk/Makefile" ;;
@@ -7927,6 +7967,10 @@ s,@UI_LDFLAGS@,$UI_LDFLAGS,;t t
 s,@UI_DIR@,$UI_DIR,;t t
 s,@UI_CXX_TRUE@,$UI_CXX_TRUE,;t t
 s,@UI_CXX_FALSE@,$UI_CXX_FALSE,;t t
+s,@HUB_NAME@,$HUB_NAME,;t t
+s,@HUB_DIR@,$HUB_DIR,;t t
+s,@MAKE_HUB_TRUE@,$MAKE_HUB_TRUE,;t t
+s,@MAKE_HUB_FALSE@,$MAKE_HUB_FALSE,;t t
 s,@ENC_CFLAGS@,$ENC_CFLAGS,;t t
 s,@ENC_CPPFLAGS@,$ENC_CPPFLAGS,;t t
 s,@ENC_CXXFLAGS@,$ENC_CXXFLAGS,;t t
