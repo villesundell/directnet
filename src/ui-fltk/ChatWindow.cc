@@ -6,7 +6,7 @@ Fl_Double_Window* ChatWindow::make_window() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(360, 290, "User");
     w = o;
-    o->user_data((void*)(this));
+    o->callback((Fl_Callback*)closeChat, (void*)(this));
     { Fl_Input* o = textIn = new Fl_Input(0, 265, 360, 25);
       o->callback((Fl_Callback*)sendInput);
       o->when(FL_WHEN_ENTER_KEY);

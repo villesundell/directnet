@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005 Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -55,6 +55,8 @@ struct hashKeyS **dn_iRoutes;
 struct hashKey **dn_trans_keys;
 int currentTransKey;
 
+struct hashKey **dn_chats;
+
 char uiLoaded;
 DN_LOCK displayLock; // Only one thread writing at a time.
 
@@ -105,12 +107,18 @@ int main(int argc, char **argv, char **envp)
     dn_iRoutes = hashSCreate(DN_MAX_ROUTES);
     
     // This hash stores the state of all nonrepeating unrouted messages
-    /*dn_trans_keys = hashCreate(65536);
-    currentTransKey = 0;*/
+    dn_trans_keys = hashCreate(65536);
+    currentTransKey = 0;
+    
+    // This hash stores whether we're in certain chats
+    dn_chats = hashCreate(1024);
     
     /* Set uiLoaded to 0 - this is merely a convenience for UIs that need to monitor whether
        they're loaded yet */
     uiLoaded = 0;
+    
+    // Initialize the lock for output
+    dn_lockInit(&displayLock);
     
     // Establish the server
     serverPthread = establishServer();
@@ -159,4 +167,5 @@ void newTransKey(char *into)
 {
     sprintf(into, "%s%d", dn_name, currentTransKey);
     hashSet(dn_trans_keys, into, 1);
+    currentTransKey++;
 }
