@@ -37,8 +37,6 @@
 #include "server.h"
 #include "ui.h"
 
-#define DN_PORT 3336
-
 int server_sock;
 
 void *serverAcceptLoop(void *ignore);
@@ -69,7 +67,7 @@ pthread_t establishServer()
     }
     
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(DN_PORT);
+    addr.sin_port = htons(serv_port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     memset(&(addr.sin_zero), '\0', 8);
     

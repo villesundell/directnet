@@ -27,6 +27,8 @@
 #include "hash.h"
 #include "lock.h"
 
+extern int serv_port;
+
 extern int *fds, *pipe_fds, onfd, onpthread;
 extern pthread_t *pthreads;
 

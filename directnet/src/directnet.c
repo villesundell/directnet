@@ -35,6 +35,8 @@
 #include "server.h"
 #include "ui.h"
 
+int serv_port = 3336;
+
 int *fds, *pipe_fds, onfd, onpthread;
 pthread_t *pthreads;
 
@@ -69,10 +71,25 @@ int main(int argc, char **argv, char **envp)
     int i;
     
     if (argc >= 2) {
-        if (!strncmp(argv[1], "-v", 2)) {
-            printf("DirectNet version ALPHA 0.3\n");
-            exit(0);
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[1], "-v", 2)) {
+                printf("DirectNet version ALPHA 0.3\n");
+                exit(0);
+            } else if (!strncmp(argv[i], "-p", 2)) {
+                i++;
+                if (!argv[i]) {
+                    sprintf(stderr, "-p must have an argument\n");
+                    exit(1);
+                }
+                serv_port = atoi(argv[i]);
+            } else {
+                sprintf(stderr, "Use:\n%s [-v] [-p port]\n");
+                sprintf(stderr, "  -v: Display the version number and quit.\n");
+                sprintf(stderr, "  -p: Set the port to listen for connections on (default 3336).\n\n");
+                exit(1);
+            }
         }
+            
     }
     
     // fds is an array containing every file descriptor.  fdnums are indexes into this array
