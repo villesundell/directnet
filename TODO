@@ -1,8 +1,3 @@
-Todo by ALPHA 0.4:
-x One non-dumb UI (FLTK)
-x Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
-x Away (simple autoresponse)
-
 Todo by ALPHA 0.5:
 Another non-dumb UI
 Buddy list (sorta)
@@ -25,3 +20,8 @@ autoconf
 Separate UI and connection code properly
 dcr in UI
 Lost connection detection
+
+Todo by ALPHA 0.4:
+One non-dumb UI (FLTK)
+Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
+Away (simple autoresponse)
