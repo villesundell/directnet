@@ -46,7 +46,10 @@ extern struct hashKeyS **dn_iRoutes;
 extern struct hashKey **dn_trans_keys;
 extern int currentTransKey;
 
+extern struct hashKey **dn_chats;
+
 extern DN_LOCK displayLock;
+
 extern char uiLoaded;
 
 void newTransKey(char *into);

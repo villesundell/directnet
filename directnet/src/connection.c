@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005 Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -37,7 +37,7 @@
 
 void handleMsg(char *inbuf, int fdnum);
 int handleNLUnroutedMsg(char **params);
-//int handleNRUnroutedMsg(char **params);
+int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params);
 
 void *communicator(void *fdnum_voidptr)
 {
@@ -163,7 +163,20 @@ void handleMsg(char *inbuf, int fdnum)
     }
     
     // Current protocol commands
-    if ((!strncmp(command, "dcr", 3) &&
+    if ((!strncmp(command, "cms", 3) &&
+         inbuf[3] == 1 && inbuf[4] == 1)) {
+        REQ_PARAMS(4);
+        
+        // Before letting it continue, check if we're on the chat
+        if (hashGet(dn_chats, params[1]) != 1) {
+            return;
+        }
+        
+        if (handleNRUnroutedMsg(fdnum, command, inbuf[3], inbuf[4], params)) {
+            // Display the message
+            uiDispChatMsg(params[1], params[2], params[3]);
+        }
+    } else if ((!strncmp(command, "dcr", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) ||
         (!strncmp(command, "dce", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1)) {
@@ -594,15 +607,26 @@ int handleNLUnroutedMsg(char **params)
     return 1;
 }
 
-/*int handleNRUnroutedMsg(char **params)
+int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params)
 {
     // This part of handleUnroutedMsg decides whether to just delete it
     if (hashGet(dn_trans_keys, params[0]) == -1) {
+        char outbuf[DN_CMD_LEN];
+        int i;
+        
         hashSet(dn_trans_keys, params[0], 1);
+        
+        // Continue the transmission
+        buildCmd(outbuf, command, vera, verb, params[0]);
+        for (i = 1; params[i]; i++) {
+            addParam(outbuf, params[i]);
+        }
+        emitUnroutedMsg(fromfd, outbuf);
+        
         return 1;
     }
     return 0;
-}*/
+}
 
 void emitUnroutedMsg(int fromfd, char *outbuf)
 {
@@ -743,5 +767,30 @@ void sendFnd(char *to)
     addParam(outbuf, to);
     addParam(outbuf, gpgExportKey());
         
+    emitUnroutedMsg(-1, outbuf);
+}
+
+void joinChat(char *chat)
+{
+    hashSet(dn_chats, chat, 1);
+}
+
+void leaveChat(char *chat)
+{
+    hashSet(dn_chats, chat, -1);
+}
+
+void sendChat(char *to, char *msg)
+{
+    char outbuf[DN_CMD_LEN];
+    char key[DN_NAME_LEN + 10];
+    
+    // Build the output
+    newTransKey(key);
+    buildCmd(outbuf, "cms", 1, 1, key);
+    addParam(outbuf, to);
+    addParam(outbuf, dn_name);
+    addParam(outbuf, msg);
+    
     emitUnroutedMsg(-1, outbuf);
 }

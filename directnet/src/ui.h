@@ -24,6 +24,7 @@
 int uiInit(int argc, char **argv, char **envp);
 
 void uiDispMsg(char *from, char *msg);
+void uiDispChatMsg(char *chat, char *from, char *msg);
 void uiEstConn(char *from);
 void uiEstRoute(char *from);
 void uiLoseConn(char *from);

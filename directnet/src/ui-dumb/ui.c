@@ -127,6 +127,11 @@ int handleUInput(char *inp)
             }
         
             strncpy(currentPartner, params[1], 256);
+            
+            if (currentPartner[0] == '#') {
+                // Join the chat
+                joinChat(currentPartner+1);
+            }
         } else if (!strncmp(params[0]+1, "q", 1)) {
             return 1;
         }
@@ -139,8 +144,13 @@ int handleUInput(char *inp)
             return 0;
         }
         
-        if (sendMsg(currentPartner, inp)) {
-            printf("to %s: %s\n", currentPartner, inp);
+        // Is it a chat?
+        if (currentPartner[0] == '#') {
+            sendChat(currentPartner+1, inp);
+        } else {
+            if (sendMsg(currentPartner, inp)) {
+                printf("to %s: %s\n", currentPartner, inp);
+            }
         }
     }
     
@@ -151,6 +161,13 @@ void uiDispMsg(char *from, char *msg)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s: %s\n%s> ", from, msg, currentPartner);
+    fflush(stdout);
+}
+
+void uiDispChatMsg(char *chat, char *from, char *msg)
+{
+    while (!uiLoaded) sleep(0);
+    printf("\n#%s: %s: %s\n%s> ", chat, from, msg, currentPartner);
     fflush(stdout);
 }
 

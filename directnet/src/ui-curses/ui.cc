@@ -53,9 +53,6 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     // noecho()  // For when we do our own character input handling
     cbreak(); 
     
-    // Initialize the lock for output
-    dn_lockInit(&displayLock); 
-    
     // initialize the screen 
     int max_y, max_x; // in curses, y is always first, so get used to it. 
     getmaxyx(stdscr, max_y, max_x);

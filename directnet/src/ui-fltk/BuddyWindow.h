@@ -11,6 +11,7 @@ extern void talkTo(Fl_Button*, void*);
 #include <FL/Fl_Input.H>
 extern void estConn(Fl_Input*, void*);
 extern void estFnd(Fl_Input*, void*);
+extern void estCht(Fl_Input*, void*);
 
 class BuddyWindow {
 public:
@@ -20,5 +21,6 @@ public:
   Fl_Button *chatButton;
   Fl_Input *connectInput;
   Fl_Input *findUser;
+  Fl_Input *chatJoin;
 };
 #endif

@@ -146,6 +146,34 @@ void estFnd(Fl_Input *w, void *ignore)
     free(connTo);
 }
 
+void estCht(Fl_Input *w, void *ignore)
+{
+    char chatOn[strlen(w->value()) + 2];
+    
+    chatOn[0] = '#';
+    strcpy(chatOn + 1, w->value());
+    w->value("");
+
+    joinChat(chatOn + 1);
+    getWindow(chatOn);
+}
+
+void closeChat(Fl_Double_Window *w, void *ignore)
+{
+    char *name;
+    
+    name = strdup(w->label());
+    
+    // if it's a chat window, we should leave the chat now
+    if (name[0] == '#') {
+        leaveChat(name + 1);
+    }
+    
+    w->hide();
+    
+    free(name);
+}
+
 void talkTo(Fl_Button *b, void *ignore)
 {
     int sel;
@@ -173,19 +201,26 @@ void sendInput(Fl_Input *w, void *ignore)
     
             dispmsg = (char *) alloca((strlen(dn_name) + strlen(msg) + 4) * sizeof(char));
             sprintf(dispmsg, "%s: %s\n", dn_name, msg);
-    
-            putOutput(cws[i], dispmsg);
-            
-            /* now actually send */
-            sendMsg(to, msg);
+
+            if (to[0] == '#') {
+                // Chat room
+                sendChat(to + 1, msg);
+                putOutput(cws[i], dispmsg);
+            } else {
+                if (sendMsg(to, msg)) {
+                    putOutput(cws[i], dispmsg);
+                }
+            }
             
             free(to);
             free(msg);
+            
+            return;
         }
     }
 }
 
-extern "C" void uiDispMsg(char *from, char *msg)
+void flDispMsg(char *window, char *from, char *msg)
 {
     ChatWindow *cw;
     char *dispmsg;
@@ -195,9 +230,24 @@ extern "C" void uiDispMsg(char *from, char *msg)
     dispmsg = (char *) alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
     sprintf(dispmsg, "%s: %s\n", from, msg);
     
-    cw = getWindow(from);
+    cw = getWindow(window);
     
     putOutput(cw, dispmsg);
+}
+
+extern "C" void uiDispMsg(char *from, char *msg)
+{
+    flDispMsg(from, from, msg);
+}
+
+extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)
+{
+    char chatWHash[strlen(chat) + 2];
+    
+    chatWHash[0] = '#';
+    strcpy(chatWHash + 1, chat);
+    
+    flDispMsg(chatWHash, from, msg);
 }
 
 extern "C" void uiEstConn(char *from)

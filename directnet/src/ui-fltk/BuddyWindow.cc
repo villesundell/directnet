@@ -1049,7 +1049,7 @@ static Fl_RGB_Image image_dn(idata_dn, 255, 50, 3, 0);
 
 Fl_Double_Window* BuddyWindow::make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = buddyWindow = new Fl_Double_Window(255, 355, "DirectNet");
+  { Fl_Double_Window* o = buddyWindow = new Fl_Double_Window(255, 400, "DirectNet");
     w = o;
     o->color(FL_FOREGROUND_COLOR);
     o->callback((Fl_Callback*)mainWinClosed, (void*)(this));
@@ -1072,6 +1072,12 @@ Fl_Double_Window* BuddyWindow::make_window() {
     { Fl_Input* o = findUser = new Fl_Input(0, 330, 255, 25, "  Find (username):");
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)estFnd);
+      o->align(FL_ALIGN_TOP_LEFT);
+      o->when(FL_WHEN_ENTER_KEY);
+    }
+    { Fl_Input* o = chatJoin = new Fl_Input(0, 375, 255, 25, "  Join or create chat:");
+      o->labelcolor(FL_BACKGROUND2_COLOR);
+      o->callback((Fl_Callback*)estCht);
       o->align(FL_ALIGN_TOP_LEFT);
       o->when(FL_WHEN_ENTER_KEY);
     }
