@@ -5566,7 +5566,7 @@ fi
 
 
 
-if test "x$hub" != "xno"; then
+if test "x$HUB_NAME" != "xno"; then
   MAKE_HUB_TRUE=
   MAKE_HUB_FALSE='#'
 else
