@@ -88,6 +88,7 @@ void *communicator(void *fdnum_voidptr)
             }
             
             close(fds[fdnum]);
+            fds[fdnum] = 0;
             return NULL;
         }
     }
@@ -122,7 +123,9 @@ void addParam(char *into, char *newparam)
 void sendCmd(int fdnum, char *buf)
 {
     dn_lock(pipe_locks+fdnum);
-    send(fds[fdnum], buf, strlen(buf)+1, 0);
+    if (fds[fnum]) {
+        send(fds[fdnum], buf, strlen(buf)+1, 0);
+    }
     dn_unlock(pipe_locks+fdnum);
 }
 
