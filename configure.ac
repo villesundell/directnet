@@ -135,6 +135,18 @@ The appropriate libraries could not be found.
                 found_ui=yes
                 ui=curses
                 AS_MESSAGE([Using curses UI])
+                
+                # Can we use readline?
+                AC_CHECK_READLINE
+                
+                if test "x$has_readline" = "xtrue"
+                then
+                        UI_CFLAGS="$UI_CFLAGS $READLINE_INCLUDES"
+                        UI_LIBS="$UI_LIBS $READLINE_LIBS"
+                        AS_MESSAGE([Readline enabled])
+                else
+                        AS_MESSAGE([Readline disabled])
+                fi
         fi
 fi
         
@@ -155,7 +167,7 @@ AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h semaphore.h stdlib.h string.h sys/socket.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 

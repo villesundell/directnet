@@ -43,7 +43,8 @@ subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/macros/curses.m4 \
-	$(top_srcdir)/macros/pthread.m4 $(top_srcdir)/macros/wxwin.m4 \
+	$(top_srcdir)/macros/pthread.m4 \
+	$(top_srcdir)/macros/readline.m4 $(top_srcdir)/macros/wxwin.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -145,6 +146,8 @@ PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
+READLINE_INCLUDES = @READLINE_INCLUDES@
+READLINE_LIBS = @READLINE_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
