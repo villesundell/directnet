@@ -14,6 +14,7 @@ Makefile
 src/Makefile
 src/enc-fake/Makefile
 src/enc-gpg/Makefile
+src/hub/Makefile
 src/ui-curses/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
@@ -46,7 +47,7 @@ AC_CHECK_LIB([c], [gethostbyname],
 
 # Figure out what UI to use
 AC_ARG_ENABLE(ui,
-[  --enable-ui[=dumb]
+[  --enable-ui[[=dumb]]
                 set the UI (currently the only UI is "dumb")],
 [case "$enableval" in
         dumb) ui=dumb ;;
@@ -195,6 +196,24 @@ AC_SUBST(UI_LIBS)
 AC_SUBST(UI_LDFLAGS)
 AC_SUBST(UI_DIR)
 AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
+
+
+# Check if we should enable the hub
+AC_ARG_ENABLE(hub,
+[  --enable-hub=name
+                enable hub mode - name is the name of the hub "user"],
+[HUB_NAME=$enableval], [HUB_NAME=no], [HUB_NAME=no])
+
+if test "x$HUB_NAME" != "xno"
+then
+        HUB_DIR=hub
+else
+        HUB_DIR=
+fi
+
+AC_SUBST(HUB_NAME)
+AC_SUBST(HUB_DIR)
+AM_CONDITIONAL(MAKE_HUB, test "x$hub" != "xno")
 
 
 # Check for encryption to use
