@@ -10,6 +10,7 @@ extern void setName(Fl_Input*, void*);
 class NameWindow {
 public:
   Fl_Double_Window* make_window();
+  Fl_Double_Window *nameWindow;
   Fl_Input *nameIn;
 };
 #endif

@@ -89,6 +89,17 @@ void setName(Fl_Input *w, void *ignore)
     uiLoaded = 1;
 }
 
+void mainWinClosed(Fl_Double_Window *w, void *ignore)
+{
+    int i;
+    
+    for (i = 0; cws[i] != NULL; i++) {
+        cws[i]->chatWindow->hide();
+    }
+    
+    w->hide();
+}
+
 void estConn(Fl_Input *w, void *ignore)
 {
     char *connTo;
@@ -156,7 +167,7 @@ extern "C" void uiDispMsg(char *from, char *msg)
     cw = getWindow(from);
     
     cw->textOut->insert(dispmsg);
-    cw->textOut->redraw();
+    Fl::flush();
 }
 
 extern "C" void uiEstConn(char *from)
@@ -174,7 +185,7 @@ extern "C" void uiEstRoute(char *from)
     
     cw = getWindow(from);
     cw->textOut->insert("Route established.\n");
-    cw->textOut->redraw();
+    Fl::flush();
 }
 
 extern "C" void uiLoseConn(char *from)
@@ -185,7 +196,7 @@ extern "C" void uiLoseConn(char *from)
     
     cw = getWindow(from);
     cw->textOut->insert("Connection lost.\n");
-    cw->textOut->redraw();
+    Fl::flush();
 }
 
 extern "C" void uiLoseRoute(char *from)
@@ -196,7 +207,7 @@ extern "C" void uiLoseRoute(char *from)
     
     cw = getWindow(from);
     cw->textOut->insert("Route lost.\n");
-    cw->textOut->redraw();
+    Fl::flush();
 }
 
 extern "C" void uiNoRoute(char *to)
@@ -207,5 +218,5 @@ extern "C" void uiNoRoute(char *to)
     
     cw = getWindow(to);
     cw->textOut->insert("You do not have a route to this user.\n");
-    cw->textOut->redraw();
+    Fl::flush();
 }

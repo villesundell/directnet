@@ -4,11 +4,12 @@
 #define BuddyWindow_h
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
+extern void mainWinClosed(Fl_Double_Window*, void*);
 #include <FL/Fl_Choice.H>
-#include <FL/Fl_Input.H>
-extern void estConn(Fl_Input*, void*);
 #include <FL/Fl_Button.H>
 extern void talkTo(Fl_Button*, void*);
+#include <FL/Fl_Input.H>
+extern void estConn(Fl_Input*, void*);
 extern void estFnd(Fl_Input*, void*);
 
 class BuddyWindow {
@@ -16,8 +17,8 @@ public:
   Fl_Double_Window* make_window();
   Fl_Double_Window *buddyWindow;
   Fl_Choice *onlineList;
-  Fl_Input *connectInput;
   Fl_Button *chatButton;
+  Fl_Input *connectInput;
   Fl_Input *findUser;
 };
 #endif
