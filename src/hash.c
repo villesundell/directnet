@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "directnet.h"
 #include "hash.h"
 
 // There are int versions and string versions, int first

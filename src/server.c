@@ -32,10 +32,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef MACOSX
-#include <tcpd.h>
-#endif
-
 #include "connection.h"
 #include "directnet.h"
 #include "server.h"
