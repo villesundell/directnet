@@ -95,7 +95,7 @@ pthread_t establishServer()
 void *serverAcceptLoop(void *ignore)
 {
     int sin_size, pthreadres, curfd;
-    int *onfd_ptr;
+    int *onfd_ptr, acceptfd;
     struct sockaddr_in rem_addr;
     pthread_attr_t ptattr;
     
@@ -104,9 +104,11 @@ void *serverAcceptLoop(void *ignore)
     while(1) {
         sin_size = sizeof(struct sockaddr_in);
         
+        acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, &sin_size);
+        
         dn_lock(&dn_fd_lock);
         for (curfd = 0; fds[curfd]; curfd++);
-        fds[curfd] = accept(server_sock, (struct sockaddr *)&rem_addr, &sin_size);
+        fds[curfd] = acceptfd;
         dn_unlock(&dn_fd_lock);
         if (fds[curfd] == -1) {
             fds[curfd] = 0;
