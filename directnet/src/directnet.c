@@ -52,6 +52,8 @@ char *dn_route_by_num[1024];
 struct hashKey **dn_trans_keys;
 int currentTransKey;
 
+char uiLoaded;
+
 char *findHome(char **envp);
 
 int main(int argc, char **argv, char **envp)
@@ -102,6 +104,10 @@ int main(int argc, char **argv, char **envp)
     dn_trans_keys = hashCreate(65536);
     currentTransKey = 0;
     
+    /* Set uiLoaded to 0 - this is merely a convenience for UIs that need to monitor whether
+       they're loaded yet */
+    uiLoaded = 0;
+    
     // Establish the server
     serverPthread = establishServer();
 
@@ -122,6 +128,7 @@ int main(int argc, char **argv, char **envp)
     
     free(fds);
     free(pipe_fds);
+    free(pipe_locks);
     free(pthreads);
     free(fnd_pthreads);
     
