@@ -108,7 +108,15 @@ int handleUInput(char *inp)
         }
         
         
-        if (!strncmp(params[0]+1, "c", 1)) {
+        if (!strncmp(params[0]+1, "a", 1)) {
+            setAway(params[1]);
+            if (params[1]) {
+                printf("\nAway message set.\n");
+            } else {
+                printf("\nAway message unset.\n");
+            }
+            return 0;
+        } else if (!strncmp(params[0]+1, "c", 1)) {
             if (params[1] == NULL) {
                 return 0;
             }

@@ -27,6 +27,7 @@ void sendFnd(char *to);
 void joinChat(char *chat);
 void leaveChat(char *chat);
 void sendChat(char *to, char *msg);
+void setAway(char *msg);
 
 void buildCmd(char *into, char *command, char vera, char verb, char *param);
 void addParam(char *into, char *newparam);
