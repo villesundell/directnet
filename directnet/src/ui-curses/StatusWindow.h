@@ -20,18 +20,20 @@
 #ifndef DN_CURSES_STATUSWINDOW_H
 #define DN_CURSES_STATUSWINDOW_H
 
-class SatusWindow { 
+class StatusWindow { 
     WINDOW *win; 
     string cur_nick; 
     string cur_target;
+    int ncols; 
     void redrawStatus();
     public: 
-    StatusWindow(); 
+    StatusWindow(int cols, int row_anchor); 
     ~StatusWindow(); 
     void setNick(string s); 
     void setTarget(string s); 
     string getNick(); 
     string getTarget(); 
+};
     
 
 #endif

@@ -32,6 +32,8 @@ extern "C" {
 #include <unistd.h>
 }
 
+#include <string>
+using std::string; 
 // #include "Message.h"
 #include "DisplayWindow.h" 
 #include "StatusWindow.h"
