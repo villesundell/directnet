@@ -22,6 +22,7 @@
 /* From http://www.roesler-ac.de/wolfram/hello.htm */
 /* The copyright on this code is uncertain, but it's only temporary, a placeholder */
 
+extern "C" {
 #if defined(USE_NCURSES) && !defined(RENAMED_NCURSES)
 #include <ncurses.h>
 #else
@@ -29,8 +30,9 @@
 #endif
 
 #include <unistd.h>
+}
 
-int uiInit(int argc, char **argv, char **envp)
+extern "C" int uiInit(int argc, char **argv, char **envp)
 {
     initscr();
     addstr("Hello World!\n");
@@ -40,26 +42,26 @@ int uiInit(int argc, char **argv, char **envp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg)
+extern "C" void uiDispMsg(char *from, char *msg)
 {
 }
 
-void uiEstConn(char *from)
+extern "C" void uiEstConn(char *from)
 {
 }
 
-void uiEstRoute(char *from)
+extern "C" void uiEstRoute(char *from)
 {
 }
 
-void uiLoseConn(char *from)
+extern "C" void uiLoseConn(char *from)
 {
 }
 
-void uiLoseRoute(char *from)
+extern "C" void uiLoseRoute(char *from)
 {
 }
 
-void uiNoRoute(char *to)
+extern "C" void uiNoRoute(char *to)
 {
 }
