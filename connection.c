@@ -135,11 +135,14 @@ void handleMsg(char *inbuf, int fdnum)
             routeElement[0] = newroute;
             onRE = 1;
             
-            ostrlen = strlen(newroute)-1;
+            ostrlen = strlen(newroute);
             for (i = 0; i < ostrlen; i++) {
                 if (newroute[i] == '\n') {
-                    routeElement[onRE] = newroute+i+1;
-                    onRE++;
+                    newroute[i] = '\0';
+                    if (newroute[i+1] != '\0') {
+                        routeElement[onRE] = newroute+i+1;
+                        onRE++;
+                    }
                 }
             }
             
@@ -172,6 +175,7 @@ void handleMsg(char *inbuf, int fdnum)
             handleRoutedMsg("fnr", 1, 1, outparams);
             
             uiDispMsg(params[1], "Route established.");
+            uiDispMsg(params[1], reverseRoute);
             
             return;
         }
@@ -222,6 +226,7 @@ void handleMsg(char *inbuf, int fdnum)
             gpgImportKey(params[3]);
             
             uiDispMsg(params[1], "Route established.");
+            uiDispMsg(params[1], newroute);
         }
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
