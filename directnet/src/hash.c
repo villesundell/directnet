@@ -94,9 +94,13 @@ void hash##hshortn##Set(struct hash##hshortn *hash, char *key, htype value) \
     toadd->key = strdup(key); \
     toadd->value = value; \
     toadd->next = NULL; \
-    cur = hash->head; \
-    while (cur->next) cur = cur->next; \
-    cur->next = toadd; \
+    if (hash->head) { \
+        cur = hash->head; \
+        while (cur->next) cur = cur->next; \
+        cur->next = toadd; \
+    } else { \
+        hash->head = toadd; \
+    } \
 }
 
 DN_HASH_INTLIKE_C(int, I)
@@ -177,9 +181,13 @@ void hashSSet(struct hashS *hash, char *key, char *value)
     toadd->value = strdup(value);
     toadd->next = NULL;
     
-    cur = hash->head;
-    while (cur->next) cur = cur->next;
-    cur->next = toadd;
+    if (hash->head) {
+        cur = hash->head;
+        while (cur->next) cur = cur->next;
+        cur->next = toadd;
+    } else {
+        hash->head = toadd;
+    }
 }
 
 void hashSDelKey(struct hashS *hash, char *key)
@@ -241,9 +249,13 @@ DN_LOCK *hashLGet(struct hashL *hash, char *key)
     dn_lockInit(&(toadd->value));
     toadd->next = NULL;
     
-    cur = hash->head;
-    while (cur->next) cur = cur->next;
-    cur->next = toadd;
+    if (hash->head) {
+        cur = hash->head;
+        while (cur->next) cur = cur->next;
+        cur->next = toadd;
+    } else {
+        hash->head = toadd;
+    }
     
     return &(toadd->value);
 }
