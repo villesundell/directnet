@@ -39,10 +39,23 @@ void establishClient(char *destination)
     struct sockaddr_in addr;
     //struct in_addr inIP;
     pthread_attr_t ptattr;
+    char *hostname;
+    int i, port;
 
-    he = gethostbyname(destination);
+    /* split 'destination' into 'hostname' and 'port' */
+    hostname = strdup(destination);
+    for (i = 0; hostname[i] != ':' && hostname[i] != '\0'; i++);
+    if (hostname[i] == ':') {
+        /* it has a port */
+        hostname[i] = '\0';
+        port = atoi(hostname + i + 1);
+    } else {
+        port = 3336;
+    }
+    
+    he = gethostbyname(hostname);
     if (he == NULL) {
-        //printf("Error: %d\nHOST_NOT_FOUND: %d\nNO_ADDRESS: %d\nNO_DATA: %d\nNO_RECOVERY: %d\nNO_RECOVERY: %d\n", h_errno, HOST_NOT_FOUND, NO_ADDRESS, NO_DATA, NO_RECOVERY, NO_RECOVERY);
+        free(hostname);
         return;
     }
     
@@ -51,18 +64,20 @@ void establishClient(char *destination)
     fds[curfd] = socket(AF_INET, SOCK_STREAM, 0);
     if (fds[curfd] == -1) {
         perror("socket");
+        free(hostname);
         return;
     }
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(3336);
+    addr.sin_port = htons(port);
     addr.sin_addr = *((struct in_addr *)he->h_addr);
-    /*inet_aton(destination, &inIP);
+    /*inet_aton(hostname, &inIP);
     addr.sin_addr = inIP;*/
     memset(&(addr.sin_zero), '\0', 8);
 
     if (connect(fds[curfd], (struct sockaddr *)&addr, sizeof(struct sockaddr)) == -1) {
         perror("connect");
+        free(hostname);
         return;
     }
 
@@ -72,4 +87,6 @@ void establishClient(char *destination)
     pthreadres = pthread_create(&pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
 
     onpthread++;
+    
+    free(hostname);
 }
