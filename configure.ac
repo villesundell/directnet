@@ -486,6 +486,7 @@ The wx-config script couldn't be found.
                         ui=wx
                         CC=$CXX
                 fi
+        fi
 fi
 
 AC_SUBST(UI_CFLAGS)
