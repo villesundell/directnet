@@ -7,13 +7,13 @@ class NameWindow {open
   Function {make_window()} {open
   } {
     Fl_Window nameWindow {
-      label DirectNet open selected
-      xywh {344 209 255 45} type Double visible
+      label DirectNet open
+      xywh {344 209 255 90} type Double color 0 visible
     } {
       Fl_Input nameIn {
         label {  Nickname:}
-        callback setName
-        xywh {0 20 255 25} align 5 when 8
+        callback setName selected
+        image {dn-toplogo.ppm} xywh {0 65 255 25} labelcolor 7 align 5 when 8
       }
     }
   }
