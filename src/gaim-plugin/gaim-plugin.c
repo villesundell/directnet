@@ -19,7 +19,7 @@
  */
 
 #ifdef WIN32
-#define pipe(a) _pipe((a), 0, _O_BINARY | _O_NOINHERIT)
+#define pipe(a) _pipe((a), 512, _O_BINARY | _O_NOINHERIT)
 
 #include <glib-object.h>
 #include <glib/gtypes.h>
@@ -28,6 +28,22 @@
 #define GTranslateFunc int
 #include <glib/goption.h>
 #undef GTranslateFunc
+
+// fgets on Windows won't delimit on \n
+char *fgets_win32(char *s, int size, FILE *stream)
+{
+    int i, c;
+    for (i = 0; i < size-1; i++) {
+        c = getchar(stream);
+	s[i] = c;
+	if (c == '\n') {
+	    s[i+1] = '\0';
+	    return s;
+	}
+    }
+    return s;
+}
+#define fgets fgets_win32
 
 #endif
 
