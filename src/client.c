@@ -58,7 +58,7 @@ void establishClient(char *destination)
         free(hostname);
         return;
     }
-    
+
     dn_lock(&dn_fd_lock);
     for (curfd = 0; fds[curfd]; curfd++);
     fds[curfd] = socket(AF_INET, SOCK_STREAM, 0);
