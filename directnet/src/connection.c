@@ -99,7 +99,7 @@ void buildCmd(char *into, char *command, char vera, char verb, char *param)
 {
     /*sprintf(into, "%s%c%c%s", command, vera, verb, param);*/
     int cpied;
-    SF_strncpy(into, command, 3);
+    SF_strncpy(into, command, 4);
     into[3] = vera;
     into[4] = verb;
     SF_strncpy(into + 5, param, DN_CMD_LEN - cpied);
