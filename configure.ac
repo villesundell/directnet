@@ -31,10 +31,12 @@ AC_SUBST(PTHREAD_CFLAGS)
 AC_SUBST(PTHREAD_LIBS)
 
 # On solaris, we need -lnsl and -lsocket
-AC_CHECK_LIB([c], [socket], [],
+AC_CHECK_LIB([c], [socket],
+        AS_MESSAGE([This is not a Solaris system.]),
         AC_CHECK_LIB([socket], [socket])
 )
-AC_CHECK_LIB([c], [gethostbyname], [],
+AC_CHECK_LIB([c], [gethostbyname],
+        AS_MESSAGE([This is not a Solaris system.]),
         AC_CHECK_LIB([nsl], [gethostbyname])
 )
 
