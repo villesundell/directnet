@@ -93,6 +93,15 @@ lst(1)(1) (lost route)
                 end user
 
 
+msa(1)(1) (message away)
+        purpose: Away response to a message
+        type: routed
+        parameters:
+                route
+                local name
+                message
+
+
 msg(1)(1) (message)
         purpose: Send a message
         type: routed

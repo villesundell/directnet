@@ -36,9 +36,12 @@
 #include "gpg.h"
 #include "ui.h"
 
+char *awayMsg = NULL;
+
 void handleMsg(char *inbuf, int fdnum);
 int handleNLUnroutedMsg(char **params);
 int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params);
+int sendMsgB(char *to, char *msg, char away);
 
 void *communicator(void *fdnum_voidptr)
 {
@@ -574,14 +577,22 @@ void handleMsg(char *inbuf, int fdnum)
         REQ_PARAMS(2);
         
         uiLoseRoute(params[1]);
-    } else if (!strncmp(command, "msg", 3) &&
-               inbuf[3] == 1 && inbuf[4] == 1) {
+    } else if ((!strncmp(command, "msg", 3) &&
+                inbuf[3] == 1 && inbuf[4] == 1) ||
+               (!strncmp(command, "msa", 3) &&
+                inbuf[3] == 1 && inbuf[4] == 1)) {
         REQ_PARAMS(3);
 	REJOIN_PARAMS(3);
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message
             uiDispMsg(params[1], gpgFrom(dn_name, params[2]));
+            
+            // Are we away?
+            if (awayMsg && strncmp(command, "msa", 3)) {
+                sendMsgB(params[1], awayMsg, 1);
+            }
+            
             return;
         }
     }
@@ -808,7 +819,7 @@ void establishConnection(char *to)
     }
 }
 
-int sendMsg(char *to, char *msg)
+int sendMsgB(char *to, char *msg, char away)
 {
     char *outparams[DN_MAX_PARAMS], *route;
     
@@ -823,11 +834,20 @@ int sendMsg(char *to, char *msg)
     strcpy(outparams[0], route);
     outparams[1] = dn_name;
     outparams[2] = gpgTo(dn_name, to, msg);
-    handleRoutedMsg("msg", 1, 1, outparams);
+    if (away) {
+        handleRoutedMsg("msa", 1, 1, outparams);
+    } else {
+        handleRoutedMsg("msg", 1, 1, outparams);
+    }
         
     free(outparams[0]);
     
     return 1;
+}
+
+int sendMsg(char *to, char *msg)
+{
+    return sendMsgB(to, msg, 0);
 }
 
 void sendFnd(char *to)
@@ -908,5 +928,21 @@ void sendChat(char *to, char *msg)
         
                 
         handleRoutedMsg("cms", 1, 1, outParams);
+    }
+}
+
+void setAway(char *msg)
+{
+    char *oldam;
+    oldam = awayMsg;
+    
+    if (msg) {
+        awayMsg = strdup(msg);
+    } else {
+        awayMsg = NULL;
+    }
+    
+    if (oldam) {
+        free(oldam);
     }
 }
