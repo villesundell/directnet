@@ -188,7 +188,7 @@ void handleMsg(char *inbuf, int fdnum)
     } else if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
-        char newroute[32256], ostrlen, outbuf[65536];;
+        char newroute[32256], ostrlen, outbuf[65536];
         
         REQ_PARAMS(4);
         
@@ -201,9 +201,21 @@ void handleMsg(char *inbuf, int fdnum)
             char *routeElement[50], *outparams[5];
             char reverseRoute[32256];
             int onRE, i, ostrlen;
+            DN_LOCK *recFndLock;
+            pthread_t curPthread;
             
             memset(routeElement, 0, 50 * sizeof(char *));
             memset(outparams, 0, 5 * sizeof(char *));
+            
+            // Get a fnd receive lock.  This is actually a lock on a hash of locks ... weird, I know
+            dn_lock(&recFndHashLock);
+        
+            // Now that we have the hash locked, lock our particular lock in the hash (gack)
+            recFndLock = hashLGet(recFndLocks, params[1]);
+            dn_lock(recFndLock);
+            
+            // And give up the lock on the hash
+            dn_unlock(&recFndHashLock);
             
             // Start with the current route
             strncpy(newroute, params[0], 32256);
@@ -222,19 +234,24 @@ void handleMsg(char *inbuf, int fdnum)
                     }
                 }
             }
+
+            // Get the pthread
+            curPthread = hashPGet(recFndPthreads, params[1]);
             
-            if (!fnd_pthreads[fdnum]) {
+            // If we haven't started one, good
+            if (curPthread == -1) {
                 pthread_attr_t ptattr;
-                int *onfd_ptr;
+                void *route_voidptr;
                 
                 // This is the first fnd received, but ignore it if we already have a route
                 if (hashSGet(dn_routes, params[1])) {
+                    dn_unlock(recFndLock);
                     return;
                 }
                 
                 // If we haven't already gotten the fastest route, this must be it
                 onRE--;
-            
+                
                 // Build backwards route
                 reverseRoute[0] = '\0';
                 for (i = onRE; i >= 0; i--) {
@@ -264,32 +281,40 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 uiEstRoute(params[1]);
                 
-                onfd_ptr = malloc(sizeof(int));
-                *onfd_ptr = fdnum;
+                route_voidptr = malloc((strlen(params[1]) + 1) * sizeof(char));
+                strcpy((char *) route_voidptr, params[1]);
                 
                 pthread_attr_init(&ptattr);
-                pthread_create(&fnd_pthreads[fdnum], &ptattr, fndPthread, (void *) onfd_ptr);
+                pthread_create(&curPthread, &ptattr, fndPthread, route_voidptr);
+                
+                // Then put curPthread back where we found it
+                hashPSet(recFndPthreads, params[1], curPthread);
             } else {
                 char oldWRoute[32256];
+                char *curWRoute;
                 char *newRouteElements[50];
                 int onRE, x, y, ostrlen;
                 
+                printf("Hoorah, an alternative route!\n");
+                
                 memset(newRouteElements, 0, 50 * sizeof(char *));
                 
+                curWRoute = hashSGet(weakRoutes, params[1]);
                 // If there is no current weakroute, just copy in the current route
-                if (!weakRoutes[fdnum]) {
+                if (!curWRoute) {
                     char *curroute;
                     
-                    curroute = dn_route_by_num[fdnum];
+                    curroute = hashSGet(dn_routes, params[1]);
                     if (curroute == NULL) {
+                        dn_unlock(recFndLock);
                         return;
                     }
                     
-                    weakRoutes[fdnum] = (char *) malloc(32256 * sizeof(char));
-                    strncpy(weakRoutes[fdnum], curroute, 32256);
+                    hashSSet(weakRoutes, params[1], curroute);
+                    curWRoute = hashSGet(weakRoutes, params[1]);
                 }
                 
-                strncpy(oldWRoute, weakRoutes[fdnum], 32256);
+                strncpy(oldWRoute, curWRoute, 32256);
                 
                 newRouteElements[0] = oldWRoute;
                 onRE = 1;
@@ -307,21 +332,25 @@ void handleMsg(char *inbuf, int fdnum)
                 }
                 
                 // Now compare the two into a new one
-                weakRoutes[fdnum][0] = '\0';
+                curWRoute[0] = '\0';
                 
                 for (x = 0; newRouteElements[x] != NULL; x++) {
                     for (y = 0; routeElement[y] != NULL; y++) {
                         if (!strncmp(newRouteElements[x], routeElement[y], 24)) {
                             // It's a match, copy it in.
-                            ostrlen = strlen(weakRoutes[fdnum]);
-                            strncpy(weakRoutes[fdnum]+ostrlen, routeElement[y], 32256-ostrlen);
+                            ostrlen = strlen(curWRoute);
+                            strncpy(curWRoute+ostrlen, routeElement[y], 32256-ostrlen);
                             ostrlen += strlen(routeElement[y]);
-                            strncpy(weakRoutes[fdnum]+ostrlen, "\n", 32256-ostrlen);
+                            strncpy(curWRoute+ostrlen, "\n", 32256-ostrlen);
                         }
                     }
                 }
+                
+                // And put it back in the hash
+                hashSSet(weakRoutes, params[1], curWRoute);
             }
             
+            dn_unlock(recFndLock);
             return;
         }
         
@@ -545,43 +574,50 @@ void emitUnroutedMsg(int fromfd, char *outbuf)
 }
 
 // fndPthread is the pthread that harvests late fnds
-void *fndPthread(void *fdnum_voidptr)
+void *fndPthread(void *name_voidptr)
 {
-    int fdnum;
+    char name[256];
     char isWeak = 0;
+    char *curWRoute;
     
-    fdnum = *((int *) fdnum_voidptr);
-    free(fdnum_voidptr);
+    strncpy(name, (char *) name_voidptr, 256);
+    free(name_voidptr);
     
     sleep(15);
     
+    /* FIXME
+    this should lock the recFndLocks hash */
+    
     // Figure out if there's a weak route
-    if (weakRoutes[fdnum]) {
+    curWRoute = hashSGet(weakRoutes, name);
+    if (curWRoute) {
         // If the string has a location, check if it's weak
-        if (strlen(weakRoutes[fdnum]) > 0) {
+        if (strlen(curWRoute) > 0) {
             isWeak = 1;
+            printf("Route is weak!\n%s\n\n", curWRoute);
         }
-        free(weakRoutes[fdnum]);
-        weakRoutes[fdnum] = NULL;
+        hashSDelKey(weakRoutes, name);
     } else {
         // If this isn't set, that means _NO_ other fnd was received, VERY weak route!
         isWeak = 1;
+        printf("Only one possible route!\n");
     }
     
     if (!isWeak) {
-        fnd_pthreads[fdnum] = 0;
+        hashPSet(recFndPthreads, name, -1);
         return NULL;
     }
     
     // If it's weak, send a dcr (direct connect request)
     {
-        char *params[50], hostbuf[128], *ip;
+        char *params[50], hostbuf[128], *ip, *route;
         struct hostent *he;
         
         memset(params, 0, 50 * sizeof(char *));
         
-        params[0] = (char *) malloc((strlen(dn_route_by_num[fdnum]) + 1) * sizeof(char));
-        strcpy(params[0], dn_route_by_num[fdnum]);
+        route = hashSGet(dn_routes, name);
+        params[0] = (char *) malloc((strlen(route) + 1) * sizeof(char));
+        strcpy(params[0], route);
         params[1] = dn_name;
         
         gethostname(hostbuf, 128);
@@ -595,7 +631,7 @@ void *fndPthread(void *fdnum_voidptr)
         free(params[0]);
         free(params[2]);
         
-        fnd_pthreads[fdnum] = 0;
+        hashPSet(recFndPthreads, name, -1);
         return NULL;
     }
 }

@@ -21,21 +21,31 @@
 #ifndef DN_HASH_H
 #define DN_HASH_H
 
-struct hashKey {
-    char key[24];
-    int value;
-};
+#include "lock.h"
+
+#define DN_HASH_INTLIKE_H(htype, hshortn) \
+struct hashKey##hshortn { \
+    char key[24]; \
+    htype value; \
+}; \
+struct hashKey##hshortn **hash##hshortn##Create(int count); \
+void hash##hshortn##Destroy(struct hashKey##hshortn **hash); \
+htype hash##hshortn##Get(struct hashKey##hshortn **hash, char *key); \
+char *hash##hshortn##RevGet(struct hashKey##hshortn **hash, htype value); \
+void hash##hshortn##Set(struct hashKey##hshortn **hash, char *key, htype value);
+
+DN_HASH_INTLIKE_H(int, )
+DN_HASH_INTLIKE_H(pthread_t, P)
 
 struct hashKeyS {
     char key[24];
     char *value;
 };
 
-struct hashKey **hashCreate(int count);
-void hashDestroy(struct hashKey **hash);
-int hashGet(struct hashKey **hash, char *key);
-char *hashRevGet(struct hashKey **hash, int value);
-void hashSet(struct hashKey **hash, char *key, int value);
+struct hashKeyL {
+    char key[24];
+    DN_LOCK value;
+};
 
 struct hashKeyS **hashSCreate(int count);
 void hashSDestroy(struct hashKeyS **hash);
@@ -43,5 +53,19 @@ char *hashSGet(struct hashKeyS **hash, char *key);
 char *hashSRevGet(struct hashKeyS **hash, char *value);
 void hashSSet(struct hashKeyS **hash, char *key, char *value);
 void hashSDelKey(struct hashKeyS **hash, char *key);
+
+struct hashKeyL **hashLCreate(int count);
+void hashLDestroy(struct hashKeyL **hash);
+DN_LOCK *hashLGet(struct hashKeyL **hash, char *key);
+
+/*struct hashKey {
+    char key[24];
+    int value;
+};
+struct hashKey **hashCreate(int count);
+void hashDestroy(struct hashKey **hash);
+int hashGet(struct hashKey **hash, char *key);
+char *hashRevGet(struct hashKey **hash, int value);
+void hashSet(struct hashKey **hash, char *key, int value);*/
 
 #endif // DN_HASH_H

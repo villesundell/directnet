@@ -23,66 +23,72 @@
 
 #include "directnet.h"
 #include "hash.h"
+#include "lock.h"
 
-// There are int versions and string versions, int first
-
-struct hashKey **hashCreate(int count)
-{
-    return (struct hashKey **) malloc(count * sizeof(struct hashKey *));
+#define DN_HASH_INTLIKE_C(htype, hshortn) \
+struct hashKey##hshortn **hash##hshortn##Create(int count) \
+{ \
+    return (struct hashKey##hshortn **) malloc(count * sizeof(struct hashKey##hshortn *)); \
+} \
+\
+void hash##hshortn##Destroy(struct hashKey##hshortn **hash) \
+{ \
+    int i; \
+    \
+    for (i = 0; hash[i] != NULL; i++) { \
+        free(hash[i]); \
+    } \
+    \
+    free(hash); \
+} \
+\
+htype hash##hshortn##Get(struct hashKey##hshortn **hash, char *key) \
+{ \
+    int i; \
+    \
+    for (i = 0; hash[i] != NULL; i++) { \
+        if (!strncmp(hash[i]->key, key, 25)) { \
+            return hash[i]->value; \
+        } \
+    } \
+    \
+    return -1; \
+} \
+\
+char *hash##hshortn##RevGet(struct hashKey##hshortn **hash, htype value) \
+{ \
+    int i; \
+    \
+    for (i = 0; hash[i] != NULL; i++) { \
+        if (hash[i]->value == value) { \
+            return hash[i]->key; \
+        } \
+    } \
+    \
+    return NULL; \
+} \
+\
+void hash##hshortn##Set(struct hashKey##hshortn **hash, char *key, htype value) \
+{ \
+    int i; \
+    \
+    for (i = 0; hash[i] != NULL; i++) { \
+        if (!strncmp(hash[i]->key, key, 25)) { \
+            hash[i]->value = value; \
+            return; \
+        } \
+    } \
+    \
+    hash[i] = (struct hashKey##hshortn *) malloc(sizeof(struct hashKey##hshortn)); \
+    strncpy(hash[i]->key, key, 25); \
+    hash[i]->value = value; \
 }
 
-void hashDestroy(struct hashKey **hash)
-{
-    int i;
-    
-    for (i = 0; hash[i] != NULL; i++) {
-        free(hash[i]);
-    }
-    
-    free(hash);
-}
+DN_HASH_INTLIKE_C(int, )
+DN_HASH_INTLIKE_C(pthread_t, P)
 
-int hashGet(struct hashKey **hash, char *key)
-{
-    int i;
-    
-    for (i = 0; hash[i] != NULL; i++) {
-        if (!strncmp(hash[i]->key, key, 25)) {
-            return hash[i]->value;
-        }
-    }
-    
-    return -1;
-}
 
-char *hashRevGet(struct hashKey **hash, int value)
-{
-    int i;
-    
-    for (i = 0; hash[i] != NULL; i++) {
-        if (hash[i]->value == value) {
-            return hash[i]->key;
-        }
-    }
-    
-    return NULL;
-}
 
-void hashSet(struct hashKey **hash, char *key, int value)
-{
-    int i;
-    
-    for (i = 0; hash[i] != NULL; i++) {
-        if (!strncmp(hash[i]->key, key, 25)) {
-            hash[i]->value = value;
-            return;
-        }
-    }
-    
-    hash[i] = (struct hashKey *) malloc(sizeof(struct hashKey));
-    strncpy(hash[i]->key, key, 25);
-    hash[i]->value = value;
-}
 
 
 // Then strings
@@ -164,3 +170,104 @@ void hashSDelKey(struct hashKeyS **hash, char *key)
         }
     }
 }
+
+
+
+
+
+// Then locks
+struct hashKeyL **hashLCreate(int count)
+{
+    return (struct hashKeyL **) malloc(count * sizeof(struct hashKeyL *));
+}
+
+void hashLDestroy(struct hashKeyL **hash)
+{
+    int i;
+    
+    for (i = 0; hash[i] != NULL; i++) {
+        free(hash[i]);
+    }
+    
+    free(hash);
+}
+
+DN_LOCK *hashLGet(struct hashKeyL **hash, char *key)
+{
+    int i;
+    
+    for (i = 0; hash[i] != NULL; i++) {
+        if (!strncmp(hash[i]->key, key, 25)) {
+            return &(hash[i]->value);
+        }
+    }
+    
+    // We have to create and initialize a lock for this
+    hash[i] = (struct hashKeyL *) malloc(sizeof(struct hashKeyL));
+    strncpy(hash[i]->key, key, 25);
+    dn_lockInit(&(hash[i]->value));
+    
+    return &(hash[i]->value);
+}
+
+/*
+// There are int versions and string versions, int first
+
+struct hashKey **hashCreate(int count)
+{
+return (struct hashKey **) malloc(count * sizeof(struct hashKey *));
+}
+
+void hashDestroy(struct hashKey **hash)
+{
+int i;
+    
+for (i = 0; hash[i] != NULL; i++) {
+free(hash[i]);
+}
+    
+free(hash);
+}
+
+int hashGet(struct hashKey **hash, char *key)
+{
+int i;
+    
+for (i = 0; hash[i] != NULL; i++) {
+if (!strncmp(hash[i]->key, key, 25)) {
+return hash[i]->value;
+}
+}
+    
+return -1;
+}
+
+char *hashRevGet(struct hashKey **hash, int value)
+{
+int i;
+    
+for (i = 0; hash[i] != NULL; i++) {
+if (hash[i]->value == value) {
+return hash[i]->key;
+}
+}
+    
+return NULL;
+}
+
+void hashSet(struct hashKey **hash, char *key, int value)
+{
+int i;
+    
+for (i = 0; hash[i] != NULL; i++) {
+if (!strncmp(hash[i]->key, key, 25)) {
+hash[i]->value = value;
+return;
+}
+}
+    
+hash[i] = (struct hashKey *) malloc(sizeof(struct hashKey));
+strncpy(hash[i]->key, key, 25);
+hash[i]->value = value;
+}
+*/
