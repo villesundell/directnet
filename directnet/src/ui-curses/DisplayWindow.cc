@@ -27,15 +27,17 @@ extern "C" {
 
 #include <unistd.h>
 }
-#include <string>
 
-#include "DisplayWindow.h" 
+#include <string>
 using std::string;
 
-DisplayWindow::DisplayWindow(int nRows, int nCols) 
+#include "DisplayWindow.h" 
+
+
+DisplayWindow::DisplayWindow(int rows, int cols) 
 { 
-    this.nRows = nRows; 
-    this.nCols = nCols; 
+    nRows = rows; 
+    nCols = cols; 
     // Always anchorn display window to top-left corner. 
     win = newwin (nRows, nCols, 0,0);
     scrollok(win, TRUE); 

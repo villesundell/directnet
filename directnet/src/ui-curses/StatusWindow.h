@@ -17,44 +17,21 @@
  *    along with DirectNet; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef DN_CURSES_STATUSWINDOW_H
+#define DN_CURSES_STATUSWINDOW_H
 
-extern "C" {
-#if defined(USE_NCURSES) && !defined(RENAMED_NCURSES)
-#include <ncurses.h>
-#else
-#include <curses.h>
-#endif
-
-#include <unistd.h>
-}
-#include <string>
-using std::string;
-
-#include "InputWindow.h" 
-
-
-InputWindow::InputWindow(int nLines, int nCols, int orig_y) 
-{
-    win = newwin(nLines, nCols, orig_y, 0); 
-    scrollok(win, TRUE);
-}
-
-InputWindow::~InputWindow()
-{
-    delwin(win);
-}
-
-string InputWindow::getInput() 
-{ 
-    char buf[8192]; 
-    wclear(win);  
-    wmove(win, 0,0);
-    wrefresh(win);
-    wgetnstr(win, buf, 8192); 
-    wclear(win); 
-    wmove(win, 0,0);
-    wrefresh(win); 
+class SatusWindow { 
+    WINDOW *win; 
+    string cur_nick; 
+    string cur_target;
+    void redrawStatus();
+    public: 
+    StatusWindow(); 
+    ~StatusWindow(); 
+    void setNick(string s); 
+    void setTarget(string s); 
+    string getNick(); 
+    string getTarget(); 
     
-    string input(buf); 
-    return input;
-}
+
+#endif

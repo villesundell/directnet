@@ -26,7 +26,7 @@ class DisplayWindow {
     int nCols; 
    
     public:
-    DisplayWindow(int nRows, int nCols); 
+    DisplayWindow(int rows, int cols); 
     ~DisplayWindow(); 
     void displayRecvdMsg(string msg, string from);    
     void displaySentMsg(string msg, string to); 
