@@ -10,7 +10,7 @@ Nonlooping unrouted messages contain a parameter for the route that they have ta
 the current node, andy any other parameters.  Nonrepeating unrouted messages contain a parameter
 for the transmission key (so that they are not retransmitted), and any other necessary parameters.
 
-cjo(1)(1) (chat join
+cjo(1)(1) (chat join)
         purpose: Join a chat
         type: routed
         parameters:
@@ -83,6 +83,7 @@ key(1)(1) (key)
         type: direct
         parameters:
                 local name
+                public key
 
 
 lst(1)(1) (lost route)
