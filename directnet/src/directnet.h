@@ -34,7 +34,7 @@ int pluginMain(int argc, char **argv, char **envp);
 extern int serv_port;
 
 extern int *fds, *pipe_fds, onfd, onpthread;
-extern pthread_t *pthreads;
+extern pthread_t **pthreads;
 extern int onfd;
 extern DN_LOCK dn_fd_lock;
 

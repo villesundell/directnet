@@ -18,15 +18,20 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef WIN32
 #include <arpa/inet.h>
-#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#else
+#include <winsock.h>
+#endif
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 #include "chat.h"
@@ -304,7 +309,7 @@ void handleMsg(char *inbuf, int fdnum)
             char reverseRoute[DN_ROUTE_LEN];
             int onRE, i, ostrlen;
             DN_LOCK *recFndLock;
-            pthread_t curPthread;
+            pthread_t *curPthread;
             
             memset(routeElement, 0, DN_MAX_PARAMS * sizeof(char *));
             memset(outparams, 0, 5 * sizeof(char *));
@@ -341,7 +346,7 @@ void handleMsg(char *inbuf, int fdnum)
             curPthread = hashPGet(recFndPthreads, params[1]);
             
             // If we haven't started one, good
-            if (curPthread == -1) {
+            if (curPthread == (pthread_t *) -1) {
                 pthread_attr_t ptattr;
                 void *route_voidptr;
                 
@@ -382,15 +387,16 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 uiEstRoute(params[1]);
                 
-                route_voidptr = malloc((strlen(params[1]) + 1) * sizeof(char));
+                route_voidptr = (void *) malloc((strlen(params[1]) + 1) * sizeof(char));
                 strcpy((char *) route_voidptr, params[1]);
                 
                 pthread_attr_init(&ptattr);
-                pthread_create(&curPthread, &ptattr, fndPthread, route_voidptr);
-                
-                // Then put curPthread back where we found it
-                hashPSet(recFndPthreads, params[1], curPthread);
-            } else {
+		curPthread = (pthread_t *) malloc(sizeof(pthread_attr_t));
+                pthread_create(curPthread, &ptattr, fndPthread, route_voidptr);
+
+		// Put it back where it belongs
+		hashPSet(recFndPthreads, params[1], curPthread);
+	    } else {
                 char oldWRoute[DN_ROUTE_LEN];
                 char *curWRoute;
                 char *newRouteElements[DN_MAX_PARAMS];
@@ -750,7 +756,7 @@ void *fndPthread(void *name_voidptr)
     }
     
     if (!isWeak) {
-        hashPSet(recFndPthreads, name, -1);
+        hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
     }
     
@@ -777,7 +783,7 @@ void *fndPthread(void *name_voidptr)
         free(params[0]);
         free(params[2]);
         
-        hashPSet(recFndPthreads, name, -1);
+        hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
     }
 }

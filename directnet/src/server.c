@@ -18,16 +18,21 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef WIN32
 #include <arpa/inet.h>
-#include <fcntl.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#else
+#include <winsock.h>
+#endif
+
+#include <fcntl.h>
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -46,11 +51,11 @@ void sigterm_handler(int sig)
     exit(0);
 }
 
-pthread_t establishServer()
+pthread_t *establishServer()
 {
     int pthreadres;
     int yes=1;
-    pthread_t newthread;
+    pthread_t *newthread;
     pthread_attr_t ptattr;
     
     struct sockaddr_in addr;
@@ -82,7 +87,8 @@ pthread_t establishServer()
     }
     
     pthread_attr_init(&ptattr);
-    pthreadres = pthread_create(&newthread, &ptattr, serverAcceptLoop, NULL);
+    newthread = (pthread_t *) malloc(sizeof(pthread_t));
+    pthreadres = pthread_create(newthread, &ptattr, serverAcceptLoop, NULL);
     
     if (pthreadres == -1) {
         perror("pthread_create");
@@ -130,6 +136,7 @@ void *serverAcceptLoop(void *ignore)
         *onfd_ptr = curfd;
         //pids[onpid] = clone(communicator, client_stack, SIGCHLD | CLONE_FILES | CLONE_VM, (void *) onfd_ptr);
         pthread_attr_init(&ptattr);
+	pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
         pthreadres = pthread_create(&pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
         
         onpthread++;

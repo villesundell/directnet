@@ -24,7 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#ifdef HAVE_SYS_WAIT
 #include <sys/wait.h>
+#endif
 #include <unistd.h>
 
 #include "chat.h"
@@ -39,7 +41,7 @@
 int serv_port = 3336;
 
 int *fds, *pipe_fds, onpthread;
-pthread_t *pthreads;
+pthread_t **pthreads;
 int onfd;
 DN_LOCK dn_fd_lock;
 
@@ -73,7 +75,7 @@ int main(int argc, char **argv, char **envp)
 int pluginMain(int argc, char **argv, char **envp)
 #endif
 {
-    pthread_t serverPthread;
+    pthread_t *serverPthread = NULL;
     int i;
     
     if (argc >= 2) {
@@ -111,7 +113,8 @@ int pluginMain(int argc, char **argv, char **envp)
     memset(pipe_locks, 0, DN_MAX_CONNS * sizeof(DN_LOCK));
     
     // pthreads is an array of every active connection's pthread_t
-    pthreads = (pthread_t *) malloc(DN_MAX_CONNS * sizeof(pthread_t));
+    pthreads = (pthread_t **) malloc(DN_MAX_CONNS * sizeof(pthread_t *));
+    memset(pthreads, 0, DN_MAX_CONNS * sizeof(pthread_t *));
     onpthread = 0;
     
     // these are described above
@@ -162,11 +165,11 @@ int pluginMain(int argc, char **argv, char **envp)
 #ifndef GAIM_PLUGIN
     
     // When the UI has exited, we're done.
-    serverPthread ? pthread_kill(serverPthread, SIGTERM) : 0;
+    serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
     
     for (i = 0; i < onpthread; i++) {
         //kill(pids[i], SIGTERM);
-        pthreads[i] ? pthread_kill(pthreads[i], SIGTERM) : 0;
+        pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
         //waitpid(pids[i], NULL, 0);
     }
     
