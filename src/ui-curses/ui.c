@@ -28,6 +28,8 @@
 #include <curses.h>
 #endif
 
+#include <unistd.h>
+
 int uiInit(int argc, char **argv, char **envp)
 {
     initscr();
