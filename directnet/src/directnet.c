@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "directnet.h"
+#include "globals.h"
 #include "gpg.h"
 #include "hash.h"
 #include "lock.h"
@@ -37,17 +38,15 @@
 int *fds, *pipe_fds, onfd, onpthread;
 pthread_t *pthreads;
 
-int pipes[1024][2];
+int pipes[DN_MAX_CONNS][2];
 DN_LOCK *pipe_locks;
 
-/*pthread_t *fnd_pthreads;
-char *weakRoutes[1024];*/
 DN_LOCK recFndHashLock; // Lock on the following hash
 struct hashKeyL **recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
 struct hashKeyP **recFndPthreads;
 struct hashKeyS **weakRoutes; // List of weak routes
 
-char dn_name[1024];
+char dn_name[DN_NAME_LEN];
 struct hashKey **dn_fds;
 
 struct hashKeyS **dn_routes;
@@ -73,46 +72,40 @@ int main(int argc, char **argv, char **envp)
     }
     
     // fds is an array containing every file descriptor.  fdnums are indexes into this array
-    fds = (int *) malloc(1024 * sizeof(int));
+    fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));
     // pipe_fds is an equivilant array for the output pipes that throttle bandwidth
-    pipe_fds = (int *) malloc(1024 * sizeof(int));
+    pipe_fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));
     onfd = 0;
     
-    pipe_locks = (DN_LOCK *) malloc(1024 * sizeof(DN_LOCK));
-    memset(pipe_locks, 0, 1024 * sizeof(DN_LOCK));
+    pipe_locks = (DN_LOCK *) malloc(DN_MAX_CONNS * sizeof(DN_LOCK));
+    memset(pipe_locks, 0, DN_MAX_CONNS * sizeof(DN_LOCK));
     
     // pthreads is an array of every active connection's pthread_t
-    pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
+    pthreads = (pthread_t *) malloc(DN_MAX_CONNS * sizeof(pthread_t));
     onpthread = 0;
-    
-    /* fnd_pthreads is an array of the temporary pthreads made to collect extra routes after
-       receiving an initial fnd * /
-    fnd_pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
-    memset(fnd_pthreads, 0, 1024 * sizeof(pthread_t));*/
     
     // these are described above
     dn_lockInit(&recFndHashLock);
-    recFndLocks = hashLCreate(1024);
-    recFndPthreads = hashPCreate(1024);
+    recFndLocks = hashLCreate(DN_MAX_ROUTES);
+    recFndPthreads = hashPCreate(DN_MAX_ROUTES);
     
     /* Upon receiving a fnd, the node then continues to accept alternate fnds.  Every time it
        receives one, it goes through the current route and new route and only keeps the ones that
        appear in both.  That way, it ends up with a list of nodes that have no backup.  If there
        are any such nodes, it needs to attempt a direct connection to strengthen the network. */
-    weakRoutes = hashSCreate(1024);
-    //memset(weakRoutes, 0, 1024 * sizeof(char *));
+    weakRoutes = hashSCreate(DN_MAX_ROUTES);
     
     // This stores fd numbers by name
-    dn_fds = hashCreate(1024);
+    dn_fds = hashCreate(DN_MAX_CONNS);
     
     // This stores routes by name
-    dn_routes = hashSCreate(1024);
+    dn_routes = hashSCreate(DN_MAX_ROUTES);
     // This stores intermediate routes, for response on broken routes
-    dn_iRoutes = hashSCreate(1024);
+    dn_iRoutes = hashSCreate(DN_MAX_ROUTES);
     
     // This hash stores the state of all nonrepeating unrouted messages
-    dn_trans_keys = hashCreate(65536);
-    currentTransKey = 0;
+    /*dn_trans_keys = hashCreate(65536);
+    currentTransKey = 0;*/
     
     /* Set uiLoaded to 0 - this is merely a convenience for UIs that need to monitor whether
        they're loaded yet */

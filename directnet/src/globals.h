@@ -18,36 +18,15 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_DIRECTNET_H
-#define DN_DIRECTNET_H
+#ifndef DN_GLOBALS_H
+#define DN_GLOBALS_H
 
-#include <pthread.h>
+#define DN_NAME_LEN 24
+#define DN_MAX_CONNS 1024
+#define DN_MAX_ROUTES 2048
+#define DN_CMD_LEN 2048
+#define DN_ROUTE_LEN 512
+#define DN_MAX_PARAMS 50
+#define DN_HOSTNAME_LEN 256
 
-#include "globals.h"
-#include "hash.h"
-#include "lock.h"
-
-extern int *fds, *pipe_fds, onfd, onpthread;
-extern pthread_t *pthreads;
-
-extern DN_LOCK *pipe_locks;
-
-extern DN_LOCK recFndHashLock; // Lock on the following hash
-extern struct hashKeyL **recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
-extern struct hashKeyP **recFndPthreads; // And the pthreads themselves
-extern struct hashKeyS **weakRoutes; // List of weak routes
-
-extern char dn_name[DN_NAME_LEN];
-extern struct hashKey **dn_fds;
-
-extern struct hashKeyS **dn_routes;
-extern struct hashKeyS **dn_iRoutes;
-
-extern struct hashKey **dn_trans_keys;
-extern int currentTransKey;
-
-extern char uiLoaded;
-
-void newTransKey(char *into);
-
-#endif // DN_DIRECTNET_H
+#endif

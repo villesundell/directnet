@@ -36,13 +36,13 @@
 #include "ui.h"
 
 void handleMsg(char *inbuf, int fdnum);
-int handleNLUnroutedMsg(char **params);
+//int handleNLUnroutedMsg(char **params);
 int handleNRUnroutedMsg(char **params);
 
 void *communicator(void *fdnum_voidptr)
 {
     int fdnum, byterec, origstrlen;
-    char buf[65536];
+    char buf[DN_CMD_LEN];
     
     fdnum = *((int *) fdnum_voidptr);
     free(fdnum_voidptr);
@@ -133,14 +133,14 @@ void *fndPthread(void *fdnum_voidptr);
 
 void handleMsg(char *inbuf, int fdnum)
 {
-    char command[4], *params[50];
+    char command[4], *params[DN_MAX_PARAMS];
     int i, onparam, ostrlen;
     
     // Get the command itself
     strncpy(command, inbuf, 3);
     command[3] = '\0';
     
-    memset(params, 0, 50 * sizeof(char *));
+    memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
     
     params[0] = inbuf+5;
     onparam = 1;
@@ -165,10 +165,10 @@ void handleMsg(char *inbuf, int fdnum)
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
-                char *outParams[50], hostbuf[256];
+                char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN];
                 struct hostent *he;
                 
-                memset(outParams, 0, 50 * sizeof(char *));
+                memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
             
                 // First, echo
                 outParams[0] = hashSGet(dn_routes, params[1]);
@@ -189,7 +189,7 @@ void handleMsg(char *inbuf, int fdnum)
     } else if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
-        char newroute[32256], ostrlen, outbuf[65536];
+        char newroute[DN_ROUTE_LEN], ostrlen, outbuf[DN_CMD_LEN];
         
         REQ_PARAMS(4);
         
@@ -198,14 +198,14 @@ void handleMsg(char *inbuf, int fdnum)
         }
         
         // Am I this person?
-        if (!strncmp(params[2], dn_name, 1024)) {
-            char *routeElement[50], *outparams[5];
-            char reverseRoute[32256];
+        if (!strncmp(params[2], dn_name, DN_NAME_LEN)) {
+            char *routeElement[DN_MAX_PARAMS], *outparams[5];
+            char reverseRoute[DN_ROUTE_LEN];
             int onRE, i, ostrlen;
             DN_LOCK *recFndLock;
             pthread_t curPthread;
             
-            memset(routeElement, 0, 50 * sizeof(char *));
+            memset(routeElement, 0, DN_MAX_PARAMS * sizeof(char *));
             memset(outparams, 0, 5 * sizeof(char *));
             
             // Get a fnd receive lock.  This is actually a lock on a hash of locks ... weird, I know
@@ -219,7 +219,7 @@ void handleMsg(char *inbuf, int fdnum)
             dn_unlock(&recFndHashLock);
             
             // Start with the current route
-            strncpy(newroute, params[0], 32256);
+            strncpy(newroute, params[0], DN_ROUTE_LEN);
             
             // Then tokenize it by \n
             routeElement[0] = newroute;
@@ -257,14 +257,14 @@ void handleMsg(char *inbuf, int fdnum)
                 reverseRoute[0] = '\0';
                 for (i = onRE; i >= 0; i--) {
                     ostrlen = strlen(reverseRoute);
-                    strncpy(reverseRoute+ostrlen, routeElement[i], 32256-ostrlen);
+                    strncpy(reverseRoute+ostrlen, routeElement[i], DN_ROUTE_LEN-ostrlen);
                     ostrlen += strlen(routeElement[i]);
-                    strncpy(reverseRoute+ostrlen, "\n", 32256-ostrlen);
+                    strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
                 }
                 ostrlen = strlen(reverseRoute);
-                strncpy(reverseRoute+ostrlen, params[1], 32256-ostrlen);
+                strncpy(reverseRoute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
                 ostrlen += strlen(params[1]);
-                strncpy(reverseRoute+ostrlen, "\n", 32256-ostrlen);
+                strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
                 
                 // Add his route,
                 hashSSet(dn_routes, params[1], reverseRoute);
@@ -290,12 +290,12 @@ void handleMsg(char *inbuf, int fdnum)
                 // Then put curPthread back where we found it
                 hashPSet(recFndPthreads, params[1], curPthread);
             } else {
-                char oldWRoute[32256];
+                char oldWRoute[DN_ROUTE_LEN];
                 char *curWRoute;
-                char *newRouteElements[50];
+                char *newRouteElements[DN_MAX_PARAMS];
                 int onRE, x, y, ostrlen;
                 
-                memset(newRouteElements, 0, 50 * sizeof(char *));
+                memset(newRouteElements, 0, DN_MAX_PARAMS * sizeof(char *));
                 
                 curWRoute = hashSGet(weakRoutes, params[1]);
                 // If there is no current weakroute, just copy in the current route
@@ -312,7 +312,7 @@ void handleMsg(char *inbuf, int fdnum)
                     curWRoute = hashSGet(weakRoutes, params[1]);
                 }
                 
-                strncpy(oldWRoute, curWRoute, 32256);
+                strncpy(oldWRoute, curWRoute, DN_ROUTE_LEN);
                 
                 newRouteElements[0] = oldWRoute;
                 onRE = 1;
@@ -334,12 +334,12 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 for (x = 0; newRouteElements[x] != NULL; x++) {
                     for (y = 0; routeElement[y] != NULL; y++) {
-                        if (!strncmp(newRouteElements[x], routeElement[y], 24)) {
+                        if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
                             // It's a match, copy it in.
                             ostrlen = strlen(curWRoute);
-                            strncpy(curWRoute+ostrlen, routeElement[y], 32256-ostrlen);
+                            strncpy(curWRoute+ostrlen, routeElement[y], DN_ROUTE_LEN-ostrlen);
                             ostrlen += strlen(routeElement[y]);
-                            strncpy(curWRoute+ostrlen, "\n", 32256-ostrlen);
+                            strncpy(curWRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
                         }
                     }
                 }
@@ -353,11 +353,11 @@ void handleMsg(char *inbuf, int fdnum)
         }
         
         // Add myself to the route
-        strncpy(newroute, params[0], 32256);
+        strncpy(newroute, params[0], DN_ROUTE_LEN);
         ostrlen = strlen(newroute);
-        strncpy(newroute+ostrlen, dn_name, 32256-ostrlen);
+        strncpy(newroute+ostrlen, dn_name, DN_ROUTE_LEN-ostrlen);
         ostrlen = strlen(newroute);
-        strncpy(newroute+ostrlen, "\n", 32256-ostrlen);
+        strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
 
         buildCmd(outbuf, "fnd", 1, 1, newroute);
         addParam(outbuf, params[1]);
@@ -384,7 +384,7 @@ void handleMsg(char *inbuf, int fdnum)
         if (!handleit) {
             // This isn't our route, but do add intermediate routes
             int i, ostrlen;
-            char endu[256], myn[256], newroute[32256];
+            char endu[DN_NAME_LEN], myn[DN_NAME_LEN], newroute[DN_ROUTE_LEN];
             char checknext, usenext;
             
             // Fix our pararms[0]
@@ -393,15 +393,15 @@ void handleMsg(char *inbuf, int fdnum)
             
             // Who's the end user?
             for (i = strlen(params[0])-2; params[0][i] != '\n' && params[0][i] != '\0' && i >= 0; i--);
-            strncpy(endu, params[0]+i+1, 256);
+            strncpy(endu, params[0]+i+1, DN_NAME_LEN);
             endu[strlen(endu)-1] = '\0';
             
             // And add an intermediate route
             hashSSet(dn_iRoutes, endu, params[0]);
             
             // Then figure out the route from here back
-            /*i = strncpy(myn, dn_name, 256);
-            strncpy(myn + i, "\n", 256-i);*/
+            /*i = strncpy(myn, dn_name, DN_NAME_LEN);
+            strncpy(myn + i, "\n", DN_NAME_LEN-i);*/
             sprintf(myn, "%.254s\n", dn_name);
             
             // Loop through to find my name
@@ -418,7 +418,7 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 if (params[2][i] == '\n') {
                     if (usenext) {
-                        strncpy(newroute, params[2]+i+1, 32256);
+                        strncpy(newroute, params[2]+i+1, DN_ROUTE_LEN);
                         break;
                     }
                     checknext = 1;
@@ -426,23 +426,23 @@ void handleMsg(char *inbuf, int fdnum)
             }
             
             ostrlen = strlen(newroute);
-            strncpy(newroute+ostrlen, params[1], 32256-ostrlen);
+            strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
             
             // And add that route
             hashSSet(dn_iRoutes, params[1], newroute);
         } else {
-            char newroute[32256];
+            char newroute[DN_ROUTE_LEN];
             int ostrlen;
             
             // Hoorah, add a user
             
             // 1) Route
-            strncpy(newroute, params[2], 32256);
+            strncpy(newroute, params[2], DN_ROUTE_LEN);
             
             ostrlen = strlen(newroute);
-            strncpy(newroute+ostrlen, params[1], 32256-ostrlen);
+            strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
             ostrlen += strlen(params[1]);
-            strncpy(newroute+ostrlen, "\n", 32256-ostrlen);
+            strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
             
             hashSSet(dn_routes, params[1], newroute);
             
@@ -497,7 +497,7 @@ void handleMsg(char *inbuf, int fdnum)
 int handleRoutedMsg(char *command, char vera, char verb, char **params)
 {
     int i, sendfd;
-    char *newroute, newbuf[65536];
+    char *newroute, newbuf[DN_CMD_LEN];
     
     if (strlen(params[0]) == 0) {
         return 1; // This is our data
@@ -512,7 +512,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
     if (sendfd == -1) {
         // We need to tell the other side that this route is dead!
         if (strncmp(command, "lst", 3)) {
-            char *newparams[50], *endu, *iroute;
+            char *newparams[DN_MAX_PARAMS], *endu, *iroute;
             // Bouncing a lost could end up in an infinite loop, so don't
             
             // Fix our params[0]
@@ -526,7 +526,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
             endu = params[0]+i+1;
             
             // If this is me, don't send the command, just display it
-            if (!strncmp(params[1], dn_name, 24)) {
+            if (!strncmp(params[1], dn_name, DN_NAME_LEN)) {
                 uiLoseRoute(endu);
             } else {
                 // Do we have an intermediate route?
@@ -555,13 +555,13 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
 
 int handleNLUnroutedMsg(char **params)
 {
-    char origroute[32256];
-    char *divroute[50];
+    char origroute[DN_ROUTE_LEN];
+    char *divroute[DN_MAX_PARAMS];
     int ondr, i, ostrlen;
     
-    memset(divroute, 0, 50 * sizeof(char *));
+    memset(divroute, 0, DN_MAX_PARAMS * sizeof(char *));
     
-    strncpy(origroute, params[0], 32256);
+    strncpy(origroute, params[0], DN_ROUTE_LEN);
     
     divroute[0] = origroute;
     ondr = 1;
@@ -578,7 +578,7 @@ int handleNLUnroutedMsg(char **params)
     }
     
     for (i = ondr - 1; i >= 0; i--) {
-        if (!strncmp(dn_name, divroute[i], 24)) {
+        if (!strncmp(dn_name, divroute[i], DN_NAME_LEN)) {
             return 0;
         }
     }
@@ -586,7 +586,7 @@ int handleNLUnroutedMsg(char **params)
     return 1;
 }
 
-int handleNRUnroutedMsg(char **params)
+/*int handleNRUnroutedMsg(char **params)
 {
     // This part of handleUnroutedMsg decides whether to just delete it
     if (hashGet(dn_trans_keys, params[0]) == -1) {
@@ -594,7 +594,7 @@ int handleNRUnroutedMsg(char **params)
         return 1;
     }
     return 0;
-}
+}*/
 
 void emitUnroutedMsg(int fromfd, char *outbuf)
 {
@@ -611,11 +611,11 @@ void emitUnroutedMsg(int fromfd, char *outbuf)
 // fndPthread is the pthread that harvests late fnds
 void *fndPthread(void *name_voidptr)
 {
-    char name[256];
+    char name[DN_NAME_LEN];
     char isWeak = 0;
     char *curWRoute;
     
-    strncpy(name, (char *) name_voidptr, 256);
+    strncpy(name, (char *) name_voidptr, DN_NAME_LEN);
     free(name_voidptr);
     
     sleep(15);
@@ -643,10 +643,10 @@ void *fndPthread(void *name_voidptr)
     
     // If it's weak, send a dcr (direct connect request)
     {
-        char *params[50], hostbuf[128], *ip, *route;
+        char *params[DN_MAX_PARAMS], hostbuf[128], *ip, *route;
         struct hostent *he;
         
-        memset(params, 0, 50 * sizeof(char *));
+        memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
         route = hashSGet(dn_routes, name);
         params[0] = (char *) malloc((strlen(route) + 1) * sizeof(char));
@@ -676,10 +676,10 @@ void establishConnection(char *to)
     
     route = hashSGet(dn_routes, to);
     if (route) {
-        char *params[50], *ip, hostbuf[128];
+        char *params[DN_MAX_PARAMS], *ip, hostbuf[128];
         struct hostent *he;
         
-        memset(params, 0, 50 * sizeof(char *));
+        memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
         // It's a user, send a DCR
         params[0] = (char *) malloc((strlen(route) + 1) * sizeof(char));
@@ -705,9 +705,9 @@ void establishConnection(char *to)
 
 int sendMsg(char *to, char *msg)
 {
-    char *outparams[50], *route;
+    char *outparams[DN_MAX_PARAMS], *route;
     
-    memset(outparams, 0, 50 * sizeof(char *));
+    memset(outparams, 0, DN_MAX_PARAMS * sizeof(char *));
         
     route = hashSGet(dn_routes, to);
     if (route == NULL) {
@@ -727,7 +727,7 @@ int sendMsg(char *to, char *msg)
 
 void sendFnd(char *to)
 {
-    char outbuf[65536];
+    char outbuf[DN_CMD_LEN];
     
     // Find a user by name
     buildCmd(outbuf, "fnd", 1, 1, "");
