@@ -21,7 +21,7 @@
 #ifndef DN_UI_H
 #define DN_UI_H
 
-int uiInit();
+int uiInit(int argc, char **argv, char **envp);
 void uiDispMsg(char *from, char *msg);
 
 #endif // DN_UI_H

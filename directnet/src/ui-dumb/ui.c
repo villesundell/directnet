@@ -33,7 +33,7 @@ char *currentPartner;
 
 int handleUInput(char *inp);
 
-int uiInit(char **envp)
+int uiInit(int argc, char ** argv, char **envp)
 {
     // This is the most basic UI
     int charin, ostrlen;
