@@ -76,6 +76,13 @@ ChatWindow *getWindow(const char *name)
     return cws[i];
 }
 
+void putOutput(ChatWindow *w, const char *txt)
+{
+    w->textOut->insert(txt);
+    w->textOut->show_insert_position();
+    Fl::flush();
+}
+
 void setName(Fl_Input *w, void *ignore)
 {
     strncpy(dn_name, w->value(), DN_NAME_LEN);
@@ -143,7 +150,7 @@ void sendInput(Fl_Input *w, void *ignore)
             dispmsg = (char *) alloca((strlen(dn_name) + strlen(msg) + 4) * sizeof(char));
             sprintf(dispmsg, "%s: %s\n", dn_name, msg);
     
-            cws[i]->textOut->insert(dispmsg);
+            putOutput(cws[i], dispmsg);
             
             /* now actually send */
             sendMsg(to, msg);
@@ -166,8 +173,7 @@ extern "C" void uiDispMsg(char *from, char *msg)
     
     cw = getWindow(from);
     
-    cw->textOut->insert(dispmsg);
-    Fl::flush();
+    putOutput(cw, dispmsg);
 }
 
 extern "C" void uiEstConn(char *from)
@@ -184,8 +190,7 @@ extern "C" void uiEstRoute(char *from)
     bw->onlineList->add(from);
     
     cw = getWindow(from);
-    cw->textOut->insert("Route established.\n");
-    Fl::flush();
+    putOutput(cw, "Route established.\n");
 }
 
 extern "C" void uiLoseConn(char *from)
@@ -195,8 +200,7 @@ extern "C" void uiLoseConn(char *from)
     while (!uiLoaded) sleep(0);
     
     cw = getWindow(from);
-    cw->textOut->insert("Connection lost.\n");
-    Fl::flush();
+    putOutput(cw, "Connection lost.\n");
 }
 
 extern "C" void uiLoseRoute(char *from)
@@ -206,8 +210,7 @@ extern "C" void uiLoseRoute(char *from)
     while (!uiLoaded) sleep(0);
     
     cw = getWindow(from);
-    cw->textOut->insert("Route lost.\n");
-    Fl::flush();
+    putOutput(cw, "Route lost.\n");
 }
 
 extern "C" void uiNoRoute(char *to)
@@ -217,6 +220,5 @@ extern "C" void uiNoRoute(char *to)
     while (!uiLoaded) sleep(0);
     
     cw = getWindow(to);
-    cw->textOut->insert("You do not have a route to this user.\n");
-    Fl::flush();
+    putOutput(cw, "You do not have a route to this user.\n");
 }
