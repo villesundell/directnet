@@ -311,7 +311,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB build build_cpu build_vendor build_os host host_cpu host_vendor host_os acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS WX_CONFIG_PATH WX_CPPFLAGS WX_CFLAGS WX_CXXFLAGS WX_CFLAGS_ONLY WX_CXXFLAGS_ONLY WX_LIBS WX_LIBS_STATIC WX_VERSION CURSES_LIBS CURSES_INCLUDEDIR EGREP UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_DUMB_TRUE UI_DUMB_FALSE LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB build build_cpu build_vendor build_os host host_cpu host_vendor host_os acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS WX_CONFIG_PATH WX_CPPFLAGS WX_CFLAGS WX_CXXFLAGS WX_CFLAGS_ONLY WX_CXXFLAGS_ONLY WX_LIBS WX_LIBS_STATIC WX_VERSION CURSES_LIBS CURSES_INCLUDEDIR EGREP UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -4512,7 +4512,11 @@ if test "${enable_ui+set}" = set; then
   case "$enableval" in
         dumb) ui=dumb ;;
         wx) ui=wx ;;
+        wx-static) ui=wx-static ;;
         curses) ui=curses ;;
+        *) { { echo "$as_me:$LINENO: error: Invalid UI chosen." >&5
+echo "$as_me: error: Invalid UI chosen." >&2;}
+   { (exit 1); exit 1; }; } ;;
 esac
 else
   ui=determine
@@ -4537,7 +4541,7 @@ then
 echo "$as_me: Using dumb UI" >&6;}
 fi
 
-if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+if test "x$ui" = "xwx" || test "x$ui" = "xwx-static" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
 
 
@@ -4761,16 +4765,32 @@ The wx-config script could not be found.
    { (exit 1); exit 1; }; }
                 fi
         else
-                UI_CFLAGS=$WX_CFLAGS
-                UI_CPPFLAGS=$WX_CPPFLAGS
-                UI_CXXFLAGS=$WX_CXXFLAGS
-                UI_LIBS=$WX_LIBS
-                UI_LDFLAGS=
-                UI_DIR=ui-wx
-                found_ui=yes
-                ui=wx
-                { echo "$as_me:$LINENO: Using wx UI" >&5
+                CC=$CXX
+
+                if test "x$ui" != "xwx-static"
+                then
+                        UI_CFLAGS=$WX_CFLAGS
+                        UI_CPPFLAGS=$WX_CPPFLAGS
+                        UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_LIBS=$WX_LIBS
+                        UI_LDFLAGS=
+                        UI_DIR=ui-wx
+                        found_ui=yes
+                        ui=wx
+                        { echo "$as_me:$LINENO: Using wx UI" >&5
 echo "$as_me: Using wx UI" >&6;}
+                else
+                        UI_CFLAGS=$WX_CFLAGS
+                        UI_CPPFLAGS=$WX_CPPFLAGS
+                        UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_LIBS=$WX_LIBS_STATIC
+                        UI_LDFLAGS=
+                        UI_DIR=ui-wx
+                        found_ui=yes
+                        ui=wx
+                        { echo "$as_me:$LINENO: Using wx UI" >&5
+echo "$as_me: Using wx UI" >&6;}
+                fi
         fi
 fi
 
@@ -5186,7 +5206,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5189 "configure"
+#line 5209 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
@@ -5273,12 +5293,12 @@ fi
 
 
 
-if test "x$ui" = "xdumb"; then
-  UI_DUMB_TRUE=
-  UI_DUMB_FALSE='#'
+if test "x$UI_CXX" = "xtrue"; then
+  UI_CXX_TRUE=
+  UI_CXX_FALSE='#'
 else
-  UI_DUMB_TRUE='#'
-  UI_DUMB_FALSE=
+  UI_CXX_TRUE='#'
+  UI_CXX_FALSE=
 fi
 
 
@@ -6971,10 +6991,10 @@ echo "$as_me: error: conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${UI_DUMB_TRUE}" && test -z "${UI_DUMB_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"UI_DUMB\" was never defined.
+if test -z "${UI_CXX_TRUE}" && test -z "${UI_CXX_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"UI_CXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"UI_DUMB\" was never defined.
+echo "$as_me: error: conditional \"UI_CXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -7591,8 +7611,8 @@ s,@UI_CXXFLAGS@,$UI_CXXFLAGS,;t t
 s,@UI_LIBS@,$UI_LIBS,;t t
 s,@UI_LDFLAGS@,$UI_LDFLAGS,;t t
 s,@UI_DIR@,$UI_DIR,;t t
-s,@UI_DUMB_TRUE@,$UI_DUMB_TRUE,;t t
-s,@UI_DUMB_FALSE@,$UI_DUMB_FALSE,;t t
+s,@UI_CXX_TRUE@,$UI_CXX_TRUE,;t t
+s,@UI_CXX_FALSE@,$UI_CXX_FALSE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

@@ -46,7 +46,9 @@ AC_ARG_ENABLE(ui,
 [case "$enableval" in
         dumb) ui=dumb ;;
         wx) ui=wx ;;
+        wx-static) ui=wx-static ;;
         curses) ui=curses ;;
+        *) AC_MSG_ERROR([Invalid UI chosen.]) ;;
 esac], [ui=determine])
 
 AS_MESSAGE([checking which UI to use...])
@@ -66,7 +68,7 @@ then
         AS_MESSAGE([Using dumb UI])
 fi
 
-if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+if test "x$ui" = "xwx" || test "x$ui" = "xwx-static" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
         AMX_OPTIONS_WXCONFIG
         AMX_PATH_WXCONFIG(2.3.4, wxWin=1)
@@ -81,15 +83,28 @@ The wx-config script could not be found.
                         ])
                 fi
         else
-                UI_CFLAGS=$WX_CFLAGS
-                UI_CPPFLAGS=$WX_CPPFLAGS
-                UI_CXXFLAGS=$WX_CXXFLAGS
-                UI_LIBS=$WX_LIBS
-                UI_LDFLAGS=
-                UI_DIR=ui-wx
-                found_ui=yes
-                ui=wx
-                AS_MESSAGE([Using wx UI])
+                if test "x$ui" != "xwx-static"
+                then
+                        UI_CFLAGS=$WX_CFLAGS
+                        UI_CPPFLAGS=$WX_CPPFLAGS
+                        UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_LIBS=$WX_LIBS
+                        UI_LDFLAGS=
+                        UI_DIR=ui-wx
+                        found_ui=yes
+                        ui=wx
+                        AS_MESSAGE([Using wx UI])
+                else
+                        UI_CFLAGS=$WX_CFLAGS
+                        UI_CPPFLAGS=$WX_CPPFLAGS
+                        UI_CXXFLAGS=$WX_CXXFLAGS
+                        UI_LIBS=$WX_LIBS_STATIC
+                        UI_LDFLAGS=
+                        UI_DIR=ui-wx
+                        found_ui=yes
+                        ui=wx
+                        AS_MESSAGE([Using wx UI])
+                fi
         fi
 fi
 
@@ -130,7 +145,7 @@ AC_SUBST(UI_CXXFLAGS)
 AC_SUBST(UI_LIBS)
 AC_SUBST(UI_LDFLAGS)
 AC_SUBST(UI_DIR)
-AM_CONDITIONAL(UI_DUMB, test "x$ui" = "xdumb")
+AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
 
 
 # Checks for header files.
