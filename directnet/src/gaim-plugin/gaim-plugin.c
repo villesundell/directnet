@@ -36,7 +36,7 @@ char *fgets_win32(char *s, int size, FILE *stream)
 {
     int i, c;
     for (i = 0; i < size-1; i++) {
-        c = getchar(stream);
+        c = getc(stream);
 	s[i] = c;
 	if (c == '\n') {
 	    s[i+1] = '\0';
