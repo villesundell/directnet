@@ -14,7 +14,8 @@
 
 @SET_MAKE@
 
-SOURCES = $(directnet_SOURCES) $(directnetd_SOURCES) $(directnethub_SOURCES)
+
+SOURCES = $(libdirectnet_gaim_la_SOURCES) $(directnet_SOURCES) $(directnetd_SOURCES) $(directnethub_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -56,7 +57,28 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"
+gaimLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(gaim_LTLIBRARIES)
+am__libdirectnet_gaim_la_SOURCES_DIST = chat.c client.c connection.c \
+	directnet.c gaim-plugin.c hash.c lock.c server.c
+@GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS =  \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-chat.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-client.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-connection.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-directnet.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-gaim-plugin.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-hash.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-lock.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-server.lo
+libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
+@GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_rpath = -rpath $(gaimdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__directnet_SOURCES_DIST = chat.c client.c connection.c directnet.c \
@@ -94,17 +116,24 @@ depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
-CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
-SOURCES = $(directnet_SOURCES) $(directnetd_SOURCES) \
-	$(directnethub_SOURCES)
-DIST_SOURCES = $(am__directnet_SOURCES_DIST) \
-	$(am__directnetd_SOURCES_DIST) \
+CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+SOURCES = $(libdirectnet_gaim_la_SOURCES) $(directnet_SOURCES) \
+	$(directnetd_SOURCES) $(directnethub_SOURCES)
+DIST_SOURCES = $(am__libdirectnet_gaim_la_SOURCES_DIST) \
+	$(am__directnet_SOURCES_DIST) $(am__directnetd_SOURCES_DIST) \
 	$(am__directnethub_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
@@ -120,6 +149,7 @@ ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -132,11 +162,13 @@ CPPFLAGS = @CPPFLAGS@
 CURSES_INCLUDEDIR = @CURSES_INCLUDEDIR@
 CURSES_LIBS = @CURSES_LIBS@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -148,9 +180,16 @@ ENC_DIR = @ENC_DIR@
 ENC_LDFLAGS = @ENC_LDFLAGS@
 ENC_LIBS = @ENC_LIBS@
 EXEEXT = @EXEEXT@
+F77 = @F77@
+FFLAGS = @FFLAGS@
 FLTK_CFLAGS = @FLTK_CFLAGS@
 FLTK_CONFIG = @FLTK_CONFIG@
 FLTK_LIBS = @FLTK_LIBS@
+GAIM_CFLAGS = @GAIM_CFLAGS@
+GAIM_LIBS = @GAIM_LIBS@
+GAIM_PLUGIN_DIR = @GAIM_PLUGIN_DIR@
+GAIM_PLUGIN_FALSE = @GAIM_PLUGIN_FALSE@
+GAIM_PLUGIN_TRUE = @GAIM_PLUGIN_TRUE@
 HUB_DIR = @HUB_DIR@
 HUB_NAME = @HUB_NAME@
 INSTALL_DATA = @INSTALL_DATA@
@@ -160,6 +199,8 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MAKE_HUB_FALSE = @MAKE_HUB_FALSE@
@@ -172,6 +213,7 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
@@ -199,8 +241,10 @@ WX_CXXFLAGS_ONLY = @WX_CXXFLAGS_ONLY@
 WX_LIBS = @WX_LIBS@
 WX_LIBS_STATIC = @WX_LIBS_STATIC@
 WX_VERSION = @WX_VERSION@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_F77 = @ac_ct_F77@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 acx_pthread_config = @acx_pthread_config@
@@ -280,10 +324,25 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@
 @MAKE_HUB_TRUE@directnethub_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@
 @MAKE_HUB_TRUE@directnethub_DEPENDENCIES = @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a
 @MAKE_HUB_TRUE@directnethub_LDADD = @PTHREAD_LIBS@ @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a @ENC_LIBS@
+@GAIM_PLUGIN_TRUE@gaimdir = $(libdir)/gaim
+@GAIM_PLUGIN_TRUE@gaim_LTLIBRARIES = libdirectnet_gaim.la
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_SOURCES = chat.c \
+@GAIM_PLUGIN_TRUE@client.c \
+@GAIM_PLUGIN_TRUE@connection.c \
+@GAIM_PLUGIN_TRUE@directnet.c \
+@GAIM_PLUGIN_TRUE@gaim-plugin.c \
+@GAIM_PLUGIN_TRUE@hash.c \
+@GAIM_PLUGIN_TRUE@lock.c \
+@GAIM_PLUGIN_TRUE@server.c
+
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@ -module -avoid-version -Wl,--export-dynamic
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @ENC_DIR@/libenc.a
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @PTHREAD_LIBS@ @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
 all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .c .cc .o .obj
+.SUFFIXES: .c .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -313,16 +372,46 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-gaimLTLIBRARIES: $(gaim_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(gaimdir)" || $(mkdir_p) "$(DESTDIR)$(gaimdir)"
+	@list='$(gaim_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) --mode=install $(gaimLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(gaimdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(gaimLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(gaimdir)/$$f"; \
+	  else :; fi; \
+	done
+
+uninstall-gaimLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@set -x; list='$(gaim_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(gaimdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(gaimdir)/$$p"; \
+	done
+
+clean-gaimLTLIBRARIES:
+	-test -z "$(gaim_LTLIBRARIES)" || rm -f $(gaim_LTLIBRARIES)
+	@list='$(gaim_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libdirectnet_gaim.la: $(libdirectnet_gaim_la_OBJECTS) $(libdirectnet_gaim_la_DEPENDENCIES) 
+	$(LINK) $(am_libdirectnet_gaim_la_rpath) $(libdirectnet_gaim_la_LDFLAGS) $(libdirectnet_gaim_la_OBJECTS) $(libdirectnet_gaim_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
 	  if test -f $$p \
+	     || test -f $$p1 \
 	  ; then \
 	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
+	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
 	  else :; fi; \
 	done
 
@@ -335,7 +424,11 @@ uninstall-binPROGRAMS:
 	done
 
 clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
 directnet$(EXEEXT): $(directnet_OBJECTS) $(directnet_DEPENDENCIES) 
 	@rm -f directnet$(EXEEXT)
 	$(CXXLINK) $(directnet_LDFLAGS) $(directnet_OBJECTS) $(directnet_LDADD) $(LIBS)
@@ -374,6 +467,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-hash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-chat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-client.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-connection.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-directnet.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-lock.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-server.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -388,6 +489,69 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libdirectnet_gaim_la-chat.lo: chat.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-chat.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-chat.Tpo" -c -o libdirectnet_gaim_la-chat.lo `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-chat.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-chat.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-chat.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='libdirectnet_gaim_la-chat.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-chat.lo `test -f 'chat.c' || echo '$(srcdir)/'`chat.c
+
+libdirectnet_gaim_la-client.lo: client.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-client.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-client.Tpo" -c -o libdirectnet_gaim_la-client.lo `test -f 'client.c' || echo '$(srcdir)/'`client.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-client.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-client.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='libdirectnet_gaim_la-client.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-client.lo `test -f 'client.c' || echo '$(srcdir)/'`client.c
+
+libdirectnet_gaim_la-connection.lo: connection.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-connection.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-connection.Tpo" -c -o libdirectnet_gaim_la-connection.lo `test -f 'connection.c' || echo '$(srcdir)/'`connection.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-connection.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-connection.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='libdirectnet_gaim_la-connection.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-connection.lo `test -f 'connection.c' || echo '$(srcdir)/'`connection.c
+
+libdirectnet_gaim_la-directnet.lo: directnet.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-directnet.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-directnet.Tpo" -c -o libdirectnet_gaim_la-directnet.lo `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-directnet.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-directnet.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='libdirectnet_gaim_la-directnet.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-directnet.lo `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
+
+libdirectnet_gaim_la-gaim-plugin.lo: gaim-plugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-gaim-plugin.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Tpo" -c -o libdirectnet_gaim_la-gaim-plugin.lo `test -f 'gaim-plugin.c' || echo '$(srcdir)/'`gaim-plugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gaim-plugin.c' object='libdirectnet_gaim_la-gaim-plugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-gaim-plugin.lo `test -f 'gaim-plugin.c' || echo '$(srcdir)/'`gaim-plugin.c
+
+libdirectnet_gaim_la-hash.lo: hash.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-hash.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-hash.Tpo" -c -o libdirectnet_gaim_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-hash.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-hash.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='libdirectnet_gaim_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+
+libdirectnet_gaim_la-lock.lo: lock.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-lock.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-lock.Tpo" -c -o libdirectnet_gaim_la-lock.lo `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-lock.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-lock.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='libdirectnet_gaim_la-lock.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-lock.lo `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
+
+libdirectnet_gaim_la-server.lo: server.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-server.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-server.Tpo" -c -o libdirectnet_gaim_la-server.lo `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-server.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-server.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='libdirectnet_gaim_la-server.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-server.lo `test -f 'server.c' || echo '$(srcdir)/'`server.c
 
 directnet-chat.o: chat.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-chat.o -MD -MP -MF "$(DEPDIR)/directnet-chat.Tpo" -c -o directnet-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
@@ -697,6 +861,13 @@ directnethub-server.obj: server.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
+.cc.lo:
+@am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
 directnet-fake.o: fake.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-fake.o -MD -MP -MF "$(DEPDIR)/directnet-fake.Tpo" -c -o directnet-fake.o `test -f 'fake.cc' || echo '$(srcdir)/'`fake.cc; \
 @am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-fake.Tpo" "$(DEPDIR)/directnet-fake.Po"; else rm -f "$(DEPDIR)/directnet-fake.Tpo"; exit 1; fi
@@ -710,6 +881,15 @@ directnet-fake.obj: fake.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fake.cc' object='directnet-fake.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-fake.obj `if test -f 'fake.cc'; then $(CYGPATH_W) 'fake.cc'; else $(CYGPATH_W) '$(srcdir)/fake.cc'; fi`
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
 uninstall-info-am:
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -876,10 +1056,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -908,13 +1088,14 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+clean-am: clean-binPROGRAMS clean-gaimLTLIBRARIES clean-generic \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-tags
+	distclean-libtool distclean-tags
 
 dvi: dvi-recursive
 
@@ -926,7 +1107,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am:
+install-data-am: install-gaimLTLIBRARIES
 
 install-exec-am: install-binPROGRAMS
 
@@ -943,7 +1124,8 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
 pdf: pdf-recursive
 
@@ -953,23 +1135,27 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-binPROGRAMS uninstall-gaimLTLIBRARIES \
+	uninstall-info-am
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-binPROGRAMS clean-generic clean-recursive ctags \
-	ctags-recursive distclean distclean-compile distclean-generic \
+	clean clean-binPROGRAMS clean-gaimLTLIBRARIES clean-generic \
+	clean-libtool clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
 	distclean-recursive distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
 	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-recursive pdf pdf-am ps ps-am \
+	install-gaimLTLIBRARIES install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
 	tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-info-am
+	uninstall-binPROGRAMS uninstall-gaimLTLIBRARIES \
+	uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -21,6 +21,6 @@
 #ifndef DN_CLIENT_H
 #define DN_CLIENT_H
 
-void establishClient(char *destination);
+int establishClient(char *destination);
 
 #endif // DN_CLIENT_H

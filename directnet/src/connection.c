@@ -207,20 +207,20 @@ void handleMsg(char *inbuf, int fdnum)
     } else if ((!strncmp(command, "cms", 3) &&
          inbuf[3] == 1 && inbuf[4] == 1)) {
         REQ_PARAMS(5);
-        
-        // Should we just ignore it?
-        if (hashGet(dn_trans_keys, params[1]) == -1) {
-            hashSet(dn_trans_keys, params[1], 1);
-        } else {
-            return;
-        }
-        
+
         // a chat message
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             char **users;
             char *outParams[DN_MAX_PARAMS];
             int i;
             
+            // Should we just ignore it?
+            if (hashGet(dn_trans_keys, params[1]) == -1) {
+                hashSet(dn_trans_keys, params[1], 1);
+            } else {
+                return;
+            }
+        
             // Are we on this chat?
             if (!chatOnChannel(params[2])) {
                 return;
@@ -607,7 +607,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
     for (i = 0; params[0][i] != '\n' && params[0][i] != '\0'; i++);
     params[0][i] = '\0';
     newroute = params[0]+i+1;
-        
+    
     sendfd = hashGet(dn_fds, params[0]);
         
     if (sendfd == -1) {
@@ -782,7 +782,7 @@ void *fndPthread(void *name_voidptr)
 }
 
 /* Commands used by the UI */
-void establishConnection(char *to)
+int establishConnection(char *to)
 {
     char *route;
     
@@ -810,9 +810,11 @@ void establishConnection(char *to)
         
         free(params[0]);
         free(params[2]);
+        
+        return 1;
     } else {
         // It's a hostname or IP
-        establishClient(to);
+        return establishClient(to);
     }
 }
 
@@ -923,7 +925,6 @@ void sendChat(char *to, char *msg)
             continue;
         }
         
-                
         handleRoutedMsg("cms", 1, 1, outParams);
     }
 }

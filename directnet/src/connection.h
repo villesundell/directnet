@@ -21,7 +21,7 @@
 #ifndef DN_CONNECTION_H
 #define DN_CONNECTION_H
 
-void establishConnection(char *to);
+int establishConnection(char *to);
 int sendMsg(char *to, char *msg);
 void sendFnd(char *to);
 void joinChat(char *chat);
