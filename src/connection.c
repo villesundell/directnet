@@ -71,8 +71,12 @@ void *communicator(void *fdnum_voidptr)
                 handleMsg(buf, fdnum);
                 buf[0] = '\0';
             }
-        } else if (byterec == 0) {
+        } else if (byterec <= 0) {
             char *name;
+            
+            if (byterec == -1) {
+                perror("recv");
+            }
             
             // Disconnect
             name = hashRevGet(dn_fds, fdnum);
@@ -84,9 +88,6 @@ void *communicator(void *fdnum_voidptr)
             
             close(fds[fdnum]);
             return NULL;
-        } else if (byterec == -1) {
-            perror("recv");
-            return (void *) -1;
         }
     }
     
