@@ -40,8 +40,12 @@ pthread_t *pthreads;
 int pipes[1024][2];
 DN_LOCK *pipe_locks;
 
-pthread_t *fnd_pthreads;
-char *weakRoutes[1024];
+/*pthread_t *fnd_pthreads;
+char *weakRoutes[1024];*/
+DN_LOCK recFndHashLock; // Lock on the following hash
+struct hashKeyL **recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
+struct hashKeyP **recFndPthreads;
+struct hashKeyS **weakRoutes; // List of weak routes
 
 char dn_name[1024];
 struct hashKey **dn_fds;
@@ -83,18 +87,24 @@ int main(int argc, char **argv, char **envp)
     onpthread = 0;
     
     /* fnd_pthreads is an array of the temporary pthreads made to collect extra routes after
-       receiving an initial fnd */
+       receiving an initial fnd * /
     fnd_pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
-    memset(fnd_pthreads, 0, 1024 * sizeof(pthread_t));
+    memset(fnd_pthreads, 0, 1024 * sizeof(pthread_t));*/
     
-    // This stores fd numbers by name
-    dn_fds = hashCreate(1024);
+    // these are described above
+    dn_lockInit(&recFndHashLock);
+    recFndLocks = hashLCreate(1024);
+    recFndPthreads = hashPCreate(1024);
     
     /* Upon receiving a fnd, the node then continues to accept alternate fnds.  Every time it
        receives one, it goes through the current route and new route and only keeps the ones that
        appear in both.  That way, it ends up with a list of nodes that have no backup.  If there
        are any such nodes, it needs to attempt a direct connection to strengthen the network. */
-    memset(weakRoutes, 0, 1024 * sizeof(char *));
+    weakRoutes = hashSCreate(1024);
+    //memset(weakRoutes, 0, 1024 * sizeof(char *));
+    
+    // This stores fd numbers by name
+    dn_fds = hashCreate(1024);
     
     // This stores routes by name
     dn_routes = hashSCreate(1024);
@@ -133,7 +143,7 @@ int main(int argc, char **argv, char **envp)
     free(pipe_fds);
     free(pipe_locks);
     free(pthreads);
-    free(fnd_pthreads);
+    //free(fnd_pthreads);
     
     pthread_exit(NULL);
     

@@ -31,8 +31,10 @@ extern pthread_t *pthreads;
 
 extern DN_LOCK *pipe_locks;
 
-extern pthread_t *fnd_pthreads;
-extern char *weakRoutes[1024];
+extern DN_LOCK recFndHashLock; // Lock on the following hash
+extern struct hashKeyL **recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
+extern struct hashKeyP **recFndPthreads; // And the pthreads themselves
+extern struct hashKeyS **weakRoutes; // List of weak routes
 
 extern char dn_name[1024];
 extern struct hashKey **dn_fds;
