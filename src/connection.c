@@ -95,12 +95,27 @@ void *communicator(void *fdnum_voidptr)
 void buildCmd(char *into, char *command, char vera, char verb, char *param)
 {
     sprintf(into, "%s%c%c%s", command, vera, verb, param);
+    /*int cpied;
+    strncpy(into, command, 65534);
+    cpied = strlen(command);
+    
+    into[cpied+1] = vera;
+    into[cpied+2] = verb;
+    cpied += 2;
+    
+    strncpy(into + cpied, param, 65536 - cpied);*/
 }
 
 // Add a parameter into a command buffer
 void addParam(char *into, char *newparam)
 {
     sprintf(into+strlen(into), ";%s", newparam);
+    /*int cpied = strlen(into);
+    
+    into[cpied] = ';';
+    cpied++;
+    
+    strncpy(into + cpied, newparam, 65536-cpied);*/
 }
 
 // Send a command
@@ -333,9 +348,59 @@ void handleMsg(char *inbuf, int fdnum)
         emitUnroutedMsg(fdnum, outbuf);
     } else if (!strncmp(command, "fnr", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
+        char handleit;
+        
         REQ_PARAMS(4);
         
-        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+        handleit = handleRoutedMsg(command, inbuf[3], inbuf[4], params);
+        
+        if (!handleit) {
+            // Don't continue the route, but do add intermediate routes
+            int i;
+            char *newroute, *endu, myn[256];
+            char checknext, usenext;
+            
+            // Figure out the route from here to the end user
+            for (i = 0; params[0][i] != '\n'; i++);
+            newroute = params[0]+i+1;
+            
+            for (i = strlen(params[0])-2; params[0][i] != '\n'; i--);
+            endu = params[0]+i+1;
+            
+            // And add an intermediate route
+            hashSSet(dn_iRoutes, endu, newroute);
+            
+            // Then figure out the route from here back
+            /*i = strncpy(myn, dn_name, 256);
+            strncpy(myn + i, "\n", 256-i);*/
+            sprintf(myn, "%.254s\n", dn_name);
+            
+            // Loop through to find my name
+            checknext = 1;
+            usenext = 0;
+            for (i = 0; params[2][i] != '\0'; i++) {
+                if (checknext) {
+                    checknext = 0;
+                    // Hey, it's me, the next name is my route
+                    if (!strncmp(params[2]+i, myn, strlen(myn))) {
+                        usenext = 1;
+                    }
+                }
+                
+                if (params[2][i] == '\n') {
+                    if (usenext) {
+                        newroute = params[2]+i+1;
+                        break;
+                    }
+                }
+            }
+            
+            for (i = strlen(params[2])-2; params[2][i] != '\n'; i--);
+            endu = params[2]+i+1;
+            
+            // And add that route
+            hashSSet(dn_iRoutes, endu, newroute);
+        } else {
             char newroute[32256];
             int ostrlen;
             

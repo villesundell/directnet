@@ -33,7 +33,7 @@ fnd(1)(1) (find)
                 current route
                 local name
                 remote name
-                public key
+
 
 fnr(1)(1) (find response)
         purpose: Respond to a find by sending back the received route
@@ -49,7 +49,15 @@ key(1)(1) (key)
         type: direct
         parameters:
                 local name
-                public key
+
+
+lst(1)(1) (lost route)
+        purpose: Identify when a route has been lost (sent to the sender of msg, etc)
+        type: routed
+        parameters:
+                route
+                end user
+
 
 msg(1)(1) (message)
         purpose: Send a message

@@ -48,6 +48,7 @@ struct hashKey **dn_fds;
 
 struct hashKeyS **dn_routes;
 char *dn_route_by_num[1024];
+struct hashKeyS **dn_iRoutes;
 
 struct hashKey **dn_trans_keys;
 int currentTransKey;
@@ -99,6 +100,8 @@ int main(int argc, char **argv, char **envp)
     dn_routes = hashSCreate(1024);
     // And routes by number
     memset(dn_route_by_num, 0, 1024 * sizeof(char *));
+    // This stores intermediate routes, for response on broken routes
+    dn_iRoutes = hashSCreate(1024);
     
     // This hash stores the state of all nonrepeating unrouted messages
     dn_trans_keys = hashCreate(65536);
@@ -112,7 +115,7 @@ int main(int argc, char **argv, char **envp)
     serverPthread = establishServer();
 
     // Set GPG's home directory
-    sprintf(gpghomedir, "%s/.directnet", findHome(envp));
+    sprintf(gpghomedir, "%.245s/.directnet", findHome(envp));
 
     // Start the UI
     uiInit(argc, argv, envp);
