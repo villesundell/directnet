@@ -522,7 +522,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
         return 1; // This is our data
     }
     
-    for (i = 0; params[0][i] != '\n'; i++);
+    for (i = 0; params[0][i] != '\n' && params[0][i] != '\0'; i++);
     params[0][i] = '\0';
     newroute = params[0]+i+1;
         
