@@ -213,7 +213,7 @@ fi
 
 AC_SUBST(HUB_NAME)
 AC_SUBST(HUB_DIR)
-AM_CONDITIONAL(MAKE_HUB, test "x$hub" != "xno")
+AM_CONDITIONAL(MAKE_HUB, test "x$HUB_NAME" != "xno")
 
 
 # Check for encryption to use
