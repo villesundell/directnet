@@ -29,13 +29,14 @@ ui.o
 all: directnet
 
 directnet: $(OBJS)
+	rm -fr directnet
 	$(CC) $(CFLAGS) $(LIBS) $(OBJS) -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
 semiclean:
-	rm -f $(OBJS) gpgtest.o
+	rm -fr $(OBJS) gpgtest.o
 
 clean: semiclean
-	rm -f gpgtest directnet
+	rm -fr gpgtest directnet
