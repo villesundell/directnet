@@ -62,11 +62,7 @@ static GaimPluginProtocolInfo prpl_info = {
     gp_chatinfo,
     gp_chatinfo_defaults,
     gp_login, /* login */
-<<<<<<< gaim-plugin.c
-    pluginClose, /* close */
-=======
     gp_close, /* close */
->>>>>>> 1.14
     gp_sendim, /* send IM */
     NULL, /* set info */
     NULL, /* send "typing" */

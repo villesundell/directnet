@@ -163,7 +163,12 @@ int pluginMain(int argc, char **argv, char **envp)
     // Start the UI
     uiInit(argc, argv, envp);
 
-#ifndef GAIM_PLUGIN
+#ifdef GAIM_PLUGIN
+}
+void pluginClose(void *gc) {
+    dn_name_set = 0;
+    uiLoaded = 0;
+#endif
     
     // When the UI has exited, we're done.
     serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
@@ -183,8 +188,6 @@ int pluginMain(int argc, char **argv, char **envp)
     pthread_exit(NULL);
     
     return 0;
-    
-#endif
 }
 
 char *findHome(char **envp)
