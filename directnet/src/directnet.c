@@ -195,6 +195,11 @@ char *findHome(char **envp)
             return envp[i]+5;
         }
     }
+   
+#ifdef WIN32
+    // On Windoze we'll accept something invalid
+    return "c:/";
+#endif
     
     fprintf(stderr, "Couldn't find your HOME directory.\n");
     exit(-1);
