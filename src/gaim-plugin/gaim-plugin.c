@@ -20,6 +20,24 @@
 
 #ifdef WIN32
 
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <winsock2.h>
+
+struct sockaddr_in sockin[2];
+
+void *connectThread(void *fd_ptr)
+{
+    int fd = *((int *) fd_ptr);
+    free(fd_ptr);
+    if (connect(fd, (struct sockaddr *) &sockin[0], sizeof(sockin[0])) < 0)
+    {
+        perror("connect");
+        return;
+    }
+}
+
 /* Because Windows doesn't support pipe, I lifted a socketpair function from the web.  It seems
  * to be under the GPL, as it was intended to be a patch to GDB
  * source: http://sources.redhat.com/ml/gdb-patches/1999-q3/msg00070.html
@@ -27,8 +45,9 @@
 socketpair(int af, int type, int protocol, int fd[2])
 {
     int	listen_socket;
-    struct sockaddr_in sin[2];
     int	len;
+    pthread_t newthread;
+    int *fd_ptr = (int *) malloc(sizeof(int));
 
     /* The following is only valid if type == SOCK_STREAM */
     if (type != SOCK_STREAM)
@@ -41,18 +60,18 @@ socketpair(int af, int type, int protocol, int fd[2])
         perror("creating listen_socket");
         return -1;
     }
-    sin[0].sin_family = af;
-    sin[0].sin_port = 0; /* Use any port number */
-    sin[0].sin_addr.s_addr = inet_makeaddr(INADDR_ANY, 0);
-    if (bind(listen_socket, &sin[0], sizeof(sin[0])) < 0)
+    sockin[0].sin_family = af;
+    sockin[0].sin_port = 0; /* Use any port number */
+    sockin[0].sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(listen_socket, (struct sockaddr *) &sockin[0], sizeof(sockin[0])) < 0)
     {
         perror("bind");
         return -1;
     }
-    len = sizeof(sin[0]);
+    len = sizeof(sockin[0]);
 
     /* Read the port number we got, so that our client can connect to it */
-    if (getsockname(listen_socket, &sin[0], &len) < 0)
+    if (getsockname(listen_socket, (struct sockaddr *) &sockin[0], &len) < 0)
     {
         perror("getsockname");
         return -1;
@@ -73,24 +92,17 @@ socketpair(int af, int type, int protocol, int fd[2])
         return -1;
     }
 
-    /* Put the client socket in non-blocking connecting mode */
-    fcntl(fd[1], F_SETFL, fcntl(fd[1], F_GETFL, 0) | O_NDELAY);
-    if (connect(fd[1], &sin[0], sizeof(sin[0])) < 0)
-    {
-        perror("connect");
-        return -1;
-    }
-
+    /* Since we don't have the option of going into non-blocking mode, we have to thread (:() */
+    *fd_ptr = fd[1];
+    pthread_create(&newthread, NULL, connectThread, (void *) fd_ptr);
+    
     /* At the listen-side, accept the incoming connection we generated */
-    len = sizeof(sin[1]);
-    if ((fd[0] = accept(listen_socket, &sin[1], &len)) < 0)
+    len = sizeof(sockin[1]);
+    if ((fd[0] = accept(listen_socket, (struct sockaddr *) &sockin[1], &len)) < 0)
     {
         perror("accept");
         return -1;
     }
-
-    /* Reset the client socket to blocking mode */
-    fcntl(fd[1], F_SETFL, fcntl(fd[1], F_GETFL, 0) & ~O_NDELAY);
 
     close(listen_socket);
 
@@ -123,6 +135,7 @@ extern char **environ;
 #include "directnet.h"
 #include "gaim-plugin.h"
 #include "gpg.h"
+#include "hash.h"
 #include "ui.h"
 
 static GaimPlugin *my_protocol = NULL;
@@ -150,7 +163,7 @@ static GaimPluginProtocolInfo prpl_info = {
     gp_chatinfo,
     gp_chatinfo_defaults,
     gp_login, /* login */
-    NULL, /* close */
+    gp_close, /* close */
     gp_sendim, /* send IM */
     NULL, /* set info */
     NULL, /* send "typing" */
@@ -539,6 +552,41 @@ static void gp_login(GaimAccount *account)
     uiLoaded = 1;
 }
 
+static void gp_close(GaimConnection *gc)
+{
+    struct BuddyList *cur, *next;
+    int i;
+    
+    if (gc == my_gc) {
+        /* OK, try to free and delete everything we can */
+        cur = bltop;
+        bltop = NULL;
+        while (cur) {
+            next = cur->next;
+            free(cur);
+            cur = next;
+        }
+        
+        my_protocol = NULL;
+        my_account = NULL; /* only allow one login - icky :-P */
+        my_gc = NULL;
+        
+        close(ipcpipe[0]);
+        close(ipcpipe[1]);
+        
+        serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
+    
+        for (i = 0; i < onpthread; i++) {
+            pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
+        }
+    
+        free(fds);
+        free(pipe_fds);
+        free(pipe_locks);
+        free(pthreads);
+    }
+}
+
 static int gp_sendim(GaimConnection *gc, const char *who, const char *message, GaimConvImFlags flags)
 {
     while (!uiLoaded) sleep(0);
@@ -567,6 +615,7 @@ void *waitConn(void *to_vp)
 {
     struct BuddyList *cur;
     GaimBuddy *to = (GaimBuddy *) to_vp;
+    char *route;
 
     while (!uiLoaded) sleep(0);
 
@@ -580,7 +629,13 @@ void *waitConn(void *to_vp)
             }
         }
     } else {
-        sendFnd(to->name);
+        /* if we have a route, mark them as online, otherwise, send a find */
+        route = hashSGet(dn_routes, to->name);
+        if (route) {
+            uiEstRoute(to->name);
+        } else {
+            sendFnd(to->name);
+        }
         return NULL;
     }
     
@@ -673,7 +728,7 @@ static int gp_saychat(GaimConnection *gc, int id, const char *msg)
     char *omsg = strdup(msg);
     
     sendChat(gconv->name + 1, omsg);
-    ipc_chat_msg(id, dn_name, gconv->name, msg);
+    ipc_chat_msg(id, dn_name, gconv->name, omsg);
     
     free(omsg);
     

@@ -12,6 +12,7 @@ static GList *gp_chatinfo(GaimConnection *gc);
 GHashTable *gp_chatinfo_defaults(GaimConnection *gc, const char *chat_name);
 static GList *gp_awaystates(GaimConnection *gc);
 static void gp_login(GaimAccount *account);
+static void gp_close(GaimConnection *gc);
 static int gp_sendim(GaimConnection *gc, const char *who, const char *message, GaimConvImFlags flags);
 static void gp_setaway(GaimConnection *gc, const char *state, const char *text);
 static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group);

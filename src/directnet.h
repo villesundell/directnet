@@ -31,6 +31,7 @@
 int pluginMain(int argc, char **argv, char **envp);
 #endif
 
+extern pthread_t *serverPthread;
 extern int serv_port;
 
 extern int *fds, *pipe_fds, onfd, onpthread;
