@@ -113,34 +113,84 @@ void handleMsg(char *inbuf, int fdnum)
     if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
-        char newroute[32256], ostrlen;
+        char newroute[32256], ostrlen, outbuf[65536];;
         
-        REQ_PARAMS(4);
+        REQ_PARAMS(5);
         
         if (!handleUnroutedMsg(params)) {
             return;
         }
         
         // Am I this person?
-        if (!strncmp(params[1], dn_name, 1024)) {
-            printf("Got a fnd for me!  Handle here!\n");
+        if (!strncmp(params[2], dn_name, 1024)) {
+            char *routeElement[50], *outparams[5];
+            char reverseRoute[32256];
+            int onRE, i, ostrlen;
+            
+            memset(routeElement, 0, 50 * sizeof(char *));
+            memset(outparams, 0, 5 * sizeof(char *));
+            
+            strncpy(newroute, params[3]);
+            
+            routeElement[0] = newroute;
+            onRE = 1;
+            
+            ostrlen = strlen(newroute)-1;
+            for (i = 0; i < ostrlen; i++) {
+                if (newroute[i] == '\n') {
+                    routeElement[onRE] = newroute+i+1;
+                    onRE++;
+                }
+            }
+            
+            onRE--;
+            
+            // Build backwards route
+            reverseRoute[0] = '\0';
+            for (i = onRE; i >= 0; i--) {
+                ostrlen = strlen(reverseRoute);
+                strncpy(reverseRoute+ostrlen, routeElement[i], 32256-ostrlen);
+                ostrlen += strlen(routeElement[i]);
+                strncpy(reverseRoute+ostrlen, "\n", 32256-ostrlen);
+            }
+            ostrlen = strlen(reverseRoute);
+            strncpy(reverseRoute+ostrlen, params[1], 32256-ostrlen);
+            ostrlen += strlen(params[1]);
+            strncpy(reverseRoute+ostrlen, "\n", 32256-ostrlen);
+            
+            // Add his route,
+            hashSSet(dn_routes, params[1], reverseRoute);
+            
+            // and public key,
+            gpgImportKey(params[4]);
+            
+            // then send your route back to him
+            outparams[0] = reverseRoute;
+            outparams[1] = dn_name;
+            outparams[2] = params[3];
+            outparams[3] = gpgExportKey();
+            handleRoutedMsg("fnr", 1, 1, outparams);
+            
+            uiDispMsg(params[1], "Route established.");
+            
+            return;
         }
         
         // Add myself to the route
-        strncpy(newroute, params[2], 32256);
+        strncpy(newroute, params[3], 32256);
         ostrlen = strlen(newroute);
         strncpy(newroute+ostrlen, dn_name, 32256-ostrlen);
         ostrlen = strlen(newroute);
         strncpy(newroute+ostrlen, "\n", 32256-ostrlen);
 
-        char outbuf[65536];
         buildCmd(outbuf, "fnd", 1, 1, params[0]);
         addParam(outbuf, params[1]);
+        addParam(outbuf, params[2]);
         addParam(outbuf, newroute);
         addParam(outbuf, params[3]);
         
         // Do I have a connection to this person?
-        remfd = hashGet(dn_fds, params[1]);
+        remfd = hashGet(dn_fds, params[2]);
         if (remfd != -1) {
             sendCmd(remfd, outbuf);
             return;
@@ -148,8 +198,33 @@ void handleMsg(char *inbuf, int fdnum)
         
         // If all else fails, continue the chain
         emitUnroutedMsg(fdnum, outbuf);
+    } else if (!strncmp(command, "fnr", 3) &&
+               inbuf[3] == 1 && inbuf[4] == 1) {
+        REQ_PARAMS(4);
+        
+        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+            char newroute[32256];
+            int ostrlen;
+            
+            // Hoorah, add a user
+            
+            // 1) Route
+            strncpy(newroute, params[2], 32256);
+            
+            ostrlen = strlen(newroute);
+            strncpy(newroute+ostrlen, params[1], 32256-ostrlen);
+            ostrlen += strlen(params[1]);
+            strncpy(newroute+ostrlen, "\n", 32256-ostrlen);
+            
+            hashSSet(dn_routes, params[1], reverseRoute);
+            
+            // 2) Key
+            gpgImportKey(params[3]);
+            
+            uiDispMsg(params[1], "Route established.");
+        }
     } else if (!strncmp(command, "key", 3) &&
-        inbuf[3] == 1 && inbuf[4] == 1) {
+               inbuf[3] == 1 && inbuf[4] == 1) {
         char route[strlen(params[0])+2];
         
         REQ_PARAMS(2);
