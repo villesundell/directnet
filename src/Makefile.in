@@ -67,13 +67,12 @@ am__installdirs = "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"
 gaimLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(gaim_LTLIBRARIES)
 am__libdirectnet_gaim_la_SOURCES_DIST = chat.c client.c connection.c \
-	directnet.c gaim-plugin.c hash.c lock.c server.c
+	directnet.c hash.c lock.c server.c
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS =  \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-chat.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-client.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-connection.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-directnet.lo \
-@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-gaim-plugin.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-hash.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-lock.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-server.lo
@@ -285,7 +284,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@
+SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@ 
 @UI_CXX_TRUE@directnet_SOURCES = chat.c \
 @UI_CXX_TRUE@client.c \
 @UI_CXX_TRUE@connection.c \
@@ -330,15 +329,14 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@
 @GAIM_PLUGIN_TRUE@client.c \
 @GAIM_PLUGIN_TRUE@connection.c \
 @GAIM_PLUGIN_TRUE@directnet.c \
-@GAIM_PLUGIN_TRUE@gaim-plugin.c \
 @GAIM_PLUGIN_TRUE@hash.c \
 @GAIM_PLUGIN_TRUE@lock.c \
 @GAIM_PLUGIN_TRUE@server.c
 
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@ -module -avoid-version -Wl,--export-dynamic
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @ENC_DIR@/libenc.a
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @PTHREAD_LIBS@ @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
 all: all-recursive
 
 .SUFFIXES:
@@ -471,7 +469,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-connection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-directnet.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-lock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-server.Plo@am__quote@
@@ -524,13 +521,6 @@ libdirectnet_gaim_la-directnet.lo: directnet.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='libdirectnet_gaim_la-directnet.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-directnet.lo `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
-
-libdirectnet_gaim_la-gaim-plugin.lo: gaim-plugin.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-gaim-plugin.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Tpo" -c -o libdirectnet_gaim_la-gaim-plugin.lo `test -f 'gaim-plugin.c' || echo '$(srcdir)/'`gaim-plugin.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-gaim-plugin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gaim-plugin.c' object='libdirectnet_gaim_la-gaim-plugin.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-gaim-plugin.lo `test -f 'gaim-plugin.c' || echo '$(srcdir)/'`gaim-plugin.c
 
 libdirectnet_gaim_la-hash.lo: hash.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-hash.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-hash.Tpo" -c -o libdirectnet_gaim_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
