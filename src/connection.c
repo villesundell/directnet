@@ -295,8 +295,6 @@ void handleMsg(char *inbuf, int fdnum)
                 char *newRouteElements[50];
                 int onRE, x, y, ostrlen;
                 
-                printf("Hoorah, an alternative route!\n");
-                
                 memset(newRouteElements, 0, 50 * sizeof(char *));
                 
                 curWRoute = hashSGet(weakRoutes, params[1]);
@@ -594,13 +592,11 @@ void *fndPthread(void *name_voidptr)
         // If the string has a location, check if it's weak
         if (strlen(curWRoute) > 0) {
             isWeak = 1;
-            printf("Route is weak!\n%s\n\n", curWRoute);
         }
         hashSDelKey(weakRoutes, name);
     } else {
         // If this isn't set, that means _NO_ other fnd was received, VERY weak route!
         isWeak = 1;
-        printf("Only one possible route!\n");
     }
     
     if (!isWeak) {
