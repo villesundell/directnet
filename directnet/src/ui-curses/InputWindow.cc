@@ -37,6 +37,7 @@ InputWindow::InputWindow(int nLines, int nCols, int orig_y)
 {
     win = newwin(nLines, nCols, orig_y, 0); 
     scrollok(win, TRUE);
+    keypad(win, TRUE);
 }
 
 InputWindow::~InputWindow()
