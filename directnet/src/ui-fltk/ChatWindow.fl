@@ -17,6 +17,7 @@ class ChatWindow {open
       Fl_Text_Display textOut {selected
         xywh {0 0 360 260} resizable
         code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
+        code1 {textOut->wrap_mode(1, 0);}
       }
     }
   }
