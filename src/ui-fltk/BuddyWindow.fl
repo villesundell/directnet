@@ -1,0 +1,24 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cc}
+class BuddyWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window buddyWindow {
+      label DirectNet open selected
+      xywh {320 143 205 365} type Double visible
+    } {
+      Fl_Choice onlineList {
+        label {  Route List:} open
+        xywh {0 20 205 25} down_box BORDER_BOX align 5
+      } {}
+      Fl_Input connectInput {
+        label {  Connect to:}
+        callback estConn
+        xywh {0 340 205 25} align 5 when 8
+      }
+    }
+  }
+} 
