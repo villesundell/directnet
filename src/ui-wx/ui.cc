@@ -72,11 +72,11 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
         "About Hello World", wxOK | wxICON_INFORMATION, this);
 }
 
-int uiInit()
+extern "C" int uiInit(int argc, char **argv, char **envp)
 {
-    wxEntry();
+    wxEntry(argc, argv);
 }
 
-void uiDispMsg(char *from, char *msg)
+extern "C" void uiDispMsg(char *from, char *msg)
 {
 }

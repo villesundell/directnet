@@ -3992,27 +3992,25 @@ else
   ui=determine
 fi;
 
-if test "x$ui" = "xdetermine"
-then
-        { echo "$as_me:$LINENO: checking which UI to use..." >&5
+{ echo "$as_me:$LINENO: checking which UI to use..." >&5
 echo "$as_me: checking which UI to use..." >&6;}
 
-        found_ui=no
+found_ui=no
 
-        if test "x$ui" = "xdumb" || test "x$ui" = "xdetermine"
-        then
-                UI_CFLAGS=
-                UI_CPPFLAGS=
-                UI_CXXFLAGS=
-                UI_LIBS=
-                UI_LDFLAGS=
-                UI_DIR=ui-dumb
-                found_ui=yes
-                ui=dumb
-        fi
+if test "x$ui" = "xdumb" || test "x$ui" = "xdetermine"
+then
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_LIBS=
+        UI_LDFLAGS=
+        UI_DIR=ui-dumb
+        found_ui=yes
+        ui=dumb
+fi
 
-        if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
-        then
+if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+then
 
 
 # Check whether --with-wx-prefix or --without-wx-prefix was given.
@@ -4219,32 +4217,37 @@ echo "${ECHO_T}no (version $WX_VERSION is not new enough)" >&6
 
 
 
-                if test "$wxWin" != 1
+        if test "x$wxWin" != x1
+        then
+                if test "x$ui" = "xwx"
                 then
-                        if test "x$ui" = "xwx"
-                        then
-                                { { echo "$as_me:$LINENO: error:
+                        { { echo "$as_me:$LINENO: error:
 The chosen UI (wx) is unconfigurable.
-The wx-config script couldn't be found.
-                                " >&5
+The wx-config script could not be found.
+                        " >&5
 echo "$as_me: error:
 The chosen UI (wx) is unconfigurable.
-The wx-config script couldn't be found.
-                                " >&2;}
+The wx-config script could not be found.
+                        " >&2;}
    { (exit 1); exit 1; }; }
-                        fi
-                else
-                        UI_CFLAGS=$WX_CFLAGS_ONLY
-                        UI_CPPFLAGS=$WX_CPPFLAGS
-                        UI_CXXFLAGS=$WX_CXXFLAGS_ONLY
-                        UI_LIBS=$WX_LIBS
-                        UI_LDFLAGS=
-                        UI_DIR=ui-wx
-                        found_ui=yes
-                        ui=wx
-                        CC=$CXX
                 fi
+        else
+                UI_CFLAGS=$WX_CFLAGS
+                UI_CPPFLAGS=$WX_CPPFLAGS
+                UI_CXXFLAGS=$WX_CXXFLAGS
+                UI_LIBS=$WX_LIBS
+                UI_LDFLAGS=
+                UI_DIR=ui-wx
+                found_ui=yes
+                ui=wx
         fi
+fi
+
+if test "x$found_ui" = "xno"
+then
+        { { echo "$as_me:$LINENO: error: Couldn't find a working UI." >&5
+echo "$as_me: error: Couldn't find a working UI." >&2;}
+   { (exit 1); exit 1; }; }
 fi
 
 

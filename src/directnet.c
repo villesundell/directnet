@@ -100,7 +100,7 @@ int main(int argc, char **argv, char **envp)
     sprintf(gpghomedir, "%s/.directnet", findHome(envp));
 
     // Start the UI
-    uiInit(envp);
+    uiInit(argc, argv, envp);
     
     // When the UI has exited, we're done.
     serverPthread ? pthread_kill(serverPthread, SIGTERM) : 0;

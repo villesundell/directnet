@@ -444,49 +444,50 @@ AC_ARG_ENABLE(ui,
         wx) ui=wx ;;
 esac], [ui=determine])
 
-if test "x$ui" = "xdetermine"
+AS_MESSAGE([checking which UI to use...])
+
+found_ui=no
+
+if test "x$ui" = "xdumb" || test "x$ui" = "xdetermine"
 then
-        AS_MESSAGE([checking which UI to use...])
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_LIBS=
+        UI_LDFLAGS=
+        UI_DIR=ui-dumb
+        found_ui=yes
+        ui=dumb
+fi
 
-        found_ui=no
-
-        if test "x$ui" = "xdumb" || test "x$ui" = "xdetermine"
+if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+then
+        AM_OPTIONS_WXCONFIG
+        AM_PATH_WXCONFIG(2.3.4, wxWin=1)
+        if test "x$wxWin" != x1
         then
-                UI_CFLAGS=
-                UI_CPPFLAGS=
-                UI_CXXFLAGS=
-                UI_LIBS=
-                UI_LDFLAGS=
-                UI_DIR=ui-dumb
-                found_ui=yes
-                ui=dumb
-        fi
-        
-        if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
-        then
-                AM_OPTIONS_WXCONFIG
-                AM_PATH_WXCONFIG(2.3.4, wxWin=1)
-                if test "$wxWin" != 1
+                if test "x$ui" = "xwx"
                 then
-                        if test "x$ui" = "xwx"
-                        then
-                                AC_MSG_ERROR([
+                        AC_MSG_ERROR([
 The chosen UI (wx) is unconfigurable.
-The wx-config script couldn't be found.
-                                ])
-                        fi
-                else
-                        UI_CFLAGS=$WX_CFLAGS_ONLY
-                        UI_CPPFLAGS=$WX_CPPFLAGS
-                        UI_CXXFLAGS=$WX_CXXFLAGS_ONLY
-                        UI_LIBS=$WX_LIBS
-                        UI_LDFLAGS=
-                        UI_DIR=ui-wx
-                        found_ui=yes
-                        ui=wx
-                        CC=$CXX
+The wx-config script could not be found.
+                        ])
                 fi
+        else
+                UI_CFLAGS=$WX_CFLAGS
+                UI_CPPFLAGS=$WX_CPPFLAGS
+                UI_CXXFLAGS=$WX_CXXFLAGS
+                UI_LIBS=$WX_LIBS
+                UI_LDFLAGS=
+                UI_DIR=ui-wx
+                found_ui=yes
+                ui=wx
         fi
+fi
+        
+if test "x$found_ui" = "xno"
+then
+        AC_MSG_ERROR([Couldn't find a working UI.])
 fi
 
 AC_SUBST(UI_CFLAGS)
