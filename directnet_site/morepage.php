@@ -29,7 +29,7 @@ function morepage($page, $frame) {
     
     if ($page == "download") {
         // Include linked-in downloads
-        $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=107979&package_id=130620", "r");        
+        $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135053", "r");        
         $mode = 0;
         while (!feof($handle)) {
             $line = trim(fgets($handle, 2048));
@@ -48,6 +48,7 @@ function morepage($page, $frame) {
                     }
                     
                     $temp = str_replace("href=\"show", "href=\"http://www.sourceforge.net/project/show", $line);
+                    $temp = str_replace("bgcolor=\"#FFFFFF\"", "bgcolor=\"#111111\"", $temp);
                     print $temp . "\n";
                     break;
             }
