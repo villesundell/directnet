@@ -1,5 +1,7 @@
 This is DirectNet, the serverless instant messaging system.
 
+This README only applies to the dumb UI.
+
 NOTE: THIS VERSION DOES NOT SUPPORT ENCRYPTION!  ALL MESSAGES TRANSMITTED ARE SENT IN CLEAR TEXT
 TO ANYONE IN YOUR ROUTE ON THE NETWORK!
 
