@@ -115,9 +115,6 @@
 /* If you Curses does not have color define this one */
 #undef NO_COLOR_CURSES
 
-/* Name of package */
-#undef PACKAGE
-
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
@@ -154,9 +151,6 @@
 
 /* Use SystemV curses? */
 #undef USE_SYSV_CURSES
-
-/* Version number of package */
-#undef VERSION
 
 /* Define to rpl_malloc if the replacement function should be used. */
 #undef malloc
