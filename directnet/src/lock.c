@@ -21,42 +21,19 @@
 #include "directnet.h"
 #include "lock.h"
 
-#ifdef HAVE_SEMAPHORE_H
-
-#include <semaphore.h>
+#include <pthread.h>
 
 void dn_lockInit(DN_LOCK *lockVal)
 {
-    sem_init(lockVal, 1, 0);
+    pthread_mutex_init(lockVal, NULL);
 }
 
 void dn_lock(DN_LOCK *lockVal)
 {
-    sem_wait(lockVal);
+    pthread_mutex_lock(lockVal);
 }
 
 void dn_unlock(DN_LOCK *lockVal)
 {
-    sem_post(lockVal);
+    pthread_mutex_unlock(lockVal);
 }
-
-#else
-
-// No semaphores = lame (not entirely thread-safe) locking
-void dn_lockInit(DN_LOCK *lockVal)
-{
-    *lockVal = 0;
-}
-
-void dn_lock(DN_LOCK *lockVal)
-{
-    while (*lockVal) sleep(0);
-    *lockVal = 1;
-}
-
-void dn_unlock(DN_LOCK *lockVal)
-{
-    *lockVal = 0;
-}
-
-#endif

@@ -61,9 +61,6 @@
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
-/* Define to 1 if you have the <semaphore.h> header file. */
-#undef HAVE_SEMAPHORE_H
-
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
