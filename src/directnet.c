@@ -60,6 +60,7 @@ struct hashS *dn_iRoutes;
 
 struct hashI *dn_trans_keys;
 int currentTransKey;
+DN_LOCK dn_transKey_lock;
 
 char uiLoaded;
 DN_LOCK displayLock; // Only one thread writing at a time.
@@ -135,6 +136,7 @@ int pluginMain(int argc, char **argv, char **envp)
     // This hash stores the state of all nonrepeating unrouted messages
     dn_trans_keys = hashICreate();
     currentTransKey = 0;
+    dn_lockInit(&dn_transKey_lock);
     
     // This hash stores whether we're in certain chats
     dn_chats = hashSCreate();
@@ -197,7 +199,9 @@ char *findHome(char **envp)
 
 void newTransKey(char *into)
 {
+    dn_lock(&dn_transKey_lock);
     sprintf(into, "%s%d", dn_name, currentTransKey);
     hashISet(dn_trans_keys, into, 1);
     currentTransKey++;
+    dn_unlock(&dn_transKey_lock);
 }
