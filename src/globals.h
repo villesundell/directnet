@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005 Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -22,7 +22,7 @@
 #define DN_GLOBALS_H
 
 #define DN_NAME_LEN 24
-#define DN_TRANSKEY_LIST 34
+#define DN_TRANSKEY_LEN 34
 #define DN_MAX_CONNS 1024
 #define DN_MAX_ROUTES 2048
 #define DN_CMD_LEN 2048
