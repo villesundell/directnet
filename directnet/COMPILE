@@ -1,5 +1,8 @@
 GNU/Linux:
 The Makefile was made for GNU/Linux, just 'make'
 
+HPUX:
+Should just 'gmake', but only tested with GNU make and GNU cc.
+
 Solaris:
 make all CFLAGS="-lsocket -lnsl"
