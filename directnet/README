@@ -5,18 +5,22 @@ TO ANYONE IN YOUR ROUTE ON THE NETWORK!
 
 Here's a quick overview of the commands:
 
-connect <host>
+/c <host>
         Connect to another user running DirectNet by hostname or IP address, and establish a route
        to the user.
-        Example: connect 192.168.1.1
+        Example: /c 192.168.1.1
 
-say <name> <message>
-        Send a message to a user that you've established a route with.
-        Example: say Gregor Hello!
+/t <name>
+        Enable chatting with a certain user.  After enabling chatting, anything you type that
+       doesn't start with '/' will be sent as a message to the user you're chatting with.
+        Example: /t Gregor
 
-find <name>
+/f <name>
         Establish a route to someone you don't have a direct connection to.
-        Example: find Gregor
+        Example: /f Gregor
+
+/q
+        Quit
 
 
 If that's not enough, wait for a future version of the client - this is, after all, an alpha

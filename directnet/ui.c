@@ -27,6 +27,8 @@
 #include "gpg.h"
 #include "ui.h"
 
+char *currentPartner;
+
 int handleUInput(char *inp);
 
 int uiInit(char **envp)
@@ -35,11 +37,13 @@ int uiInit(char **envp)
     int charin, ostrlen;
     char cmdbuf[32256];
     
+    // Always start by finding GPG
     if (findGPG(envp) == -1) {
         printf("GPG was not found on your PATH!\n");
         return -1;
     }
     
+    // Then asking for the nick
     printf("What is your nick? ");
     fgets(dn_name, 1024, stdin);
     
@@ -48,10 +52,15 @@ int uiInit(char **envp)
         dn_name[charin-1] = '\0';
     }
     
+    // And creating the key
     printf("%s\n", gpgCreateKey());
     
+    // You start in a conversation with nobody
+    currentPartner = (char *) malloc(256 * sizeof(char));
+    currentPartner[0] = '\0';
+    
     while (1) {
-        printf("> ");
+        printf("%s> ", currentPartner);
         fflush(stdout);
         fgets(cmdbuf, 32256, stdin);
         
@@ -61,6 +70,7 @@ int uiInit(char **envp)
         }
         
         if (handleUInput(cmdbuf)) {
+            free(currentPartner);
             return 0;
         }
     }
@@ -70,55 +80,71 @@ int uiInit(char **envp)
 
 int handleUInput(char *inp)
 {
-    char *params[50];
-    int i, onparam;
+    // Is it a command?
+    if (inp[0] == '/') {
+        char *params[50];
+        int i, onparam;
+        
+        // Tokenize the parameters by ' '
+        memset(params, 0, 50 * sizeof(char *));
     
-    memset(params, 0, 50 * sizeof(char *));
+        params[0] = inp;
+        onparam = 1;
     
-    params[0] = inp;
-    onparam = 1;
-    
-    for (i = 0; inp[i] != '\0'; i++) {
-        if (inp[i] == ' ') {
-            inp[i] = '\0';
-            params[onparam] = inp+i+1;
-            onparam++;
+        for (i = 0; inp[i] != '\0'; i++) {
+            if (inp[i] == ' ') {
+                inp[i] = '\0';
+                params[onparam] = inp+i+1;
+                onparam++;
+            }
         }
-    }
-    
-    if (!strncmp(params[0], "connect", 7)) {
-        if (params[1] == NULL) {
+        
+        
+        if (!strncmp(params[0]+1, "c", 1)) {
+            if (params[1] == NULL) {
+                return 0;
+            }
+        
+            // Connect to a given hostname
+            establishClient(params[1]);
             return 0;
+        } else if (!strncmp(params[0]+1, "f", 1)) {
+            char outbuf[65536];
+        
+            if (params[1] == NULL) {
+                return 0;
+            }
+        
+            // Find a user by name
+            buildCmd(outbuf, "fnd", 1, 1, "");
+            addParam(outbuf, dn_name);
+            addParam(outbuf, params[1]);
+            addParam(outbuf, gpgExportKey());
+        
+            emitUnroutedMsg(-1, outbuf);
+        } else if (!strncmp(params[0]+1, "t", 1)) {
+            if (params[1] == NULL) {
+                return 0;
+            }
+        
+            strncpy(currentPartner, params[1], 256);
+        } else if (!strncmp(params[0]+1, "q", 1)) {
+            return 1;
         }
-        establishClient(params[1]);
-    } else if (!strncmp(params[0], "find", 4)) {
-        char outbuf[65536];
         
-        if (params[1] == NULL) {
-            return 0;
-        }
-        
-        buildCmd(outbuf, "fnd", 1, 1, "");
-        addParam(outbuf, dn_name);
-        addParam(outbuf, params[1]);
-        addParam(outbuf, gpgExportKey());
-        
-        emitUnroutedMsg(-1, outbuf);
-    } else if (!strncmp(params[0], "say", 3)) {
+    } else {
+        // Not a command, a message
         char *outparams[50], *route;
         
-        if (params[2] == NULL) {
+        if (currentPartner[0] == '\0') {
+            printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n> ");
+            fflush(stdout);
             return 0;
         }
         
         memset(outparams, 0, 50 * sizeof(char *));
         
-        // param 2- are all one
-        for (i = 2; params[i+1] != NULL; i++) {
-            params[i][strlen(params[i])] = ' ';
-        }
-        
-        route = hashSGet(dn_routes, params[1]);
+        route = hashSGet(dn_routes, currentPartner);
         if (route == NULL) {
             printf("No route to user.\n");
             return 0;
@@ -126,10 +152,8 @@ int handleUInput(char *inp)
         outparams[0] = (char *) malloc((strlen(route)+1) * sizeof(char));
         strcpy(outparams[0], route);
         outparams[1] = dn_name;
-        outparams[2] = gpgTo(dn_name, params[1], params[2]);
+        outparams[2] = gpgTo(dn_name, currentPartner, inp);
         handleRoutedMsg("msg", 1, 1, outparams);
-    } else if (!strncmp(params[0], "quit", 4)) {
-        return 1;
     }
     
     return 0;
