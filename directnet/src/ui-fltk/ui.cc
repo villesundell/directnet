@@ -21,8 +21,11 @@
 extern "C" {
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
+#include "directnet.h"
 #include "ui.h"
 }
 
@@ -57,7 +60,7 @@ extern "C" void uiDispMsg(char *from, char *msg)
     
     while (!uiLoaded) sleep(0);
     
-    outmsg = alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
+    outmsg = (char *) alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
     sprintf(outmsg, "%s: %s\n", from, msg);
     
     textOut->insert(outmsg);
@@ -69,7 +72,7 @@ extern "C" void uiEstConn(char *from)
     
     while (!uiLoaded) sleep(0);
     
-    outmsg = alloca((strlen(from) + 44) * sizeof(char));
+    outmsg = (char *) alloca((strlen(from) + 44) * sizeof(char));
     sprintf(outmsg, "A connection has been established with %s.\n", from);
     
     textOut->insert(outmsg);
@@ -81,7 +84,7 @@ extern "C" void uiEstRoute(char *from)
     
     while (!uiLoaded) sleep(0);
     
-    outmsg = alloca((strlen(from) + 39) * sizeof(char));
+    outmsg = (char *) alloca((strlen(from) + 39) * sizeof(char));
     sprintf(outmsg, "A route has been established with %s.\n", from);
     
     textOut->insert(outmsg);
@@ -93,7 +96,7 @@ extern "C" void uiLoseConn(char *from)
     
     while (!uiLoaded) sleep(0);
     
-    outmsg = alloca((strlen(from) + 37) * sizeof(char));
+    outmsg = (char *) alloca((strlen(from) + 37) * sizeof(char));
     sprintf(outmsg, "The connection with %s has been lost.\n", from);
     
     textOut->insert(outmsg);
@@ -105,7 +108,7 @@ extern "C" void uiLoseRoute(char *from)
     
     while (!uiLoaded) sleep(0);
     
-    outmsg = alloca((strlen(from) + 32) * sizeof(char));
+    outmsg = (char *) alloca((strlen(from) + 32) * sizeof(char));
     sprintf(outmsg, "The route with %s has been lost.\n", from);
     
     textOut->insert(outmsg);
@@ -117,7 +120,7 @@ extern "C" void uiNoRoute(char *to)
     
     while (!uiLoaded) sleep(0);
     
-    outmsg = alloca((strlen(from) + 30) * sizeof(char));
+    outmsg = (char *) alloca((strlen(to) + 30) * sizeof(char));
     sprintf(outmsg, "You do not have a route to %s.\n", to);
     
     textOut->insert(outmsg);

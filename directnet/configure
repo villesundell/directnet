@@ -311,7 +311,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB build build_cpu build_vendor build_os host host_cpu host_vendor host_os acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS WX_CONFIG_PATH WX_CPPFLAGS WX_CFLAGS WX_CXXFLAGS WX_CFLAGS_ONLY WX_CXXFLAGS_ONLY WX_LIBS WX_LIBS_STATIC WX_VERSION CURSES_LIBS CURSES_INCLUDEDIR EGREP READLINE_LIBS READLINE_INCLUDES UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB build build_cpu build_vendor build_os host host_cpu host_vendor host_os acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS WX_CONFIG_PATH WX_CPPFLAGS WX_CFLAGS WX_CXXFLAGS WX_CFLAGS_ONLY WX_CXXFLAGS_ONLY WX_LIBS WX_LIBS_STATIC WX_VERSION CURSES_LIBS CURSES_INCLUDEDIR EGREP READLINE_LIBS READLINE_INCLUDES UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -871,6 +871,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-fltk-prefix=PFX   Prefix where FLTK is installed (optional)
+  --with-fltk-exec-prefix=PFX Exec prefix where FLTK is installed (optional)
   --with-wx-prefix=PREFIX   Prefix where wxWindows is installed (optional)
   --with-wx-exec-prefix=PREFIX Exec prefix where wxWindows is installed (optional)
   --with-wx-config=CONFIG   wx-config script to use (optional)
@@ -1781,7 +1783,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
           ac_config_headers="$ac_config_headers config.h"
 
 
-                                                                      ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-wx/Makefile"
+                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-wx/Makefile"
 
 
 # Checks for programs.
@@ -4503,6 +4505,7 @@ if test "${enable_ui+set}" = set; then
   enableval="$enable_ui"
   case "$enableval" in
         dumb) ui=dumb ;;
+        fltk) ui=fltk ;;
         wx) ui=wx ;;
         wx-static) ui=wx-static ;;
         curses) ui=curses ;;
@@ -4533,6 +4536,140 @@ then
         { echo "$as_me:$LINENO: Using dumb UI" >&5
 echo "$as_me: Using dumb UI" >&6;}
 fi
+
+if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+then
+
+
+# Check whether --with-fltk-prefix or --without-fltk-prefix was given.
+if test "${with_fltk_prefix+set}" = set; then
+  withval="$with_fltk_prefix"
+  fltk_config_prefix="$withval"
+else
+  fltk_config_prefix=""
+fi;
+
+# Check whether --with-fltk-exec-prefix or --without-fltk-exec-prefix was given.
+if test "${with_fltk_exec_prefix+set}" = set; then
+  withval="$with_fltk_exec_prefix"
+  fltk_config_exec_prefix="$withval"
+else
+  fltk_config_exec_prefix=""
+fi;
+
+  if test x$fltk_config_exec_prefix != x ; then
+     fltk_config_args="$fltk_config_args --exec-prefix=$fltk_config_exec_prefix"
+     if test x${FLTK_CONFIG+set} != xset ; then
+        FLTK_CONFIG=$fltk_config_exec_prefix/bin/fltk-config
+     fi
+  fi
+  if test x$fltk_config_prefix != x ; then
+     fltk_config_args="$fltk_config_args --prefix=$fltk_config_prefix"
+     if test x${FLTK_CONFIG+set} != xset ; then
+        FLTK_CONFIG=$fltk_config_prefix/bin/fltk-config
+     fi
+  fi
+
+  # Extract the first word of "fltk-config", so it can be a program name with args.
+set dummy fltk-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_FLTK_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $FLTK_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_FLTK_CONFIG="$FLTK_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_FLTK_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_FLTK_CONFIG" && ac_cv_path_FLTK_CONFIG="no"
+  ;;
+esac
+fi
+FLTK_CONFIG=$ac_cv_path_FLTK_CONFIG
+
+if test -n "$FLTK_CONFIG"; then
+  echo "$as_me:$LINENO: result: $FLTK_CONFIG" >&5
+echo "${ECHO_T}$FLTK_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  min_fltk_version=1.1
+  echo "$as_me:$LINENO: checking for FLTK - version >= $min_fltk_version" >&5
+echo $ECHO_N "checking for FLTK - version >= $min_fltk_version... $ECHO_C" >&6
+  no_fltk=""
+  if test "$FLTK_CONFIG" = "no" ; then
+    no_fltk=yes
+    FLTK_VERSION=""
+  else
+    FLTK_CFLAGS=`$FLTK_CONFIG $fltk_config_args --cflags`
+    FLTK_LIBS=`$FLTK_CONFIG $fltk_config_args --ldflags`
+    FLTK_VERSION=`$FLTK_CONFIG $fltk_config_args --version`
+  fi
+  if test "x$no_fltk" = x ; then
+     echo "$as_me:$LINENO: result: yes (version $FLTK_VERSION)" >&5
+echo "${ECHO_T}yes (version $FLTK_VERSION)" >&6
+     fltk=1
+  else
+     if test "x$FLTK_VERSION" = x; then
+        echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+     else
+        echo "$as_me:$LINENO: result: no (version $FLTK_VERSION)" >&5
+echo "${ECHO_T}no (version $FLTK_VERSION)" >&6
+     fi
+     FLTK_CFLAGS=""
+     FLTK_LIBS=""
+     :
+  fi
+
+
+
+
+        if test "x$fltk" != x1
+        then
+                if test "x$ui" = "xfltk"
+                then
+                        { { echo "$as_me:$LINENO: error:
+The chosen UI (wx) is unconfigurable.
+The fltk-config script could not be found.
+                        " >&5
+echo "$as_me: error:
+The chosen UI (wx) is unconfigurable.
+The fltk-config script could not be found.
+                        " >&2;}
+   { (exit 1); exit 1; }; }
+                fi
+        else
+                UI_CFLAGS=$FLTK_CFLAGS
+                UI_CXXFLAGS=$FLTK_CFLAGS
+                UI_CXX=true
+                UI_LIBS=$FLTK_LIBS
+                UI_LDFLAGS=
+                UI_DIR=ui-fltk
+                found_ui=yes
+                ui=fltk
+                { echo "$as_me:$LINENO: Using fltk UI" >&5
+echo "$as_me: Using fltk UI" >&6;}
+        fi
+fi
+
 
 if test "x$ui" = "xwx" || test "x$ui" = "xwx-static" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
@@ -5184,7 +5321,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5187 "configure"
+#line 5324 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
@@ -7617,6 +7754,7 @@ do
   "src/enc-gpg/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-gpg/Makefile" ;;
   "src/ui-curses/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-curses/Makefile" ;;
   "src/ui-dumb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
+  "src/ui-fltk/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-fltk/Makefile" ;;
   "src/ui-wx/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-wx/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
@@ -7764,6 +7902,9 @@ s,@acx_pthread_config@,$acx_pthread_config,;t t
 s,@PTHREAD_CC@,$PTHREAD_CC,;t t
 s,@PTHREAD_LIBS@,$PTHREAD_LIBS,;t t
 s,@PTHREAD_CFLAGS@,$PTHREAD_CFLAGS,;t t
+s,@FLTK_CONFIG@,$FLTK_CONFIG,;t t
+s,@FLTK_CFLAGS@,$FLTK_CFLAGS,;t t
+s,@FLTK_LIBS@,$FLTK_LIBS,;t t
 s,@WX_CONFIG_PATH@,$WX_CONFIG_PATH,;t t
 s,@WX_CPPFLAGS@,$WX_CPPFLAGS,;t t
 s,@WX_CFLAGS@,$WX_CFLAGS,;t t
