@@ -109,13 +109,14 @@ void *serverAcceptLoop(void *ignore)
         dn_lock(&dn_fd_lock);
         for (curfd = 0; fds[curfd]; curfd++);
         fds[curfd] = acceptfd;
-        dn_unlock(&dn_fd_lock);
         if (fds[curfd] == -1) {
             fds[curfd] = 0;
             perror("accept");
+            dn_unlock(&dn_fd_lock);
             continue;
         }
-        if (curfd > onfd) onfd = curfd;
+        if (curfd >= onfd) onfd = curfd + 1;
+        dn_unlock(&dn_fd_lock);
 
         uiEstConn(inet_ntoa(rem_addr.sin_addr));
         
