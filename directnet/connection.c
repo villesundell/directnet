@@ -238,6 +238,8 @@ void handleMsg(char *inbuf, int fdnum)
         hashSSet(dn_routes, params[0], route);
         
         gpgImportKey(params[1]);
+        
+        uiDispMsg(params[0], "Route established.");
     } else if (!strncmp(command, "msg", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         REQ_PARAMS(3);

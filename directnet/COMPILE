@@ -4,5 +4,8 @@ The Makefile was made for GNU/Linux, just 'make'
 HPUX:
 Should just 'gmake', but only tested with GNU make and GNU cc.
 
+Mac OS X:
+make all CFLAGS="-DMACOSX"
+
 Solaris:
 make all CFLAGS="-lsocket -lnsl"
