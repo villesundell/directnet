@@ -17,8 +17,8 @@
  *    along with DirectNet; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef DN_INPUTWINDOW_H
-#define DN_INPUTWINDOW_H
+#ifndef DN_INPUTPARSER_H
+#define DN_INPUTPARSER_H
 
 #define CONNECT 0
 #define TALK    1
@@ -26,19 +26,21 @@
 #define CHAT    3
 #define QUIT    4
 
-class InputHandler { 
-    string input; 
+// Max number of params for longest command
+#define MAX_COMMAND_TOKENS
+class InputParser { 
+    string in = ""; 
     vector<string> params; 
-    int onParam;
+    bool isCom = false; 
+    bool isChat = false;
+    int command = 0; 
     
     public: 
     bool isCommand(); 
     bool isChat();
-    bool isMessage();
-    int  getCommand(); 
-    int  checkInput(); 
+    int  getCommand();  
     void setInput(string ins); 
-    string nextParam(); 
+    string getParam(int which); 
 }; 
 
 

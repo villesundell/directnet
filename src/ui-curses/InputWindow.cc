@@ -51,7 +51,7 @@ string InputWindow::getInput()
     wclear(win);  
     wmove(win, 0,0);
     wrefresh(win);
-    wgetnstr(win, buf, 8192); 
+    wgetnstr(win, buf, MAX_INPUT_SIZE); 
     wclear(win); 
     wmove(win, 0,0);
     wrefresh(win); 

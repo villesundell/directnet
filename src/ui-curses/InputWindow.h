@@ -29,4 +29,8 @@ class InputWindow {
     string getInput(); 
     
 }; 
+
+// 8k input buffer.  If that's not big enough, 
+// can change later or allow dynamic sizing
+#define MAX_INPUT_SIZE 8192 
 #endif
