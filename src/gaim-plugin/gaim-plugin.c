@@ -395,7 +395,9 @@ static void gp_callback(gpointer data, gint source, GaimInputCondition condition
     while (!uiLoaded) sleep(0);
     
     for (i = 0; i < 1023; i++) {
+        printf("Start read\n");
         read(ipcpipe[0], inpline + i, 1);
+        printf("End read: %c\n", inpline[i]);
         if (inpline[i] == '\n') {
             inpline[i+1] = '\0';
             i = 1023;
