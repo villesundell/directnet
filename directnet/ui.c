@@ -69,9 +69,11 @@ int uiInit(char **envp)
             cmdbuf[ostrlen-1] = '\0';
         }
         
-        if (handleUInput(cmdbuf)) {
-            free(currentPartner);
-            return 0;
+        if (strlen(cmdbuf) != 0) {
+            if (handleUInput(cmdbuf)) {
+                free(currentPartner);
+                return 0;
+            }
         }
     }
     
@@ -163,6 +165,6 @@ int handleUInput(char *inp)
 
 void uiDispMsg(char *from, char *msg)
 {
-    printf("\n%s: %s\n> ", from, msg);
+    printf("\n%s: %s\n%s> ", from, msg, currentPartner);
     fflush(stdout);
 }
