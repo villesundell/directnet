@@ -1049,7 +1049,7 @@ static Fl_RGB_Image image_dn(idata_dn, 255, 50, 3, 0);
 
 Fl_Double_Window* BuddyWindow::make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = buddyWindow = new Fl_Double_Window(255, 400, "DirectNet");
+  { Fl_Double_Window* o = buddyWindow = new Fl_Double_Window(255, 430, "DirectNet");
     w = o;
     o->color(FL_FOREGROUND_COLOR);
     o->callback((Fl_Callback*)mainWinClosed, (void*)(this));
@@ -1080,6 +1080,12 @@ Fl_Double_Window* BuddyWindow::make_window() {
       o->callback((Fl_Callback*)estCht);
       o->align(FL_ALIGN_TOP_LEFT);
       o->when(FL_WHEN_ENTER_KEY);
+    }
+    { Fl_Button* o = bSetAway = new Fl_Button(0, 405, 125, 25, "Away");
+      o->callback((Fl_Callback*)fSetAway);
+    }
+    { Fl_Button* o = bBack = new Fl_Button(130, 405, 125, 25, "Back");
+      o->callback((Fl_Callback*)fBack);
     }
     o->end();
   }
