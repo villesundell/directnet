@@ -67,12 +67,15 @@ int main(int argc, char **argv, char **envp)
     uiInit(envp);
     
     pthread_kill(serverPthread, SIGTERM);
+    
     for (i = 0; i < onpthread; i++) {
         //kill(pids[i], SIGTERM);
         pthread_kill(pthreads[i], SIGTERM);
         //waitpid(pids[i], NULL, 0);
     }
-        
+    
+    pthread_exit(NULL);
+    
     return 0;
 }
 

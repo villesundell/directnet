@@ -85,6 +85,8 @@ void sendCmd(int fdnum, char *buf)
     send(fds[fdnum], buf, strlen(buf)+1, 0);
 }
 
+#define REQ_PARAMS(x) if (params[x-1] == NULL) return
+
 void handleMsg(char *inbuf, int fdnum)
 {
     char command[4], *params[50];
@@ -112,6 +114,8 @@ void handleMsg(char *inbuf, int fdnum)
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
         char newroute[32256], ostrlen;
+        
+        REQ_PARAMS(4);
         
         if (!handleUnroutedMsg(params)) {
             return;
@@ -148,6 +152,8 @@ void handleMsg(char *inbuf, int fdnum)
         inbuf[3] == 1 && inbuf[4] == 1) {
         char route[strlen(params[0])+2];
         
+        REQ_PARAMS(2);
+        
         hashSet(dn_fds, params[0], fdnum);
         
         sprintf(route, "%s\n", params[0]);
@@ -156,6 +162,8 @@ void handleMsg(char *inbuf, int fdnum)
         gpgImportKey(params[1]);
     } else if (!strncmp(command, "msg", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
+        REQ_PARAMS(3);
+        
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message
             uiDispMsg(params[1], gpgFrom(dn_name, params[2]));
