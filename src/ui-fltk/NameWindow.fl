@@ -1,0 +1,19 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+class NameWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window {} {open selected
+      xywh {344 209 255 45} type Double visible
+    } {
+      Fl_Input nameIn {
+        label {  Nickname:}
+        callback setName
+        xywh {0 20 255 25} align 5 when 8
+      }
+    }
+  }
+} 

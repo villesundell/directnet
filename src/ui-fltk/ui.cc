@@ -26,6 +26,7 @@ extern "C" {
 
 #include "connection.h"
 #include "directnet.h"
+#include "globals.h"
 #include "ui.h"
 }
 
@@ -33,7 +34,9 @@ extern "C" {
 
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
+#include "NameWindow.h"
 
+NameWindow *nw;
 BuddyWindow *bw;
 ChatWindow *cws[1024];
 
@@ -41,18 +44,13 @@ using namespace std;
 
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
-    /* get the name */
-    strcpy(dn_name, "Gregor");
-    
     /* blank our array of windows */
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
 
-    /* make the buddy window */
-    bw = new BuddyWindow();
-    bw->make_window();
-    bw->buddyWindow->show();
-
-    uiLoaded = 1;
+    /* make the name window */
+    nw = new NameWindow();
+    nw->make_window();
+    nw->nameWindow->show();
     
     Fl::run();
 
@@ -76,6 +74,19 @@ ChatWindow *getWindow(const char *name)
     cws[i]->chatWindow->show();
     
     return cws[i];
+}
+
+void setName(Fl_Input *w, void *ignore)
+{
+    strncpy(dn_name, w->value(), DN_NAME_LEN);
+    nw->nameWindow->hide();
+    
+    /* make the buddy window */
+    bw = new BuddyWindow();
+    bw->make_window();
+    bw->buddyWindow->show();
+
+    uiLoaded = 1;
 }
 
 void estConn(Fl_Input *w, void *ignore)
@@ -145,6 +156,7 @@ extern "C" void uiDispMsg(char *from, char *msg)
     cw = getWindow(from);
     
     cw->textOut->insert(dispmsg);
+    cw->textOut->redraw();
 }
 
 extern "C" void uiEstConn(char *from)
@@ -162,6 +174,7 @@ extern "C" void uiEstRoute(char *from)
     
     cw = getWindow(from);
     cw->textOut->insert("Route established.\n");
+    cw->textOut->redraw();
 }
 
 extern "C" void uiLoseConn(char *from)
@@ -172,6 +185,7 @@ extern "C" void uiLoseConn(char *from)
     
     cw = getWindow(from);
     cw->textOut->insert("Connection lost.\n");
+    cw->textOut->redraw();
 }
 
 extern "C" void uiLoseRoute(char *from)
@@ -182,6 +196,7 @@ extern "C" void uiLoseRoute(char *from)
     
     cw = getWindow(from);
     cw->textOut->insert("Route lost.\n");
+    cw->textOut->redraw();
 }
 
 extern "C" void uiNoRoute(char *to)
@@ -192,4 +207,5 @@ extern "C" void uiNoRoute(char *to)
     
     cw = getWindow(to);
     cw->textOut->insert("You do not have a route to this user.\n");
+    cw->textOut->redraw();
 }

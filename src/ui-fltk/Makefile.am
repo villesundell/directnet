@@ -4,5 +4,6 @@ AM_LDFLAGS=@UI_LDFLAGS@
 noinst_LIBRARIES=libui.a
 libui_a_SOURCES=BuddyWindow.cc \
 ChatWindow.cc \
+NameWindow.cc \
 ui.cc
 
