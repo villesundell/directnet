@@ -29,99 +29,48 @@ extern "C" {
 #include "ui.h"
 }
 
-#include "ui_fl.h"
+#include "BuddyWindow.h"
 
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
+    BuddyWindow *w;
+    
     /* get the name */
     strcpy(dn_name, "Gregor");
-    
-    Fl_Double_Window *w;
-    pthread_t subpthread;
-    pthread_attr_t ptattr;
-    Fl_Text_Buffer *tb;
-    
-    w = ui_fl();
 
-    tb = new Fl_Text_Buffer(32256);
-    textOut->buffer(tb);
+    w = new BuddyWindow();
     w->show();
-    
-    uiLoaded = 1;
     
     Fl::run();
 
     return 0;
 }
 
+void estConn(Fl_Input *w, void *ignore)
+{
+    cout << "Connect to " << w->value() << endl;
+}
+
 extern "C" void uiDispMsg(char *from, char *msg)
 {
-    char *outmsg;
-    
-    while (!uiLoaded) sleep(0);
-    
-    outmsg = (char *) alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
-    sprintf(outmsg, "%s: %s\n", from, msg);
-    
-    textOut->insert(outmsg);
 }
 
 extern "C" void uiEstConn(char *from)
 {
-    char *outmsg;
-    
-    while (!uiLoaded) sleep(0);
-    
-    outmsg = (char *) alloca((strlen(from) + 44) * sizeof(char));
-    sprintf(outmsg, "A connection has been established with %s.\n", from);
-    
-    textOut->insert(outmsg);
 }
 
 extern "C" void uiEstRoute(char *from)
 {
-    char *outmsg;
-    
-    while (!uiLoaded) sleep(0);
-    
-    outmsg = (char *) alloca((strlen(from) + 39) * sizeof(char));
-    sprintf(outmsg, "A route has been established with %s.\n", from);
-    
-    textOut->insert(outmsg);
 }
 
 extern "C" void uiLoseConn(char *from)
 {
-    char *outmsg;
-    
-    while (!uiLoaded) sleep(0);
-    
-    outmsg = (char *) alloca((strlen(from) + 37) * sizeof(char));
-    sprintf(outmsg, "The connection with %s has been lost.\n", from);
-    
-    textOut->insert(outmsg);
 }
 
 extern "C" void uiLoseRoute(char *from)
 {
-    char *outmsg;
-    
-    while (!uiLoaded) sleep(0);
-    
-    outmsg = (char *) alloca((strlen(from) + 32) * sizeof(char));
-    sprintf(outmsg, "The route with %s has been lost.\n", from);
-    
-    textOut->insert(outmsg);
 }
 
 extern "C" void uiNoRoute(char *to)
 {
-    char *outmsg;
-    
-    while (!uiLoaded) sleep(0);
-    
-    outmsg = (char *) alloca((strlen(to) + 30) * sizeof(char));
-    sprintf(outmsg, "You do not have a route to %s.\n", to);
-    
-    textOut->insert(outmsg);
 }
