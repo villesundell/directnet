@@ -1,0 +1,5 @@
+GNU/Linux:
+The Makefile was made for GNU/Linux, just 'make'
+
+Solaris:
+make all CFLAGS="-lsocket -lnsl"
