@@ -21,6 +21,10 @@
 #ifndef DN_CONNECTION_H
 #define DN_CONNECTION_H
 
+void establishConnection(char *to);
+int sendMsg(char *to, char *msg);
+void sendFnd(char *to);
+
 void buildCmd(char *into, char *command, char vera, char verb, char *param);
 void addParam(char *into, char *newparam);
 void sendCmd(int fdnum, char *buf);

@@ -74,7 +74,7 @@ void *communicator(void *fdnum_voidptr)
             // Disconnect
             name = hashRevGet(dn_fds, fdnum);
             if (name != NULL) {
-                uiDispMsg(name, "Lost connection.");
+                uiLoseConn(name);
                 hashSDelKey(dn_routes, name);
             }
             
@@ -243,7 +243,7 @@ void handleMsg(char *inbuf, int fdnum)
                 outparams[3] = gpgExportKey();
                 handleRoutedMsg("fnr", 1, 1, outparams);
                 
-                uiDispMsg(params[1], "Route established.");
+                uiEstRoute(params[1]);
                 
                 onfd_ptr = malloc(sizeof(int));
                 *onfd_ptr = fdnum;
@@ -350,7 +350,7 @@ void handleMsg(char *inbuf, int fdnum)
             // 2) Key
             gpgImportKey(params[3]);
             
-            uiDispMsg(params[1], "Route established.");
+            uiEstRoute(params[1]);
         }
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
@@ -378,7 +378,7 @@ void handleMsg(char *inbuf, int fdnum)
         
         gpgImportKey(params[1]);
         
-        uiDispMsg(params[0], "Route established.");
+        uiEstRoute(params[0]);
     } else if (!strncmp(command, "msg", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         REQ_PARAMS(3);
@@ -529,4 +529,73 @@ void *fndPthread(void *fdnum_voidptr)
         fnd_pthreads[fdnum] = 0;
         return NULL;
     }
+}
+
+/* Commands used by the UI */
+void establishConnection(char *to)
+{
+    char *route;
+    
+    route = hashSGet(dn_routes, to);
+    if (route) {
+        char *params[50], *ip, hostbuf[128];
+        struct hostent *he;
+        
+        memset(params, 0, 50 * sizeof(char *));
+        
+        // It's a user, send a DCR
+        params[0] = (char *) malloc((strlen(route) + 1) * sizeof(char));
+        strcpy(params[0], route);
+
+        params[1] = dn_name;
+ 
+        gethostname(hostbuf, 128);
+        he = gethostbyname(hostbuf);
+        ip = inet_ntoa(*((struct in_addr *)he->h_addr));
+        params[2] = (char *) malloc((strlen(ip) + 1) * sizeof(char));
+        strcpy(params[2], ip);
+        
+        handleRoutedMsg("dcr", 1, 1, params);
+        
+        free(params[0]);
+        free(params[2]);
+    } else {
+        // It's a hostname or IP
+        establishClient(to);
+    }
+}
+
+int sendMsg(char *to, char *msg)
+{
+    char *outparams[50], *route;
+    
+    memset(outparams, 0, 50 * sizeof(char *));
+        
+    route = hashSGet(dn_routes, to);
+    if (route == NULL) {
+        uiNoRoute(to);
+        return 0;
+    }
+    outparams[0] = (char *) malloc((strlen(route)+1) * sizeof(char));
+    strcpy(outparams[0], route);
+    outparams[1] = dn_name;
+    outparams[2] = gpgTo(dn_name, to, msg);
+    handleRoutedMsg("msg", 1, 1, outparams);
+        
+    free(outparams[0]);
+    
+    return 1;
+}
+
+void sendFnd(char *to)
+{
+    char outbuf[65536];
+    
+    // Find a user by name
+    buildCmd(outbuf, "fnd", 1, 1, "");
+    addParam(outbuf, dn_name);
+    addParam(outbuf, to);
+    addParam(outbuf, gpgExportKey());
+        
+    emitUnroutedMsg(-1, outbuf);
 }

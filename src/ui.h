@@ -22,6 +22,12 @@
 #define DN_UI_H
 
 int uiInit(int argc, char **argv, char **envp);
+
 void uiDispMsg(char *from, char *msg);
+void uiEstConn(char *from);
+void uiEstRoute(char *from);
+void uiLoseConn(char *from);
+void uiLoseRoute(char *from);
+void uiNoRoute(char *to);
 
 #endif // DN_UI_H
