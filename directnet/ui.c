@@ -52,6 +52,7 @@ int uiInit(char **envp)
     
     while (1) {
         printf("> ");
+        fflush(stdout);
         fgets(cmdbuf, 32256, stdin);
         
         ostrlen = strlen(cmdbuf);
@@ -86,9 +87,16 @@ int handleUInput(char *inp)
     }
     
     if (!strncmp(params[0], "connect", 7)) {
+        if (params[1] == NULL) {
+            return 0;
+        }
         establishClient(params[1]);
     } else if (!strncmp(params[0], "say", 3)) {
         char *outparams[50], *route;
+        
+        if (params[2] == NULL) {
+            return 0;
+        }
         
         memset(outparams, 0, 50 * sizeof(char *));
         
@@ -98,6 +106,10 @@ int handleUInput(char *inp)
         }
         
         route = hashSGet(dn_routes, params[1]);
+        if (route == NULL) {
+            printf("No route to user.\n");
+            return 0;
+        }
         outparams[0] = (char *) malloc((strlen(route)+1) * sizeof(char));
         strcpy(outparams[0], route);
         outparams[1] = dn_name;
@@ -112,5 +124,6 @@ int handleUInput(char *inp)
 
 void uiDispMsg(char *from, char *msg)
 {
-    printf("%s: %s\n", from, msg);
+    printf("\n%s: %s\n> ", from, msg);
+    fflush(stdout);
 }
