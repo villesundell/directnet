@@ -30,16 +30,16 @@
 #include "gtk.hh"
 #endif
 
-class MyApp: public wxApp
+class wxDirectNet: public wxApp
 {
     virtual bool OnInit();
 };
 
-class MyFrame: public wxFrame
+class wxBuddyFrame: public wxFrame
 {
     public:
 
-    MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+    wxBuddyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
 
     void OnQuit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
@@ -53,22 +53,22 @@ enum
         ID_About,
 };
 
-BEGIN_EVENT_TABLE(MyFrame, wxFrame)
-EVT_MENU(ID_Quit, MyFrame::OnQuit)
-EVT_MENU(ID_About, MyFrame::OnAbout)
+BEGIN_EVENT_TABLE(wxBuddyFrame, wxFrame)
+EVT_MENU(ID_Quit, wxBuddyFrame::OnQuit)
+EVT_MENU(ID_About, wxBuddyFrame::OnAbout)
 END_EVENT_TABLE()
 
-IMPLEMENT_APP_NO_MAIN(MyApp)
+IMPLEMENT_APP_NO_MAIN(wxDirectNet)
 
-bool MyApp::OnInit()
+bool wxDirectNet::OnInit()
 {
-    MyFrame *frame = new MyFrame( "Hello World", wxPoint(50,50), wxSize(450,340) );
+    wxBuddyFrame *frame = new wxBuddyFrame( "Hello World", wxPoint(50,50), wxSize(450,340) );
     frame->Show(TRUE);
     SetTopWindow(frame);
     return TRUE;
 } 
 
-MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
+wxBuddyFrame::wxBuddyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 : wxFrame((wxFrame *)NULL, -1, title, pos, size)
 {
     wxMenu *menuFile = new wxMenu;
@@ -86,12 +86,12 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     SetStatusText( "Welcome to wxWindows!" );
 }
 
-void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
+void wxBuddyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
     Close(TRUE);
 }
 
-void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
+void wxBuddyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxMessageBox("This is a wxWindows Hello world sample",
                  "About Hello World", wxOK | wxICON_INFORMATION, this);
