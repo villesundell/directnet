@@ -74,7 +74,7 @@ int main(int argc, char **argv, char **envp)
     if (argc >= 2) {
         for (i = 1; i < argc; i++) {
             if (!strncmp(argv[1], "-v", 2)) {
-                printf("DirectNet version ALPHA 0.3\n");
+                printf("DirectNet version ALPHA 0.4\n");
                 exit(0);
             } else if (!strncmp(argv[i], "-p", 2)) {
                 i++;
