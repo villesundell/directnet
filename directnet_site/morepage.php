@@ -74,13 +74,13 @@ function morepage($page, $frame) {
         print "</ul></li>";
         
         // OSX
-        print "<li>Mac OS X (10.2 or higher)<br>";
+        print "<li>Apple Mac OS X (10.2 or higher)<br>";
         print "<ul>";
         print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-powerpc-apple-darwin6.8.gz?download'>PPC</a></li>";
         print "</ul></li>";
         
         // Solaris
-        print "<li>Solaris 9<br>";
+        print "<li>Sun Solaris 9<br>";
         print "<ul>";
         print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-sparc-sun-solaris2.9.gz?download'>ULTRASPARC</a></li>";
         print "</ul></li>";
@@ -104,10 +104,10 @@ function morepage($page, $frame) {
         print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-alphaev7-dec-osf5.1b.gz?download'>Alpha</a></li>";
         print "</ul></li>";
         
-        // Huh?
-        print "<li>That ... uhhh ... I guess they call it an \"operating system\" ... it's named ... uhhh ... doors ... or glass ... or something.<br>";
+        // Windows
+        print "<li>Microsoft Windows<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-i686-pc-cygwin.zip?download'>i686 (Intel/AMD PC) (<b>NOT</b> Wintel you ignorant morons)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-i686-pc-cygwin.zip?download'>i686 (Intel/AMD PC)</a></li>";
         print "</ul></li></ul>";
     }
 }
