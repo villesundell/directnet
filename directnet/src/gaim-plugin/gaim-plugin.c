@@ -18,6 +18,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef WIN32
+#define pipe(a) _pipe((a), 0, _O_BINARY | _O_NOINHERIT)
+#endif
+
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -26,6 +30,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 extern char **environ;
+
+#include <glib-object.h>
+#include <glib/gtypes.h>
+
+// Badly get rid of a mystery error...
+#define GTranslateFunc int
+#include <glib/goption.h>
+#undef GTranslateFunc
 
 #include "client.h"
 #include "connection.h"
