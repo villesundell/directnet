@@ -36,8 +36,8 @@
 #include "ui.h"
 
 void handleMsg(char *inbuf, int fdnum);
-//int handleNLUnroutedMsg(char **params);
-int handleNRUnroutedMsg(char **params);
+int handleNLUnroutedMsg(char **params);
+//int handleNRUnroutedMsg(char **params);
 
 void *communicator(void *fdnum_voidptr)
 {
@@ -130,7 +130,14 @@ void sendCmd(int fdnum, char *buf)
 void *fndPthread(void *fdnum_voidptr);
 
 #define REQ_PARAMS(x) if (params[x-1] == NULL) return
-
+#define REJOIN_PARAMS(x) { \
+	int i; \
+	for (i = x; params[i] != NULL; i++) { \
+		*(params[i]-1) = ';'; \
+		params[i] = NULL; \
+	} \
+}
+			
 void handleMsg(char *inbuf, int fdnum)
 {
     char command[4], *params[DN_MAX_PARAMS];
@@ -485,6 +492,7 @@ void handleMsg(char *inbuf, int fdnum)
     } else if (!strncmp(command, "msg", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         REQ_PARAMS(3);
+	REJOIN_PARAMS(3);
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message

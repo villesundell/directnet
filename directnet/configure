@@ -4203,7 +4203,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # On solaris, we need -lnsl and -lsocket
-
 echo "$as_me:$LINENO: checking for socket in -lc" >&5
 echo $ECHO_N "checking for socket in -lc... $ECHO_C" >&6
 if test "${ac_cv_lib_c_socket+set}" = set; then
@@ -4269,12 +4268,8 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_c_socket" >&5
 echo "${ECHO_T}$ac_cv_lib_c_socket" >&6
 if test $ac_cv_lib_c_socket = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBC 1
-_ACEOF
-
-  LIBS="-lc $LIBS"
-
+  { echo "$as_me:$LINENO: This is not a Solaris system." >&5
+echo "$as_me: This is not a Solaris system." >&6;}
 else
 
 echo "$as_me:$LINENO: checking for socket in -lsocket" >&5
@@ -4353,7 +4348,6 @@ fi
 
 fi
 
-
 echo "$as_me:$LINENO: checking for gethostbyname in -lc" >&5
 echo $ECHO_N "checking for gethostbyname in -lc... $ECHO_C" >&6
 if test "${ac_cv_lib_c_gethostbyname+set}" = set; then
@@ -4419,12 +4413,8 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_c_gethostbyname" >&5
 echo "${ECHO_T}$ac_cv_lib_c_gethostbyname" >&6
 if test $ac_cv_lib_c_gethostbyname = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBC 1
-_ACEOF
-
-  LIBS="-lc $LIBS"
-
+  { echo "$as_me:$LINENO: This is not a Solaris system." >&5
+echo "$as_me: This is not a Solaris system." >&6;}
 else
 
 echo "$as_me:$LINENO: checking for gethostbyname in -lnsl" >&5
@@ -5192,7 +5182,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5195 "configure"
+#line 5185 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
