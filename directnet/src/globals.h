@@ -22,6 +22,7 @@
 #define DN_GLOBALS_H
 
 #define DN_NAME_LEN 24
+#define DN_TRANSKEY_LIST 34
 #define DN_MAX_CONNS 1024
 #define DN_MAX_ROUTES 2048
 #define DN_CMD_LEN 2048
