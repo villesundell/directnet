@@ -21,7 +21,10 @@ Just make - won't work with HPUX's cc.
 Mac OS X:
 make all CFLAGS="-DMACOSX"
 
-Solaris:
+Solaris (native cc):
+make all CC=cc CFLAGS_ALL="-lsocket -lnsl"
+
+Solaris (gcc):
 make all CFLAGS="-lsocket -lnsl"
 
 Tru64 UNIX (Tru64 cc):

@@ -11,5 +11,6 @@ hpux
 hpux-gcc
 macosx
 solaris
+solaris-gcc
 tru64
 tru64-gcc
