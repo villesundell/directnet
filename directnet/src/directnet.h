@@ -29,7 +29,6 @@
 
 #ifdef GAIM_PLUGIN
 int pluginMain(int argc, char **argv, char **envp);
-int pluginClose(void *gc);
 #endif
 
 extern pthread_t *serverPthread;

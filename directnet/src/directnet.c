@@ -163,12 +163,7 @@ int pluginMain(int argc, char **argv, char **envp)
     // Start the UI
     uiInit(argc, argv, envp);
 
-#ifdef GAIM_PLUGIN
-}
-void pluginClose(void *gc) {
-    dn_name_set = 0;
-    uiLoaded = 0;
-#endif
+#ifndef GAIM_PLUGIN
     
     // When the UI has exited, we're done.
     serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
@@ -186,6 +181,8 @@ void pluginClose(void *gc) {
     //free(fnd_pthreads);
     
     pthread_exit(NULL);
+    
+#endif
     
     return 0;
 }
