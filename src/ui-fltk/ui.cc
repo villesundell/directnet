@@ -132,7 +132,12 @@ void estFnd(Fl_Input *w, void *ignore)
 
 void talkTo(Fl_Button *b, void *ignore)
 {
-    getWindow(bw->onlineList->text());
+    int sel;
+    
+    sel = bw->onlineList->value();
+    if (sel != 0) {
+        getWindow(bw->onlineList->text(sel));
+    }
 }
 
 void sendInput(Fl_Input *w, void *ignore)

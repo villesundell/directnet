@@ -9,26 +9,26 @@ class BuddyWindow {open
     Fl_Window buddyWindow {
       label DirectNet
       callback mainWinClosed open selected
-      xywh {320 143 205 170} type Double visible
+      xywh {320 143 205 305} type Double resizable visible
     } {
-      Fl_Choice onlineList {
-        label {  Route List:} open
-        xywh {0 20 205 25} box UP_BOX down_box DOWN_BOX align 5 when 1
-      } {}
+      Fl_Browser onlineList {
+        label {  Route list:}
+        xywh {0 20 205 165} type Hold align 5 resizable
+      }
       Fl_Button chatButton {
         label Chat
         callback talkTo
-        xywh {0 45 205 25}
+        xywh {0 185 205 25}
       }
       Fl_Input connectInput {
         label {  Connect to (IP or hostname):}
         callback estConn
-        xywh {0 105 205 25} align 5 when 8
+        xywh {0 240 205 25} align 5 when 8
       }
       Fl_Input findUser {
         label {  Find (username):}
         callback estFnd
-        xywh {0 145 205 25} align 5 when 8
+        xywh {0 280 205 25} align 5 when 8
       }
     }
   }
