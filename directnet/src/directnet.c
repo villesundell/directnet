@@ -38,6 +38,7 @@
 #include "server.h"
 #include "ui.h"
 
+pthread_t *serverPthread;
 int serv_port = 3336;
 
 int *fds, *pipe_fds, onpthread;
@@ -75,7 +76,7 @@ int main(int argc, char **argv, char **envp)
 int pluginMain(int argc, char **argv, char **envp)
 #endif
 {
-    pthread_t *serverPthread = NULL;
+    serverPthread = NULL;
     int i;
     
     if (argc >= 2) {
