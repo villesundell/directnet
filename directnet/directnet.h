@@ -25,11 +25,19 @@
 
 extern int *fds, onfd, onpthread;
 extern pthread_t *pthreads;
+
+extern pthread_t *fnd_pthreads;
+extern char *fnd_locks;
+extern char *weakRoutes[1024];
+
 extern char dn_name[1024];
 extern struct hashKey **dn_fds;
+
 extern struct hashKeyS **dn_routes;
+extern char *dn_route_by_num[1024];
+
 extern struct hashKey **dn_trans_keys;
-int currentTransKey;
+extern int currentTransKey;
 
 void newTransKey(char *into);
 

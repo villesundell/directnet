@@ -33,16 +33,19 @@
 
 int *fds, onfd, onpthread;
 pthread_t *pthreads;
+
+pthread_t *fnd_pthreads;
+char *fnd_locks;
+char *weakRoutes[1024];
+
 char dn_name[1024];
 struct hashKey **dn_fds;
+
 struct hashKeyS **dn_routes;
+char *dn_route_by_num[1024];
+
 struct hashKey **dn_trans_keys;
 int currentTransKey;
-
-/*void sigchld_handler(int s)
-{
-    while(wait(NULL) > 0);
-}*/
 
 char *findHome(char **envp);
 
@@ -58,27 +61,52 @@ int main(int argc, char **argv, char **envp)
         }
     }
     
+    // fds is an array containing every file descriptor.  fdnums are indexes into this array
     fds = (int *) malloc(1024 * sizeof(int));
     onfd = 0;
+    
+    // pthreads is an array of every active connection's pthread_t
     pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
     onpthread = 0;
     
+    /* fnd_pthreads is an array of the temporary pthreads made to collect extra routes after
+       receiving an initial fnd */
+    fnd_pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
+    memset(fnd_pthreads, 0, 1024 * sizeof(pthread_t));
+    
+    // This stores fd numbers by name
     dn_fds = hashCreate(1024);
+    
+    /* Upon receiving a fnd, the node then continues to accept alternate fnds.  Every time it
+       receives one, it goes through the current route and new route and only keeps the ones that
+       appear in both.  That way, it ends up with a list of nodes that have no backup.  If there
+       are any such nodes, it needs to attempt a direct connection to strengthen the network. */
+    memset(weakRoutes, 0, 1024 * sizeof(char *));
+    
+    // This stores routes by name
     dn_routes = hashSCreate(1024);
+    // And routes by number
+    memset(dn_route_by_num, 0, 1024 * sizeof(char *));
+    
+    // This hash stores the state of all nonrepeating unrouted messages
     dn_trans_keys = hashCreate(65536);
     currentTransKey = 0;
     
+    // Establish the server
     serverPthread = establishServer();
 
+    // Set GPG's home directory
     sprintf(gpghomedir, "%s/.directnet", findHome(envp));
 
+    // Start the UI
     uiInit(envp);
     
-    pthread_kill(serverPthread, SIGTERM);
+    // When the UI has exited, we're done.
+    serverPthread ? pthread_kill(serverPthread, SIGTERM) : 0;
     
     for (i = 0; i < onpthread; i++) {
         //kill(pids[i], SIGTERM);
-        pthread_kill(pthreads[i], SIGTERM);
+        pthreads[i] ? pthread_kill(pthreads[i], SIGTERM) : 0;
         //waitpid(pids[i], NULL, 0);
     }
     
