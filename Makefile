@@ -33,7 +33,7 @@ directnet: $(OBJS)
 	$(CC) $(CFLAGS_ALL) $(LIBS) $(OBJS) -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS_ALL) -c $< -o $@
 
 semiclean:
 	rm -fr $(OBJS) gpgtest.o
