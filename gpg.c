@@ -138,6 +138,9 @@ char *gpgWrap(char *cmd, char *msg, int hasout)
     
     if (!proc) {
         execvp(cmd, newargv);
+        
+        printf("BIG ErROR!  Couldn't call GPG!\n");
+        exit(-1);
     }
     
     dup2(oldstdin, 0);
