@@ -167,7 +167,10 @@ void handleMsg(char *inbuf, int fdnum)
         }
     }
     
-    // Current protocol commands
+    /*****************************
+     * Current protocol commands *
+     *****************************/
+    
     if ((!strncmp(command, "cjo", 3) &&
          inbuf[3] == 1 && inbuf[4] == 1) ||
         (!strncmp(command, "con", 3) &&
@@ -255,12 +258,13 @@ void handleMsg(char *inbuf, int fdnum)
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
+                // dcr echos
                 char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN], *ip;
                 struct hostent *he;
                 
                 memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
             
-                // First, echo
+                // First, echo, then try to connect
                 outParams[0] = hashSGet(dn_routes, params[1]);
                 if (outParams[0] == NULL) {
                     return;
@@ -281,6 +285,7 @@ void handleMsg(char *inbuf, int fdnum)
             // Then, attempt the connection
             establishClient(params[2]);
         }
+
     } else if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
@@ -468,6 +473,7 @@ void handleMsg(char *inbuf, int fdnum)
         
         // If all else fails, continue the chain
         emitUnroutedMsg(fdnum, outbuf);
+    
     } else if (!strncmp(command, "fnr", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         char handleit;
@@ -546,37 +552,28 @@ void handleMsg(char *inbuf, int fdnum)
             
             uiEstRoute(params[1]);
         }
+    
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
-#ifndef AIX
         char route[strlen(params[0])+2];
-#else
-        char *route;
-#endif
         
         REQ_PARAMS(2);
-        
-#ifdef AIX
-        route = (char *) malloc((strlen(params[0])+2) * sizeof(char));
-#endif
         
         hashSet(dn_fds, params[0], fdnum);
         
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
         
-#ifdef AIX
-        free(route);
-#endif
-        
         gpgImportKey(params[1]);
         
         uiEstRoute(params[0]);
+
     } else if (!strncmp(command, "lst", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         REQ_PARAMS(2);
         
         uiLoseRoute(params[1]);
+    
     } else if ((!strncmp(command, "msg", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) ||
                (!strncmp(command, "msa", 3) &&
