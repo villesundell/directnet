@@ -48,6 +48,7 @@ int uiInit(int argc, char ** argv, char **envp)
     // Then asking for the nick
     printf("What is your nick? ");
     fgets(dn_name, 1024, stdin);
+    dn_name_set = 1;
     
     charin = strlen(dn_name);
     if (dn_name[charin-1] == '\n') {

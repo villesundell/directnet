@@ -47,6 +47,7 @@ struct hashKeyP **recFndPthreads;
 struct hashKeyS **weakRoutes; // List of weak routes
 
 char dn_name[DN_NAME_LEN];
+char dn_name_set = 0;
 struct hashKey **dn_fds;
 
 struct hashKeyS **dn_routes;

@@ -103,6 +103,7 @@ void putOutput(ChatWindow *w, const char *txt)
 void setName(Fl_Input *w, void *ignore)
 {
     strncpy(dn_name, w->value(), DN_NAME_LEN);
+    dn_name_set = 1;
     nw->nameWindow->hide();
     
     /* make the buddy window */
