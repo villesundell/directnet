@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "directnet.h"
+#include "globals.h"
 #include "hash.h"
 #include "lock.h"
 
@@ -80,7 +81,7 @@ void hash##hshortn##Set(struct hashKey##hshortn **hash, char *key, htype value) 
     } \
     \
     hash[i] = (struct hashKey##hshortn *) malloc(sizeof(struct hashKey##hshortn)); \
-    strncpy(hash[i]->key, key, 25); \
+    SF_strncpy(hash[i]->key, key, 24); \
     hash[i]->value = value; \
 }
 
@@ -151,7 +152,7 @@ void hashSSet(struct hashKeyS **hash, char *key, char *value)
     }
     
     hash[i] = (struct hashKeyS *) malloc(sizeof(struct hashKeyS));
-    strncpy(hash[i]->key, key, 25);
+    SF_strncpy(hash[i]->key, key, 24);
     hash[i]->value = (char *) malloc((strlen(value) + 1) * sizeof(char));
     strcpy(hash[i]->value, value);
 }
@@ -204,7 +205,7 @@ DN_LOCK *hashLGet(struct hashKeyL **hash, char *key)
     
     // We have to create and initialize a lock for this
     hash[i] = (struct hashKeyL *) malloc(sizeof(struct hashKeyL));
-    strncpy(hash[i]->key, key, 25);
+    SF_strncpy(hash[i]->key, key, 24);
     dn_lockInit(&(hash[i]->value));
     
     return &(hash[i]->value);
