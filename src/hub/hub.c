@@ -73,8 +73,8 @@ int uiInit(int argc, char ** argv, char **envp)
                 fgets(line, 1024, dnhf);
                 
                 ostrlen = strlen(line);
-                if (line[ostrlen] == '\n') {
-                    line[ostrlen] = '\0';
+                if (line[ostrlen-1] == '\n') {
+                    line[ostrlen-1] = '\0';
                 }
                 printf("Connecting to %s\n", line);
                 establishConnection(line);
