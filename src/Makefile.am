@@ -18,7 +18,7 @@ directnetx_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
 directnetx_CXXFLAGS=@PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
 directnetx_LDFLAGS=@UI_LDFLAGS@ @ENC_LDFLAGS@
 directnetx_DEPENDENCIES=@UI_DIR@/libui.a  @ENC_DIR@/libenc.a
-directnetx_LDADD=@PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @UI_LIBS@ @ENC_LIBS@
+directnetx_LDADD=@PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
 
 else
 
@@ -34,6 +34,6 @@ server.c
 directnet_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
 directnet_LDFLAGS=@PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
 directnet_DEPENDENCIES=@UI_DIR@/libui.a @ENC_DIR@/libenc.a
-directnet_LDADD=@PTHREAD_LIBS@ @UI_DIR@/libui.a @UI_LIBS@ @ENC_LIBS@
+directnet_LDADD=@PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
 
 endif
