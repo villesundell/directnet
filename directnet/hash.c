@@ -52,6 +52,19 @@ int hashGet(struct hashKey **hash, char *key)
     return -1;
 }
 
+char *hashRevGet(struct hashKey **hash, int value)
+{
+    int i;
+    
+    for (i = 0; hash[i] != NULL; i++) {
+        if (hash[i]->value == value) {
+            return hash[i]->key;
+        }
+    }
+    
+    return NULL;
+}
+
 void hashSet(struct hashKey **hash, char *key, int value)
 {
     int i;
@@ -100,13 +113,28 @@ char *hashSGet(struct hashKeyS **hash, char *key)
     return NULL;
 }
 
+char *hashSRevGet(struct hashKeyS **hash, char *value)
+{
+    int i;
+    
+    for (i = 0; hash[i] != NULL; i++) {
+        if (!strncmp(hash[i]->value, value, 25)) {
+            return hash[i]->key;
+        }
+    }
+    
+    return NULL;
+}
+
 void hashSSet(struct hashKeyS **hash, char *key, char *value)
 {
     int i;
     
     for (i = 0; hash[i] != NULL; i++) {
         if (!strncmp(hash[i]->key, key, 25)) {
-            free(hash[i]->value);
+            if (hash[i]->value != NULL) {
+                free(hash[i]->value);
+            }
             hash[i]->value = (char *) malloc((strlen(value) + 1) * sizeof(char));
             strcpy(hash[i]->value, value);
             return;
@@ -125,7 +153,9 @@ void hashSDelKey(struct hashKeyS **hash, char *key)
     
     for (i = 0; hash[i] != NULL; i++) {
         if (!strncmp(hash[i]->key, key, 25)) {
-            free(hash[i]->value);
+            if (hash[i]->value != NULL) {
+                free(hash[i]->value);
+            }
             hash[i]->value = NULL;
             return;
         }

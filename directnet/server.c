@@ -114,7 +114,7 @@ void *serverAcceptLoop(void *ignore)
             continue;
         }
 
-        printf("server: got connection from %s\n",
+        printf("\nserver: got connection from %s\n",
                inet_ntoa(rem_addr.sin_addr));
         
         onfd_ptr = malloc(sizeof(int));

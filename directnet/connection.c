@@ -58,7 +58,15 @@ void *communicator(void *fdnum_voidptr)
                 buf[0] = '\0';
             }
         } else if (byterec == 0) {
+            char *name;
+            
             // Disconnect
+            name = hashRevGet(dn_fds, fdnum);
+            if (name != NULL) {
+                uiDispMsg(name, "Lost connection.");
+                hashSDelKey(dn_routes, name);
+            }
+            
             close(fds[fdnum]);
             return NULL;
         } else if (byterec == -1) {
