@@ -127,8 +127,8 @@ The appropriate libraries could not be found.
         else
                 UI_CFLAGS=$CURSES_INCLUDEDIR
                 UI_CPPFLAGS=
-                UI_CXXFLAGS=
-                UI_CXX=false
+                UI_CXXFLAGS=$CURSES_INCLUDEDIR
+                UI_CXX=true
                 UI_LIBS=$CURSES_LIBS
                 UI_LDFLAGS=
                 UI_DIR=ui-curses
