@@ -40,7 +40,6 @@ extern char dn_name[1024];
 extern struct hashKey **dn_fds;
 
 extern struct hashKeyS **dn_routes;
-extern char *dn_route_by_num[1024];
 extern struct hashKeyS **dn_iRoutes;
 
 extern struct hashKey **dn_trans_keys;
