@@ -18,109 +18,6 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef WIN32
-
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <winsock2.h>
-
-struct sockaddr_in sockin[2];
-
-void *connectThread(void *fd_ptr)
-{
-    int fd = *((int *) fd_ptr);
-    free(fd_ptr);
-    if (connect(fd, (struct sockaddr *) &sockin[0], sizeof(sockin[0])) < 0)
-    {
-        perror("connect");
-        return;
-    }
-}
-
-/* Because Windows doesn't support pipe, I lifted a socketpair function from the web.  It seems
- * to be under the GPL, as it was intended to be a patch to GDB
- * source: http://sources.redhat.com/ml/gdb-patches/1999-q3/msg00070.html
- * Thanks to Philippe De Muyter */
-socketpair(int af, int type, int protocol, int fd[2])
-{
-    int	listen_socket;
-    int	len;
-    pthread_t newthread;
-    int *fd_ptr = (int *) malloc(sizeof(int));
-
-    /* The following is only valid if type == SOCK_STREAM */
-    if (type != SOCK_STREAM)
-        return -1;
-
-    /* Create a temporary listen socket; temporary, so any port is good */
-    listen_socket = socket(af, type, protocol);
-    if (listen_socket < 0)
-    {
-        perror("creating listen_socket");
-        return -1;
-    }
-    sockin[0].sin_family = af;
-    sockin[0].sin_port = 0; /* Use any port number */
-    sockin[0].sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(listen_socket, (struct sockaddr *) &sockin[0], sizeof(sockin[0])) < 0)
-    {
-        perror("bind");
-        return -1;
-    }
-    len = sizeof(sockin[0]);
-
-    /* Read the port number we got, so that our client can connect to it */
-    if (getsockname(listen_socket, (struct sockaddr *) &sockin[0], &len) < 0)
-    {
-        perror("getsockname");
-        return -1;
-    }
-
-    /* Put the listen socket in listening mode */
-    if (listen(listen_socket, 5) < 0)
-    {
-        perror("listen");
-        return -1;
-    }
-
-    /* Create the client socket */
-    fd[1] = socket(af, type, protocol);
-    if (fd[1] < 0)
-    {
-        perror("creating client_socket");
-        return -1;
-    }
-
-    /* Since we don't have the option of going into non-blocking mode, we have to thread (:() */
-    *fd_ptr = fd[1];
-    pthread_create(&newthread, NULL, connectThread, (void *) fd_ptr);
-    
-    /* At the listen-side, accept the incoming connection we generated */
-    len = sizeof(sockin[1]);
-    if ((fd[0] = accept(listen_socket, (struct sockaddr *) &sockin[1], &len)) < 0)
-    {
-        perror("accept");
-        return -1;
-    }
-
-    close(listen_socket);
-
-    return 0;
-}
-
-#define pipe(a) socketpair(AF_UNIX, SOCK_STREAM, 0, a)
-
-#include <glib-object.h>
-#include <glib/gtypes.h>
-
-// Badly get rid of a mystery error...
-#define GTranslateFunc int
-#include <glib/goption.h>
-#undef GTranslateFunc
-
-#endif
-
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -165,7 +62,11 @@ static GaimPluginProtocolInfo prpl_info = {
     gp_chatinfo,
     gp_chatinfo_defaults,
     gp_login, /* login */
+<<<<<<< gaim-plugin.c
+    pluginClose, /* close */
+=======
     gp_close, /* close */
+>>>>>>> 1.14
     gp_sendim, /* send IM */
     NULL, /* set info */
     NULL, /* send "typing" */
