@@ -43,8 +43,7 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/macros/curses.m4 \
 	$(top_srcdir)/macros/fltk.m4 $(top_srcdir)/macros/pthread.m4 \
-	$(top_srcdir)/macros/readline.m4 $(top_srcdir)/macros/wxwin.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/macros/readline.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -159,15 +158,6 @@ UI_DIR = @UI_DIR@
 UI_LDFLAGS = @UI_LDFLAGS@
 UI_LIBS = @UI_LIBS@
 VERSION = @VERSION@
-WX_CFLAGS = @WX_CFLAGS@
-WX_CFLAGS_ONLY = @WX_CFLAGS_ONLY@
-WX_CONFIG_PATH = @WX_CONFIG_PATH@
-WX_CPPFLAGS = @WX_CPPFLAGS@
-WX_CXXFLAGS = @WX_CXXFLAGS@
-WX_CXXFLAGS_ONLY = @WX_CXXFLAGS_ONLY@
-WX_LIBS = @WX_LIBS@
-WX_LIBS_STATIC = @WX_LIBS_STATIC@
-WX_VERSION = @WX_VERSION@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
