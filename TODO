@@ -1,13 +1,17 @@
-Todo by ALPHA 0.2:
-Beter UI
-dcr (see PROTOCOL)
-fnd weak detection
-
 Todo by ALPHA 0.3:
 dcr in UI
 Intermediate routes on fnr (so that warning on broken route is possible)
 Buddy list (sorta)
-Chat rooms (sorta)
 
 Todo by ALPHA 0.4:
 Transfer files
+Chat rooms (sorta)
+
+
+--------------------------------------------------
+---------------------- DONE: ---------------------
+--------------------------------------------------
+Todo by ALPHA 0.2:
+Beter UI
+dcr (see PROTOCOL)
+fnd weak detection
