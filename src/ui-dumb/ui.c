@@ -61,6 +61,9 @@ int uiInit(int argc, char ** argv, char **envp)
     currentPartner = (char *) malloc(256 * sizeof(char));
     currentPartner[0] = '\0';
     
+    // OK, the UI is ready
+    uiLoaded = 1;
+    
     while (1) {
         printf("%s> ", currentPartner);
         fflush(stdout);
@@ -146,36 +149,42 @@ int handleUInput(char *inp)
 
 void uiDispMsg(char *from, char *msg)
 {
+    while (!uiLoaded) sleep(0);
     printf("\n%s: %s\n%s> ", from, msg, currentPartner);
     fflush(stdout);
 }
 
 void uiEstConn(char *from)
 {
+    while (!uiLoaded) sleep(0);
     printf("\n%s: Connection established.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiEstRoute(char *from)
 {
+    while (!uiLoaded) sleep(0);
     printf("\n%s: Route established.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiLoseConn(char *from)
 {
+    while (!uiLoaded) sleep(0);
     printf("\n%s: Connection lost.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiLoseRoute(char *from)
 {
+    while (!uiLoaded) sleep(0);
     printf("\n%s: Route lost.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiNoRoute(char *to)
 {
+    while (!uiLoaded) sleep(0);
     printf("\n%s: No route to user.\n%s> ", to, currentPartner);
     fflush(stdout);
 }

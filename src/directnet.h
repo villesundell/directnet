@@ -43,6 +43,8 @@ extern char *dn_route_by_num[1024];
 extern struct hashKey **dn_trans_keys;
 extern int currentTransKey;
 
+extern char uiLoaded;
+
 void newTransKey(char *into);
 
 #endif // DN_DIRECTNET_H
