@@ -480,7 +480,7 @@ static int gp_sendim(GaimConnection *gc, const char *who, const char *message, G
 
 static void gp_setaway(GaimConnection *gc, const char *state, const char *text)
 {
-    char *ntext = strdup(text);
+    char *ntext = text ? strdup(text) : strdup("I'm away right now.");
     setAway(ntext);
     free(ntext);
 }
