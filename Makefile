@@ -49,10 +49,18 @@ help:
 gnulinux: directnet
 
 hpux:
-	$(MAKE) directnet
+	$(MAKE) directnet CC=cc CFLAGS_ALL=""
+
+hpux-gcc: directnet
 
 macosx:
 	$(MAKE) directnet CFLAGS="-DMACOSX"
 
 solaris:
 	$(MAKE) directnet LDFLAGS="-lsocket -lnsl"
+
+tru64:
+	$(MAKE) directnet CC=cc CFLAGS_ALL="-pthread"
+
+tru64-gcc:
+	$(MAKE) directnet CFLAGS="-pthread"

@@ -8,11 +8,21 @@ It should allow you to compile on most platforms.
 GNU/Linux:
 The Makefile was made for GNU/Linux, just 'make'
 
-HPUX:
-Should just 'gmake', but only tested with GNU make and GNU cc.
+HPUX (ansi c):
+NOTE: this will compile with ANSI C, but NOT ANSI C++!!!
+make all CC=cc CFLAGS_ALL=""
+
+HPUX (gcc):
+Just make - won't work with HPUX's cc.
 
 Mac OS X:
 make all CFLAGS="-DMACOSX"
 
 Solaris:
 make all CFLAGS="-lsocket -lnsl"
+
+Tru64 UNIX (Tru64 cc):
+make all CC=cc CFLAGS_ALL="-pthread"
+
+Tru64 UNIX (gcc):
+make all CFLAGS="-pthread"
