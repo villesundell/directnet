@@ -68,17 +68,20 @@ int uiInit(int argc, char ** argv, char **envp)
         sprintf(dnhomefile, "%s/.dnhub", homedir);
         
         dnhf = fopen(dnhomefile, "r");
-        while (!feof(dnhf)) {
-            fgets(line, 1024, dnhf);
-            
-            ostrlen = strlen(line);
-            if (line[ostrlen] == '\n') {
-                line[ostrlen] = '\0';
+        if (dnhf) {
+            while (!feof(dnhf)) {
+                fgets(line, 1024, dnhf);
+                
+                ostrlen = strlen(line);
+                if (line[ostrlen] == '\n') {
+                    line[ostrlen] = '\0';
+                }
+                printf("Connecting to %s\n", line);
+                establishConnection(line);
             }
             
-            establishConnection(line);
+            fclose(dnhf);
         }
-        
         free(dnhomefile);
     }
     

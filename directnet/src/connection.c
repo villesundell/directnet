@@ -123,7 +123,7 @@ void addParam(char *into, char *newparam)
 void sendCmd(int fdnum, char *buf)
 {
     dn_lock(pipe_locks+fdnum);
-    if (fds[fnum]) {
+    if (fds[fdnum]) {
         send(fds[fdnum], buf, strlen(buf)+1, 0);
     }
     dn_unlock(pipe_locks+fdnum);
