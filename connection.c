@@ -175,7 +175,6 @@ void handleMsg(char *inbuf, int fdnum)
             handleRoutedMsg("fnr", 1, 1, outparams);
             
             uiDispMsg(params[1], "Route established.");
-            uiDispMsg(params[1], reverseRoute);
             
             return;
         }
@@ -226,7 +225,6 @@ void handleMsg(char *inbuf, int fdnum)
             gpgImportKey(params[3]);
             
             uiDispMsg(params[1], "Route established.");
-            uiDispMsg(params[1], newroute);
         }
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
