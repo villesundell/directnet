@@ -4,7 +4,6 @@ AC_DEFINE([NCURSES_970530], [], [Set to reflect version of ncurses
 1 = version 1.9.9g
 2 = version 4.0/4.1])
 AC_DEFINE([NO_COLOR_CURSES], [], [If you Curses does not have color define this one])
-AC_DEFINE([SCO_FLAVOR], [], [Define if you want to turn on SCO-specific code])
 AC_DEFINE([USE_NCURSES], [], [Use Ncurses?])
 AC_DEFINE([USE_SUNOS_CURSES], [], [Use SunOS SysV curses?])
 AC_DEFINE([USE_SYSV_CURSES], [], [Use SystemV curses?])
@@ -83,9 +82,6 @@ dnl
 dnl /* If you Curses does not have color define this one */
 dnl #undef NO_COLOR_CURSES
 dnl 
-dnl /* Define if you want to turn on SCO-specific code */
-dnl #undef SCO_FLAVOR
-dnl 
 dnl /* Set to reflect version of ncurses *
 dnl  *   0 = version 1.*
 dnl  *   1 = version 1.9.9g
@@ -105,14 +101,6 @@ AC_DEFUN([AC_CHECK_CURSES],[
 
 	AC_SUBST(CURSES_LIBS)
 	AC_SUBST(CURSES_INCLUDEDIR)
-
-	AC_ARG_WITH(sco,
-	  [  --with-sco              Use this to turn on SCO-specific code],[
-	  if test x$withval = xyes; then
-		AC_DEFINE(SCO_FLAVOR)
-		CFLAGS="$CFLAGS -D_SVID3"
-	  fi
-	])
 
 	AC_ARG_WITH(sunos-curses,
 	  [  --with-sunos-curses     Used to force SunOS 4.x curses],[
