@@ -60,6 +60,9 @@ macosx:
 	$(MAKE) directnet CFLAGS="-DMACOSX"
 
 solaris:
+	$(MAKE) directnet CC=cc CFLAGS_ALL="-lnsl -lsocket"
+
+solaris-gcc:
 	$(MAKE) directnet LDFLAGS="-lsocket -lnsl"
 
 tru64:
