@@ -19,10 +19,14 @@ src/ui-wx/Makefile
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_RANLIB
 
 # Checks for libraries.
+# On solaris, we need -lnsl and -lsocket
+AC_CHECK_LIB([socket], [socket])
+AC_CHECK_LIB([nsl], [gethostbyname])
 
 # ACX_PTHREAD check included from http://www.gnu.org/software/ac-archive/htmldoc/acx_pthread.html
 AC_DEFUN([ACX_PTHREAD], [
