@@ -83,9 +83,9 @@ int main(int argc, char **argv, char **envp)
                 }
                 serv_port = atoi(argv[i]);
             } else {
-                sprintf(stderr, "Use:\n%s [-v] [-p port]\n");
-                sprintf(stderr, "  -v: Display the version number and quit.\n");
-                sprintf(stderr, "  -p: Set the port to listen for connections on (default 3336).\n\n");
+                fprintf(stderr, "Use:\n%s [-v] [-p port]\n");
+                fprintf(stderr, "  -v: Display the version number and quit.\n");
+                fprintf(stderr, "  -p: Set the port to listen for connections on (default 3336).\n\n");
                 exit(1);
             }
         }
