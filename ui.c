@@ -96,19 +96,13 @@ int handleUInput(char *inp)
         for (i = 2; params[i+1] != NULL; i++) {
             params[i][strlen(params[i])] = ' ';
         }
-        printf("A\n");
+        
         route = hashSGet(dn_routes, params[1]);
-        printf("A\n");
         outparams[0] = (char *) malloc((strlen(route)+1) * sizeof(char));
-        printf("A\n");
         strcpy(outparams[0], route);
-        printf("A\n");
         outparams[1] = dn_name;
-        printf("A\n");
         outparams[2] = gpgTo(dn_name, params[1], params[2]);
-        printf("A\n");
         handleRoutedMsg("msg", 1, 1, outparams);
-        printf("A\n");
     } else if (!strncmp(params[0], "quit", 4)) {
         return 1;
     }
