@@ -76,7 +76,7 @@ pthread_t establishServer()
     
     if (bind(server_sock, (struct sockaddr *) &addr, sizeof(struct sockaddr)) == -1) {
         perror("bind");
-        exit(1);
+        return 0;
     }
     
     if (listen(server_sock, 10) == -1) {

@@ -1,12 +1,14 @@
 This is a short documentation of protocol commands.
 All protocol commands are a three-character command followed by a two-char version number followed
 by ;-delimited parameters followed by a null terminator.
-There are three types.  Direct, routed, and unrouted.  Direct commands are sent directly over a
-connection and are not continued.  Routed commands have a set route as the first parameter, and all
-of the nodes along that route strip off their name then continue the transfer until the data is
-sent to the last node on the list (at which point it will have an empty route).  Unrouted commands
-are the rare few that simply emit throughout the network.  These contain a parameter for the
-transmission key (so that they are not retransmitted), and any other necessary parameters.
+There are four types.  Direct, routed, nonlooping unrouted and nonrepeating unrouted.  Direct
+commands are sent directly over a connection and are not continued.  Routed commands have a set
+route as the first parameter, and all of the nodes along that route strip off their name then
+continue the transfer until the data is sent to the last node on the list (at which point it will
+have an empty route).  Urouted commands are the rare few that simply emit throughout the network.
+Nonlooping unrouted messages contain a parameter for the route that they have taken to get to
+the current node, andy any other parameters.  Nonrepeating unrouted messages contain a parameter
+for the transmission key (so that they are not retransmitted), and any other necessary parameters.
 
 dcr(1)(1) (direct connect request)
         purpose: Attempt to directly connect to a remote user (also causes a dce)
@@ -26,12 +28,11 @@ dce(1)(1) (direct connect request echo)
 
 fnd(1)(1) (find)
         purpose: Find a user by name
-        type: unrouted
+        type: nonlooping unrouted
         parameters:
-                transmission key
+                current route
                 local name
                 remote name
-                route being built
                 public key
 
 fnr(1)(1) (find response)
