@@ -51,6 +51,13 @@ int main(int argc, char **argv, char **envp)
     pthread_t serverPthread;
     int i;
     
+    if (argc >= 2) {
+        if (!strncmp(argv[1], "-v", 2)) {
+            printf("DirectNet version ALPHA 0.1\n");
+            exit(0);
+        }
+    }
+    
     fds = (int *) malloc(1024 * sizeof(int));
     onfd = 0;
     pthreads = (pthread_t *) malloc(1024 * sizeof(pthread_t));
