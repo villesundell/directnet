@@ -18,6 +18,7 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>
