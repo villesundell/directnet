@@ -130,7 +130,7 @@ void handleMsg(char *inbuf, int fdnum)
             memset(routeElement, 0, 50 * sizeof(char *));
             memset(outparams, 0, 5 * sizeof(char *));
             
-            strncpy(newroute, params[3]);
+            strncpy(newroute, params[3], 32256);
             
             routeElement[0] = newroute;
             onRE = 1;
@@ -216,7 +216,7 @@ void handleMsg(char *inbuf, int fdnum)
             ostrlen += strlen(params[1]);
             strncpy(newroute+ostrlen, "\n", 32256-ostrlen);
             
-            hashSSet(dn_routes, params[1], reverseRoute);
+            hashSSet(dn_routes, params[1], newroute);
             
             // 2) Key
             gpgImportKey(params[3]);
