@@ -1,12 +1,14 @@
 Todo by ALPHA 0.4:
 x One non-dumb UI (FLTK)
 x Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
-Away (simple autoresponse)
+x Away (simple autoresponse)
+
+Todo by ALPHA 0.5:
+Another non-dumb UI
+Buddy list (sorta)
 
 Todo ... sometime:
 Transfer files
-Another non-dumb UI
-Buddy list (sorta)
 Generic service commands (video chat, audio chat, etc through external programs)
 
 
