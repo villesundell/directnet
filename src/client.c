@@ -59,14 +59,16 @@ void establishClient(char *destination)
         return;
     }
     
-    curfd = onfd;
-    onfd++;
+    dn_lock(&dn_fd_lock);
+    for (curfd = 0; fds[curfd]; curfd++);
     fds[curfd] = socket(AF_INET, SOCK_STREAM, 0);
+    dn_unlock(&dn_fd_lock);
     if (fds[curfd] == -1) {
+        fds[curfd] = 0;
         perror("socket");
-        free(hostname);
         return;
     }
+    if (curfd > onfd) onfd = curfd;
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);

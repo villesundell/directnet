@@ -38,8 +38,10 @@
 
 int serv_port = 3336;
 
-int *fds, *pipe_fds, onfd, onpthread;
+int *fds, *pipe_fds, onpthread;
 pthread_t *pthreads;
+int onfd;
+DN_LOCK dn_fd_lock;
 
 int pipes[DN_MAX_CONNS][2];
 DN_LOCK *pipe_locks;
@@ -94,9 +96,11 @@ int main(int argc, char **argv, char **envp)
     // fds is an array containing every file descriptor.  fdnums are indexes into this array
     fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));
     memset(fds, 0, DN_MAX_CONNS * sizeof(int));
+    onfd = 0;
+    // dn_fd_lock is a lock over fds[]
+    dn_lockInit(&dn_fd_lock);
     // pipe_fds is an equivilant array for the output pipes that throttle bandwidth
     pipe_fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));
-    onfd = 0;
     
     pipe_locks = (DN_LOCK *) malloc(DN_MAX_CONNS * sizeof(DN_LOCK));
     memset(pipe_locks, 0, DN_MAX_CONNS * sizeof(DN_LOCK));

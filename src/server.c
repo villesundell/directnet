@@ -103,13 +103,17 @@ void *serverAcceptLoop(void *ignore)
 
     while(1) {
         sin_size = sizeof(struct sockaddr_in);
-        curfd = onfd;
-        onfd++;
+        
+        dn_lock(&dn_fd_lock);
+        for (curfd = 0; fds[curfd]; curfd++);
         fds[curfd] = accept(server_sock, (struct sockaddr *)&rem_addr, &sin_size);
+        dn_unlock(&dn_fd_lock);
         if (fds[curfd] == -1) {
+            fds[curfd] = 0;
             perror("accept");
             continue;
         }
+        if (curfd > onfd) onfd = curfd;
 
         uiEstConn(inet_ntoa(rem_addr.sin_addr));
         
