@@ -36,7 +36,7 @@ echo '*' | import
 [Install]
 # Put your installation script here
 installExe bin/*
-installDesktop "Network/Instant Messaging" share/applications/directnet.desktop
+installDesktop "Networking/Instant Messaging" share/applications/directnet.desktop
 
 [Uninstall]
 # Usually just the following line is enough to uninstall everything
