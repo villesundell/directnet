@@ -18,6 +18,8 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdio.h>
+
 #ifdef WIN32
 #define pipe(a) _pipe((a), 512, _O_BINARY | _O_NOINHERIT)
 
@@ -49,7 +51,6 @@ char *fgets_win32(char *s, int size, FILE *stream)
 
 #include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
