@@ -1,10 +1,20 @@
+Todo by ALPHA 0.4:
+x One non-dumb UI (FLTK)
+x Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
+x Away (simple autoresponse)
+  - Show in the UI when an away is fired
+Mac OS X support (borked, loads from console, not from finder?)
+
 Todo by ALPHA 0.5:
 Another non-dumb UI
-Buddy list (sorta)
+Encryption
+- Identifiable uniqueness
+Buddy list (auto-find list)
 
 Todo ... sometime:
 Transfer files
 Generic service commands (video chat, audio chat, etc through external programs)
+Work on broadcast issues (fnd = flog the network, yeeeeuck)
 
 
 --------------------------------------------------
@@ -20,8 +30,3 @@ autoconf
 Separate UI and connection code properly
 dcr in UI
 Lost connection detection
-
-Todo by ALPHA 0.4:
-One non-dumb UI (FLTK)
-Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
-Away (simple autoresponse)
