@@ -12,6 +12,8 @@ AC_CONFIG_FILES(
 [
 Makefile
 src/Makefile
+src/enc-fake/Makefile
+src/enc-gpg/Makefile
 src/ui-curses/Makefile
 src/ui-dumb/Makefile
 src/ui-wx/Makefile
