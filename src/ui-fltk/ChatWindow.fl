@@ -10,12 +10,12 @@ class ChatWindow {open
       label User open
       xywh {372 89 360 290} type Double visible
     } {
-      Fl_Text_Display textOut {
-        label User
-        xywh {0 15 360 250}
+      Fl_Text_Display textOut {selected
+        xywh {0 0 360 260}
+        code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
       }
       Fl_Input textIn {
-        user_data sendInput selected
+        callback sendInput
         xywh {0 265 360 25} when 8
       }
     }
