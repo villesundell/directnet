@@ -32,11 +32,13 @@ struct hashKeyS {
 struct hashKey **hashCreate(int count);
 void hashDestroy(struct hashKey **hash);
 int hashGet(struct hashKey **hash, char *key);
+char *hashRevGet(struct hashKey **hash, int value);
 void hashSet(struct hashKey **hash, char *key, int value);
 
 struct hashKeyS **hashSCreate(int count);
 void hashSDestroy(struct hashKeyS **hash);
 char *hashSGet(struct hashKeyS **hash, char *key);
+char *hashSRevGet(struct hashKeyS **hash, char *value);
 void hashSSet(struct hashKeyS **hash, char *key, char *value);
 void hashSDelKey(struct hashKeyS **hash, char *key);
 
