@@ -140,28 +140,30 @@ void handleMsg(char *inbuf, int fdnum)
         inbuf[3] == 1 && inbuf[4] == 1)) {
         REQ_PARAMS(3);
         
-        if (!strncmp(command, "dcr", 3) &&
-            inbuf[3] == 1 && inbuf[4] == 1) {
-            char *outParams[50], hostbuf[256];
-            struct hostent *he;
+        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+            if (!strncmp(command, "dcr", 3) &&
+                inbuf[3] == 1 && inbuf[4] == 1) {
+                char *outParams[50], hostbuf[256];
+                struct hostent *he;
+                
+                memset(outParams, 0, 50 * sizeof(char *));
             
-            memset(outParams, 0, 50 * sizeof(char *));
+                // First, echo
+                outParams[0] = hashSGet(dn_routes, params[1]);
+                if (outParams[0] == NULL) {
+                    return;
+                }
+                outParams[1] = dn_name;
+                gethostname(hostbuf, 128);
+                he = gethostbyname(hostbuf);
+                outParams[2] = inet_ntoa(*((struct in_addr *)he->h_addr));
             
-            // First, echo
-            outParams[0] = hashSGet(dn_routes, params[1]);
-            if (outParams[0] == NULL) {
-                return;
+                handleRoutedMsg("dce", 1, 1, outParams);
             }
-            outParams[1] = dn_name;
-            gethostname(hostbuf, 128);
-            he = gethostbyname(hostbuf);
-            outParams[2] = inet_ntoa(*((struct in_addr *)he->h_addr));
             
-            handleRoutedMsg("dce", 1, 1, outParams);
+            // Then, attempt the connection
+            establishClient(params[2]);
         }
-        
-        // Then, attempt the connection
-        establishClient(params[2]);
     } else if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
         int remfd;
@@ -202,6 +204,7 @@ void handleMsg(char *inbuf, int fdnum)
             
             if (!fnd_pthreads[fdnum]) {
                 pthread_attr_t ptattr;
+                int *onfd_ptr;
                 
                 // This is the first fnd received, but ignore it if we already have a route
                 if (dn_route_by_num[fdnum]) {
@@ -240,8 +243,11 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 uiDispMsg(params[1], "Route established.");
                 
+                onfd_ptr = malloc(sizeof(int));
+                *onfd_ptr = fdnum;
+                
                 pthread_attr_init(&ptattr);
-                pthread_create(&fnd_pthreads[fdnum], &ptattr, fndPthread, NULL);
+                pthread_create(&fnd_pthreads[fdnum], &ptattr, fndPthread, (void *) onfd_ptr);
             } else {
                 char oldWRoute[32256];
                 char *newRouteElements[50];
@@ -485,17 +491,27 @@ void *fndPthread(void *fdnum_voidptr)
     
     // If it's weak, send a dcr (direct connect request)
     {
-        char outbuf[65536], hostbuf[128];
+        char *params[50], hostbuf[128], *ip;
         struct hostent *he;
         
-        buildCmd(outbuf, "dcr", 1, 1, dn_route_by_num[fdnum]);
-        addParam(outbuf, dn_name);
+        memset(params, 0, 50 * sizeof(char *));
+        
+        params[0] = (char *) malloc((strlen(dn_route_by_num[fdnum]) + 1) * sizeof(char));
+        strcpy(params[0], dn_route_by_num[fdnum]);
+        params[1] = dn_name;
+        
         gethostname(hostbuf, 128);
         he = gethostbyname(hostbuf);
-        addParam(outbuf, inet_ntoa(*((struct in_addr *)he->h_addr)));
+        ip = inet_ntoa(*((struct in_addr *)he->h_addr));
+        params[2] = (char *) malloc((strlen(ip) + 1) * sizeof(char));
+        strcpy(params[2], ip);
+
+        handleRoutedMsg("dcr", 1, 1, params);
         
-        sendCmd(fdnum, outbuf);
+        free(params[0]);
+        free(params[2]);
         
+        fnd_pthreads[fdnum] = 0;
         return NULL;
     }
 }
