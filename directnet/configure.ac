@@ -14,6 +14,7 @@ Makefile
 src/Makefile
 src/enc-fake/Makefile
 src/enc-gpg/Makefile
+src/gaim-plugin/Makefile
 src/hub/Makefile
 src/ui-curses/Makefile
 src/ui-dumb/Makefile

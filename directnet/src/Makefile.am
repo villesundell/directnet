@@ -1,4 +1,4 @@
-SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@
+SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@ 
 
 CC=@PTHREAD_CC@
 
@@ -77,14 +77,13 @@ libdirectnet_gaim_la_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
-gaim-plugin.c \
 hash.c \
 lock.c \
 server.c
 
 libdirectnet_gaim_la_CFLAGS=@PTHREAD_CFLAGS@ @ENC_CFLAGS@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
 libdirectnet_gaim_la_LDFLAGS=@PTHREAD_CFLAGS@ @ENC_LDFLAGS@ -module -avoid-version -Wl,--export-dynamic
-libdirectnet_gaim_la_DEPENDENCIES=@ENC_DIR@/libenc.a
-libdirectnet_gaim_la_LIBADD=@PTHREAD_LIBS@ @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
+libdirectnet_gaim_la_DEPENDENCIES=@GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a
+libdirectnet_gaim_la_LIBADD=@PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
 
 endif

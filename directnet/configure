@@ -1968,7 +1968,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
           ac_config_headers="$ac_config_headers config.h"
 
 
-                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-wx/Makefile"
+                                                                                                    ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/gaim-plugin/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-wx/Makefile"
 
 
 # Checks for programs.
@@ -23277,6 +23277,7 @@ do
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/enc-fake/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-fake/Makefile" ;;
   "src/enc-gpg/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-gpg/Makefile" ;;
+  "src/gaim-plugin/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gaim-plugin/Makefile" ;;
   "src/hub/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/hub/Makefile" ;;
   "src/ui-curses/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-curses/Makefile" ;;
   "src/ui-dumb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
