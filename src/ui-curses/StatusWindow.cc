@@ -37,23 +37,28 @@ StatusWindow::StatusWindow(int cols, int row_anchor)
     win = newwin( 1, cols, row_anchor, 0); 
     cur_nick=""; 
     cur_target=""; 
+    ncols = cols;
+    redrawStatus();
 }
 
-StatusWindow::~StatusWindow() { 
+StatusWindow::~StatusWindow() 
+{ 
     delwin(win); 
 }
 
-StatusWindow::setNick(string s) 
+void StatusWindow::setNick(string s) 
 {
     cur_nick=s;
+    redrawStatus();
 }
 
 void StatusWindow::setTarget(string s) 
 {
     cur_target=s;
+    redrawStatus();
 }
 
-void string StatusWindow::getNick()
+string StatusWindow::getNick()
 {
     return cur_nick;
 }
@@ -70,8 +75,8 @@ void StatusWindow::redrawStatus()
     getsyx( y,x);  // save cursor position so we can put it back
     wmove (win, 0, 0); 
     
-    string buf = "---(" + cur_target + ")"; 
-    for (int i = buf.length(); i < cols; i++) { 
+    string buf = "---(" + cur_nick + " to " + cur_target + ")"; 
+    for (int i = buf.length(); i <= ncols; i++) { 
         buf += "-"; 
     }
     wprintw (win, "%s", buf.c_str()); 
