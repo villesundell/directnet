@@ -4,24 +4,23 @@
 
 Fl_Double_Window* BuddyWindow::make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = buddyWindow = new Fl_Double_Window(205, 170, "DirectNet");
+  { Fl_Double_Window* o = buddyWindow = new Fl_Double_Window(205, 305, "DirectNet");
     w = o;
     o->callback((Fl_Callback*)mainWinClosed, (void*)(this));
-    { Fl_Choice* o = onlineList = new Fl_Choice(0, 20, 205, 25, "  Route List:");
-      o->box(FL_UP_BOX);
-      o->down_box(FL_DOWN_BOX);
+    { Fl_Browser* o = onlineList = new Fl_Browser(0, 20, 205, 165, "  Route list:");
+      o->type(2);
       o->align(FL_ALIGN_TOP_LEFT);
-      o->when(FL_WHEN_CHANGED);
+      Fl_Group::current()->resizable(o);
     }
-    { Fl_Button* o = chatButton = new Fl_Button(0, 45, 205, 25, "Chat");
+    { Fl_Button* o = chatButton = new Fl_Button(0, 185, 205, 25, "Chat");
       o->callback((Fl_Callback*)talkTo);
     }
-    { Fl_Input* o = connectInput = new Fl_Input(0, 105, 205, 25, "  Connect to (IP or hostname):");
+    { Fl_Input* o = connectInput = new Fl_Input(0, 240, 205, 25, "  Connect to (IP or hostname):");
       o->callback((Fl_Callback*)estConn);
       o->align(FL_ALIGN_TOP_LEFT);
       o->when(FL_WHEN_ENTER_KEY);
     }
-    { Fl_Input* o = findUser = new Fl_Input(0, 145, 205, 25, "  Find (username):");
+    { Fl_Input* o = findUser = new Fl_Input(0, 280, 205, 25, "  Find (username):");
       o->callback((Fl_Callback*)estFnd);
       o->align(FL_ALIGN_TOP_LEFT);
       o->when(FL_WHEN_ENTER_KEY);
