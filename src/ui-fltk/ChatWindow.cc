@@ -7,12 +7,13 @@ Fl_Double_Window* ChatWindow::make_window() {
   { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(360, 290, "User");
     w = o;
     o->user_data((void*)(this));
-    { Fl_Text_Display* o = textOut = new Fl_Text_Display(0, 0, 360, 260);
-      textOut->buffer(new Fl_Text_Buffer(32256));
-    }
     { Fl_Input* o = textIn = new Fl_Input(0, 265, 360, 25);
       o->callback((Fl_Callback*)sendInput);
       o->when(FL_WHEN_ENTER_KEY);
+    }
+    { Fl_Text_Display* o = textOut = new Fl_Text_Display(0, 0, 360, 260);
+      Fl_Group::current()->resizable(o);
+      textOut->buffer(new Fl_Text_Buffer(32256));
     }
     o->end();
   }

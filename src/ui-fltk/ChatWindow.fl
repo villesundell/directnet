@@ -8,15 +8,15 @@ class ChatWindow {open
   } {
     Fl_Window chatWindow {
       label User open
-      xywh {372 89 360 290} type Double visible
+      xywh {372 89 360 290} type Double resizable visible
     } {
-      Fl_Text_Display textOut {selected
-        xywh {0 0 360 260}
-        code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
-      }
       Fl_Input textIn {
         callback sendInput
         xywh {0 265 360 25} when 8
+      }
+      Fl_Text_Display textOut {selected
+        xywh {0 0 360 260} resizable
+        code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
       }
     }
   }

@@ -4,7 +4,7 @@
 
 Fl_Double_Window* NameWindow::make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = new Fl_Double_Window(255, 45);
+  { Fl_Double_Window* o = nameWindow = new Fl_Double_Window(255, 45, "DirectNet");
     w = o;
     o->user_data((void*)(this));
     { Fl_Input* o = nameIn = new Fl_Input(0, 20, 255, 25, "  Nickname:");
