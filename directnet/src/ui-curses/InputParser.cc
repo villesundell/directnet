@@ -17,14 +17,21 @@
  *    along with DirectNet; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <strings> 
+#include <string> 
 #include <vector>
 
-using std::strings;
+using std::string;
 using std::vector;
 
 #include "InputParser.h"
 
+InputParser::InputParser() 
+{ 
+    in = ""; 
+    isCom = false;
+    chat = false; 
+    command = 0; 
+}
 
 void InputParser::setInput(string ins) 
 {
@@ -37,10 +44,11 @@ void InputParser::setInput(string ins)
     vector<string> tokens;
     
     isCom = false;
-    isChat = false;
+    chat = false;
     command = -1;
+    
     if ( !params.empty() ) { 
-        params.clear()
+        params.clear();
     }
    
     if ('/' == in[0]) { 
@@ -48,16 +56,16 @@ void InputParser::setInput(string ins)
         
         // Tokenize
         int i = 0;
-        str curTok = ""; 
+        string curTok = ""; 
         while ((tokens.size() < MAX_COMMAND_TOKENS) && (i < in.length() )) { // Never do more than we need
             if (' ' == in[i]) { 
-                if (curTok.sizeof() != 0) { 
+                if (curTok.length() != 0) { 
                     tokens.push_back(curTok);
                 }
             } else { 
                 curTok += in[i];
             }
-            i++
+            i++;
         }
         
         if (tokens.size() == 1) { 
@@ -78,8 +86,8 @@ void InputParser::setInput(string ins)
             }
             if (( "/f" == tokens[0] ) || ( "/force" == tokens[0] )) { 
                 isCom = true;
-                command = CONNECT; 
-                params.push_back(tokens[1); 
+                command = FORCEROUTE; 
+                params.push_back(tokens[1]); 
             }
             // handle chat here               
         }
@@ -94,7 +102,7 @@ bool InputParser::isCommand()
 
 bool InputParser::isChat() 
 {   
-    return isChat;
+    return chat;
 }
 
 int InputParser::getCommand() 

@@ -20,22 +20,23 @@
 #ifndef DN_INPUTPARSER_H
 #define DN_INPUTPARSER_H
 
-#define CONNECT 0
-#define TALK    1
-#define ROUTE   2
-#define CHAT    3
-#define QUIT    4
+const int CONNECT      = 0;
+const int TALK         = 1;
+const int FORCEROUTE   = 2;
+const int CHAT         = 3;
+const int QUIT         = 4;
 
 // Max number of params for longest command
-#define MAX_COMMAND_TOKENS
+const int MAX_COMMAND_TOKENS = 2;
 class InputParser { 
-    string in = ""; 
+    string in; 
     vector<string> params; 
-    bool isCom = false; 
-    bool isChat = false;
-    int command = 0; 
+    bool isCom; 
+    bool chat;
+    int command; 
     
     public: 
+    InputParser();
     bool isCommand(); 
     bool isChat();
     int  getCommand();  
