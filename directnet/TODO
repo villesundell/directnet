@@ -1,14 +1,13 @@
 Todo by ALPHA 0.3:
 x Separate UI and connection code properly
 x dcr in UI
-One non-dumb UI
 
 Todo by ALPHA 0.4:
-Intermediate routes on fnr (so that warning on broken route is possible)
-Transfer files
-Another non-dumb UI
+One non-dumb UI
 
 Todo ... sometime:
+Transfer files
+Another non-dumb UI
 Buddy list (sorta)
 Chat rooms (sorta)
 Generic service commands (video chat, audio chat, etc through external programs)
@@ -21,3 +20,9 @@ Todo by ALPHA 0.2:
 Beter UI
 dcr (see PROTOCOL)
 fnd weak detection
+
+Todo by ALPHA 0.3:
+autoconf
+Separate UI and connection code properly
+dcr in UI
+Lost connection detection
