@@ -23,6 +23,7 @@
 
 #include <pthread.h>
 
+extern int server_sock;
 pthread_t *establishServer();
 
 #endif // DN_SERVER_H
