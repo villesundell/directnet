@@ -48,9 +48,10 @@ dnl
 dnl /*=== End new stuff for acconfig.h ===*/
 dnl 
 
+AC_DEFINE([HAS_READLINE], [], [Is readline available?])
 
-AC_DEFUN(AC_CHECK_READLINE,[
-	search_readline=false
+AC_DEFUN([AC_CHECK_READLINE],[
+	search_readline=true
 	has_readline=false
 
 dnl	CFLAGS=${CFLAGS--O}
@@ -99,7 +100,7 @@ AC_DEFUN(AC_READLINE, [
     fi
 ])
 
-AC_DEFUN(AC_SEARCH_READLINE, [
+AC_DEFUN([AC_SEARCH_READLINE], [
     AC_CHECKING("location of readline.h file")
 
     AC_READLINE(/usr/include, readline.h, -lreadline,, "readline on /usr/include")

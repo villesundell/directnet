@@ -21,9 +21,17 @@
 #ifndef DN_LOCK_H
 #define DN_LOCK_H
 
-#define DN_LOCK sem_t
+#ifdef HAVE_SEMAPHORE_H
+// If possible, use superior semaphore locking
 
+#define DN_LOCK sem_t
 #include <semaphore.h>
+
+#else
+
+#define DN_LOCK char
+
+#endif
 
 void dn_lockInit(DN_LOCK *lockVal);
 void dn_lock(DN_LOCK *lockVal);
