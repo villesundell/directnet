@@ -183,7 +183,7 @@ void handleMsg(char *inbuf, int fdnum)
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
-                char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN];
+                char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN], *ip;
                 struct hostent *he;
                 
                 memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
@@ -196,9 +196,14 @@ void handleMsg(char *inbuf, int fdnum)
                 outParams[1] = dn_name;
                 gethostname(hostbuf, 128);
                 he = gethostbyname(hostbuf);
-                outParams[2] = inet_ntoa(*((struct in_addr *)he->h_addr));
+                ip = inet_ntoa(*((struct in_addr *)he->h_addr));
+                outParams[2] = (char *) malloc((strlen(ip) + 7) * sizeof(char));
+                strcpy(outParams[2], ip);
+                sprintf(outParams[2] + strlen(outParams[2]), ":%d", serv_port);
             
                 handleRoutedMsg("dce", 1, 1, outParams);
+                
+                free(outParams[2]);
             }
             
             // Then, attempt the connection
@@ -720,8 +725,9 @@ void establishConnection(char *to)
         gethostname(hostbuf, 128);
         he = gethostbyname(hostbuf);
         ip = inet_ntoa(*((struct in_addr *)he->h_addr));
-        params[2] = (char *) malloc((strlen(ip) + 1) * sizeof(char));
+        params[2] = (char *) malloc((strlen(ip) + 7) * sizeof(char));
         strcpy(params[2], ip);
+        sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
         
         handleRoutedMsg("dcr", 1, 1, params);
         
