@@ -88,6 +88,16 @@ void estConn(Fl_Input *w, void *ignore)
     free(connTo);
 }
 
+void estFnd(Fl_Input *w, void *ignore)
+{
+    char *connTo;
+    
+    connTo = strdup(w->value());
+    w->value("");
+    sendFnd(connTo);
+    free(connTo);
+}
+
 void talkTo(Fl_Button *b, void *ignore)
 {
     getWindow(bw->onlineList->text());
