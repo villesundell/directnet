@@ -219,7 +219,7 @@ void handleMsg(char *inbuf, int fdnum)
             dn_unlock(&recFndHashLock);
             
             // Start with the current route
-            strncpy(newroute, params[0], DN_ROUTE_LEN);
+            SF_strncpy(newroute, params[0], DN_ROUTE_LEN);
             
             // Then tokenize it by \n
             routeElement[0] = newroute;
@@ -257,14 +257,14 @@ void handleMsg(char *inbuf, int fdnum)
                 reverseRoute[0] = '\0';
                 for (i = onRE; i >= 0; i--) {
                     ostrlen = strlen(reverseRoute);
-                    strncpy(reverseRoute+ostrlen, routeElement[i], DN_ROUTE_LEN-ostrlen);
+                    SF_strncpy(reverseRoute+ostrlen, routeElement[i], DN_ROUTE_LEN-ostrlen);
                     ostrlen += strlen(routeElement[i]);
-                    strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+                    SF_strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
                 }
                 ostrlen = strlen(reverseRoute);
-                strncpy(reverseRoute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
+                SF_strncpy(reverseRoute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
                 ostrlen += strlen(params[1]);
-                strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+                SF_strncpy(reverseRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
                 
                 // Add his route,
                 hashSSet(dn_routes, params[1], reverseRoute);
@@ -312,7 +312,7 @@ void handleMsg(char *inbuf, int fdnum)
                     curWRoute = hashSGet(weakRoutes, params[1]);
                 }
                 
-                strncpy(oldWRoute, curWRoute, DN_ROUTE_LEN);
+                SF_strncpy(oldWRoute, curWRoute, DN_ROUTE_LEN);
                 
                 newRouteElements[0] = oldWRoute;
                 onRE = 1;
@@ -337,9 +337,9 @@ void handleMsg(char *inbuf, int fdnum)
                         if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
                             // It's a match, copy it in.
                             ostrlen = strlen(curWRoute);
-                            strncpy(curWRoute+ostrlen, routeElement[y], DN_ROUTE_LEN-ostrlen);
+                            SF_strncpy(curWRoute+ostrlen, routeElement[y], DN_ROUTE_LEN-ostrlen);
                             ostrlen += strlen(routeElement[y]);
-                            strncpy(curWRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+                            SF_strncpy(curWRoute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
                         }
                     }
                 }
@@ -353,11 +353,11 @@ void handleMsg(char *inbuf, int fdnum)
         }
         
         // Add myself to the route
-        strncpy(newroute, params[0], DN_ROUTE_LEN);
+        SF_strncpy(newroute, params[0], DN_ROUTE_LEN);
         ostrlen = strlen(newroute);
-        strncpy(newroute+ostrlen, dn_name, DN_ROUTE_LEN-ostrlen);
+        SF_strncpy(newroute+ostrlen, dn_name, DN_ROUTE_LEN-ostrlen);
         ostrlen = strlen(newroute);
-        strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+        SF_strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
 
         buildCmd(outbuf, "fnd", 1, 1, newroute);
         addParam(outbuf, params[1]);
@@ -393,7 +393,7 @@ void handleMsg(char *inbuf, int fdnum)
             
             // Who's the end user?
             for (i = strlen(params[0])-2; params[0][i] != '\n' && params[0][i] != '\0' && i >= 0; i--);
-            strncpy(endu, params[0]+i+1, DN_NAME_LEN);
+            SF_strncpy(endu, params[0]+i+1, DN_NAME_LEN);
             endu[strlen(endu)-1] = '\0';
             
             // And add an intermediate route
@@ -418,7 +418,7 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 if (params[2][i] == '\n') {
                     if (usenext) {
-                        strncpy(newroute, params[2]+i+1, DN_ROUTE_LEN);
+                        SF_strncpy(newroute, params[2]+i+1, DN_ROUTE_LEN);
                         break;
                     }
                     checknext = 1;
@@ -426,7 +426,7 @@ void handleMsg(char *inbuf, int fdnum)
             }
             
             ostrlen = strlen(newroute);
-            strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
+            SF_strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
             
             // And add that route
             hashSSet(dn_iRoutes, params[1], newroute);
@@ -437,12 +437,12 @@ void handleMsg(char *inbuf, int fdnum)
             // Hoorah, add a user
             
             // 1) Route
-            strncpy(newroute, params[2], DN_ROUTE_LEN);
+            SF_strncpy(newroute, params[2], DN_ROUTE_LEN);
             
             ostrlen = strlen(newroute);
-            strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
+            SF_strncpy(newroute+ostrlen, params[1], DN_ROUTE_LEN-ostrlen);
             ostrlen += strlen(params[1]);
-            strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
+            SF_strncpy(newroute+ostrlen, "\n", DN_ROUTE_LEN-ostrlen);
             
             hashSSet(dn_routes, params[1], newroute);
             
@@ -561,7 +561,7 @@ int handleNLUnroutedMsg(char **params)
     
     memset(divroute, 0, DN_MAX_PARAMS * sizeof(char *));
     
-    strncpy(origroute, params[0], DN_ROUTE_LEN);
+    SF_strncpy(origroute, params[0], DN_ROUTE_LEN);
     
     divroute[0] = origroute;
     ondr = 1;
@@ -615,7 +615,7 @@ void *fndPthread(void *name_voidptr)
     char isWeak = 0;
     char *curWRoute;
     
-    strncpy(name, (char *) name_voidptr, DN_NAME_LEN);
+    SF_strncpy(name, (char *) name_voidptr, DN_NAME_LEN);
     free(name_voidptr);
     
     sleep(15);

@@ -29,4 +29,6 @@
 #define DN_MAX_PARAMS 50
 #define DN_HOSTNAME_LEN 256
 
+#define SF_strncpy(x,y,z) if (z > 0) { strncpy(x,y,z); *(x+z-1) = '\0'; }
+
 #endif
