@@ -31,7 +31,7 @@
 #include "connection.h"
 #include "directnet.h"
 
-void establishClient(char *destination)
+int establishClient(char *destination)
 {
     int pthreadres, curfd;
     int *onfd_ptr;
@@ -56,7 +56,7 @@ void establishClient(char *destination)
     he = gethostbyname(hostname);
     if (he == NULL) {
         free(hostname);
-        return;
+        return 0;
     }
 
     dn_lock(&dn_fd_lock);
@@ -66,10 +66,9 @@ void establishClient(char *destination)
         fds[curfd] = 0;
         perror("socket");
         dn_unlock(&dn_fd_lock);
-        return;
+        return 0;
     }
     if (curfd >= onfd) onfd = curfd + 1;
-    dn_unlock(&dn_fd_lock);
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -81,8 +80,11 @@ void establishClient(char *destination)
     if (connect(fds[curfd], (struct sockaddr *)&addr, sizeof(struct sockaddr)) == -1) {
         perror("connect");
         free(hostname);
-        return;
+        fds[curfd] = 0;
+        dn_unlock(&dn_fd_lock);
+        return 0;
     }
+    dn_unlock(&dn_fd_lock);
 
     onfd_ptr = malloc(sizeof(int));
     *onfd_ptr = curfd;
@@ -92,4 +94,6 @@ void establishClient(char *destination)
     onpthread++;
     
     free(hostname);
+    
+    return 1;
 }

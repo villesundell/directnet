@@ -27,6 +27,10 @@
 #include "hash.h"
 #include "lock.h"
 
+#ifdef GAIM_PLUGIN
+int pluginMain(int argc, char **argv, char **envp);
+#endif
+
 extern int serv_port;
 
 extern int *fds, *pipe_fds, onfd, onpthread;

@@ -29,7 +29,9 @@
 #define DN_HASH_INTLIKE_C(htype, hshortn) \
 struct hashKey##hshortn **hash##hshortn##Create(int count) \
 { \
-    return (struct hashKey##hshortn **) malloc(count * sizeof(struct hashKey##hshortn *)); \
+    struct hashKey##hshortn **hash = (struct hashKey##hshortn **) malloc(count * sizeof(struct hashKey##hshortn *)); \
+    memset(hash, 0, count * sizeof(struct hashKey##hshortn *)); \
+    return hash; \
 } \
 \
 void hash##hshortn##Destroy(struct hashKey##hshortn **hash) \
@@ -95,7 +97,9 @@ DN_HASH_INTLIKE_C(pthread_t, P)
 // Then strings
 struct hashKeyS **hashSCreate(int count)
 {
-    return (struct hashKeyS **) malloc(count * sizeof(struct hashKeyS *));
+    struct hashKeyS **hash = (struct hashKeyS **) malloc(count * sizeof(struct hashKeyS *));
+    memset(hash, 0, count * sizeof(struct hashKeyS *));
+    return hash;
 }
 
 void hashSDestroy(struct hashKeyS **hash)
@@ -179,7 +183,9 @@ void hashSDelKey(struct hashKeyS **hash, char *key)
 // Then locks
 struct hashKeyL **hashLCreate(int count)
 {
-    return (struct hashKeyL **) malloc(count * sizeof(struct hashKeyL *));
+    struct hashKeyL **hash = (struct hashKeyL **) malloc(count * sizeof(struct hashKeyL *));
+    memset(hash, 0, count * sizeof(struct hashKeyL *));
+    return hash;
 }
 
 void hashLDestroy(struct hashKeyL **hash)

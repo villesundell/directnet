@@ -66,7 +66,11 @@ DN_LOCK displayLock; // Only one thread writing at a time.
 
 char *findHome(char **envp);
 
+#ifndef GAIM_PLUGIN
 int main(int argc, char **argv, char **envp)
+#else
+int pluginMain(int argc, char **argv, char **envp)
+#endif
 {
     pthread_t serverPthread;
     int i;
@@ -152,6 +156,8 @@ int main(int argc, char **argv, char **envp)
 
     // Start the UI
     uiInit(argc, argv, envp);
+
+#ifndef GAIM_PLUGIN
     
     // When the UI has exited, we're done.
     serverPthread ? pthread_kill(serverPthread, SIGTERM) : 0;
@@ -171,6 +177,8 @@ int main(int argc, char **argv, char **envp)
     pthread_exit(NULL);
     
     return 0;
+    
+#endif
 }
 
 char *findHome(char **envp)
