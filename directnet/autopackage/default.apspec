@@ -1,0 +1,43 @@
+# -*-shell-script-*-
+
+[Meta]
+RootName: @directnet.sourceforge.net/directnet:$SOFTWAREVERSION
+DisplayName: DirectNet
+ShortName: directnet
+Maintainer: Gregor Richards <cdgregorr@users.sourceforge.net>
+Packager: Gregor Richards <cdgregorr@users.sourceforge.net>
+Summary: DirectNet is a serverless instant messaging system.
+SoftwareVersion: 0.3.99
+
+# Only uncomment InterfaceVersion if your package exposes interfaces to other software,
+# for instance if it includes DSOs or python/perl modules. See the developer guide for more info,
+# or ask on autopackage-dev if you don't understand interface versioning in autopackage.
+#
+# InterfaceVersion: 0.0
+
+PackageVersion: 1
+
+[Description]
+DirectNet is a serverless instant messaging system. Rather than every user connecting to a central server, all users connect to each other, and all messages are sent amongst this network.
+
+[BuildPrepare]
+prepareBuild
+
+[BuildUnprepare]
+unprepareBuild
+
+[Imports]
+echo '*' | import
+
+[Prepare]
+# Dependency checking
+#require @whatever.you/need 1.0
+
+[Install]
+# Put your installation script here
+installExe bin/*
+installDesktop "Network/Instant Messaging" share/applications/directnet.desktop
+
+[Uninstall]
+# Usually just the following line is enough to uninstall everything
+uninstallFromLog

@@ -47,8 +47,8 @@ AC_CHECK_LIB([c], [gethostbyname],
 
 # Figure out what UI to use
 AC_ARG_ENABLE(ui,
-[  --enable-ui[[=dumb]]
-                set the UI (currently the only UI is "dumb")],
+[  --enable-ui[[=fltk|dumb]]
+                set the UI],
 [case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
@@ -62,20 +62,6 @@ AS_MESSAGE([checking which UI to use...])
 
 found_ui=no
 
-if test "x$ui" = "xdumb" || test "x$ui" = "xdetermine"
-then
-        UI_CFLAGS=
-        UI_CPPFLAGS=
-        UI_CXXFLAGS=
-        UI_CXX=false
-        UI_LIBS=
-        UI_LDFLAGS=
-        UI_DIR=ui-dumb
-        found_ui=yes
-        ui=dumb
-        AS_MESSAGE([Using dumb UI])
-fi
-
 if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
         AMX_PATH_FLTK([1.1], [fltk=1])
@@ -85,7 +71,7 @@ then
                 if test "x$ui" = "xfltk"
                 then
                         AC_MSG_ERROR([
-The chosen UI (wx) is unconfigurable.
+The chosen UI (fltk) is unconfigurable.
 The fltk-config script could not be found.
                         ])
                 fi
@@ -100,6 +86,21 @@ The fltk-config script could not be found.
                 ui=fltk
                 AS_MESSAGE([Using fltk UI])
         fi
+fi
+
+
+if test "x$ui" = "xdumb" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+then
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_CXX=false
+        UI_LIBS=
+        UI_LDFLAGS=
+        UI_DIR=ui-dumb
+        found_ui=yes
+        ui=dumb
+        AS_MESSAGE([Using dumb UI])
 fi
 
 

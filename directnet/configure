@@ -863,8 +863,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
-  --enable-ui[=dumb]
-                set the UI (currently the only UI is "dumb")
+  --enable-ui[=fltk|dumb]
+                set the UI
   --enable-hub=name
                 enable hub mode - name is the name of the hub "user"
   --enable-enc=fake
@@ -4524,21 +4524,6 @@ echo "$as_me: checking which UI to use..." >&6;}
 
 found_ui=no
 
-if test "x$ui" = "xdumb" || test "x$ui" = "xdetermine"
-then
-        UI_CFLAGS=
-        UI_CPPFLAGS=
-        UI_CXXFLAGS=
-        UI_CXX=false
-        UI_LIBS=
-        UI_LDFLAGS=
-        UI_DIR=ui-dumb
-        found_ui=yes
-        ui=dumb
-        { echo "$as_me:$LINENO: Using dumb UI" >&5
-echo "$as_me: Using dumb UI" >&6;}
-fi
-
 if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
 
@@ -4649,11 +4634,11 @@ echo "${ECHO_T}no (version $FLTK_VERSION)" >&6
                 if test "x$ui" = "xfltk"
                 then
                         { { echo "$as_me:$LINENO: error:
-The chosen UI (wx) is unconfigurable.
+The chosen UI (fltk) is unconfigurable.
 The fltk-config script could not be found.
                         " >&5
 echo "$as_me: error:
-The chosen UI (wx) is unconfigurable.
+The chosen UI (fltk) is unconfigurable.
 The fltk-config script could not be found.
                         " >&2;}
    { (exit 1); exit 1; }; }
@@ -4670,6 +4655,22 @@ The fltk-config script could not be found.
                 { echo "$as_me:$LINENO: Using fltk UI" >&5
 echo "$as_me: Using fltk UI" >&6;}
         fi
+fi
+
+
+if test "x$ui" = "xdumb" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+then
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_CXX=false
+        UI_LIBS=
+        UI_LDFLAGS=
+        UI_DIR=ui-dumb
+        found_ui=yes
+        ui=dumb
+        { echo "$as_me:$LINENO: Using dumb UI" >&5
+echo "$as_me: Using dumb UI" >&6;}
 fi
 
 
@@ -5323,7 +5324,7 @@ echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
 echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
 	ncurses_version=unknown
 cat > conftest.$ac_ext <<EOF
-#line 5326 "configure"
+#line 5327 "configure"
 #include "confdefs.h"
 #ifdef RENAMED_NCURSES
 #include <curses.h>
