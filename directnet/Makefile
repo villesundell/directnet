@@ -1,3 +1,5 @@
+# Copyright 2004 Gregor Richards
+#
 # This file is part of DirectNet.
 #
 #    DirectNet is free software; you can redistribute it and/or modify
