@@ -101,3 +101,23 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
 extern "C" void uiDispMsg(char *from, char *msg)
 {
 }
+
+extern "C" void uiEstConn(char *from)
+{
+}
+
+extern "C" void uiEstRoute(char *from)
+{
+}
+
+extern "C" void uiLoseConn(char *from)
+{
+}
+
+extern "C" void uiLoseRoute(char *from)
+{
+}
+
+extern "C" void uiNoRoute(char *to)
+{
+}
