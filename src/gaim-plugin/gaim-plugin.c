@@ -31,8 +31,6 @@
 
 #endif
 
-#endif
-
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
