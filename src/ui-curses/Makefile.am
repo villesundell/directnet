@@ -1,5 +1,6 @@
 noinst_LIBRARIES=libui.a
 libui_a_SOURCES=DisplayWindow.cc \
+InputParser.cc \
 InputWindow.cc \
 StatusWindow.cc \
 ui.cc
