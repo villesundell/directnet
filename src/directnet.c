@@ -56,6 +56,7 @@ struct hashKey **dn_trans_keys;
 int currentTransKey;
 
 char uiLoaded;
+DN_LOCK displayLock; // Only one thread writing at a time.
 
 char *findHome(char **envp);
 
