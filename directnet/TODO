@@ -1,9 +1,10 @@
 Todo by ALPHA 0.3:
+Separate UI and connection code properly
 dcr in UI
-Intermediate routes on fnr (so that warning on broken route is possible)
 Buddy list (sorta)
 
 Todo by ALPHA 0.4:
+Intermediate routes on fnr (so that warning on broken route is possible)
 Transfer files
 Chat rooms (sorta)
 

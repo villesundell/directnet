@@ -109,23 +109,15 @@ int handleUInput(char *inp)
                 return 0;
             }
         
-            // Connect to a given hostname
-            establishClient(params[1]);
+            // Connect to a given hostname or user
+            establishConnection(params[1]);
             return 0;
         } else if (!strncmp(params[0]+1, "f", 1)) {
-            char outbuf[65536];
-        
             if (params[1] == NULL) {
                 return 0;
             }
-        
-            // Find a user by name
-            buildCmd(outbuf, "fnd", 1, 1, "");
-            addParam(outbuf, dn_name);
-            addParam(outbuf, params[1]);
-            addParam(outbuf, gpgExportKey());
-        
-            emitUnroutedMsg(-1, outbuf);
+            
+            sendFnd(params[1]);
         } else if (!strncmp(params[0]+1, "t", 1)) {
             if (params[1] == NULL) {
                 return 0;
@@ -138,30 +130,15 @@ int handleUInput(char *inp)
         
     } else {
         // Not a command, a message
-        char *outparams[50], *route;
-        
         if (currentPartner[0] == '\0') {
             printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n");
             fflush(stdout);
             return 0;
         }
         
-        memset(outparams, 0, 50 * sizeof(char *));
-        
-        route = hashSGet(dn_routes, currentPartner);
-        if (route == NULL) {
-            printf("No route to user.\n");
-            return 0;
+        if (sendMsg(currentPartner, inp)) {
+            printf("to %s: %s\n", currentPartner, inp);
         }
-        outparams[0] = (char *) malloc((strlen(route)+1) * sizeof(char));
-        strcpy(outparams[0], route);
-        outparams[1] = dn_name;
-        outparams[2] = gpgTo(dn_name, currentPartner, inp);
-        handleRoutedMsg("msg", 1, 1, outparams);
-        
-        free(outparams[0]);
-        
-        printf("to %s: %s\n", currentPartner, inp);
     }
     
     return 0;
@@ -170,5 +147,35 @@ int handleUInput(char *inp)
 void uiDispMsg(char *from, char *msg)
 {
     printf("\n%s: %s\n%s> ", from, msg, currentPartner);
+    fflush(stdout);
+}
+
+void uiEstConn(char *from)
+{
+    printf("\n%s: Connection established.\n%s> ", from, currentPartner);
+    fflush(stdout);
+}
+
+void uiEstRoute(char *from)
+{
+    printf("\n%s: Route established.\n%s> ", from, currentPartner);
+    fflush(stdout);
+}
+
+void uiLoseConn(char *from)
+{
+    printf("\n%s: Connection lost.\n%s> ", from, currentPartner);
+    fflush(stdout);
+}
+
+void uiLoseRoute(char *from)
+{
+    printf("\n%s: Route lost.\n%s> ", from, currentPartner);
+    fflush(stdout);
+}
+
+void uiNoRoute(char *to)
+{
+    printf("\n%s: No route to user.\n%s> ", to, currentPartner);
     fflush(stdout);
 }

@@ -35,6 +35,7 @@
 #include "connection.h"
 #include "directnet.h"
 #include "server.h"
+#include "ui.h"
 
 #define DN_PORT 3336
 
@@ -112,8 +113,7 @@ void *serverAcceptLoop(void *ignore)
             continue;
         }
 
-        printf("\nserver: got connection from %s\n",
-               inet_ntoa(rem_addr.sin_addr));
+        uiEstConn(inet_ntoa(rem_addr.sin_addr));
         
         onfd_ptr = malloc(sizeof(int));
         *onfd_ptr = curfd;
