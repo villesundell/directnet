@@ -15,6 +15,7 @@ connection.c \
 directnet.c \
 gpg-fake.c \
 hash.c \
+lock.c \
 server.c \
 fake.cc
 
@@ -32,6 +33,7 @@ connection.c \
 directnet.c \
 gpg-fake.c \
 hash.c \
+lock.c \
 server.c
 
 directnet_CFLAGS=@UI_CFLAGS@

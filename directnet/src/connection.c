@@ -47,6 +47,8 @@ void *communicator(void *fdnum_voidptr)
     fdnum = *((int *) fdnum_voidptr);
     free(fdnum_voidptr);
     
+    dn_lockInit(pipe_locks+fdnum);
+    
     // Immediately send our key
     buildCmd(buf, "key", 1, 1, dn_name);
     addParam(buf, gpgExportKey());
@@ -104,7 +106,9 @@ void addParam(char *into, char *newparam)
 // Send a command
 void sendCmd(int fdnum, char *buf)
 {
+    dn_lock(pipe_locks+fdnum);
     send(fds[fdnum], buf, strlen(buf)+1, 0);
+    dn_unlock(pipe_locks+fdnum);
 }
 
 void *fndPthread(void *fdnum_voidptr);
