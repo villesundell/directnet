@@ -32,7 +32,7 @@ extern "C" {
 #include <iostream>
 
 #include "BuddyWindow.h"
-#include "ChatWindow.h
+#include "ChatWindow.h"
 
 ChatWindow *cws[1024];
 
@@ -65,8 +65,8 @@ ChatWindow *getWindow(char *name)
     int i;
     
     for (i = 0; cws[i] != NULL; i++) {
-        if (!strcmp(cws[i]->textOut->label(), name)) {
-            cws[i]->show();
+        if (!strcmp(cws[i]->chatWindow->label(), name)) {
+            cws[i]->chatWindow->show();
             return cws[i];
         }
     }
@@ -74,8 +74,7 @@ ChatWindow *getWindow(char *name)
     cws[i] = new ChatWindow();
     cws[i]->make_window();
     cws[i]->chatWindow->label(name);
-    cws[i]->textOut->label(name);
-    cws[i]->show();
+    cws[i]->chatWindow->show();
     
     return cws[i];
 }
@@ -85,12 +84,38 @@ void estConn(Fl_Input *w, void *ignore)
     char *connTo;
     
     connTo = strdup(w->value());
+    w->value("");
     establishConnection(connTo);
     free(connTo);
 }
 
 void sendInput(Fl_Input *w, void *ignore)
 {
+    /* sad way to figure out what window we're in ... */
+    int i;
+    
+    for (i = 0; cws[i] != NULL; i++) {
+        if (cws[i]->textIn == w) {
+            /* this is our window */
+            char *dispmsg, *to, *msg;
+            
+            to = strdup(cws[i]->chatWindow->label());
+            
+            msg = strdup(cws[i]->textIn->value());
+            cws[i]->textIn->value("");
+    
+            dispmsg = (char *) alloca((strlen(dn_name) + strlen(msg) + 4) * sizeof(char));
+            sprintf(dispmsg, "%s: %s\n", dn_name, msg);
+    
+            cws[i]->textOut->insert(dispmsg);
+            
+            /* now actually send */
+            sendMsg(to, msg);
+            
+            free(to);
+            free(msg);
+        }
+    }
 }
 
 extern "C" void uiDispMsg(char *from, char *msg)
@@ -100,7 +125,7 @@ extern "C" void uiDispMsg(char *from, char *msg)
     
     while (!uiLoaded) sleep(0);
     
-    dispmsg = alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
+    dispmsg = (char *) alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
     sprintf(dispmsg, "%s: %s\n", from, msg);
     
     cw = getWindow(from);
@@ -110,25 +135,45 @@ extern "C" void uiDispMsg(char *from, char *msg)
 
 extern "C" void uiEstConn(char *from)
 {
-    while (!uiLoaded) sleep(0);
+    /* what to use here...? */
 }
 
 extern "C" void uiEstRoute(char *from)
 {
+    ChatWindow *cw;
+    
     while (!uiLoaded) sleep(0);
+    
+    cw = getWindow(from);
+    cw->textOut->insert("Route established.\n");
 }
 
 extern "C" void uiLoseConn(char *from)
 {
+    ChatWindow *cw;
+    
     while (!uiLoaded) sleep(0);
+    
+    cw = getWindow(from);
+    cw->textOut->insert("Connection lost.\n");
 }
 
 extern "C" void uiLoseRoute(char *from)
 {
+    ChatWindow *cw;
+    
     while (!uiLoaded) sleep(0);
+    
+    cw = getWindow(from);
+    cw->textOut->insert("Route lost.\n");
 }
 
 extern "C" void uiNoRoute(char *to)
 {
+    ChatWindow *cw;
+    
     while (!uiLoaded) sleep(0);
+    
+    cw = getWindow(to);
+    cw->textOut->insert("You do not have a route to this user.\n");
 }

@@ -6,6 +6,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Input.H>
+extern void sendInput(Fl_Input*, void*);
 
 class ChatWindow {
 public:
