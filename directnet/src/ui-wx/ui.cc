@@ -100,6 +100,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
     wxEntry(argc, argv);
+    return 0;
 }
 
 extern "C" void uiDispMsg(char *from, char *msg)
