@@ -18,6 +18,7 @@ src/ui-wx/Makefile
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_RANLIB
 
 # Checks for libraries.
@@ -463,7 +464,6 @@ then
         
         if test "x$ui" = "xwx" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
         then
-                AC_PROG_CXX
                 AM_OPTIONS_WXCONFIG
                 AM_PATH_WXCONFIG(2.3.4, wxWin=1)
                 if test "$wxWin" != 1
