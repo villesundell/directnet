@@ -19,7 +19,6 @@ src/hub/Makefile
 src/ui-curses/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
-src/ui-wx/Makefile
 ])
 
 # Checks for programs.
@@ -53,8 +52,6 @@ AC_ARG_ENABLE(ui,
 [case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
-        wx) ui=wx ;;
-        wx-static) ui=wx-static ;;
         curses) ui=curses ;;
         *) AC_MSG_ERROR([Invalid UI chosen.]) ;;
 esac], [ui=determine])
@@ -104,48 +101,6 @@ then
         AS_MESSAGE([Using dumb UI])
 fi
 
-
-if test "x$ui" = "xwx" || test "x$ui" = "xwx-static" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
-then
-        AMX_OPTIONS_WXCONFIG
-        AMX_PATH_WXCONFIG(2.3.4, wxWin=1)
-        
-        if test "x$wxWin" != x1
-        then
-                if test "x$ui" = "xwx"
-                then
-                        AC_MSG_ERROR([
-The chosen UI (wx) is unconfigurable.
-The wx-config script could not be found.
-                        ])
-                fi
-        else
-                if test "x$ui" != "xwx-static"
-                then
-                        UI_CFLAGS=$WX_CFLAGS
-                        UI_CPPFLAGS=$WX_CPPFLAGS
-                        UI_CXXFLAGS=$WX_CXXFLAGS
-                        UI_CXX=true
-                        UI_LIBS=$WX_LIBS
-                        UI_LDFLAGS=
-                        UI_DIR=ui-wx
-                        found_ui=yes
-                        ui=wx
-                        AS_MESSAGE([Using wx UI])
-                else
-                        UI_CFLAGS=$WX_CFLAGS
-                        UI_CPPFLAGS=$WX_CPPFLAGS
-                        UI_CXXFLAGS=$WX_CXXFLAGS
-                        UI_CXX=true
-                        UI_LIBS=$WX_LIBS_STATIC
-                        UI_LDFLAGS=
-                        UI_DIR=ui-wx
-                        found_ui=yes
-                        ui=wx
-                        AS_MESSAGE([Using wx UI])
-                fi
-        fi
-fi
 
 if test "x$ui" = "xcurses" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "no" )
 then
