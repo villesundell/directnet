@@ -16,6 +16,7 @@ src/enc-fake/Makefile
 src/enc-gpg/Makefile
 src/ui-curses/Makefile
 src/ui-dumb/Makefile
+src/ui-fltk/Makefile
 src/ui-wx/Makefile
 ])
 
@@ -49,6 +50,7 @@ AC_ARG_ENABLE(ui,
                 set the UI (currently the only UI is "dumb")],
 [case "$enableval" in
         dumb) ui=dumb ;;
+        fltk) ui=fltk ;;
         wx) ui=wx ;;
         wx-static) ui=wx-static ;;
         curses) ui=curses ;;
@@ -72,6 +74,33 @@ then
         ui=dumb
         AS_MESSAGE([Using dumb UI])
 fi
+
+if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
+then
+        AM_PATH_FLTK(1.1, fltk=1)
+
+        if test "x$fltk" != x1
+        then
+                if test "x$ui" = "xfltk"
+                then
+                        AC_MSG_ERROR([
+The chosen UI (wx) is unconfigurable.
+The fltk-config script could not be found.
+                        ])
+                fi
+        else
+                UI_CFLAGS=$FLTK_CFLAGS
+                UI_CXXFLAGS=$FLTK_CFLAGS
+                UI_CXX=true
+                UI_LIBS=$FLTK_LIBS
+                UI_LDFLAGS=
+                UI_DIR=ui-fltk
+                found_ui=yes
+                ui=fltk
+                AS_MESSAGE([Using fltk UI])
+        fi
+fi
+
 
 if test "x$ui" = "xwx" || test "x$ui" = "xwx-static" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
