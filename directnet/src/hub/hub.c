@@ -33,6 +33,7 @@ int uiInit(int argc, char ** argv, char **envp)
     // This is the most basic UI
     int charin, ostrlen;
     char cmdbuf[32256];
+    char *homedir, *dnhomefile;
     
     // Always start by finding GPG
     if (findGPG(envp) == -1) {
@@ -54,6 +55,31 @@ int uiInit(int argc, char ** argv, char **envp)
     
     // OK, the UI is ready
     uiLoaded = 1;
+    
+    // Make initial connections from ~/.dnhub
+    homedir = getenv("HOME");
+    if (homedir != NULL) {
+        FILE *dnhf;
+        char line[1024];
+        int ostrlen;
+        
+        dnhomefile = (char *) malloc((strlen(homedir) + 8) * sizeof(char));
+        sprintf(dnhomefile, "%s/.dnhub", homedir);
+        
+        dnhf = fopen(dnhomefile, "r");
+        while (!feof(dnhf)) {
+            fgets(line, 1024, dnhf);
+            
+            ostrlen = strlen(line);
+            if (line[ostrlen] == '\n') {
+                line[ostrlen] = '\0';
+            }
+            
+            establishConnection(line);
+        }
+        
+        free(dnhomefile);
+    }
     
     while (1) {
         /* just spin */
