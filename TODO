@@ -1,14 +1,16 @@
 Todo by ALPHA 0.3:
 x Separate UI and connection code properly
 x dcr in UI
-Buddy list (sorta)
+One non-dumb UI
 
 Todo by ALPHA 0.4:
 Intermediate routes on fnr (so that warning on broken route is possible)
 Transfer files
-Chat rooms (sorta)
+Another non-dumb UI
 
 Todo ... sometime:
+Buddy list (sorta)
+Chat rooms (sorta)
 Generic service commands (video chat, audio chat, etc through external programs)
 
 
