@@ -78,6 +78,9 @@ ChatWindow *getWindow(const char *name)
 
 void putOutput(ChatWindow *w, const char *txt)
 {
+    Fl_Text_Buffer *tb = w->textOut->buffer();
+    
+    w->textOut->insert_position(tb->length());
     w->textOut->insert(txt);
     w->textOut->show_insert_position();
     Fl::flush();
