@@ -29,6 +29,7 @@ fnd(1)(1) (find)
         type: unrouted
         parameters:
                 transmission key
+                local name
                 remote name
                 route being built
                 public key
@@ -40,6 +41,7 @@ fnr(1)(1) (find response)
                 route
                 local name
                 route back
+                public key
 
 key(1)(1) (key)
         purpose: Identify yourself to a new connection
