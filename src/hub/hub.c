@@ -76,8 +76,10 @@ int uiInit(int argc, char ** argv, char **envp)
                 if (line[ostrlen-1] == '\n') {
                     line[ostrlen-1] = '\0';
                 }
-                printf("Connecting to %s\n", line);
-                establishConnection(line);
+                if (line[0] != '\0' && line[0] != '#') {
+                    printf("Connecting to %s\n", line);
+                    establishConnection(line);
+                }
             }
             
             fclose(dnhf);
