@@ -19,7 +19,6 @@
  */
 
 #ifdef WIN32
-#define pipe(a) _pipe( (a), 0, _O_BINARY )
 
 #include <glib-object.h>
 #include <glib/gtypes.h>
@@ -96,7 +95,7 @@ static GaimPluginProtocolInfo prpl_info = {
     gp_joinchat, /* join a chat */
     NULL,
     NULL,
-    NULL, /*gp_simplechatinvite, /* chat invite by sending a message */
+    NULL, /*gp_simplechatinvite,  chat invite by sending a message */
     gp_leavechat, /* leave a chat */
     NULL,
     gp_saychat, /* chat send */
@@ -181,8 +180,6 @@ int chatByName(char *name)
     return -1;
 }
 
-int ipcpipe[2];
-FILE *ipcin, *ipcout;
 pthread_mutex_t ipclock;
 #define IPC_MSG 1
 struct ipc_msg {
@@ -207,46 +204,91 @@ struct ipc_chat_join {
     char *chan;
 };
 
+
+gboolean idle_got_im(struct ipc_msg *ma) 
+{
+  serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
+  
+  free(ma->from);
+  free(ma->msg);
+  free(ma);
+  
+  pthread_mutex_unlock(&ipclock);
+
+  return FALSE;
+}
+
+gboolean idle_set_state(struct ipc_state *sa)
+{
+  serv_got_update(my_gc, sa->who, sa->state, 0, 0, 0, 0);
+  free(sa->who);
+  free(sa);
+  pthread_mutex_unlock(&ipclock);
+  return FALSE;
+}
+
+gboolean idle_chat_msg(struct ipc_chat_msg *cma)
+{
+  serv_got_chat_in(my_gc, cma->id, cma->who, 0, cma->msg, time(NULL));
+  free(cma->who);
+  free(cma->msg);
+  free(cma);
+  pthread_mutex_unlock(&ipclock);
+  return FALSE;
+  
+}           
+
+gboolean idle_chat_join(struct ipc_chat_join *cja)
+{
+  serv_got_joined_chat(my_gc, cja->id, cja->chan);
+
+  free(cja->chan);
+  free(cja);
+  pthread_mutex_unlock(&ipclock);
+
+  return FALSE;
+}
+
 void ipc_got_im(char *who, char *msg)
 {
     struct ipc_msg *a = (struct ipc_msg *) malloc(sizeof(struct ipc_msg));
+
     a->from = strdup(who);
     a->msg = strdup(msg);
     pthread_mutex_lock(&ipclock);
-    fprintf(ipcout, "%c%p\n", IPC_MSG, a);
-    fflush(ipcout);
+    g_idle_add((GSourceFunc) idle_got_im, a);
 }
 
 void ipc_set_state(char *who, int state)
 {
     struct ipc_state *a = (struct ipc_state *) malloc(sizeof(struct ipc_state));
+
     a->who = strdup(who);
     a->state = state;
     pthread_mutex_lock(&ipclock);
-    fprintf(ipcout, "%c%p\n", IPC_STATE, a);
-    fflush(ipcout);
+    g_idle_add((GSourceFunc)idle_set_state, a);
 }
 
 void ipc_chat_msg(int id, char *who, char *chan, char *msg)
 {
     struct ipc_chat_msg *a = (struct ipc_chat_msg *) malloc(sizeof(struct ipc_chat_msg));
+
     a->id = id;
     a->who = strdup(who);
     a->chan = strdup(chan);
     a->msg = strdup(msg);
     pthread_mutex_lock(&ipclock);
-    fprintf(ipcout, "%c%p\n", IPC_CHAT_MSG, a);
-    fflush(ipcout);
+    g_idle_add((GSourceFunc)idle_chat_msg, a);
 }
 
 void ipc_chat_join(int id, char *chan)
 {
     struct ipc_chat_join *a = (struct ipc_chat_join *) malloc(sizeof(struct ipc_chat_join));
+
     a->id = id;
     a->chan = strdup(chan);
     pthread_mutex_lock(&ipclock);
-    fprintf(ipcout, "%c%p\n", IPC_CHAT_JOIN, a);
-    fflush(ipcout);
+    g_idle_add((GSourceFunc)idle_chat_join, a);
 }
 
 static void init_plugin(GaimPlugin *plugin)
@@ -275,6 +317,9 @@ int uiInit(int argc, char ** argv, char **envp)
     
     // And create the key
     gpgCreateKey();
+
+	return 0;
+
 }
 
 void uiDispMsg(char *from, char *msg)
@@ -364,9 +409,9 @@ GHashTable *gp_chatinfo_defaults(GaimConnection *gc, const char *chat_name)
     GHashTable *defaults;
 
     defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
-
     if (chat_name != NULL)
         g_hash_table_insert(defaults, "room", g_strdup(chat_name));
+
 
     return defaults;
 }
@@ -374,62 +419,13 @@ GHashTable *gp_chatinfo_defaults(GaimConnection *gc, const char *chat_name)
 static GList *gp_awaystates(GaimConnection *gc)
 {
     GList *m = NULL;
-    
+
     m = g_list_append(m, GAIM_AWAY_CUSTOM);
     m = g_list_append(m, _("Back"));
-    
+
     return m;
 }
 
-static void gp_callback(gpointer data, gint source, GaimInputCondition condition)
-{
-    /* grab our input line */
-    char inpline[1024];
-    struct ipc_msg *ma;
-    struct ipc_state *sa;
-    struct ipc_chat_msg *cma;
-    struct ipc_chat_join *cja;
-    
-    while (!uiLoaded) sleep(0);
-    
-    inpline[1023] = '\0';
-    
-    fgets(inpline, 1023, ipcin);
-    
-    switch (inpline[0]) {
-        case IPC_MSG:
-            if (sscanf(inpline + 1, "%p", &ma) < 1) return;
-            serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
-            free(ma->from);
-            free(ma->msg);
-            free(ma);
-            break;
-            
-        case IPC_STATE:
-            if (sscanf(inpline + 1, "%p", &sa) < 1) return;
-            serv_got_update(my_gc, sa->who, sa->state, 0, 0, 0, 0);
-            free(sa->who);
-            free(sa);
-            break;
-            
-        case IPC_CHAT_MSG:
-            if (sscanf(inpline + 1, "%p", &cma) < 1) return;
-            serv_got_chat_in(my_gc, cma->id, cma->who, 0, cma->msg, time(NULL));
-            free(cma->who);
-            free(cma->msg);
-            free(cma);
-            break;
-            
-        case IPC_CHAT_JOIN:
-            if (sscanf(inpline + 1, "%p", &cja) < 1) return;
-            serv_got_joined_chat(my_gc, cja->id, cja->chan);
-            free(cja->chan);
-            free(cja);
-            break;
-    }
-    
-    pthread_mutex_unlock(&ipclock);
-}
     
 static void gp_login(GaimAccount *account)
 {
@@ -443,11 +439,8 @@ static void gp_login(GaimAccount *account)
     my_account = account;
 
     // Prepare the IPC pipe
-    pipe(ipcpipe);
-    ipcin = fdopen(ipcpipe[0], "r");
-    ipcout = fdopen(ipcpipe[1], "w");
-    pthread_mutex_init(&ipclock, NULL);
-    gaim_input_add(ipcpipe[0], GAIM_INPUT_READ, gp_callback, gc);
+	pthread_mutex_init(&ipclock, NULL);
+
     
     /* call "main" */
     pluginMain(1, argv, environ);
@@ -462,13 +455,14 @@ static void gp_login(GaimAccount *account)
     
     // OK, the UI is ready
     uiLoaded = 1;
+
 }
 
 static void gp_close(GaimConnection *gc)
 {
     struct BuddyList *cur, *next;
     int i, curfd;
-    
+
     if (gc == my_gc) {
         /* OK, try to free and delete everything we can */
         cur = bltop;
@@ -483,10 +477,7 @@ static void gp_close(GaimConnection *gc)
         my_account = NULL;
         my_gc = NULL;
         
-        close(ipcpipe[0]);
-        close(ipcpipe[1]);
-        
-        serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
+		serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
     
         for (i = 0; i < onpthread; i++) {
             pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
@@ -514,24 +505,27 @@ static int gp_sendim(GaimConnection *gc, const char *who, const char *message, G
 {
     while (!uiLoaded) sleep(0);
     
-    if (!strncmp(who, "con:", 4)) return 1;
+    if (!strncmp(who, "con:", 4)) goto exit;
     
     // don't let people talk to themself
-    if (!strcmp(who, dn_name)) return;
+    if (!strcmp(who, dn_name)) goto exit;
     
     char *nwho = strdup(who);
     char *nmsg = strdup(message);
     sendMsg(nwho, nmsg);
     free(nwho);
     free(nmsg);
+ exit:
     return 1;
 }
 
 static void gp_setaway(GaimConnection *gc, const char *state, const char *text)
 {
     char *ntext = text ? strdup(text) : strdup("I'm away right now.");
-    setAway(ntext);
+
+	setAway(ntext);
     free(ntext);
+
 }
 
 void *waitConn(void *to_vp)
@@ -540,15 +534,19 @@ void *waitConn(void *to_vp)
     GaimBuddy *to = (GaimBuddy *) to_vp;
     char *route;
 
+
     while (!uiLoaded) sleep(0);
 
     // don't let people talk to themself
-    if (!strcmp(to->name, dn_name)) return;
+    if (!strcmp(to->name, dn_name)) return NULL;
     
     if (!strncmp(to->name, "con:", 4)) {
         if (establishConnection(to->name + 4)) {
             if (to->present == 0) {
                 ipc_set_state(to->name, 1);
+
+				/* don't forget to unlock the mutex ??*/
+				pthread_mutex_unlock(&ipclock);
             }
         }
     } else {
@@ -570,7 +568,6 @@ void *waitConn(void *to_vp)
         }
         cur = cur->next;
     }
-    
     return NULL;
 }
 
@@ -578,7 +575,7 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
 {
     pthread_t newthread;
     char *route;
-    
+
     /* there are special "buddies" that are connections: con:host */
     if (!strncmp(buddy->name, "con:", 4)) {
         pthread_create(&newthread, NULL, waitConn, buddy);
@@ -618,7 +615,8 @@ static void gp_removebuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *grou
 
 static void gp_joinchat(GaimConnection *gc, GHashTable *data)
 {
-    char *name = g_hash_table_lookup(data, "room");
+
+  char *name = g_hash_table_lookup(data, "room");
     if (name[0] == '#') {
         joinChat(name + 1);
         ipc_chat_join(regChat(name), name);
@@ -649,11 +647,11 @@ static int gp_saychat(GaimConnection *gc, int id, const char *msg)
 {
     GaimConversation *gconv = gaim_find_chat(gc, id);
     char *omsg = strdup(msg);
-    
+
     sendChat(gconv->name + 1, omsg);
     ipc_chat_msg(id, dn_name, gconv->name, omsg);
     
     free(omsg);
-    
+
     return 1;
 }
