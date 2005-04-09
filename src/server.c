@@ -43,6 +43,9 @@
 #include "ui.h"
 
 int server_sock;
+#ifdef WIN32
+BOOL sockets_init = FALSE;
+#endif
 
 void *serverAcceptLoop(void *ignore);
 
@@ -50,6 +53,19 @@ void sigterm_handler(int sig)
 {
     pthread_exit(0);
 }
+
+#ifdef WIN32
+void initSockets()
+{
+  WSADATA dw;
+  if (sockets_init) return;
+  if (WSAStartup(MAKEWORD(1,1), &dw) != 0) { /*check for version 1.1 */
+	perror("WSAStartup - initializing winsock failed");
+	exit(-1);
+  }
+  sockets_init = TRUE;
+}
+#endif
 
 pthread_t *establishServer()
 {
@@ -59,7 +75,10 @@ pthread_t *establishServer()
     pthread_attr_t ptattr;
     
     struct sockaddr_in addr;
-    
+#ifdef WIN32
+	initSockets();
+#endif
+
     server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock == -1) {
         perror("socket");
