@@ -220,33 +220,40 @@ gboolean idle_got_im(struct ipc_msg *ma)
 
 gboolean idle_set_state(struct ipc_state *sa)
 {
-  serv_got_update(my_gc, sa->who, sa->state, 0, 0, 0, 0);
-  free(sa->who);
-  free(sa);
-  pthread_mutex_unlock(&ipclock);
-  return FALSE;
+    serv_got_update(my_gc, sa->who, sa->state, 0, 0, 0, 0);
+    
+    free(sa->who);
+    free(sa);
+    
+    pthread_mutex_unlock(&ipclock);
+    
+    return FALSE;
 }
 
 gboolean idle_chat_msg(struct ipc_chat_msg *cma)
 {
-  serv_got_chat_in(my_gc, cma->id, cma->who, 0, cma->msg, time(NULL));
-  free(cma->who);
-  free(cma->msg);
-  free(cma);
-  pthread_mutex_unlock(&ipclock);
-  return FALSE;
+    serv_got_chat_in(my_gc, cma->id, cma->who, 0, cma->msg, time(NULL));
+
+    free(cma->who);
+    free(cma->msg);
+    free(cma);
+    
+    pthread_mutex_unlock(&ipclock);
+    
+    return FALSE;
   
 }           
 
 gboolean idle_chat_join(struct ipc_chat_join *cja)
 {
-  serv_got_joined_chat(my_gc, cja->id, cja->chan);
+    serv_got_joined_chat(my_gc, cja->id, cja->chan);
 
-  free(cja->chan);
-  free(cja);
-  pthread_mutex_unlock(&ipclock);
+    free(cja->chan);
+    free(cja);
+    
+    pthread_mutex_unlock(&ipclock);
 
-  return FALSE;
+    return FALSE;
 }
 
 void ipc_got_im(char *who, char *msg)
@@ -255,7 +262,9 @@ void ipc_got_im(char *who, char *msg)
 
     a->from = strdup(who);
     a->msg = strdup(msg);
+    
     pthread_mutex_lock(&ipclock);
+    
     g_idle_add((GSourceFunc) idle_got_im, a);
 }
 
@@ -265,7 +274,9 @@ void ipc_set_state(char *who, int state)
 
     a->who = strdup(who);
     a->state = state;
+
     pthread_mutex_lock(&ipclock);
+    
     g_idle_add((GSourceFunc)idle_set_state, a);
 }
 
@@ -277,7 +288,9 @@ void ipc_chat_msg(int id, char *who, char *chan, char *msg)
     a->who = strdup(who);
     a->chan = strdup(chan);
     a->msg = strdup(msg);
+    
     pthread_mutex_lock(&ipclock);
+    
     g_idle_add((GSourceFunc)idle_chat_msg, a);
 }
 
@@ -287,7 +300,9 @@ void ipc_chat_join(int id, char *chan)
 
     a->id = id;
     a->chan = strdup(chan);
+    
     pthread_mutex_lock(&ipclock);
+    
     g_idle_add((GSourceFunc)idle_chat_join, a);
 }
 
@@ -452,10 +467,12 @@ static void gp_login(GaimAccount *account)
     my_gc = gc;
 
     serv_finish_login(gc);
+
+    // yay, bad fixes for strange pthread problems!
+    sleep(2);
     
     // OK, the UI is ready
     uiLoaded = 1;
-
 }
 
 static void gp_close(GaimConnection *gc)
@@ -534,7 +551,6 @@ void *waitConn(void *to_vp)
     GaimBuddy *to = (GaimBuddy *) to_vp;
     char *route;
 
-
     while (!uiLoaded) sleep(0);
 
     // don't let people talk to themself
@@ -544,9 +560,6 @@ void *waitConn(void *to_vp)
         if (establishConnection(to->name + 4)) {
             if (to->present == 0) {
                 ipc_set_state(to->name, 1);
-
-				/* don't forget to unlock the mutex ??*/
-				pthread_mutex_unlock(&ipclock);
             }
         }
     } else {
