@@ -30,6 +30,8 @@
 
 #endif
 
+#include <glib/gmain.h>
+
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -181,6 +183,7 @@ int chatByName(char *name)
 }
 
 pthread_mutex_t ipclock;
+GMainContext *ctx;
 #define IPC_MSG 1
 struct ipc_msg {
     char *from;
@@ -207,15 +210,15 @@ struct ipc_chat_join {
 
 gboolean idle_got_im(struct ipc_msg *ma) 
 {
-  serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
+    serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
   
-  free(ma->from);
-  free(ma->msg);
-  free(ma);
-  
-  pthread_mutex_unlock(&ipclock);
+    free(ma->from);
+    free(ma->msg);
+    free(ma);
 
-  return FALSE;
+    pthread_mutex_unlock(&ipclock);
+
+    return FALSE;
 }
 
 gboolean idle_set_state(struct ipc_state *sa)
@@ -241,7 +244,6 @@ gboolean idle_chat_msg(struct ipc_chat_msg *cma)
     pthread_mutex_unlock(&ipclock);
     
     return FALSE;
-  
 }           
 
 gboolean idle_chat_join(struct ipc_chat_join *cja)
@@ -332,9 +334,8 @@ int uiInit(int argc, char ** argv, char **envp)
     
     // And create the key
     gpgCreateKey();
-
-	return 0;
-
+    
+    return 0;
 }
 
 void uiDispMsg(char *from, char *msg)
@@ -441,7 +442,6 @@ static GList *gp_awaystates(GaimConnection *gc)
     return m;
 }
 
-    
 static void gp_login(GaimAccount *account)
 {
     char *argv[] = {"plugin", NULL};
@@ -454,11 +454,13 @@ static void gp_login(GaimAccount *account)
     my_account = account;
 
     // Prepare the IPC pipe
-	pthread_mutex_init(&ipclock, NULL);
-
+    pthread_mutex_init(&ipclock, NULL);
     
     /* call "main" */
     pluginMain(1, argv, environ);
+
+    // pthreads are magical
+    sleep(1);
     
     gc = gaim_account_get_connection(account);
     gaim_connection_set_state(gc, GAIM_CONNECTED);
@@ -467,9 +469,6 @@ static void gp_login(GaimAccount *account)
     my_gc = gc;
 
     serv_finish_login(gc);
-
-    // yay, bad fixes for strange pthread problems!
-    sleep(2);
     
     // OK, the UI is ready
     uiLoaded = 1;
