@@ -80,7 +80,9 @@ ChatWindow *getWindow(const char *name)
     for (i = 0; cws[i] != NULL; i++) {
         if (!strcmp(cws[i]->chatWindow->label(), name)) {
             /*cws[i]->chatWindow->show();*/
+            dn_unlock(&displayLock);
             while (showcw) sleep(0);
+            dn_lock(&displayLock);
             showcw = cws[i];
             return cws[i];
         }
@@ -90,7 +92,9 @@ ChatWindow *getWindow(const char *name)
     cws[i]->make_window();
     cws[i]->chatWindow->label(strdup(name));
     /*cws[i]->chatWindow->show();*/
+    dn_unlock(&displayLock);
     while (showcw) sleep(0);
+    dn_lock(&displayLock);
     showcw = cws[i];
     
     return cws[i];
