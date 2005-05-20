@@ -29,11 +29,7 @@ function morepage($page, $frame) {
     
     if ($page == "download-s" /*|| $page == "download-b"*/) {
         // Include linked-in downloads
-        if ($page == "download-s") {
-            $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135053", "r");
-        } else {
-            $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135808", "r");
-        }
+        $handle = @fopen("http://sourceforge.net/project/showfiles.php?group_id=123564&package_id=135053", "r");
         $mode = 0;
         while (!feof($handle)) {
             $line = trim(fgets($handle, 2048));
@@ -60,7 +56,7 @@ function morepage($page, $frame) {
     }
     
     if ($page == "download-b") {
-        $ver = "ALPHA0.3";
+        $ver = "alpha0.4";
         
         print "<h1>Binaries</h1>";
         print "<ul>";
@@ -68,46 +64,46 @@ function morepage($page, $frame) {
         // GNU/Linux
         print "<li>GNU/Linux<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-i686-pc-linux-gnu.gz?download'>i686 (Intel/AMD PC)</a></li>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-alphaev67-unknown-linux.gz?download'>Alpha</a></li>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-x86_64-unknown-linux-gnu.gz?download'>x86_64 (AMD AMD64/Intel EM64T PC)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-i386-linux-gnu.tar.gz?download'>i686 (Intel/AMD PC)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-alphaev67-unknown-linux.gz?download'>Alpha (old)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-x86_64-unknown-linux-gnu.gz?download'>x86_64 (AMD AMD64/Intel EM64T PC) (old)</a></li>";
         print "</ul></li>";
         
         // OSX
-        print "<li>Apple Mac OS X (10.2 or higher)<br>";
+        print "<li>Apple Mac OS X<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-powerpc-apple-darwin6.8.gz?download'>PPC</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-macosx.dmg.gz?download'>PPC</a></li>";
         print "</ul></li>";
         
         // Solaris
         print "<li>Sun Solaris 9<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-sparc-sun-solaris2.9.gz?download'>ULTRASPARC</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-sparc-sun-solaris2.9.gz?download'>ULTRASPARC (old)</a></li>";
         print "</ul></li>";
         
         // FreeBSD
         print "<li>FreeBSD 4.10<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-i386-unknown-freebsd4.10.gz?download'>i686 (Intel/AMD PC)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-i386-unknown-freebsd4.10.gz?download'>i686 (Intel/AMD PC) (old)</a></li>";
         print "</ul></li>";
         
         // HP-UX
         print "<li>HP-UX 11<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-hppa2.0w-hp-hpux11.23.gz?download'>HPPA</a></li>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-ia64-hp-hpux11.23.gz?download'>Itanium</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-hppa2.0w-hp-hpux11.23.gz?download'>HPPA (old)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-ia64-hp-hpux11.23.gz?download'>Itanium (old)</a></li>";
         print "</ul></li>";
         
         // HP Tru64
         print "<li>HP Tru64 UNIX<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-alphaev7-dec-osf5.1b.gz?download'>Alpha</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . "ALPHA0.3" . "-alphaev7-dec-osf5.1b.gz?download'>Alpha (old)</a></li>";
         print "</ul></li>";
         
         // Windows
         print "<li>Microsoft Windows<br>";
         print "<ul>";
-        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-i686-pc-cygwin.zip?download'>i686 (Intel/AMD PC)</a></li>";
+        print "<li><a href='http://prdownloads.sourceforge.net/directnet/directnet-" . $ver . "-win32.zip?download'>i686 (Intel/AMD PC)</a></li>";
         print "</ul></li></ul>";
     }
 }
