@@ -27,6 +27,7 @@ extern "C" {
 #include "connection.h"
 #include "directnet.h"
 #include "globals.h"
+#include "gpg.h"
 #include "lock.h"
 #include "ui.h"
 }
@@ -49,6 +50,15 @@ ChatWindow *showcw = NULL;
 
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
+    /* Always start by finding GPG */
+    if (findGPG(envp) == -1) {
+        printf("GPG was not found on your PATH!\n");
+        return -1;
+    }
+
+    /* And creating the key */
+    gpgCreateKey();
+    
     /* blank our array of windows */
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
 
