@@ -189,8 +189,13 @@ void estCht(Fl_Input *w, void *ignore)
     
     dn_lock(&displayLock);
     
-    chatOn[0] = '#';
-    strcpy(chatOn + 1, w->value());
+    if (*w->value() == '#') {
+        strcpy(chatOn, w->value());
+    } else {
+        chatOn[0] = '#';
+        strcpy(chatOn + 1, w->value());
+    }
+    
     w->value("");
 
     joinChat(chatOn + 1);
