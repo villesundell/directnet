@@ -25,7 +25,7 @@ extern char gpghomedir[256];
 
 int findGPG(char **envp);
 char *gpgTo(char *from, char *to, char *msg);
-char *gpgFrom(char *to, char *msg);
+char *gpgFrom(char *from, char *to, char *msg);
 char *gpgCreateKey();
 char *gpgExportKey();
 char *gpgImportKey(char *name, char *key);

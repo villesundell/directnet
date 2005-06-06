@@ -590,7 +590,7 @@ void handleMsg(char *inbuf, int fdnum)
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message
-            uiDispMsg(params[1], gpgFrom(dn_name, params[2]));
+            uiDispMsg(params[1], gpgFrom(params[1], dn_name, params[2]));
             
             // Are we away?
             if (awayMsg && strncmp(command, "msa", 3)) {

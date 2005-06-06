@@ -34,7 +34,7 @@ char *gpgTo(char *from, char *to, char *msg)
     return msg;
 }
 
-char *gpgFrom(char *to, char *msg)
+char *gpgFrom(char *from, char *to, char *msg)
 {
     return msg;
 }
@@ -48,6 +48,6 @@ char *gpgExportKey() {
     return "nokey";
 }
 
-char *gpgImportKey(char *key) {
+char *gpgImportKey(char *name, char *key) {
     return "";
 }

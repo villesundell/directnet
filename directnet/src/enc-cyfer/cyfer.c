@@ -122,7 +122,7 @@ char *dehex(int *len, unsigned char *inp)
 }
 
 /* Perform encryption or decryption. */
-char *encdec(char *pk, char *name, char *inp, int encrypt)
+char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
 {
     char *key;
     int klen, loc, oloc, osl;
@@ -136,7 +136,7 @@ char *encdec(char *pk, char *name, char *inp, int encrypt)
     /* Create context */
     ctx = init_ctx(pk);
 
-    if (encrypt) {
+    if (name != NULL) {
         cur = cyf_key_head;
         while (cur) {
             if (!strcmp(cur->name, name)) {
@@ -145,12 +145,14 @@ char *encdec(char *pk, char *name, char *inp, int encrypt)
             }
         }
         if (!cur) return strdup("");
-        
+    } else {
+        key = dehex(&klen, myprkey);
+    }
+    
+    if (encrypt) {
         import = CYFER_Pk_Import_Key(ctx, NULL, 0, key, klen);
         CYFER_Pk_Size(ctx, &in_len, &out_len);
     } else {
-        key = dehex(&klen, myprkey);
-        
         import = CYFER_Pk_Import_Key(ctx, key, klen, NULL, 0);
         CYFER_Pk_Size(ctx, &out_len, &in_len);
     }
@@ -168,14 +170,12 @@ char *encdec(char *pk, char *name, char *inp, int encrypt)
 
     /* Encrypt or decrypt. For incomplete block, this assumes the remainder
      * is filled with zeroes.  */
-    /* inp is hex if this is decryption */
-    if (!encrypt) {
-        inp = dehex(&osl, inp);
-    } else {
+    if (*len == 0) {
         osl = strlen(inp);
+    } else {
+        osl = *len;
     }
     for (loc = 0; loc < osl; loc += in_len) {
-        //memcpy(inbuf, inp + loc, in_len);
         memcpy(inbuf, inp + loc, in_len);
         out = (char *) realloc(out, oloc + out_len);
         
@@ -183,10 +183,8 @@ char *encdec(char *pk, char *name, char *inp, int encrypt)
             CYFER_Pk_Encrypt(ctx, inbuf, outbuf);
         else
             CYFER_Pk_Decrypt(ctx, inbuf, outbuf);
-        //memcpy(outbuf, inbuf, in_len);
         
         memcpy(out + oloc, outbuf, out_len);
-        //strncpy(out + oloc, outbuf, in_len);
         
         oloc += out_len;
     }
@@ -194,15 +192,8 @@ char *encdec(char *pk, char *name, char *inp, int encrypt)
     CYFER_Pk_Finish(ctx);
     free(key); free(inbuf); free(outbuf);
     
-    if (encrypt) {
-        /* needs to be hex */
-        outh = mkhex(oloc, out);
-        free(out);
-        return outh;
-    } else {
-        free(inp);
-        return out;
-    }
+    *len = oloc;
+    return out;
 }
 
 int findGPG(char **envp)
@@ -212,13 +203,34 @@ int findGPG(char **envp)
     
 char *gpgTo(char *from, char *to, char *msg)
 {
-    char *snd = encdec("RSA", to, msg, 1);
-    return snd;
+    int len;
+    char *enc, *enc2;
+    
+    len = 0;
+    enc = encdec("RSA", to, msg, 1, &len); // encrypt
+    enc2 = encdec("RSA", NULL, enc, 1, &len); // sign
+    free(enc);
+    
+    enc = mkhex(len, enc2); // hex
+    free(enc2);
+    
+    return enc;
 }
 
-char *gpgFrom(char *to, char *msg)
+char *gpgFrom(char *from, char *to, char *msg)
 {
-    return encdec("RSA", NULL, msg, 0);
+    int len;
+    char *enc, *enc2;
+    
+    enc = dehex(&len, msg); // dehex
+    
+    enc2 = encdec("RSA", from, enc, 0, &len); // de-sign
+    free(enc);
+    
+    enc = encdec("RSA", NULL, enc2, 0, &len); // decrypt
+    free(enc2);
+    
+    return enc;
 }
 
 char *gpgCreateKey()
