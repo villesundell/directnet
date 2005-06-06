@@ -12,6 +12,7 @@ AC_CONFIG_FILES(
 [
 Makefile
 src/Makefile
+src/enc-cyfer/Makefile
 src/enc-fake/Makefile
 src/enc-gpg/Makefile
 src/gaim-plugin/Makefile
@@ -212,9 +213,10 @@ AM_CONDITIONAL(MAKE_HUB, test "x$HUB_NAME" != "xno")
 
 # Check for encryption to use
 AC_ARG_ENABLE(enc,
-[  --enable-enc[=fake]
-                set the encryption (currently the only encryption is "fake")],
+[  --enable-enc[=cyfer]
+                set the encryption (cyfer or fake)],
 [case "$enableval" in
+        cyfer) enc=cyfer ;;
         fake) enc=fake ;;
         gpg) enc=gpg ;;
         *) AC_MSG_ERROR([Invalid encryption chosen.]) ;;
@@ -224,7 +226,32 @@ AS_MESSAGE([checking which encryption to use...])
 
 found_enc=no
 
-if test "x$enc" = "xfake" || test "x$enc" = "xdetermine"
+if test "x$enc" = "xcyfer" || test "x$enc" = "xdetermine"
+then
+        CYFCF="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -I`pwd`/$srcdir/src/enc-cyfer/cyfer/include"
+        GMPCF="-L`pwd`/$srcdir/src/enc-cyfer/gmp -I`pwd`/$srcdir/src/enc-cyfer/gmp"
+        ENC_CFLAGS="$CYFCF $GMPCF"
+        ENC_CPPFLAGS=
+        ENC_CXXFLAGS=
+        ENC_CXX=false
+        ENC_LIBS="`pwd`/$srcdir/src/enc-cyfer/cyfer/lib/.libs/libcyfer.a"
+        ENC_LIBS="$ENC_LIBS `pwd`/$srcdir/src/enc-cyfer/gmp/.libs/libgmp.a"
+        ENC_LDFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -L`pwd`/$srcdir/src/enc-cyfer/gmp"
+        ENC_DIR=enc-cyfer
+        found_enc=yes
+        enc=cyfer
+        AS_MESSAGE([Using cyfer encryption])
+        
+        ORIGDIR=`pwd`
+        export ORIGDIR
+        cd $ORIGDIR/$srcdir/src/enc-cyfer/gmp
+        ./configure --enable-static --disable-shared
+        cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
+        ./configure --enable-static --disable-shared
+        cd $ORIGDIR
+fi
+
+if test "x$enc" = "xfake" || (test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
 then
         ENC_CFLAGS=
         ENC_CPPFLAGS=
