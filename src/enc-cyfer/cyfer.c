@@ -103,8 +103,6 @@ char *dehex(int *len, unsigned char *inp)
         ol = i >> 1;
         out[ol] = 0;
 
-        printf("%c%c is ", inp[i], inp[i+1]);
-        
         if (inp[i] >= '0' && inp[i] <= '9') {
             out[ol] += (inp[i] - '0') << 4;
         } else {
@@ -116,8 +114,6 @@ char *dehex(int *len, unsigned char *inp)
         } else {
             out[ol] += inp[i+1] - 'A' + 10;
         }
-        
-        printf("%x\n", out[ol]);
     }
     ol = i >> 1;
     out[ol] = '\0';
