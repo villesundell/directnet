@@ -1,3 +1,14 @@
-The entirety of this code was written by Gregor Richards.
+The DirectNet core, the dumb UI, the FLTK UI, the hub pseudo-UI, the gaim plugin pseudo-UI, the
+fake encryption module and the Cyfer encryption module were written by Gregor Richards.
+
+GMP and Cyfer are used by DirectNet, but are not Gregor's code.  Please see src/enc-cyfer/gmp and
+src/enc-cyfer/cyfer for more information on GMP and Cyfer, respectively.
 
 The upcoming (but not yet finished) curses UI is being written by Rob Nesius.
+
+
+DirectNet has a modular design.  If you would like to submit a new UI or encryption module, the
+easiest way is to modify the dumb UI or fake encryption module and the Makefile in that directory,
+and make it compile that way.  When you have it working, you can submit the entire modified
+directory to the patch tracker on the SourceForge page
+( http://www.sourceforge.net/projects/directnet/ ), and I (Gregor) will integrate it properly.
