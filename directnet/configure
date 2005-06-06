@@ -1042,8 +1042,8 @@ Optional Features:
                 enable the Gaim Plugin - must have Gaim 1.2.0 or higher development libraries
   --enable-hub=name
                 enable hub mode - name is the name of the hub "user"
-  --enable-enc=fake
-                set the encryption (currently the only encryption is "fake")
+  --enable-enc=cyfer
+                set the encryption (cyfer or fake)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1965,7 +1965,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
           ac_config_headers="$ac_config_headers config.h"
 
 
-                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/gaim-plugin/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile"
+                                                                                                    ac_config_files="$ac_config_files Makefile src/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/gaim-plugin/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile"
 
 
 # Checks for programs.
@@ -20944,6 +20944,7 @@ fi
 if test "${enable_enc+set}" = set; then
   enableval="$enable_enc"
   case "$enableval" in
+        cyfer) enc=cyfer ;;
         fake) enc=fake ;;
         gpg) enc=gpg ;;
         *) { { echo "$as_me:$LINENO: error: Invalid encryption chosen." >&5
@@ -20959,7 +20960,33 @@ echo "$as_me: checking which encryption to use..." >&6;}
 
 found_enc=no
 
-if test "x$enc" = "xfake" || test "x$enc" = "xdetermine"
+if test "x$enc" = "xcyfer" || test "x$enc" = "xdetermine"
+then
+        CYFCF="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -I`pwd`/$srcdir/src/enc-cyfer/cyfer/include"
+        GMPCF="-L`pwd`/$srcdir/src/enc-cyfer/gmp -I`pwd`/$srcdir/src/enc-cyfer/gmp"
+        ENC_CFLAGS="$CYFCF $GMPCF"
+        ENC_CPPFLAGS=
+        ENC_CXXFLAGS=
+        ENC_CXX=false
+        ENC_LIBS="`pwd`/$srcdir/src/enc-cyfer/cyfer/lib/.libs/libcyfer.a"
+        ENC_LIBS="$ENC_LIBS `pwd`/$srcdir/src/enc-cyfer/gmp/.libs/libgmp.a"
+        ENC_LDFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -L`pwd`/$srcdir/src/enc-cyfer/gmp"
+        ENC_DIR=enc-cyfer
+        found_enc=yes
+        enc=cyfer
+        { echo "$as_me:$LINENO: Using cyfer encryption" >&5
+echo "$as_me: Using cyfer encryption" >&6;}
+
+        ORIGDIR=`pwd`
+        export ORIGDIR
+        cd $ORIGDIR/$srcdir/src/enc-cyfer/gmp
+        ./configure --enable-static --disable-shared
+        cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
+        ./configure --enable-static --disable-shared
+        cd $ORIGDIR
+fi
+
+if test "x$enc" = "xfake" || (test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
 then
         ENC_CFLAGS=
         ENC_CPPFLAGS=
@@ -22857,6 +22884,7 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+  "src/enc-cyfer/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-cyfer/Makefile" ;;
   "src/enc-fake/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-fake/Makefile" ;;
   "src/enc-gpg/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-gpg/Makefile" ;;
   "src/gaim-plugin/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gaim-plugin/Makefile" ;;

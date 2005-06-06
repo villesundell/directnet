@@ -376,7 +376,7 @@ void handleMsg(char *inbuf, int fdnum)
                 hashSSet(dn_routes, params[1], reverseRoute);
             
                 // and public key,
-                gpgImportKey(params[3]);
+                gpgImportKey(params[1], params[3]);
                 
                 // then send your route back to him
                 outparams[0] = reverseRoute;
@@ -555,7 +555,7 @@ void handleMsg(char *inbuf, int fdnum)
             hashSSet(dn_routes, params[1], newroute);
             
             // 2) Key
-            gpgImportKey(params[3]);
+            gpgImportKey(params[1], params[3]);
             
             uiEstRoute(params[1]);
         }
@@ -571,7 +571,7 @@ void handleMsg(char *inbuf, int fdnum)
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
         
-        gpgImportKey(params[1]);
+        gpgImportKey(params[0], params[1]);
         
         uiEstRoute(params[0]);
 

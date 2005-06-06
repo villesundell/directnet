@@ -28,6 +28,6 @@ char *gpgTo(char *from, char *to, char *msg);
 char *gpgFrom(char *to, char *msg);
 char *gpgCreateKey();
 char *gpgExportKey();
-char *gpgImportKey();
+char *gpgImportKey(char *name, char *key);
 
 #endif // DN_GPG_H
