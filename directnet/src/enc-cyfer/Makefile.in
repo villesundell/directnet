@@ -454,7 +454,7 @@ uninstall-am: uninstall-info-am
 	uninstall-info-am
 
 
-gmp:
+gmpdir:
 	cd gmp ; $(MAKE) all
 
 cyferdir: gmpdir
