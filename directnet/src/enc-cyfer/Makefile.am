@@ -1,5 +1,3 @@
-SUBDIRS=gmp cyfer
-
 AM_CFLAGS=@ENC_CFLAGS@ -I.. -Lcyfer/lib -Icyfer/include -Lgmp -Igmp
 AM_LDFLAGS=@ENC_LDFLAGS@ -Lcyfer/lib -Lgmp
 
