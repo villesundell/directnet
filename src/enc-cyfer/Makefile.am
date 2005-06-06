@@ -5,7 +5,7 @@ noinst_LIBRARIES=libenc.a
 libenc_a_SOURCES=cyfer.c
 libenc_a_DEPENDENCIES=gmpdir cyferdir
 
-gmp:
+gmpdir:
 	cd gmp ; $(MAKE) all
 
 cyferdir: gmpdir
