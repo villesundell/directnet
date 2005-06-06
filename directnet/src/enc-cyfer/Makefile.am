@@ -3,10 +3,10 @@ AM_LDFLAGS=@ENC_LDFLAGS@ -Lcyfer/lib -Lgmp
 
 noinst_LIBRARIES=libenc.a
 libenc_a_SOURCES=cyfer.c
-libenc_a_DEPENDENCIES=gmp cyfer
+libenc_a_DEPENDENCIES=gmpdir cyferdir
 
 gmp:
 	cd gmp ; $(MAKE) all
 
-cyfer: gmp
+cyferdir: gmpdir
 	cd cyfer ; $(MAKE) all
