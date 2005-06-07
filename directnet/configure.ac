@@ -245,9 +245,9 @@ then
         ORIGDIR=`pwd`
         export ORIGDIR
         cd $ORIGDIR/$srcdir/src/enc-cyfer/gmp
-        ./configure --enable-static --disable-shared
+        ./configure --enable-static --disable-shared $@
         cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
-        ./configure --enable-static --disable-shared
+        ./configure --enable-static --disable-shared $@
         cd $ORIGDIR
 fi
 
