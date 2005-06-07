@@ -1,3 +1,0 @@
-To get Cyfer working from CVS, put the GMP directory in this directory with the name "gmp", and
-the Cyfer directory in this directory with the name "cyfer".  Apply the cyfer-<version>.dn.diff
-patch to the cyfer directory.
