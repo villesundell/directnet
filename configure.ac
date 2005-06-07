@@ -245,9 +245,11 @@ then
         ORIGDIR=`pwd`
         export ORIGDIR
         cd $ORIGDIR/$srcdir/src/enc-cyfer/gmp
-        ./configure --enable-static --disable-shared $@
+        CC="$CC" CFLAGS="$CFLAGS" ./configure --enable-static --disable-shared --host=$host_alias \
+                --build=$build_alias || exit 1
         cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
-        ./configure --enable-static --disable-shared $@
+        CC="$CC" CFLAGS="$CFLAGS" ./configure --enable-static --disable-shared --host=$host_alias \
+                --build=$build_alias || exit 1
         cd $ORIGDIR
 fi
 

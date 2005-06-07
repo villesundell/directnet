@@ -267,7 +267,13 @@ char *gpgExportKey() {
 char *gpgImportKey(char *name, char *key) {
     if (cyf_key_head) {
         struct cyf_key *cur = cyf_key_head;
-        while (cur->next) cur = cur->next;
+        while (cur->next) {
+            if (!strcmp(cur->name, name)) {
+                cur->key = strdup(key);
+                return "";
+            }
+            cur = cur->next;
+        }
         
         cur->next = (struct cyf_key *) malloc(sizeof(struct cyf_key));
         cur->next->name = strdup(name);
@@ -279,4 +285,6 @@ char *gpgImportKey(char *name, char *key) {
         cyf_key_head->key = strdup(key);
         cyf_key_head->next = NULL;
     }
+    
+    return "";
 }
