@@ -1,6 +1,6 @@
 #!/bin/sh
 # Put the Gaim version here:
-export GVER=1.2.0
+export GVER=1.3.0
 # If you're not using a cross compiler, set this to ""
 export CROSSC=i686-pc-mingw32
 
