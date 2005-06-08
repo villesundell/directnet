@@ -143,6 +143,7 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
                 key = dehex(&klen, cur->key);
                 break;
             }
+            cur = cur->next;
         }
         if (!cur) return strdup("");
     } else {
