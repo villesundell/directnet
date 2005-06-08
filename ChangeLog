@@ -1,1 +1,4 @@
-I don't keep changelogs for ALPHA code, sorry ;)
+Beta 0.5 from Alpha 0.4:
+        - Gaim plugin
+        - Cyfer encryption
+        - Better Win32 support (MingW32 with pthreads)
