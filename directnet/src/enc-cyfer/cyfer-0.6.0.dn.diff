@@ -1,6 +1,6 @@
 diff -ru cyfer-0.6.0/configure cyfer/configure
 --- cyfer-0.6.0/configure	2004-09-25 18:43:58.000000000 -0700
-+++ cyfer/configure	2005-06-05 18:06:52.655740168 -0700
++++ cyfer/configure	2005-06-07 21:42:04.127124082 -0700
 @@ -1,11 +1,10 @@
  #! /bin/sh
  # Guess values for system-dependent variables and create Makefiles.
@@ -2928,7 +2928,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
 diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
 --- cyfer-0.6.0/configure.in	2004-09-25 18:43:03.000000000 -0700
-+++ cyfer/configure.in	2005-06-05 18:06:48.186419608 -0700
++++ cyfer/configure.in	2005-06-07 21:42:04.128123735 -0700
 @@ -46,7 +46,9 @@
  AC_C_BIGENDIAN(, AC_SUBST(LENDIAN, -DCYFER_LITTLE_ENDIAN),
  		AC_MSG_WARN(cannot determine system endianess, assuming big endian))
@@ -2940,9 +2940,22 @@ diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
  
  # Write results
  
+diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
+--- cyfer-0.6.0/include/cyfer/cyfer.h	2004-09-25 08:12:43.000000000 -0700
++++ cyfer/include/cyfer/cyfer.h	2005-06-07 21:45:45.126424741 -0700
+@@ -59,7 +59,8 @@
+ #include <stdlib.h>
+ 
+ #if defined(_WIN32)
+-#define CYFER_API __declspec(dllimport)
++/*#define CYFER_API __declspec(dllimport)*/
++#define CYFER_API
+ typedef unsigned int bool;
+ #define false 0
+ #define true (!0)
 diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
 --- cyfer-0.6.0/lib/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/Makefile.in	2005-06-05 18:08:09.773016560 -0700
++++ cyfer/lib/Makefile.in	2005-06-07 21:42:04.128123735 -0700
 @@ -13,10 +13,14 @@
  all:	libcyfer.la
  
@@ -2962,7 +2975,7 @@ diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
  
 diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
 --- cyfer-0.6.0/lib/sym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/sym/Makefile.in	2005-06-05 18:08:51.322700048 -0700
++++ cyfer/lib/sym/Makefile.in	2005-06-07 21:42:04.128123735 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
