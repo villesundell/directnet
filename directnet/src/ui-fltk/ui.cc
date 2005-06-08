@@ -39,6 +39,11 @@ extern "C" {
 #include "ChatWindow.h"
 #include "NameWindow.h"
 
+#ifdef WIN32
+#define sleep _sleep
+#include <malloc.h>
+#endif
+
 NameWindow *nw;
 BuddyWindow *bw;
 ChatWindow *cws[1024];
