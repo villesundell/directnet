@@ -60,6 +60,8 @@ extern DN_LOCK displayLock;
 
 extern char uiLoaded;
 
+extern char dn_localip[24];
+
 void newTransKey(char *into);
 
 #endif // DN_DIRECTNET_H

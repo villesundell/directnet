@@ -173,6 +173,14 @@ void handleMsg(char *inbuf, int fdnum)
         }
     }
     
+    /* DEBUG
+    printf("Command: %s\n", command);
+    for (i = 0; params[i]; i++) {
+        printf("Param %d: %s\n", i, params[i]);
+    }
+    putchar('\n');
+    */
+    
     /*****************************
      * Current protocol commands *
      *****************************/
@@ -761,7 +769,8 @@ void *fndPthread(void *name_voidptr)
     }
     
     // If it's weak, send a dcr (direct connect request)
-    {
+    // this does not currently work, so has been commented out
+    /*{
         char *params[DN_MAX_PARAMS], hostbuf[128], *ip, *route;
         struct hostent *he;
         
@@ -785,7 +794,7 @@ void *fndPthread(void *name_voidptr)
         
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
-    }
+    }*/
 }
 
 /* Commands used by the UI */
