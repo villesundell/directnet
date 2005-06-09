@@ -274,7 +274,7 @@ void handleMsg(char *inbuf, int fdnum)
                 inbuf[3] == 1 && inbuf[4] == 1) {
                 // dcr echos
                 char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN], *ip;
-                char *rfe, *first, *route;
+                char *rfe, *first;
                 int firfd, locip_len;
                 struct sockaddr locip;
                 struct sockaddr_in *locip_i;
@@ -293,7 +293,7 @@ void handleMsg(char *inbuf, int fdnum)
                 rfe = strchr(outParams[0], '\n');
                 if (rfe == NULL) return;
                 first = (char *) strdup(outParams[0]);
-                first[rfe - route] = '\0';
+                first[rfe - outParams[0]] = '\0';
                 // then get the fd
                 firfd = hashIGet(dn_fds, first);
                 if (firfd == -1) return;
