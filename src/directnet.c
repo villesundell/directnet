@@ -68,6 +68,8 @@ DN_LOCK dn_transKey_lock;
 char uiLoaded;
 DN_LOCK displayLock; // Only one thread writing at a time.
 
+char dn_localip[24];
+
 char *findHome(char **envp);
 
 #ifndef GAIM_PLUGIN
@@ -153,6 +155,9 @@ int pluginMain(int argc, char **argv, char **envp)
     
     // Initialize the lock for output
     dn_lockInit(&displayLock);
+    
+    // We don't yet know our local IP
+    dn_localip[0] = '\0';
     
     // Establish the server
     serverPthread = establishServer();
