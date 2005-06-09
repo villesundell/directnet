@@ -292,7 +292,8 @@ void handleMsg(char *inbuf, int fdnum)
                 // grab before the first \n for the next name in the line
                 rfe = strchr(outParams[0], '\n');
                 if (rfe == NULL) return;
-                first = (char *) strndup(outParams[0], (size_t) (rfe - route));
+                first = (char *) strdup(outParams[0]);
+                first[rfe - route] = '\0';
                 // then get the fd
                 firfd = hashIGet(dn_fds, first);
                 if (firfd == -1) return;
@@ -806,7 +807,8 @@ void *fndPthread(void *name_voidptr)
         // grab before the first \n for the next name in the line
         rfe = strchr(route, '\n');
         if (rfe == NULL) return NULL;
-        first = (char *) strndup(route, rfe - route);
+        first = (char *) strdup(route);
+        first[rfe - route] = '\0';
         // then get the fd
         firfd = hashIGet(dn_fds, first);
         if (firfd == -1) return NULL;
