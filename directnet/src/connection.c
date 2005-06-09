@@ -274,6 +274,10 @@ void handleMsg(char *inbuf, int fdnum)
                 inbuf[3] == 1 && inbuf[4] == 1) {
                 // dcr echos
                 char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN], *ip;
+                char *rfe, *first, *route;
+                int firfd, locip_len;
+                struct sockaddr locip;
+                struct sockaddr_in *locip_i;
                 struct hostent *he;
                 
                 memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
@@ -284,11 +288,26 @@ void handleMsg(char *inbuf, int fdnum)
                     return;
                 }
                 outParams[1] = dn_name;
-                gethostname(hostbuf, 128);
-                he = gethostbyname(hostbuf);
-                ip = inet_ntoa(*((struct in_addr *)he->h_addr));
-                outParams[2] = (char *) malloc((strlen(ip) + 7) * sizeof(char));
-                strcpy(outParams[2], ip);
+                
+                // grab before the first \n for the next name in the line
+                rfe = strchr(outParams[0], '\n');
+                if (rfe == NULL) return;
+                first = (char *) strndup(outParams[0], (size_t) (rfe - route));
+                // then get the fd
+                firfd = hashIGet(dn_fds, first);
+                if (firfd == -1) return;
+                firfd = fds[firfd];
+                free(first);
+                // then turn the fd into a sockaddr
+                locip_len = sizeof(struct sockaddr);
+                if (getsockname(firfd, &locip, &locip_len) == 0) {
+                    locip_i = (struct sockaddr_in *) &locip;
+                    /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
+                    outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
+                } else {
+                    return;
+                }
+                outParams[2] = realloc(outParams[2], strlen(outParams[2]) + 7);
                 sprintf(outParams[2] + strlen(outParams[2]), ":%d", serv_port);
             
                 handleRoutedMsg("dce", 1, 1, outParams);
@@ -769,10 +788,13 @@ void *fndPthread(void *name_voidptr)
     }
     
     // If it's weak, send a dcr (direct connect request)
-    // this does not currently work, so has been commented out
-    /*{
-        char *params[DN_MAX_PARAMS], hostbuf[128], *ip, *route;
+    {
+        char *params[DN_MAX_PARAMS], hostbuf[128], *ip, *route, *first;
         struct hostent *he;
+        struct sockaddr locip;
+        struct sockaddr_in *locip_i;
+        char *rfe;
+        int firfd, locip_len;
         
         memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
@@ -781,11 +803,27 @@ void *fndPthread(void *name_voidptr)
         strcpy(params[0], route);
         params[1] = dn_name;
         
-        gethostname(hostbuf, 128);
-        he = gethostbyname(hostbuf);
-        ip = inet_ntoa(*((struct in_addr *)he->h_addr));
-        params[2] = (char *) malloc((strlen(ip) + 1) * sizeof(char));
-        strcpy(params[2], ip);
+        // grab before the first \n for the next name in the line
+        rfe = strchr(route, '\n');
+        if (rfe == NULL) return NULL;
+        first = (char *) strndup(route, rfe - route);
+        // then get the fd
+        firfd = hashIGet(dn_fds, first);
+        if (firfd == -1) return NULL;
+        firfd = fds[firfd];
+        printf ("'%s' refers to %d.\n", first, firfd);
+        free(first);
+        // then turn the fd into a sockaddr
+        locip_len = sizeof(struct sockaddr);
+        if (getsockname(firfd, &locip, &locip_len) == 0) {
+            locip_i = (struct sockaddr_in *) &locip;
+            /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
+            params[2] = strdup(inet_ntoa(locip_i->sin_addr));
+        } else {
+            return NULL;
+        }
+        params[2] = realloc(params[2], strlen(params[2]) + 7);
+        sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
 
         handleRoutedMsg("dcr", 1, 1, params);
         
@@ -794,7 +832,7 @@ void *fndPthread(void *name_voidptr)
         
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
-    }*/
+    }
 }
 
 /* Commands used by the UI */
