@@ -813,7 +813,6 @@ void *fndPthread(void *name_voidptr)
         firfd = hashIGet(dn_fds, first);
         if (firfd == -1) return NULL;
         firfd = fds[firfd];
-        printf ("'%s' refers to %d.\n", first, firfd);
         free(first);
         // then turn the fd into a sockaddr
         locip_len = sizeof(struct sockaddr);
