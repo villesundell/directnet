@@ -615,7 +615,7 @@ void handleMsg(char *inbuf, int fdnum)
         // if I already have a route to this person, drop it
         if (hashSGet(dn_routes, params[0])) {
             uiLoseRoute(params[0]);
-            hashSSet(dn_routes, params[0], NULL);
+            hashSDelKey(dn_routes, params[0]);
         }
         
         // now accept the new FD
