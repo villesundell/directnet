@@ -608,9 +608,17 @@ void handleMsg(char *inbuf, int fdnum)
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         char route[strlen(params[0])+2];
+        int remfd;
         
         REQ_PARAMS(2);
         
+        // if I already have a route to this person, drop it
+        if (hashSGet(dn_routes, params[0])) {
+            uiLoseRoute(params[0]);
+            hashSSet(dn_routes, params[0], NULL);
+        }
+        
+        // now accept the new FD
         hashISet(dn_fds, params[0], fdnum);
         
         sprintf(route, "%s\n", params[0]);
