@@ -215,7 +215,6 @@ void handleMsg(char *inbuf, int fdnum)
                 outParams[2] = dn_name;
                 
                 handleRoutedMsg("con", 1, 1, outParams);
-                free(outParams[0]);
             }
         }
         
@@ -271,7 +270,6 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 handleRoutedMsg("cms", 1, 1, outParams);
                 
-                free(outParams[0]);
                 free(outParams[5]);
             }
             
@@ -827,14 +825,13 @@ void *fndPthread(void *name_voidptr)
         
         memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
-        route = hashSGet(dn_routes, name);
-        params[0] = strdup(route);
+        params[0] = hashSGet(dn_routes, name);
         params[1] = dn_name;
         
         // grab before the first \n for the next name in the line
         rfe = strchr(route, '\n');
         if (rfe == NULL) return NULL;
-        first = (char *) strdup(route);
+        first = (char *) strdup(params[0]);
         first[rfe - route] = '\0';
         // then get the fd
         firfd = hashIGet(dn_fds, first);
@@ -855,7 +852,6 @@ void *fndPthread(void *name_voidptr)
 
         handleRoutedMsg("dcr", 1, 1, params);
         
-        free(params[0]);
         free(params[2]);
         
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
@@ -876,8 +872,6 @@ int establishConnection(char *to)
         memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
         // It's a user, send a DCR
-        params[0] = strdup(route);
-
         params[1] = dn_name;
  
         gethostname(hostbuf, 128);
@@ -889,7 +883,6 @@ int establishConnection(char *to)
         
         handleRoutedMsg("dcr", 1, 1, params);
         
-        free(params[0]);
         free(params[2]);
         
         return 1;
@@ -910,7 +903,7 @@ int sendMsgB(char *to, char *msg, char away)
         uiNoRoute(to);
         return 0;
     }
-    outparams[0] = strdup(route);
+    outparams[0] = route;
     outparams[1] = dn_name;
     outparams[2] = gpgTo(dn_name, to, msg);
     if (away) {
@@ -919,7 +912,6 @@ int sendMsgB(char *to, char *msg, char away)
         handleRoutedMsg("msg", 1, 1, outparams);
     }
         
-    free(outparams[0]);
     free(outparams[2]);
     
     return 1;
@@ -1016,12 +1008,10 @@ void sendChat(char *to, char *msg)
             continue;
         }
         
-        outParams[0] = strdup(outParams[0]);
         outParams[5] = gpgTo(dn_name, users[i], msg);
         
         handleRoutedMsg("cms", 1, 1, outParams);
         
-        free(outParams[0]);
         free(outParams[5]);
     }
 }
