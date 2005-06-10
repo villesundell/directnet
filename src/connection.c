@@ -211,7 +211,6 @@ void handleMsg(char *inbuf, int fdnum)
                 if (outParams[0] == NULL) {
                     return;
                 }
-                outParams[0] = strdup(outParams[0]);
                 outParams[1] = params[1];
                 outParams[2] = dn_name;
                 
@@ -268,7 +267,6 @@ void handleMsg(char *inbuf, int fdnum)
                     continue;
                 }
                 
-                outParams[0] = strdup(outParams[0]);
                 outParams[5] = gpgTo(dn_name, users[i], unenmsg);
                 
                 handleRoutedMsg("cms", 1, 1, outParams);
@@ -614,7 +612,6 @@ void handleMsg(char *inbuf, int fdnum)
         
         // if I already have a route to this person, drop it
         if (hashSGet(dn_routes, params[0])) {
-            uiLoseRoute(params[0]);
             hashSDelKey(dn_routes, params[0]);
         }
         
@@ -660,17 +657,19 @@ void handleMsg(char *inbuf, int fdnum)
 int handleRoutedMsg(char *command, char vera, char verb, char **params)
 {
     int i, sendfd;
-    char *newroute, newbuf[DN_CMD_LEN];
+    char *route, *newroute, newbuf[DN_CMD_LEN];
     
     if (strlen(params[0]) == 0) {
         return 1; // This is our data
     }
     
-    for (i = 0; params[0][i] != '\n' && params[0][i] != '\0'; i++);
-    params[0][i] = '\0';
-    newroute = params[0]+i+1;
+    route = strdup(params[0]);
     
-    sendfd = hashIGet(dn_fds, params[0]);
+    for (i = 0; route[i] != '\n' && route[i] != '\0'; i++);
+    route[i] = '\0';
+    newroute = route+i+1;
+    
+    sendfd = hashIGet(dn_fds, route);
         
     if (sendfd == -1) {
         // We need to tell the other side that this route is dead!
@@ -678,15 +677,15 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
             char *newparams[DN_MAX_PARAMS], *endu, *iroute;
             // Bouncing a lost could end up in an infinite loop, so don't
             
-            // Fix our params[0]
-            for (i = 0; params[0][i] != '\0'; i++);
-            params[0][i] = '\n';
+            // Fix our route
+            for (i = 0; route[i] != '\0'; i++);
+            route[i] = '\n';
             
             // Who's the end user?
-            params[0][strlen(params[0])-1] = '\0';
+            route[strlen(route)-1] = '\0';
             
-            for (i = strlen(params[0])-1; params[0][i] != '\n'; i--);
-            endu = params[0]+i+1;
+            for (i = strlen(route)-1; route[i] != '\n'; i--);
+            endu = route+i+1;
             
             // If this is me, don't send the command, just display it
             if (!strncmp(params[1], dn_name, DN_NAME_LEN)) {
@@ -697,12 +696,13 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
                 if (iroute == NULL) return 0;
             
                 // Send the command
-                newparams[0] = iroute;
+                newroute = iroute;
                 newparams[1] = endu;
                 handleRoutedMsg("lst", 1, 1, newparams);
             }
         }
         
+        free(route);
         return 0;
     }
     
@@ -710,9 +710,10 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
     for (i = 1; params[i] != NULL; i++) {
         addParam(newbuf, params[i]);
     }
-        
+    
     sendCmd(sendfd, newbuf);
     
+    free(route);
     return 0;
 }
 
@@ -827,8 +828,7 @@ void *fndPthread(void *name_voidptr)
         memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
         route = hashSGet(dn_routes, name);
-        params[0] = (char *) malloc((strlen(route) + 1) * sizeof(char));
-        strcpy(params[0], route);
+        params[0] = strdup(route);
         params[1] = dn_name;
         
         // grab before the first \n for the next name in the line
@@ -876,8 +876,7 @@ int establishConnection(char *to)
         memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
         // It's a user, send a DCR
-        params[0] = (char *) malloc((strlen(route) + 1) * sizeof(char));
-        strcpy(params[0], route);
+        params[0] = strdup(route);
 
         params[1] = dn_name;
  
@@ -911,8 +910,7 @@ int sendMsgB(char *to, char *msg, char away)
         uiNoRoute(to);
         return 0;
     }
-    outparams[0] = (char *) malloc((strlen(route)+1) * sizeof(char));
-    strcpy(outparams[0], route);
+    outparams[0] = strdup(route);
     outparams[1] = dn_name;
     outparams[2] = gpgTo(dn_name, to, msg);
     if (away) {
