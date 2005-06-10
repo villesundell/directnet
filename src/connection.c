@@ -173,13 +173,13 @@ void handleMsg(char *inbuf, int fdnum)
         }
     }
     
-    /* DEBUG
+    /* DEBUG * /
     printf("Command: %s\n", command);
     for (i = 0; params[i]; i++) {
         printf("Param %d: %s\n", i, params[i]);
     }
     putchar('\n');
-    */
+    // */
     
     /*****************************
      * Current protocol commands *
@@ -211,21 +211,24 @@ void handleMsg(char *inbuf, int fdnum)
                 if (outParams[0] == NULL) {
                     return;
                 }
+                outParams[0] = strdup(outParams[0]);
                 outParams[1] = params[1];
                 outParams[2] = dn_name;
-            
+                
                 handleRoutedMsg("con", 1, 1, outParams);
+                free(outParams[0]);
             }
         }
         
     } else if ((!strncmp(command, "cms", 3) &&
          inbuf[3] == 1 && inbuf[4] == 1)) {
-        REQ_PARAMS(5);
-
+        REQ_PARAMS(6);
+        
         // a chat message
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             char **users;
             char *outParams[DN_MAX_PARAMS];
+            char *unenmsg;
             int i;
             
             // Should we just ignore it?
@@ -236,19 +239,26 @@ void handleMsg(char *inbuf, int fdnum)
             }
         
             // Are we on this chat?
-            if (!chatOnChannel(params[2])) {
+            if (!chatOnChannel(params[3])) {
                 return;
             }
             
             // Yay, chat for us!
-            uiDispChatMsg(params[2], params[3], params[4]);
+            
+            // Decrypt it
+            unenmsg = gpgFrom(params[2], dn_name, params[5]);
+            if (unenmsg[0] == '\0') {
+                free(unenmsg);
+                return;
+            }
+            uiDispChatMsg(params[3], params[4], unenmsg);
             
             // Pass it on
-            users = chatUsers(params[2]);
+            users = chatUsers(params[3]);
             
             memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
             outParams[1] = params[1];
-            outParams[2] = params[2];
+            outParams[2] = dn_name;
             outParams[3] = params[3];
             outParams[4] = params[4];
             
@@ -258,9 +268,16 @@ void handleMsg(char *inbuf, int fdnum)
                     continue;
                 }
                 
+                outParams[0] = strdup(outParams[0]);
+                outParams[5] = gpgTo(dn_name, users[i], unenmsg);
                 
                 handleRoutedMsg("cms", 1, 1, outParams);
+                
+                free(outParams[0]);
+                free(outParams[5]);
             }
+            
+            free(unenmsg);
         }
         
     } else if ((!strncmp(command, "dcr", 3) &&
@@ -618,7 +635,9 @@ void handleMsg(char *inbuf, int fdnum)
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message
-            uiDispMsg(params[1], gpgFrom(params[1], dn_name, params[2]));
+            char *dispmsg = gpgFrom(params[1], dn_name, params[2]);
+            uiDispMsg(params[1], dispmsg);
+            free(dispmsg);
             
             // Are we away?
             if (awayMsg && strncmp(command, "msa", 3)) {
@@ -895,6 +914,7 @@ int sendMsgB(char *to, char *msg, char away)
     }
         
     free(outparams[0]);
+    free(outparams[2]);
     
     return 1;
 }
@@ -933,9 +953,11 @@ void joinChat(char *chat)
     
     cur = dn_routes->head;
     while (cur) {
-        outParams[0] = cur->value;
+        outParams[0] = strdup(cur->value);
         
         handleRoutedMsg("cjo", 1, 1, outParams);
+        
+        free(outParams[0]);
         cur = cur->next;
     }
 }
@@ -956,9 +978,11 @@ void leaveChat(char *chat)
     
     cur = dn_routes->head;
     while (cur) {
-        outParams[0] = cur->value;
+        outParams[0] = strdup(cur->value);
         
         handleRoutedMsg("clv", 1, 1, outParams);
+        
+        free(outParams[0]);
         cur = cur->next;
     }
 }
@@ -974,9 +998,9 @@ void sendChat(char *to, char *msg)
     newTransKey(key);
     
     outParams[1] = key;
-    outParams[2] = to;
-    outParams[3] = dn_name;
-    outParams[4] = msg;
+    outParams[2] = dn_name;
+    outParams[3] = to;
+    outParams[4] = dn_name;
     
     users = chatUsers(to);
             
@@ -986,7 +1010,13 @@ void sendChat(char *to, char *msg)
             continue;
         }
         
+        outParams[0] = strdup(outParams[0]);
+        outParams[5] = gpgTo(dn_name, users[i], msg);
+        
         handleRoutedMsg("cms", 1, 1, outParams);
+        
+        free(outParams[0]);
+        free(outParams[5]);
     }
 }
 

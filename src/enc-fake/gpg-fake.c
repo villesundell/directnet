@@ -31,12 +31,12 @@ int findGPG(char **envp)
     
 char *gpgTo(char *from, char *to, char *msg)
 {
-    return msg;
+    return strdup(msg);
 }
 
 char *gpgFrom(char *from, char *to, char *msg)
 {
-    return msg;
+    return strdup(msg);
 }
 
 char *gpgCreateKey()
