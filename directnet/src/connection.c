@@ -613,9 +613,13 @@ void handleMsg(char *inbuf, int fdnum)
         REQ_PARAMS(2);
         
         // if I already have a route to this person, drop it
+        printf("1: %s\n", params[0]);
         if (hashSGet(dn_routes, params[0])) {
+            printf("2: %s\n", params[0]);
             uiLoseRoute(params[0]);
+            printf("3: %s\n", params[0]);
             hashSDelKey(dn_routes, params[0]);
+            printf("4: %s\n", params[0]);
         }
         
         // now accept the new FD
