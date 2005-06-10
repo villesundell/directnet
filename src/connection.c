@@ -829,10 +829,10 @@ void *fndPthread(void *name_voidptr)
         params[1] = dn_name;
         
         // grab before the first \n for the next name in the line
-        rfe = strchr(route, '\n');
+        rfe = strchr(params[0], '\n');
         if (rfe == NULL) return NULL;
         first = (char *) strdup(params[0]);
-        first[rfe - route] = '\0';
+        first[rfe - params[0]] = '\0';
         // then get the fd
         firfd = hashIGet(dn_fds, first);
         if (firfd == -1) return NULL;
