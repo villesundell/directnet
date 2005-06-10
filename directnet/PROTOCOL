@@ -32,9 +32,10 @@ cms(1)(1) (chat message)
         parameters:
                 route
                 transmission key
+                intermediate name: the person sending this package
                 channel
-                local name
-                unencrypted message
+                local name: the person who made the message
+                encrypted message
 
 con(1)(1) (chat on)
         purpose: Echo to cjo
@@ -67,6 +68,7 @@ fnd(1)(1) (find)
                 current route
                 local name
                 remote name
+                public key
 
 
 fnr(1)(1) (find response)
@@ -100,7 +102,7 @@ msa(1)(1) (message away)
         parameters:
                 route
                 local name
-                message
+                encrypted message
 
 
 msg(1)(1) (message)
@@ -109,4 +111,4 @@ msg(1)(1) (message)
         parameters:
                 route
                 local name
-                message
+                encrypted message
