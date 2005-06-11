@@ -346,12 +346,20 @@ extern "C" void uiEstConn(char *from)
 extern "C" void uiEstRoute(char *from)
 {
     ChatWindow *cw;
+    int i, mustadd;
     
     while (!uiLoaded) sleep(0);
     
     dn_lock(&displayLock);
     
-    bw->onlineList->add(from);
+    // Only add if necessary
+    mustadd = 1;
+    for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+        if (!strcmp(bw->onlineList->text(i), from)) {
+            mustadd = 0;
+        }
+    }
+    if (mustadd) bw->onlineList->add(from);
     
     cw = getWindow(from);
     putOutput(cw, "Route established.\n");

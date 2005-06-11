@@ -695,7 +695,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
                 if (iroute == NULL) return 0;
             
                 // Send the command
-                newroute = iroute;
+                newparams[0] = iroute;
                 newparams[1] = endu;
                 handleRoutedMsg("lst", 1, 1, newparams);
             }
