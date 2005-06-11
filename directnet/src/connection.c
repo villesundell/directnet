@@ -325,7 +325,7 @@ void handleMsg(char *inbuf, int fdnum)
                 }
                 outParams[2] = realloc(outParams[2], strlen(outParams[2]) + 7);
                 sprintf(outParams[2] + strlen(outParams[2]), ":%d", serv_port);
-            
+                
                 handleRoutedMsg("dce", 1, 1, outParams);
                 
                 free(outParams[2]);
@@ -816,7 +816,7 @@ void *fndPthread(void *name_voidptr)
     }
     
     // If it's weak, send a dcr (direct connect request)
-    {
+    /*{
         char *params[DN_MAX_PARAMS], *first;
         struct sockaddr locip;
         struct sockaddr_in *locip_i;
@@ -833,6 +833,7 @@ void *fndPthread(void *name_voidptr)
         if (rfe == NULL) return NULL;
         first = (char *) strdup(params[0]);
         first[rfe - params[0]] = '\0';
+        
         // then get the fd
         firfd = hashIGet(dn_fds, first);
         if (firfd == -1) return NULL;
@@ -842,21 +843,21 @@ void *fndPthread(void *name_voidptr)
         locip_len = sizeof(struct sockaddr);
         if (getsockname(firfd, &locip, &locip_len) == 0) {
             locip_i = (struct sockaddr_in *) &locip;
-            /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
+            /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
             params[2] = strdup(inet_ntoa(locip_i->sin_addr));
         } else {
             return NULL;
         }
         params[2] = realloc(params[2], strlen(params[2]) + 7);
         sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
-
+        
         handleRoutedMsg("dcr", 1, 1, params);
         
         free(params[2]);
         
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
-    }
+    }*/
 }
 
 /* Commands used by the UI */
@@ -903,6 +904,7 @@ int sendMsgB(char *to, char *msg, char away)
         uiNoRoute(to);
         return 0;
     }
+
     outparams[0] = route;
     outparams[1] = dn_name;
     outparams[2] = gpgTo(dn_name, to, msg);
