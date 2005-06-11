@@ -21,6 +21,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #ifndef bool
 #define bool int
@@ -131,9 +132,8 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
     char *key;
     int klen, loc, oloc, osl;
     size_t in_len, out_len;
-    char *inbuf, *outbuf, *out, *outh;
+    char *inbuf, *outbuf, *out;
     int import;
-    int n;
     CYFER_PK_CTX *ctx;
     struct cyf_key *cur;
     

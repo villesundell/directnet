@@ -60,7 +60,7 @@ htype hash##hshortn##Get(struct hash##hshortn *hash, char *key) \
         cur = cur->next; \
     } \
     \
-    return -1; \
+    return (htype) -1; \
 } \
 \
 char *hash##hshortn##RevGet(struct hash##hshortn *hash, htype value) \
