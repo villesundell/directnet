@@ -55,6 +55,7 @@ extern struct hashS *dn_iRoutes;
 
 extern struct hashI *dn_trans_keys;
 extern int currentTransKey;
+extern DN_LOCK dn_transKey_lock;
 
 extern DN_LOCK displayLock;
 
