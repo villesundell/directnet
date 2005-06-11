@@ -156,7 +156,7 @@ void *serverAcceptLoop(void *ignore)
         //pids[onpid] = clone(communicator, client_stack, SIGCHLD | CLONE_FILES | CLONE_VM, (void *) onfd_ptr);
         pthread_attr_init(&ptattr);
 	pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
-        pthreadres = pthread_create(&pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
+        pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
         
         onpthread++;
     }

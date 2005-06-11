@@ -289,12 +289,11 @@ void handleMsg(char *inbuf, int fdnum)
             if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
                 // dcr echos
-                char *outParams[DN_MAX_PARAMS], hostbuf[DN_HOSTNAME_LEN], *ip;
+                char *outParams[DN_MAX_PARAMS];
                 char *rfe, *first;
                 int firfd, locip_len;
                 struct sockaddr locip;
                 struct sockaddr_in *locip_i;
-                struct hostent *he;
                 
                 memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
             
@@ -607,7 +606,6 @@ void handleMsg(char *inbuf, int fdnum)
     } else if (!strncmp(command, "key", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
         char route[strlen(params[0])+2];
-        int remfd;
         
         REQ_PARAMS(2);
         
@@ -819,8 +817,7 @@ void *fndPthread(void *name_voidptr)
     
     // If it's weak, send a dcr (direct connect request)
     {
-        char *params[DN_MAX_PARAMS], hostbuf[128], *ip, *route, *first;
-        struct hostent *he;
+        char *params[DN_MAX_PARAMS], *first;
         struct sockaddr locip;
         struct sockaddr_in *locip_i;
         char *rfe;
