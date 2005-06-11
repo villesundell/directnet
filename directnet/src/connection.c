@@ -230,9 +230,12 @@ void handleMsg(char *inbuf, int fdnum)
             int i;
             
             // Should we just ignore it?
+            dn_lock(&dn_transKey_lock);
             if (hashIGet(dn_trans_keys, params[1]) == -1) {
                 hashISet(dn_trans_keys, params[1], 1);
+                dn_unlock(&dn_transKey_lock);
             } else {
+                dn_unlock(&dn_transKey_lock);
                 return;
             }
         
