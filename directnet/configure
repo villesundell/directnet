@@ -20983,8 +20983,8 @@ echo "$as_me: Using cyfer encryption" >&6;}
         CC="$CC" CFLAGS="$CFLAGS" ./configure --enable-static --disable-shared --host=$host_alias \
                 --build=$build_alias || exit 1
         cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
-        CC="$CC" CFLAGS="$CFLAGS" ./configure --enable-static --disable-shared --host=$host_alias \
-                --build=$build_alias || exit 1
+        CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure --enable-static \
+                --disable-shared --host=$host_alias --build=$build_alias || exit 1
         cd $ORIGDIR
 fi
 
