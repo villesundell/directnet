@@ -22,6 +22,10 @@
 
 #include <stdio.h>
 
+#ifndef bool
+#define bool int
+#endif
+
 #include "cyfer/pk.h"
 
 #include "directnet.h"
