@@ -286,7 +286,7 @@ void handleMsg(char *inbuf, int fdnum)
         REQ_PARAMS(3);
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
-            if (!strncmp(command, "dcr", 3) &&
+            /*if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
                 // dcr echos
                 char *outParams[DN_MAX_PARAMS];
@@ -318,7 +318,7 @@ void handleMsg(char *inbuf, int fdnum)
                 locip_len = sizeof(struct sockaddr);
                 if (getsockname(firfd, &locip, &locip_len) == 0) {
                     locip_i = (struct sockaddr_in *) &locip;
-                    /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
+                    /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
                     outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
                 } else {
                     return;
@@ -332,7 +332,7 @@ void handleMsg(char *inbuf, int fdnum)
             }
             
             // Then, attempt the connection
-            establishClient(params[2]);
+            establishClient(params[2]);*/
         }
 
     } else if (!strncmp(command, "fnd", 3) &&
