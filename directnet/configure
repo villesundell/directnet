@@ -1968,13 +1968,13 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
                                                                                                     ac_config_files="$ac_config_files Makefile src/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/gaim-plugin/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile"
 
 
-if  ! -e ${srcdir}/src/enc-cyfer/gmp
+if test ! -e ${srcdir}/src/enc-cyfer/gmp
 then
         { { echo "$as_me:$LINENO: error: ERROR: You must download gmp before configuring!  Run getcyfer.sh" >&5
 echo "$as_me: error: ERROR: You must download gmp before configuring!  Run getcyfer.sh" >&2;}
    { (exit 1); exit 1; }; }
 fi
-if  ! -e ${srcdir}/src/enc-cyfer/cyfer
+if test ! -e ${srcdir}/src/enc-cyfer/cyfer
 then
         { { echo "$as_me:$LINENO: error: ERROR: You must download cyfer before configuring!  Run getcyfer.sh" >&5
 echo "$as_me: error: ERROR: You must download cyfer before configuring!  Run getcyfer.sh" >&2;}
