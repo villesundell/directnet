@@ -22,11 +22,11 @@ src/ui-dumb/Makefile
 src/ui-fltk/Makefile
 ])
 
-if [ ! -e ${srcdir}/src/enc-cyfer/gmp ]
+if test ! -e ${srcdir}/src/enc-cyfer/gmp
 then
         AC_MSG_ERROR([ERROR: You must download gmp before configuring!  Run getcyfer.sh])
 fi
-if [ ! -e ${srcdir}/src/enc-cyfer/cyfer ]
+if test ! -e ${srcdir}/src/enc-cyfer/cyfer
 then
         AC_MSG_ERROR([ERROR: You must download cyfer before configuring!  Run getcyfer.sh])
 fi
