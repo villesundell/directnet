@@ -1,6 +1,6 @@
 diff -ru cyfer-0.6.0/configure cyfer/configure
 --- cyfer-0.6.0/configure	2004-09-25 18:43:58.000000000 -0700
-+++ cyfer/configure	2005-06-13 20:48:38.696320141 -0700
++++ cyfer/configure	2005-06-13 22:57:21.591940104 -0700
 @@ -1,11 +1,10 @@
  #! /bin/sh
  # Guess values for system-dependent variables and create Makefiles.
@@ -2021,73 +2021,104 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  fi
  echo "$as_me:$LINENO: result: $ac_cv_type_size_t" >&5
  echo "${ECHO_T}$ac_cv_type_size_t" >&6
-@@ -8159,7 +8465,6 @@
- echo "$as_me:$LINENO: checking $ac_header usability" >&5
- echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
- cat >conftest.$ac_ext <<_ACEOF
+@@ -8142,223 +8448,6 @@
+ 
+ 
+ # Checks for library functions.
+-
+-for ac_header in stdlib.h
+-do
+-as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+-if eval "test \"\${$as_ac_Header+set}\" = set"; then
+-  echo "$as_me:$LINENO: checking for $ac_header" >&5
+-echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+-if eval "test \"\${$as_ac_Header+set}\" = set"; then
+-  echo $ECHO_N "(cached) $ECHO_C" >&6
+-fi
+-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+-echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+-else
+-  # Is the header compilable?
+-echo "$as_me:$LINENO: checking $ac_header usability" >&5
+-echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+-cat >conftest.$ac_ext <<_ACEOF
 -#line $LINENO "configure"
- /* confdefs.h.  */
- _ACEOF
- cat confdefs.h >>conftest.$ac_ext
-@@ -8170,11 +8475,21 @@
- _ACEOF
- rm -f conftest.$ac_objext
- if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+-/* confdefs.h.  */
+-_ACEOF
+-cat confdefs.h >>conftest.$ac_ext
+-cat >>conftest.$ac_ext <<_ACEOF
+-/* end confdefs.h.  */
+-$ac_includes_default
+-#include <$ac_header>
+-_ACEOF
+-rm -f conftest.$ac_objext
+-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
 -  (eval $ac_compile) 2>&5
-+  (eval $ac_compile) 2>conftest.er1
-   ac_status=$?
-+  grep -v '^ *+' conftest.er1 >conftest.err
-+  rm -f conftest.er1
-+  cat conftest.err >&5
-   echo "$as_me:$LINENO: \$? = $ac_status" >&5
-   (exit $ac_status); } &&
+-  ac_status=$?
+-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+-  (exit $ac_status); } &&
 -         { ac_try='test -s conftest.$ac_objext'
-+	 { ac_try='test -z "$ac_c_werror_flag"
-+			 || test ! -s conftest.err'
-+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-+  (eval $ac_try) 2>&5
-+  ac_status=$?
-+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-+  (exit $ac_status); }; } &&
-+	 { ac_try='test -s conftest.$ac_objext'
-   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-   (eval $ac_try) 2>&5
-   ac_status=$?
-@@ -8187,7 +8502,7 @@
- 
- ac_header_compiler=no
- fi
+-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+-  (eval $ac_try) 2>&5
+-  ac_status=$?
+-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+-  (exit $ac_status); }; }; then
+-  ac_header_compiler=yes
+-else
+-  echo "$as_me: failed program was:" >&5
+-sed 's/^/| /' conftest.$ac_ext >&5
+-
+-ac_header_compiler=no
+-fi
 -rm -f conftest.$ac_objext conftest.$ac_ext
-+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
- echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
- echo "${ECHO_T}$ac_header_compiler" >&6
- 
-@@ -8195,7 +8510,6 @@
- echo "$as_me:$LINENO: checking $ac_header presence" >&5
- echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
- cat >conftest.$ac_ext <<_ACEOF
+-echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+-echo "${ECHO_T}$ac_header_compiler" >&6
+-
+-# Is the header present?
+-echo "$as_me:$LINENO: checking $ac_header presence" >&5
+-echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+-cat >conftest.$ac_ext <<_ACEOF
 -#line $LINENO "configure"
- /* confdefs.h.  */
- _ACEOF
- cat confdefs.h >>conftest.$ac_ext
-@@ -8213,6 +8527,7 @@
-   (exit $ac_status); } >/dev/null; then
-   if test -s conftest.err; then
-     ac_cpp_err=$ac_c_preproc_warn_flag
-+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
-   else
-     ac_cpp_err=
-   fi
-@@ -8232,33 +8547,32 @@
- echo "${ECHO_T}$ac_header_preproc" >&6
- 
- # So?  What about this header?
+-/* confdefs.h.  */
+-_ACEOF
+-cat confdefs.h >>conftest.$ac_ext
+-cat >>conftest.$ac_ext <<_ACEOF
+-/* end confdefs.h.  */
+-#include <$ac_header>
+-_ACEOF
+-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+-  ac_status=$?
+-  grep -v '^ *+' conftest.er1 >conftest.err
+-  rm -f conftest.er1
+-  cat conftest.err >&5
+-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+-  (exit $ac_status); } >/dev/null; then
+-  if test -s conftest.err; then
+-    ac_cpp_err=$ac_c_preproc_warn_flag
+-  else
+-    ac_cpp_err=
+-  fi
+-else
+-  ac_cpp_err=yes
+-fi
+-if test -z "$ac_cpp_err"; then
+-  ac_header_preproc=yes
+-else
+-  echo "$as_me: failed program was:" >&5
+-sed 's/^/| /' conftest.$ac_ext >&5
+-
+-  ac_header_preproc=no
+-fi
+-rm -f conftest.err conftest.$ac_ext
+-echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+-echo "${ECHO_T}$ac_header_preproc" >&6
+-
+-# So?  What about this header?
 -case $ac_header_compiler:$ac_header_preproc in
 -  yes:no )
-+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
-+  yes:no: )
-     { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
- echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+-    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+-echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
 -    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
 -echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
 -    (
@@ -2098,80 +2129,123 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
 -_ASBOX
 -    ) |
 -      sed "s/^/$as_me: WARNING:     /" >&2
-+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the compiler's result" >&5
-+echo "$as_me: WARNING: $ac_header: proceeding with the compiler's result" >&2;}
-+    ac_header_preproc=yes
-     ;;
+-    ;;
 -  no:yes )
-+  no:yes:* )
-     { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
- echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+-    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+-echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
 -    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
 -echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
-+    { echo "$as_me:$LINENO: WARNING: $ac_header:     check for missing prerequisite headers?" >&5
-+echo "$as_me: WARNING: $ac_header:     check for missing prerequisite headers?" >&2;}
-+    { echo "$as_me:$LINENO: WARNING: $ac_header: see the Autoconf documentation" >&5
-+echo "$as_me: WARNING: $ac_header: see the Autoconf documentation" >&2;}
-+    { echo "$as_me:$LINENO: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&5
-+echo "$as_me: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&2;}
-     { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
- echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
-+    { echo "$as_me:$LINENO: WARNING: $ac_header: in the future, the compiler will take precedence" >&5
-+echo "$as_me: WARNING: $ac_header: in the future, the compiler will take precedence" >&2;}
-     (
-       cat <<\_ASBOX
+-    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+-echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
+-    (
+-      cat <<\_ASBOX
 -## ------------------------------------ ##
 -## Report this to bug-autoconf@gnu.org. ##
 -## ------------------------------------ ##
-+## ------------------------------ ##
-+## Report this to senko@senko.net ##
-+## ------------------------------ ##
- _ASBOX
-     ) |
-       sed "s/^/$as_me: WARNING:     /" >&2
-@@ -8269,7 +8583,7 @@
- if eval "test \"\${$as_ac_Header+set}\" = set"; then
-   echo $ECHO_N "(cached) $ECHO_C" >&6
- else
+-_ASBOX
+-    ) |
+-      sed "s/^/$as_me: WARNING:     /" >&2
+-    ;;
+-esac
+-echo "$as_me:$LINENO: checking for $ac_header" >&5
+-echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+-if eval "test \"\${$as_ac_Header+set}\" = set"; then
+-  echo $ECHO_N "(cached) $ECHO_C" >&6
+-else
 -  eval "$as_ac_Header=$ac_header_preproc"
-+  eval "$as_ac_Header=\$ac_header_preproc"
- fi
- echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
- echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
-@@ -8293,7 +8607,6 @@
-   ac_cv_func_malloc_0_nonnull=no
- else
-   cat >conftest.$ac_ext <<_ACEOF
+-fi
+-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+-echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+-
+-fi
+-if test `eval echo '${'$as_ac_Header'}'` = yes; then
+-  cat >>confdefs.h <<_ACEOF
+-#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+-_ACEOF
+-
+-fi
+-
+-done
+-
+-echo "$as_me:$LINENO: checking for GNU libc compatible malloc" >&5
+-echo $ECHO_N "checking for GNU libc compatible malloc... $ECHO_C" >&6
+-if test "${ac_cv_func_malloc_0_nonnull+set}" = set; then
+-  echo $ECHO_N "(cached) $ECHO_C" >&6
+-else
+-  if test "$cross_compiling" = yes; then
+-  ac_cv_func_malloc_0_nonnull=no
+-else
+-  cat >conftest.$ac_ext <<_ACEOF
 -#line $LINENO "configure"
- /* confdefs.h.  */
- _ACEOF
- cat confdefs.h >>conftest.$ac_ext
-@@ -8333,7 +8646,7 @@
- ( exit $ac_status )
- ac_cv_func_malloc_0_nonnull=no
- fi
+-/* confdefs.h.  */
+-_ACEOF
+-cat confdefs.h >>conftest.$ac_ext
+-cat >>conftest.$ac_ext <<_ACEOF
+-/* end confdefs.h.  */
+-#if STDC_HEADERS || HAVE_STDLIB_H
+-# include <stdlib.h>
+-#else
+-char *malloc ();
+-#endif
+-
+-int
+-main ()
+-{
+-exit (malloc (0) ? 0 : 1);
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-rm -f conftest$ac_exeext
+-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+-  (eval $ac_link) 2>&5
+-  ac_status=$?
+-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+-  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
+-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+-  (eval $ac_try) 2>&5
+-  ac_status=$?
+-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+-  (exit $ac_status); }; }; then
+-  ac_cv_func_malloc_0_nonnull=yes
+-else
+-  echo "$as_me: program exited with status $ac_status" >&5
+-echo "$as_me: failed program was:" >&5
+-sed 's/^/| /' conftest.$ac_ext >&5
+-
+-( exit $ac_status )
+-ac_cv_func_malloc_0_nonnull=no
+-fi
 -rm -f core core.* *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
-+rm -f core *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
- fi
- fi
- echo "$as_me:$LINENO: result: $ac_cv_func_malloc_0_nonnull" >&5
-@@ -8349,7 +8662,14 @@
- #define HAVE_MALLOC 0
- _ACEOF
- 
+-fi
+-fi
+-echo "$as_me:$LINENO: result: $ac_cv_func_malloc_0_nonnull" >&5
+-echo "${ECHO_T}$ac_cv_func_malloc_0_nonnull" >&6
+-if test $ac_cv_func_malloc_0_nonnull = yes; then
+-
+-cat >>confdefs.h <<\_ACEOF
+-#define HAVE_MALLOC 1
+-_ACEOF
+-
+-else
+-  cat >>confdefs.h <<\_ACEOF
+-#define HAVE_MALLOC 0
+-_ACEOF
+-
 -   LIBOBJS="$LIBOBJS malloc.$ac_objext"
-+   case $LIBOBJS in
-+    "malloc.$ac_objext"   | \
-+  *" malloc.$ac_objext"   | \
-+    "malloc.$ac_objext "* | \
-+  *" malloc.$ac_objext "* ) ;;
-+  *) LIBOBJS="$LIBOBJS malloc.$ac_objext" ;;
-+esac
-+
- 
- cat >>confdefs.h <<\_ACEOF
- #define malloc rpl_malloc
-@@ -8368,13 +8688,12 @@
+-
+-cat >>confdefs.h <<\_ACEOF
+-#define malloc rpl_malloc
+-_ACEOF
+-
+-fi
+-
+-
+-
+ echo "$as_me:$LINENO: checking for working memcmp" >&5
+ echo $ECHO_N "checking for working memcmp... $ECHO_C" >&6
+ if test "${ac_cv_func_memcmp_working+set}" = set; then
+@@ -8368,13 +8457,12 @@
    ac_cv_func_memcmp_working=no
  else
    cat >conftest.$ac_ext <<_ACEOF
@@ -2186,7 +2260,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  int
  main ()
  {
-@@ -8393,12 +8712,12 @@
+@@ -8393,12 +8481,12 @@
      int i;
      for (i = 0; i < 4; i++)
        {
@@ -2205,7 +2279,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
        }
      exit (0);
    }
-@@ -8427,12 +8746,19 @@
+@@ -8427,12 +8515,19 @@
  ( exit $ac_status )
  ac_cv_func_memcmp_working=no
  fi
@@ -2227,7 +2301,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  
  
-@@ -8445,21 +8771,28 @@
+@@ -8445,21 +8540,28 @@
    echo $ECHO_N "(cached) $ECHO_C" >&6
  else
    cat >conftest.$ac_ext <<_ACEOF
@@ -2257,7 +2331,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  /* Override any gcc2 internal prototype to avoid an error.  */
  #ifdef __cplusplus
  extern "C"
-@@ -8490,11 +8823,21 @@
+@@ -8490,11 +8592,21 @@
  _ACEOF
  rm -f conftest.$ac_objext conftest$ac_exeext
  if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
@@ -2281,7 +2355,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
    (eval $ac_try) 2>&5
    ac_status=$?
-@@ -8507,7 +8850,8 @@
+@@ -8507,7 +8619,8 @@
  
  eval "$as_ac_var=no"
  fi
@@ -2291,7 +2365,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  fi
  echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_var'}'`" >&5
  echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
-@@ -8548,7 +8892,6 @@
+@@ -8548,7 +8661,6 @@
  else
    # See if sys/param.h defines the BYTE_ORDER macro.
  cat >conftest.$ac_ext <<_ACEOF
@@ -2299,7 +2373,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  /* confdefs.h.  */
  _ACEOF
  cat confdefs.h >>conftest.$ac_ext
-@@ -8570,11 +8913,21 @@
+@@ -8570,11 +8682,21 @@
  _ACEOF
  rm -f conftest.$ac_objext
  if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -2323,7 +2397,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
    (eval $ac_try) 2>&5
    ac_status=$?
-@@ -8582,7 +8935,6 @@
+@@ -8582,7 +8704,6 @@
    (exit $ac_status); }; }; then
    # It does; now see whether it defined to BIG_ENDIAN or not.
  cat >conftest.$ac_ext <<_ACEOF
@@ -2331,7 +2405,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  /* confdefs.h.  */
  _ACEOF
  cat confdefs.h >>conftest.$ac_ext
-@@ -8604,11 +8956,21 @@
+@@ -8604,11 +8725,21 @@
  _ACEOF
  rm -f conftest.$ac_objext
  if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -2355,7 +2429,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
    (eval $ac_try) 2>&5
    ac_status=$?
-@@ -8621,7 +8983,7 @@
+@@ -8621,7 +8752,7 @@
  
  ac_cv_c_bigendian=no
  fi
@@ -2364,7 +2438,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  else
    echo "$as_me: failed program was:" >&5
  sed 's/^/| /' conftest.$ac_ext >&5
-@@ -8631,7 +8993,6 @@
+@@ -8631,7 +8762,6 @@
    # try to guess the endianness by grepping values into an object file
    ac_cv_c_bigendian=unknown
    cat >conftest.$ac_ext <<_ACEOF
@@ -2372,7 +2446,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  /* confdefs.h.  */
  _ACEOF
  cat confdefs.h >>conftest.$ac_ext
-@@ -8653,11 +9014,21 @@
+@@ -8653,11 +8783,21 @@
  _ACEOF
  rm -f conftest.$ac_objext
  if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -2396,7 +2470,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
    (eval $ac_try) 2>&5
    ac_status=$?
-@@ -8679,10 +9050,9 @@
+@@ -8679,10 +8819,9 @@
  sed 's/^/| /' conftest.$ac_ext >&5
  
  fi
@@ -2408,7 +2482,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  /* confdefs.h.  */
  _ACEOF
  cat confdefs.h >>conftest.$ac_ext
-@@ -8721,10 +9091,10 @@
+@@ -8721,10 +8860,10 @@
  ( exit $ac_status )
  ac_cv_c_bigendian=yes
  fi
@@ -2421,7 +2495,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  fi
  echo "$as_me:$LINENO: result: $ac_cv_c_bigendian" >&5
  echo "${ECHO_T}$ac_cv_c_bigendian" >&6
-@@ -8744,74 +9114,9 @@
+@@ -8744,74 +8883,9 @@
  esac
  
  
@@ -2499,7 +2573,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  # Write results
  
-@@ -8846,13 +9151,13 @@
+@@ -8846,13 +8920,13 @@
        # `set' does not quote correctly, so add quotes (double-quote
        # substitution turns \\\\ into \\, and sed turns \\ into \).
        sed -n \
@@ -2516,7 +2590,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
        ;;
      esac;
  } |
-@@ -8882,13 +9187,13 @@
+@@ -8882,13 +8956,13 @@
  # trailing colons and then remove the whole line if VPATH becomes empty
  # (actually we leave an empty line to preserve line numbers).
  if test "x$srcdir" = x.; then
@@ -2533,7 +2607,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  }'
  fi
  
-@@ -8899,7 +9204,7 @@
+@@ -8899,7 +8973,7 @@
  for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
    # 1. Remove the extension, and $U if already installed.
    ac_i=`echo "$ac_i" |
@@ -2542,7 +2616,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    # 2. Add them.
    ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
    ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
-@@ -8943,9 +9248,10 @@
+@@ -8943,9 +9017,10 @@
  elif test -n "${BASH_VERSION+set}" && (set -o posix) >/dev/null 2>&1; then
    set -o posix
  fi
@@ -2554,7 +2628,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    as_unset=unset
  else
    as_unset=false
-@@ -8964,7 +9270,7 @@
+@@ -8964,7 +9039,7 @@
    LC_MEASUREMENT LC_MESSAGES LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER \
    LC_TELEPHONE LC_TIME
  do
@@ -2563,7 +2637,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
      eval $as_var=C; export $as_var
    else
      $as_unset $as_var
-@@ -9143,16 +9449,17 @@
+@@ -9143,16 +9218,17 @@
  if mkdir -p . 2>/dev/null; then
    as_mkdir_p=:
  else
@@ -2583,7 +2657,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  
  # IFS
-@@ -9179,7 +9486,7 @@
+@@ -9179,7 +9255,7 @@
  cat >&5 <<_CSEOF
  
  This file was extended by cyfer $as_me 0.6.0, which was
@@ -2592,7 +2666,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
    CONFIG_FILES    = $CONFIG_FILES
    CONFIG_HEADERS  = $CONFIG_HEADERS
-@@ -9223,9 +9530,9 @@
+@@ -9223,9 +9299,9 @@
    -d, --debug      don't remove temporary files
        --recheck    update $as_me by reconfiguring in the same conditions
    --file=FILE[:TEMPLATE]
@@ -2604,7 +2678,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  Configuration files:
  $config_files
-@@ -9239,11 +9546,10 @@
+@@ -9239,11 +9315,10 @@
  cat >>$CONFIG_STATUS <<_ACEOF
  ac_cs_version="\\
  cyfer config.status 0.6.0
@@ -2618,7 +2692,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  This config.status script is free software; the Free Software Foundation
  gives unlimited permission to copy, distribute and modify it."
  srcdir=$srcdir
-@@ -9494,9 +9800,9 @@
+@@ -9494,9 +9569,9 @@
        (echo ':t
    /@[a-zA-Z_][a-zA-Z_0-9]*@/!b' && cat $tmp/subs.frag) >$tmp/subs-$ac_sed_frag.sed
        if test -z "$ac_sed_cmds"; then
@@ -2630,7 +2704,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
        fi
        ac_sed_frag=`expr $ac_sed_frag + 1`
        ac_beg=$ac_end
-@@ -9514,21 +9820,21 @@
+@@ -9514,21 +9589,21 @@
    # Support "outfile[:infile[:infile...]]", defaulting infile="outfile.in".
    case $ac_file in
    - | *:- | *:-:* ) # input from stdin
@@ -2660,7 +2734,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  echo X"$ac_file" |
      sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
    	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
-@@ -9544,10 +9850,10 @@
+@@ -9544,10 +9619,10 @@
        as_dirs="$as_dir $as_dirs"
        as_dir=`(dirname "$as_dir") 2>/dev/null ||
  $as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
@@ -2675,7 +2749,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  echo X"$as_dir" |
      sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
    	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
-@@ -9585,12 +9891,45 @@
+@@ -9585,12 +9660,45 @@
      ac_srcdir=$ac_top_builddir$srcdir$ac_dir_suffix
      ac_top_srcdir=$ac_top_builddir$srcdir ;;
  esac
@@ -2727,7 +2801,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  
    case $INSTALL in
-@@ -9612,7 +9951,7 @@
+@@ -9612,7 +9720,7 @@
      configure_input="$ac_file.  "
    fi
    configure_input=$configure_input"Generated from `echo $ac_file_in |
@@ -2736,7 +2810,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
    # First look for the input files in the build tree, otherwise in the
    # src tree.
-@@ -9621,24 +9960,24 @@
+@@ -9621,24 +9729,24 @@
        case $f in
        -) echo $tmp/stdin ;;
        [\\/$]*)
@@ -2774,7 +2848,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
        esac
      done` || { (exit 1); exit 1; }
  _ACEOF
-@@ -9680,12 +10019,12 @@
+@@ -9680,12 +9788,12 @@
  # NAME is the cpp macro being defined and VALUE is the value it is being given.
  #
  # ac_d sets the value in "#define NAME VALUE" lines.
@@ -2790,7 +2864,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  ac_uB='$,\1#\2define\3'
  ac_uC=' '
  ac_uD=',;t'
-@@ -9694,11 +10033,11 @@
+@@ -9694,11 +9802,11 @@
    # Support "outfile[:infile[:infile...]]", defaulting infile="outfile.in".
    case $ac_file in
    - | *:- | *:-:* ) # input from stdin
@@ -2806,7 +2880,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    * )   ac_file_in=$ac_file.in ;;
    esac
  
-@@ -9712,28 +10051,29 @@
+@@ -9712,28 +9820,29 @@
        case $f in
        -) echo $tmp/stdin ;;
        [\\/$]*)
@@ -2850,7 +2924,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  _ACEOF
  
-@@ -9756,9 +10096,9 @@
+@@ -9756,9 +9865,9 @@
  s,[\\$`],\\&,g
  t clear
  : clear
@@ -2862,7 +2936,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  : end
  _ACEOF
  # If some macros were called several times there might be several times
-@@ -9772,13 +10112,13 @@
+@@ -9772,13 +9881,13 @@
  # example, in the case of _POSIX_SOURCE, which is predefined and required
  # on some systems where configure will not decide to define it.
  cat >>conftest.undefs <<\_ACEOF
@@ -2878,7 +2952,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  echo '  # If there are no defines, we may have an empty if/fi' >>$CONFIG_STATUS
  echo '  :' >>$CONFIG_STATUS
  rm -f conftest.tail
-@@ -9787,7 +10127,7 @@
+@@ -9787,7 +9896,7 @@
    # Write a limited-size here document to $tmp/defines.sed.
    echo '  cat >$tmp/defines.sed <<CEOF' >>$CONFIG_STATUS
    # Speed up: don't consider the non `#define' lines.
@@ -2887,7 +2961,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    # Work around the forget-to-reset-the-flag bug.
    echo 't clr' >>$CONFIG_STATUS
    echo ': clr' >>$CONFIG_STATUS
-@@ -9814,7 +10154,7 @@
+@@ -9814,7 +9923,7 @@
    # Write a limited-size here document to $tmp/undefs.sed.
    echo '  cat >$tmp/undefs.sed <<CEOF' >>$CONFIG_STATUS
    # Speed up: don't consider the non `#undef'
@@ -2896,7 +2970,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    # Work around the forget-to-reset-the-flag bug.
    echo 't clr' >>$CONFIG_STATUS
    echo ': clr' >>$CONFIG_STATUS
-@@ -9848,10 +10188,10 @@
+@@ -9848,10 +9957,10 @@
      else
        ac_dir=`(dirname "$ac_file") 2>/dev/null ||
  $as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
@@ -2911,7 +2985,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  echo X"$ac_file" |
      sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
    	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
-@@ -9867,10 +10207,10 @@
+@@ -9867,10 +9976,10 @@
        as_dirs="$as_dir $as_dirs"
        as_dir=`(dirname "$as_dir") 2>/dev/null ||
  $as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
@@ -2928,8 +3002,16 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
 diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
 --- cyfer-0.6.0/configure.in	2004-09-25 18:43:03.000000000 -0700
-+++ cyfer/configure.in	2005-06-13 20:48:38.514350722 -0700
-@@ -46,7 +46,9 @@
++++ cyfer/configure.in	2005-06-13 22:56:53.955141536 -0700
+@@ -26,7 +26,6 @@
+ AC_TYPE_SIZE_T
+ 
+ # Checks for library functions.
+-AC_FUNC_MALLOC
+ AC_FUNC_MEMCMP
+ AC_CHECK_FUNCS([memmove memset])
+ 
+@@ -46,7 +45,9 @@
  AC_C_BIGENDIAN(, AC_SUBST(LENDIAN, -DCYFER_LITTLE_ENDIAN),
  		AC_MSG_WARN(cannot determine system endianess, assuming big endian))
  
@@ -2942,7 +3024,7 @@ diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
  
 diff -ru cyfer-0.6.0/examples/Makefile.in cyfer/examples/Makefile.in
 --- cyfer-0.6.0/examples/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/examples/Makefile.in	2005-06-13 20:48:38.552344337 -0700
++++ cyfer/examples/Makefile.in	2005-06-13 22:56:32.110462432 -0700
 @@ -2,7 +2,7 @@
  LIBTOOL = @LIBTOOL@
  CC = @CC@
@@ -2954,7 +3036,7 @@ diff -ru cyfer-0.6.0/examples/Makefile.in cyfer/examples/Makefile.in
  
 diff -ru cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.installed
 --- cyfer-0.6.0/examples/Makefile.installed	2004-09-25 07:36:14.000000000 -0700
-+++ cyfer/examples/Makefile.installed	2005-06-13 20:48:38.554344001 -0700
++++ cyfer/examples/Makefile.installed	2005-06-13 22:56:32.111462280 -0700
 @@ -1,5 +1,5 @@
  CC = gcc
 -WARN = -Wall -Wmissing-declarations -Wmissing-prototypes -Werror
@@ -2964,7 +3046,7 @@ diff -ru cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.install
  
 diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
 --- cyfer-0.6.0/include/cyfer/cyfer.h	2004-09-25 08:12:43.000000000 -0700
-+++ cyfer/include/cyfer/cyfer.h	2005-06-13 20:48:38.557343497 -0700
++++ cyfer/include/cyfer/cyfer.h	2005-06-13 22:56:32.111462280 -0700
 @@ -59,7 +59,8 @@
  #include <stdlib.h>
  
@@ -2977,7 +3059,7 @@ diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
  #define true (!0)
 diff -ru cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
 --- cyfer-0.6.0/lib/asym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/asym/Makefile.in	2005-06-13 20:48:38.572340976 -0700
++++ cyfer/lib/asym/Makefile.in	2005-06-13 22:56:32.112462128 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -2989,7 +3071,7 @@ diff -ru cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
  OBJS = rsa.o elgamal.o luc.o dh.o pkiutil.o pk.o keyex.o
 diff -ru cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
 --- cyfer-0.6.0/lib/hash/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/hash/Makefile.in	2005-06-13 20:48:38.576340304 -0700
++++ cyfer/lib/hash/Makefile.in	2005-06-13 22:56:32.112462128 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -3001,7 +3083,7 @@ diff -ru cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
  OBJS = md4.o md5.o sha1.o rmd160.o adler32.o snefru.o crc32.o md2.o sha256.o hash.o 
 diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
 --- cyfer-0.6.0/lib/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/Makefile.in	2005-06-13 20:48:38.587338456 -0700
++++ cyfer/lib/Makefile.in	2005-06-13 22:56:32.112462128 -0700
 @@ -13,10 +13,14 @@
  all:	libcyfer.la
  
@@ -3021,7 +3103,7 @@ diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
  
 diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
 --- cyfer-0.6.0/lib/sym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/sym/Makefile.in	2005-06-13 20:48:38.595337112 -0700
++++ cyfer/lib/sym/Makefile.in	2005-06-13 22:56:32.113461976 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -3033,7 +3115,7 @@ diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
  BCIPHERS = blowfish.o des.o desx.o rc2.o rc5.o rc6.o tripledes.o idea.o aes.o deal.o threeway.o 
 diff -ru cyfer-0.6.0/Makefile.in cyfer/Makefile.in
 --- cyfer-0.6.0/Makefile.in	2004-09-25 19:11:27.000000000 -0700
-+++ cyfer/Makefile.in	2005-06-13 20:48:38.514350722 -0700
++++ cyfer/Makefile.in	2005-06-13 22:56:32.113461976 -0700
 @@ -8,7 +8,7 @@
  
  CC = @CC@
@@ -3045,7 +3127,7 @@ diff -ru cyfer-0.6.0/Makefile.in cyfer/Makefile.in
  INSTALL_INCLUDES = include/cyfer/*.h
 diff -ru cyfer-0.6.0/test/Makefile.in cyfer/test/Makefile.in
 --- cyfer-0.6.0/test/Makefile.in	2004-09-25 07:49:44.000000000 -0700
-+++ cyfer/test/Makefile.in	2005-06-13 20:48:38.629331399 -0700
++++ cyfer/test/Makefile.in	2005-06-13 22:56:32.114461824 -0700
 @@ -2,7 +2,7 @@
  LIBTOOL = @LIBTOOL@
  CC = @CC@
