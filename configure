@@ -20168,7 +20168,8 @@ fi
 
 if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
-        if test "${ac_cv_header_slang_slang_h+set}" = set; then
+	slang_ui=ok
+	if test "${ac_cv_header_slang_slang_h+set}" = set; then
   echo "$as_me:$LINENO: checking for slang/slang.h" >&5
 echo $ECHO_N "checking for slang/slang.h... $ECHO_C" >&6
 if test "${ac_cv_header_slang_slang_h+set}" = set; then
@@ -20308,9 +20309,7 @@ fi
 if test $ac_cv_header_slang_slang_h = yes; then
   :
 else
-  { { echo "$as_me:$LINENO: error: You must have libslang installed to use the slang UI!" >&5
-echo "$as_me: error: You must have libslang installed to use the slang UI!" >&2;}
-   { (exit 1); exit 1; }; }
+  slang_ui=notok
 fi
 
 
@@ -20387,23 +20386,24 @@ _ACEOF
   LIBS="-lslang $LIBS"
 
 else
-  { { echo "$as_me:$LINENO: error: You must have libslang installed to use the slang UI!" >&5
-echo "$as_me: error: You must have libslang installed to use the slang UI!" >&2;}
-   { (exit 1); exit 1; }; }
+  slang_ui=notok
 fi
 
 
-        UI_CFLAGS=
-        UI_CPPFLAGS=
-        UI_CXXFLAGS=
-        UI_CXX=true
-        UI_LIBS=-lslang
-        UI_LDFLAGS=
-        UI_DIR=ui-slang
-        found_ui=yes
-        ui=slang
-        { echo "$as_me:$LINENO: Using slang UI" >&5
+	if test "x$slang_ui" = "xok"
+	then
+	        UI_CFLAGS=
+	        UI_CPPFLAGS=
+	        UI_CXXFLAGS=
+	        UI_CXX=true
+	        UI_LIBS=-lslang
+	        UI_LDFLAGS=
+	        UI_DIR=ui-slang
+	        found_ui=yes
+	        ui=slang
+	        { echo "$as_me:$LINENO: Using slang UI" >&5
 echo "$as_me: Using slang UI" >&6;}
+	fi
 fi
 
 

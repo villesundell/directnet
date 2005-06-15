@@ -116,21 +116,25 @@ fi
 
 if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
-        AC_CHECK_HEADER([slang/slang.h], [],
-          [AC_MSG_ERROR([You must have libslang installed to use the slang UI!])])
+	slang_ui=ok
+	AC_CHECK_HEADER([slang/slang.h], [],
+          [slang_ui=notok])
         AC_CHECK_LIB([slang], [SLtt_cls], [],
-          [AC_MSG_ERROR([You must have libslang installed to use the slang UI!])])
-        
-        UI_CFLAGS=
-        UI_CPPFLAGS=
-        UI_CXXFLAGS=
-        UI_CXX=true
-        UI_LIBS=-lslang
-        UI_LDFLAGS=
-        UI_DIR=ui-slang
-        found_ui=yes
-        ui=slang
-        AS_MESSAGE([Using slang UI])
+          [slang_ui=notok])
+
+	if test "x$slang_ui" = "xok"
+	then
+	        UI_CFLAGS=
+	        UI_CPPFLAGS=
+	        UI_CXXFLAGS=
+	        UI_CXX=true
+	        UI_LIBS=-lslang
+	        UI_LDFLAGS=
+	        UI_DIR=ui-slang
+	        found_ui=yes
+	        ui=slang
+	        AS_MESSAGE([Using slang UI])
+	fi
 fi
 
 
