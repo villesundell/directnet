@@ -1,13 +1,17 @@
 This is a short documentation of protocol commands.
+
 All protocol commands are a three-character command followed by a two-char version number followed
-by ;-delimited parameters followed by a null terminator.
-There are four types.  Direct, routed, nonlooping unrouted and nonrepeating unrouted.  Direct
+by ;-delimited parameters followed by a null terminator.  Any message sent over the line in this
+format should be interpreted correctly.  There's no "handshaking" per-se to establish a new
+connection, though the "key" command must be the first to be sent.
+
+There are four types: direct, routed, nonlooping unrouted and nonrepeating unrouted.  Direct
 commands are sent directly over a connection and are not continued.  Routed commands have a set
 route as the first parameter, and all of the nodes along that route strip off their name then
 continue the transfer until the data is sent to the last node on the list (at which point it will
 have an empty route).  Urouted commands are the rare few that simply emit throughout the network.
 Nonlooping unrouted messages contain a parameter for the route that they have taken to get to
-the current node, andy any other parameters.  Nonrepeating unrouted messages contain a parameter
+the current node, and any other parameters.  Nonrepeating unrouted messages contain a parameter
 for the transmission key (so that they are not retransmitted), and any other necessary parameters.
 
 cjo(1)(1) (chat join)
