@@ -72,6 +72,39 @@ AS_MESSAGE([checking which UI to use...])
 
 found_ui=no
 
+
+AC_ARG_ENABLE(custom-ui,
+AS_HELP_STRING([--enable-custom-ui=<ui>],
+[use a custom UI.  See the ui-customtest directory and --enable-custom-ui=customtest for an example]),
+[
+custom_ui="$enableval"
+ui=custom
+found_ui=yes
+UI_CFLAGS=
+UI_CXXFLAGS=
+UI_CXX=false
+UI_LIBS=
+UI_LDFLAGS=
+UI_DIR=ui-$custom_ui
+AS_MESSAGE([Using custom UI: $custom_ui])
+])
+
+AC_ARG_ENABLE(custom-ui-libs,
+AS_HELP_STRING([--enable-custom-ui-libs=<libs>],
+[add <libs> to the linker line.  Any necessary CFLAGS are assumed to be in \$CFLAGS]),
+[
+UI_LIBS="$enableval"
+])
+
+AC_ARG_ENABLE(custom-ui-cxx,
+AS_HELP_STRING([--enable-custom-ui-cxx],
+[tells the linker that the custom UI is C++, and so it must link with a C++ compiler.  If the
+custom UI is C++, you MUST use this.]),
+[
+UI_CXX=true
+])
+
+
 if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
         AMX_PATH_FLTK([1.1], [fltk=1])
