@@ -1,8 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Found some version of curses that we're going to use */
-#undef HAS_CURSES
-
 /* Is readline available? */
 #undef HAS_READLINE
 
@@ -38,6 +35,9 @@
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #undef HAVE_LIBNSL
+
+/* Define to 1 if you have the `slang' library (-lslang). */
+#undef HAVE_LIBSLANG
 
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
@@ -113,13 +113,6 @@
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
-/* Set to reflect version of ncurses 0 = version 1.* 1 = version 1.9.9g 2 =
-   version 4.0/4.1 */
-#undef NCURSES_970530
-
-/* If you Curses does not have color define this one */
-#undef NO_COLOR_CURSES
-
 /* Name of package */
 #undef PACKAGE
 
@@ -147,15 +140,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Use Ncurses? */
-#undef USE_NCURSES
-
-/* Use SunOS SysV curses? */
-#undef USE_SUNOS_CURSES
-
-/* Use SystemV curses? */
-#undef USE_SYSV_CURSES
 
 /* Version number of package */
 #undef VERSION

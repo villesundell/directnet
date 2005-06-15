@@ -17,9 +17,9 @@ src/enc-fake/Makefile
 src/enc-gpg/Makefile
 src/gaim-plugin/Makefile
 src/hub/Makefile
-src/ui-curses/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
+src/ui-slang/Makefile
 ])
 
 if test ! -e ${srcdir}/src/enc-cyfer/gmp
@@ -60,12 +60,11 @@ AC_CHECK_LIB([wsock32], [main])
 
 # Figure out what UI to use
 AC_ARG_ENABLE(ui,
-[  --enable-ui[[=fltk|dumb]]
-                set the UI],
+AS_HELP_STRING([--enable-ui[[=fltk|dumb]]], [set the UI]),
 [case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
-        curses) ui=curses ;;
+        slang) ui=slang ;;
         *) AC_MSG_ERROR([Invalid UI chosen.]) ;;
 esac], [ui=determine])
 
@@ -115,45 +114,26 @@ then
 fi
 
 
-if test "x$ui" = "xcurses" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "no" )
+if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
-        AC_CHECK_CURSES
+        AC_CHECK_HEADER([slang/slang.h], [],
+          [AC_MSG_ERROR([You must have libslang installed to use the slang UI!])])
+        AC_CHECK_LIB([slang], [SLtt_cls], [],
+          [AC_MSG_ERROR([You must have libslang installed to use the slang UI!])])
         
-        if test "x$has_curses" != "xtrue"
-        then
-                if test "x$ui" = "xcurses"
-                then
-                        AC_MSG_ERROR([
-The chosen UI (curses) is unconfigurable.
-The appropriate libraries could not be found.
-                        ])
-                fi
-        else
-                UI_CFLAGS=$CURSES_INCLUDEDIR
-                UI_CPPFLAGS=
-                UI_CXXFLAGS=$CURSES_INCLUDEDIR
-                UI_CXX=true
-                UI_LIBS=$CURSES_LIBS
-                UI_LDFLAGS=
-                UI_DIR=ui-curses
-                found_ui=yes
-                ui=curses
-                AS_MESSAGE([Using curses UI])
-                
-                # Can we use readline?
-                AC_CHECK_READLINE
-                
-                if test "x$has_readline" = "xtrue"
-                then
-                        UI_CFLAGS="$UI_CFLAGS $READLINE_INCLUDES"
-                        UI_LIBS="$UI_LIBS $READLINE_LIBS"
-                        AS_MESSAGE([Readline enabled])
-                else
-                        AS_MESSAGE([Readline disabled])
-                fi
-        fi
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_CXX=true
+        UI_LIBS=-lslang
+        UI_LDFLAGS=
+        UI_DIR=ui-slang
+        found_ui=yes
+        ui=slang
+        AS_MESSAGE([Using slang UI])
 fi
-        
+
+
 if test "x$found_ui" = "xno"
 then
         AC_MSG_ERROR([Couldn't find a working UI.])
@@ -170,8 +150,8 @@ AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
 
 # Check if we should enable the Gaim plugin
 AC_ARG_ENABLE(gaim-plugin,
-[  --enable-gaim-plugin
-                enable the Gaim Plugin - must have Gaim 1.2.0 or higher development libraries],
+AS_HELP_STRING([--enable-gaim-plugin],
+[enable the Gaim Plugin - must have Gaim 1.2.0 or higher development libraries]),
 [
 
 GAIM_PLUGIN=yes
@@ -204,8 +184,7 @@ AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM_PLUGIN" = "xyes")
 
 # Check if we should enable the hub
 AC_ARG_ENABLE(hub,
-[  --enable-hub=name
-                enable hub mode - name is the name of the hub "user"],
+AS_HELP_STRING([--enable-hub=name], [enable hub mode - name is the name of the hub "user"]),
 [HUB_NAME=$enableval], [HUB_NAME=no], [HUB_NAME=no])
 
 if test "x$HUB_NAME" != "xno"
@@ -222,8 +201,7 @@ AM_CONDITIONAL(MAKE_HUB, test "x$HUB_NAME" != "xno")
 
 # Check for encryption to use
 AC_ARG_ENABLE(enc,
-[  --enable-enc[=cyfer]
-                set the encryption (cyfer or fake)],
+AS_HELP_STRING([--enable-enc[[=cyfer|fake]]], [set the encryption (cyfer or fake)]),
 [case "$enableval" in
         cyfer) enc=cyfer ;;
         fake) enc=fake ;;
