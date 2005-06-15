@@ -1037,6 +1037,14 @@ Optional Features:
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-ui=fltk|dumb set the UI
+  --enable-custom-ui=<ui> use a custom UI. See the ui-customtest directory and
+                          --enable-custom-ui=customtest for an example
+  --enable-custom-ui-libs=<libs>
+                          add <libs> to the linker line. Any necessary CFLAGS
+                          are assumed to be in \$CFLAGS
+  --enable-custom-ui-cxx  tells the linker that the custom UI is C++, and so
+                          it must link with a C++ compiler. If the custom UI
+                          is C++, you MUST use this.
   --enable-gaim-plugin    enable the Gaim Plugin - must have Gaim 1.2.0 or
                           higher development libraries
   --enable-hub=name       enable hub mode - name is the name of the hub "user"
@@ -4382,7 +4390,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4385 "configure"' > conftest.$ac_ext
+  echo '#line 4393 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5263,7 +5271,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5266:" \
+echo "$as_me:5274:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6320,11 +6328,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6323: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6331: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6327: \$? = $ac_status" >&5
+   echo "$as_me:6335: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6563,11 +6571,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6566: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6574: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6570: \$? = $ac_status" >&5
+   echo "$as_me:6578: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6623,11 +6631,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6626: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6634: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:6630: \$? = $ac_status" >&5
+   echo "$as_me:6638: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8808,7 +8816,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8811 "configure"
+#line 8819 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8906,7 +8914,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8909 "configure"
+#line 8917 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11099,11 +11107,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11102: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11110: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11106: \$? = $ac_status" >&5
+   echo "$as_me:11114: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11159,11 +11167,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11162: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11170: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11166: \$? = $ac_status" >&5
+   echo "$as_me:11174: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12520,7 +12528,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12523 "configure"
+#line 12531 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12618,7 +12626,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12621 "configure"
+#line 12629 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13455,11 +13463,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13458: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13466: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13462: \$? = $ac_status" >&5
+   echo "$as_me:13470: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13515,11 +13523,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13518: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13526: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13522: \$? = $ac_status" >&5
+   echo "$as_me:13530: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15550,11 +15558,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15553: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15561: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15557: \$? = $ac_status" >&5
+   echo "$as_me:15565: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15793,11 +15801,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15796: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15804: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15800: \$? = $ac_status" >&5
+   echo "$as_me:15808: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15853,11 +15861,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15856: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15864: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15860: \$? = $ac_status" >&5
+   echo "$as_me:15868: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18038,7 +18046,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18041 "configure"
+#line 18049 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18136,7 +18144,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18139 "configure"
+#line 18147 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20015,6 +20023,42 @@ fi;
 echo "$as_me: checking which UI to use..." >&6;}
 
 found_ui=no
+
+
+# Check whether --enable-custom-ui or --disable-custom-ui was given.
+if test "${enable_custom_ui+set}" = set; then
+  enableval="$enable_custom_ui"
+
+custom_ui="$enableval"
+ui=custom
+found_ui=yes
+UI_CFLAGS=
+UI_CXXFLAGS=
+UI_CXX=false
+UI_LIBS=
+UI_LDFLAGS=
+UI_DIR=ui-$custom_ui
+{ echo "$as_me:$LINENO: Using custom UI: $custom_ui" >&5
+echo "$as_me: Using custom UI: $custom_ui" >&6;}
+
+fi;
+
+# Check whether --enable-custom-ui-libs or --disable-custom-ui-libs was given.
+if test "${enable_custom_ui_libs+set}" = set; then
+  enableval="$enable_custom_ui_libs"
+
+UI_LIBS="$enableval"
+
+fi;
+
+# Check whether --enable-custom-ui-cxx or --disable-custom-ui-cxx was given.
+if test "${enable_custom_ui_cxx+set}" = set; then
+  enableval="$enable_custom_ui_cxx"
+
+UI_CXX=true
+
+fi;
+
 
 if test "x$ui" = "xfltk" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
