@@ -1,9 +1,7 @@
 This is DirectNet, the serverless instant messaging system.
 
-This README only applies to the dumb UI.
-
-NOTE: THIS VERSION DOES NOT SUPPORT ENCRYPTION!  ALL MESSAGES TRANSMITTED ARE SENT IN CLEAR TEXT
-TO ANYONE IN YOUR ROUTE ON THE NETWORK!
+The commands only applies to the dumb UI.  The FLTK UI as of yet has no documentation, but this may
+help you understand what's going on.
 
 Here's a quick overview of the commands:
 
@@ -24,6 +22,3 @@ Here's a quick overview of the commands:
 /q
         Quit
 
-
-If that's not enough, wait for a future version of the client - this is, after all, an alpha
-release.
