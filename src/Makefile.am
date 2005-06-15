@@ -9,8 +9,9 @@ bin_PROGRAMS=directnet directnethub
 else
 bin_PROGRAMS=directnet
 endif
+noinst_PROGRAMS=directnetcxx
 
-directnet_SOURCES=chat.c \
+directnetcxx_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
@@ -19,21 +20,22 @@ lock.c \
 server.c \
 fake.cc
 
-directnet_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
-directnet_CXXFLAGS=@PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
-directnet_LDFLAGS=@UI_LDFLAGS@ @ENC_LDFLAGS@
-directnet_DEPENDENCIES=@UI_DIR@/libui.a  @ENC_DIR@/libenc.a
-directnet_LDADD=@PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+directnetcxx_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
+directnetcxx_CXXFLAGS=@PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
+directnetcxx_LDFLAGS=@UI_LDFLAGS@ @ENC_LDFLAGS@
+directnetcxx_DEPENDENCIES=@UI_DIR@/libui.a  @ENC_DIR@/libenc.a
+directnetcxx_LDADD=@PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
 
 else
 
 if MAKE_HUB
-bin_PROGRAMS=directnetd directnethub
+bin_PROGRAMS=directnet directnethub
 else
-bin_PROGRAMS=directnetd
+bin_PROGRAMS=directnet
 endif
+noinst_PROGRAMS=directnetc
 
-directnetd_SOURCES=chat.c \
+directnetc_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
@@ -41,10 +43,10 @@ hash.c \
 lock.c \
 server.c
 
-directnetd_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
-directnetd_LDFLAGS=@PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
-directnetd_DEPENDENCIES=@UI_DIR@/libui.a @ENC_DIR@/libenc.a
-directnetd_LDADD=@PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+directnetc_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
+directnetc_LDFLAGS=@PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
+directnetc_DEPENDENCIES=@UI_DIR@/libui.a @ENC_DIR@/libenc.a
+directnetc_LDADD=@PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
 
 endif
 
@@ -87,3 +89,13 @@ libdirectnet_gaim_la_DEPENDENCIES=@GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/l
 libdirectnet_gaim_la_LIBADD=@PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
 
 endif
+
+if UI_CXX
+REALBIN=directnetcxx$(EXEEXT)
+else
+REALBIN=directnetc$(EXEEXT)
+endif
+
+directnet: $(REALBIN)
+	cp -f $(REALBIN) $@
+

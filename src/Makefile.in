@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 
-SOURCES = $(libdirectnet_gaim_la_SOURCES) $(directnet_SOURCES) $(directnetd_SOURCES) $(directnethub_SOURCES)
+SOURCES = $(libdirectnet_gaim_la_SOURCES) directnet.c $(directnetc_SOURCES) $(directnetcxx_SOURCES) $(directnethub_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -39,12 +39,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@MAKE_HUB_FALSE@@UI_CXX_FALSE@bin_PROGRAMS = directnetd$(EXEEXT)
+@MAKE_HUB_FALSE@@UI_CXX_FALSE@bin_PROGRAMS = directnet$(EXEEXT)
 @MAKE_HUB_FALSE@@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT)
-@MAKE_HUB_TRUE@@UI_CXX_FALSE@bin_PROGRAMS = directnetd$(EXEEXT) \
+@MAKE_HUB_TRUE@@UI_CXX_FALSE@bin_PROGRAMS = directnet$(EXEEXT) \
 @MAKE_HUB_TRUE@@UI_CXX_FALSE@	directnethub$(EXEEXT)
 @MAKE_HUB_TRUE@@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT) \
 @MAKE_HUB_TRUE@@UI_CXX_TRUE@	directnethub$(EXEEXT)
+@UI_CXX_FALSE@noinst_PROGRAMS = directnetc$(EXEEXT)
+@UI_CXX_TRUE@noinst_PROGRAMS = directnetcxx$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -78,27 +80,31 @@ am__libdirectnet_gaim_la_SOURCES_DIST = chat.c client.c connection.c \
 libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_rpath = -rpath $(gaimdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(bin_PROGRAMS)
-am__directnet_SOURCES_DIST = chat.c client.c connection.c directnet.c \
-	hash.c lock.c server.c fake.cc
-@UI_CXX_TRUE@am_directnet_OBJECTS = directnet-chat.$(OBJEXT) \
-@UI_CXX_TRUE@	directnet-client.$(OBJEXT) \
-@UI_CXX_TRUE@	directnet-connection.$(OBJEXT) \
-@UI_CXX_TRUE@	directnet-directnet.$(OBJEXT) \
-@UI_CXX_TRUE@	directnet-hash.$(OBJEXT) directnet-lock.$(OBJEXT) \
-@UI_CXX_TRUE@	directnet-server.$(OBJEXT) \
-@UI_CXX_TRUE@	directnet-fake.$(OBJEXT)
-directnet_OBJECTS = $(am_directnet_OBJECTS)
-am__directnetd_SOURCES_DIST = chat.c client.c connection.c directnet.c \
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
+directnet_SOURCES = directnet.c
+directnet_OBJECTS = directnet.$(OBJEXT)
+directnet_LDADD = $(LDADD)
+am__directnetc_SOURCES_DIST = chat.c client.c connection.c directnet.c \
 	hash.c lock.c server.c
-@UI_CXX_FALSE@am_directnetd_OBJECTS = directnetd-chat.$(OBJEXT) \
-@UI_CXX_FALSE@	directnetd-client.$(OBJEXT) \
-@UI_CXX_FALSE@	directnetd-connection.$(OBJEXT) \
-@UI_CXX_FALSE@	directnetd-directnet.$(OBJEXT) \
-@UI_CXX_FALSE@	directnetd-hash.$(OBJEXT) \
-@UI_CXX_FALSE@	directnetd-lock.$(OBJEXT) \
-@UI_CXX_FALSE@	directnetd-server.$(OBJEXT)
-directnetd_OBJECTS = $(am_directnetd_OBJECTS)
+@UI_CXX_FALSE@am_directnetc_OBJECTS = directnetc-chat.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-client.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-connection.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-directnet.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-hash.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-lock.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-server.$(OBJEXT)
+directnetc_OBJECTS = $(am_directnetc_OBJECTS)
+am__directnetcxx_SOURCES_DIST = chat.c client.c connection.c \
+	directnet.c hash.c lock.c server.c fake.cc
+@UI_CXX_TRUE@am_directnetcxx_OBJECTS = directnetcxx-chat.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-client.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-connection.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-directnet.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-hash.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-lock.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-server.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-fake.$(OBJEXT)
+directnetcxx_OBJECTS = $(am_directnetcxx_OBJECTS)
 am__directnethub_SOURCES_DIST = chat.c client.c connection.c \
 	directnet.c hash.c lock.c server.c
 @MAKE_HUB_TRUE@am_directnethub_OBJECTS = directnethub-chat.$(OBJEXT) \
@@ -128,10 +134,12 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libdirectnet_gaim_la_SOURCES) $(directnet_SOURCES) \
-	$(directnetd_SOURCES) $(directnethub_SOURCES)
-DIST_SOURCES = $(am__libdirectnet_gaim_la_SOURCES_DIST) \
-	$(am__directnet_SOURCES_DIST) $(am__directnetd_SOURCES_DIST) \
+SOURCES = $(libdirectnet_gaim_la_SOURCES) directnet.c \
+	$(directnetc_SOURCES) $(directnetcxx_SOURCES) \
+	$(directnethub_SOURCES)
+DIST_SOURCES = $(am__libdirectnet_gaim_la_SOURCES_DIST) directnet.c \
+	$(am__directnetc_SOURCES_DIST) \
+	$(am__directnetcxx_SOURCES_DIST) \
 	$(am__directnethub_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
@@ -219,6 +227,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 UI_CFLAGS = @UI_CFLAGS@
 UI_CPPFLAGS = @UI_CPPFLAGS@
+UI_CXX = @UI_CXX@
 UI_CXXFLAGS = @UI_CXXFLAGS@
 UI_CXX_FALSE = @UI_CXX_FALSE@
 UI_CXX_TRUE = @UI_CXX_TRUE@
@@ -271,7 +280,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@ 
-@UI_CXX_TRUE@directnet_SOURCES = chat.c \
+@UI_CXX_TRUE@directnetcxx_SOURCES = chat.c \
 @UI_CXX_TRUE@client.c \
 @UI_CXX_TRUE@connection.c \
 @UI_CXX_TRUE@directnet.c \
@@ -280,12 +289,12 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @UI_CXX_TRUE@server.c \
 @UI_CXX_TRUE@fake.cc
 
-@UI_CXX_TRUE@directnet_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
-@UI_CXX_TRUE@directnet_CXXFLAGS = @PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
-@UI_CXX_TRUE@directnet_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@
-@UI_CXX_TRUE@directnet_DEPENDENCIES = @UI_DIR@/libui.a  @ENC_DIR@/libenc.a
-@UI_CXX_TRUE@directnet_LDADD = @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
-@UI_CXX_FALSE@directnetd_SOURCES = chat.c \
+@UI_CXX_TRUE@directnetcxx_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
+@UI_CXX_TRUE@directnetcxx_CXXFLAGS = @PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
+@UI_CXX_TRUE@directnetcxx_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@
+@UI_CXX_TRUE@directnetcxx_DEPENDENCIES = @UI_DIR@/libui.a  @ENC_DIR@/libenc.a
+@UI_CXX_TRUE@directnetcxx_LDADD = @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+@UI_CXX_FALSE@directnetc_SOURCES = chat.c \
 @UI_CXX_FALSE@client.c \
 @UI_CXX_FALSE@connection.c \
 @UI_CXX_FALSE@directnet.c \
@@ -293,10 +302,10 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @UI_CXX_FALSE@lock.c \
 @UI_CXX_FALSE@server.c
 
-@UI_CXX_FALSE@directnetd_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
-@UI_CXX_FALSE@directnetd_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
-@UI_CXX_FALSE@directnetd_DEPENDENCIES = @UI_DIR@/libui.a @ENC_DIR@/libenc.a
-@UI_CXX_FALSE@directnetd_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+@UI_CXX_FALSE@directnetc_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
+@UI_CXX_FALSE@directnetc_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
+@UI_CXX_FALSE@directnetc_DEPENDENCIES = @UI_DIR@/libui.a @ENC_DIR@/libenc.a
+@UI_CXX_FALSE@directnetc_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
 @MAKE_HUB_TRUE@directnethub_SOURCES = chat.c \
 @MAKE_HUB_TRUE@client.c \
 @MAKE_HUB_TRUE@connection.c \
@@ -323,6 +332,8 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@ -module -avoid-version -Wl,--export-dynamic
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
+@UI_CXX_FALSE@REALBIN = directnetc$(EXEEXT)
+@UI_CXX_TRUE@REALBIN = directnetcxx$(EXEEXT)
 all: all-recursive
 
 .SUFFIXES:
@@ -413,12 +424,19 @@ clean-binPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-directnet$(EXEEXT): $(directnet_OBJECTS) $(directnet_DEPENDENCIES) 
-	@rm -f directnet$(EXEEXT)
-	$(CXXLINK) $(directnet_LDFLAGS) $(directnet_OBJECTS) $(directnet_LDADD) $(LIBS)
-directnetd$(EXEEXT): $(directnetd_OBJECTS) $(directnetd_DEPENDENCIES) 
-	@rm -f directnetd$(EXEEXT)
-	$(LINK) $(directnetd_LDFLAGS) $(directnetd_OBJECTS) $(directnetd_LDADD) $(LIBS)
+
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+directnetc$(EXEEXT): $(directnetc_OBJECTS) $(directnetc_DEPENDENCIES) 
+	@rm -f directnetc$(EXEEXT)
+	$(LINK) $(directnetc_LDFLAGS) $(directnetc_OBJECTS) $(directnetc_LDADD) $(LIBS)
+directnetcxx$(EXEEXT): $(directnetcxx_OBJECTS) $(directnetcxx_DEPENDENCIES) 
+	@rm -f directnetcxx$(EXEEXT)
+	$(CXXLINK) $(directnetcxx_LDFLAGS) $(directnetcxx_OBJECTS) $(directnetcxx_LDADD) $(LIBS)
 directnethub$(EXEEXT): $(directnethub_OBJECTS) $(directnethub_DEPENDENCIES) 
 	@rm -f directnethub$(EXEEXT)
 	$(LINK) $(directnethub_LDFLAGS) $(directnethub_OBJECTS) $(directnethub_LDADD) $(LIBS)
@@ -429,21 +447,22 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-chat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-client.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-connection.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-directnet.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-fake.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-hash.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-lock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-chat.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-client.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-connection.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-directnet.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-hash.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-lock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetd-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-chat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-connection.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-directnet.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-lock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-chat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-connection.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-directnet.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-fake.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-lock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-chat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-connection.Po@am__quote@
@@ -529,201 +548,201 @@ libdirectnet_gaim_la-server.lo: server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-server.lo `test -f 'server.c' || echo '$(srcdir)/'`server.c
 
-directnet-chat.o: chat.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-chat.o -MD -MP -MF "$(DEPDIR)/directnet-chat.Tpo" -c -o directnet-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-chat.Tpo" "$(DEPDIR)/directnet-chat.Po"; else rm -f "$(DEPDIR)/directnet-chat.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnet-chat.o' libtool=no @AMDEPBACKSLASH@
+directnetc-chat.o: chat.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-chat.o -MD -MP -MF "$(DEPDIR)/directnetc-chat.Tpo" -c -o directnetc-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-chat.Tpo" "$(DEPDIR)/directnetc-chat.Po"; else rm -f "$(DEPDIR)/directnetc-chat.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnetc-chat.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c
 
-directnet-chat.obj: chat.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-chat.obj -MD -MP -MF "$(DEPDIR)/directnet-chat.Tpo" -c -o directnet-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-chat.Tpo" "$(DEPDIR)/directnet-chat.Po"; else rm -f "$(DEPDIR)/directnet-chat.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnet-chat.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-chat.obj: chat.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-chat.obj -MD -MP -MF "$(DEPDIR)/directnetc-chat.Tpo" -c -o directnetc-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-chat.Tpo" "$(DEPDIR)/directnetc-chat.Po"; else rm -f "$(DEPDIR)/directnetc-chat.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnetc-chat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`
 
-directnet-client.o: client.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-client.o -MD -MP -MF "$(DEPDIR)/directnet-client.Tpo" -c -o directnet-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-client.Tpo" "$(DEPDIR)/directnet-client.Po"; else rm -f "$(DEPDIR)/directnet-client.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnet-client.o' libtool=no @AMDEPBACKSLASH@
+directnetc-client.o: client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-client.o -MD -MP -MF "$(DEPDIR)/directnetc-client.Tpo" -c -o directnetc-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-client.Tpo" "$(DEPDIR)/directnetc-client.Po"; else rm -f "$(DEPDIR)/directnetc-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnetc-client.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
 
-directnet-client.obj: client.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-client.obj -MD -MP -MF "$(DEPDIR)/directnet-client.Tpo" -c -o directnet-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-client.Tpo" "$(DEPDIR)/directnet-client.Po"; else rm -f "$(DEPDIR)/directnet-client.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnet-client.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-client.obj: client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-client.obj -MD -MP -MF "$(DEPDIR)/directnetc-client.Tpo" -c -o directnetc-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-client.Tpo" "$(DEPDIR)/directnetc-client.Po"; else rm -f "$(DEPDIR)/directnetc-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnetc-client.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
 
-directnet-connection.o: connection.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-connection.o -MD -MP -MF "$(DEPDIR)/directnet-connection.Tpo" -c -o directnet-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-connection.Tpo" "$(DEPDIR)/directnet-connection.Po"; else rm -f "$(DEPDIR)/directnet-connection.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnet-connection.o' libtool=no @AMDEPBACKSLASH@
+directnetc-connection.o: connection.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-connection.o -MD -MP -MF "$(DEPDIR)/directnetc-connection.Tpo" -c -o directnetc-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-connection.Tpo" "$(DEPDIR)/directnetc-connection.Po"; else rm -f "$(DEPDIR)/directnetc-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnetc-connection.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c
 
-directnet-connection.obj: connection.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-connection.obj -MD -MP -MF "$(DEPDIR)/directnet-connection.Tpo" -c -o directnet-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-connection.Tpo" "$(DEPDIR)/directnet-connection.Po"; else rm -f "$(DEPDIR)/directnet-connection.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnet-connection.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-connection.obj: connection.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-connection.obj -MD -MP -MF "$(DEPDIR)/directnetc-connection.Tpo" -c -o directnetc-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-connection.Tpo" "$(DEPDIR)/directnetc-connection.Po"; else rm -f "$(DEPDIR)/directnetc-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnetc-connection.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`
 
-directnet-directnet.o: directnet.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-directnet.o -MD -MP -MF "$(DEPDIR)/directnet-directnet.Tpo" -c -o directnet-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-directnet.Tpo" "$(DEPDIR)/directnet-directnet.Po"; else rm -f "$(DEPDIR)/directnet-directnet.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnet-directnet.o' libtool=no @AMDEPBACKSLASH@
+directnetc-directnet.o: directnet.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-directnet.o -MD -MP -MF "$(DEPDIR)/directnetc-directnet.Tpo" -c -o directnetc-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-directnet.Tpo" "$(DEPDIR)/directnetc-directnet.Po"; else rm -f "$(DEPDIR)/directnetc-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetc-directnet.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
 
-directnet-directnet.obj: directnet.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-directnet.obj -MD -MP -MF "$(DEPDIR)/directnet-directnet.Tpo" -c -o directnet-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-directnet.Tpo" "$(DEPDIR)/directnet-directnet.Po"; else rm -f "$(DEPDIR)/directnet-directnet.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnet-directnet.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-directnet.obj: directnet.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-directnet.obj -MD -MP -MF "$(DEPDIR)/directnetc-directnet.Tpo" -c -o directnetc-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-directnet.Tpo" "$(DEPDIR)/directnetc-directnet.Po"; else rm -f "$(DEPDIR)/directnetc-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetc-directnet.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
 
-directnet-hash.o: hash.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-hash.o -MD -MP -MF "$(DEPDIR)/directnet-hash.Tpo" -c -o directnet-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-hash.Tpo" "$(DEPDIR)/directnet-hash.Po"; else rm -f "$(DEPDIR)/directnet-hash.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnet-hash.o' libtool=no @AMDEPBACKSLASH@
+directnetc-hash.o: hash.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-hash.o -MD -MP -MF "$(DEPDIR)/directnetc-hash.Tpo" -c -o directnetc-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-hash.Tpo" "$(DEPDIR)/directnetc-hash.Po"; else rm -f "$(DEPDIR)/directnetc-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetc-hash.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
 
-directnet-hash.obj: hash.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-hash.obj -MD -MP -MF "$(DEPDIR)/directnet-hash.Tpo" -c -o directnet-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-hash.Tpo" "$(DEPDIR)/directnet-hash.Po"; else rm -f "$(DEPDIR)/directnet-hash.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnet-hash.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-hash.obj: hash.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-hash.obj -MD -MP -MF "$(DEPDIR)/directnetc-hash.Tpo" -c -o directnetc-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-hash.Tpo" "$(DEPDIR)/directnetc-hash.Po"; else rm -f "$(DEPDIR)/directnetc-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetc-hash.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
 
-directnet-lock.o: lock.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-lock.o -MD -MP -MF "$(DEPDIR)/directnet-lock.Tpo" -c -o directnet-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-lock.Tpo" "$(DEPDIR)/directnet-lock.Po"; else rm -f "$(DEPDIR)/directnet-lock.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnet-lock.o' libtool=no @AMDEPBACKSLASH@
+directnetc-lock.o: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-lock.o -MD -MP -MF "$(DEPDIR)/directnetc-lock.Tpo" -c -o directnetc-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-lock.Tpo" "$(DEPDIR)/directnetc-lock.Po"; else rm -f "$(DEPDIR)/directnetc-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetc-lock.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
 
-directnet-lock.obj: lock.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-lock.obj -MD -MP -MF "$(DEPDIR)/directnet-lock.Tpo" -c -o directnet-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-lock.Tpo" "$(DEPDIR)/directnet-lock.Po"; else rm -f "$(DEPDIR)/directnet-lock.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnet-lock.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-lock.obj: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-lock.obj -MD -MP -MF "$(DEPDIR)/directnetc-lock.Tpo" -c -o directnetc-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-lock.Tpo" "$(DEPDIR)/directnetc-lock.Po"; else rm -f "$(DEPDIR)/directnetc-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetc-lock.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
 
-directnet-server.o: server.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-server.o -MD -MP -MF "$(DEPDIR)/directnet-server.Tpo" -c -o directnet-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-server.Tpo" "$(DEPDIR)/directnet-server.Po"; else rm -f "$(DEPDIR)/directnet-server.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnet-server.o' libtool=no @AMDEPBACKSLASH@
+directnetc-server.o: server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-server.o -MD -MP -MF "$(DEPDIR)/directnetc-server.Tpo" -c -o directnetc-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-server.Tpo" "$(DEPDIR)/directnetc-server.Po"; else rm -f "$(DEPDIR)/directnetc-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetc-server.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
 
-directnet-server.obj: server.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-server.obj -MD -MP -MF "$(DEPDIR)/directnet-server.Tpo" -c -o directnet-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-server.Tpo" "$(DEPDIR)/directnet-server.Po"; else rm -f "$(DEPDIR)/directnet-server.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnet-server.obj' libtool=no @AMDEPBACKSLASH@
+directnetc-server.obj: server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-server.obj -MD -MP -MF "$(DEPDIR)/directnetc-server.Tpo" -c -o directnetc-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-server.Tpo" "$(DEPDIR)/directnetc-server.Po"; else rm -f "$(DEPDIR)/directnetc-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetc-server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
 
-directnetd-chat.o: chat.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-chat.o -MD -MP -MF "$(DEPDIR)/directnetd-chat.Tpo" -c -o directnetd-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-chat.Tpo" "$(DEPDIR)/directnetd-chat.Po"; else rm -f "$(DEPDIR)/directnetd-chat.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnetd-chat.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-chat.o: chat.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-chat.o -MD -MP -MF "$(DEPDIR)/directnetcxx-chat.Tpo" -c -o directnetcxx-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-chat.Tpo" "$(DEPDIR)/directnetcxx-chat.Po"; else rm -f "$(DEPDIR)/directnetcxx-chat.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnetcxx-chat.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c
 
-directnetd-chat.obj: chat.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-chat.obj -MD -MP -MF "$(DEPDIR)/directnetd-chat.Tpo" -c -o directnetd-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-chat.Tpo" "$(DEPDIR)/directnetd-chat.Po"; else rm -f "$(DEPDIR)/directnetd-chat.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnetd-chat.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-chat.obj: chat.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-chat.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-chat.Tpo" -c -o directnetcxx-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-chat.Tpo" "$(DEPDIR)/directnetcxx-chat.Po"; else rm -f "$(DEPDIR)/directnetcxx-chat.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chat.c' object='directnetcxx-chat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-chat.obj `if test -f 'chat.c'; then $(CYGPATH_W) 'chat.c'; else $(CYGPATH_W) '$(srcdir)/chat.c'; fi`
 
-directnetd-client.o: client.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-client.o -MD -MP -MF "$(DEPDIR)/directnetd-client.Tpo" -c -o directnetd-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-client.Tpo" "$(DEPDIR)/directnetd-client.Po"; else rm -f "$(DEPDIR)/directnetd-client.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnetd-client.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-client.o: client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-client.o -MD -MP -MF "$(DEPDIR)/directnetcxx-client.Tpo" -c -o directnetcxx-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-client.Tpo" "$(DEPDIR)/directnetcxx-client.Po"; else rm -f "$(DEPDIR)/directnetcxx-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnetcxx-client.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
 
-directnetd-client.obj: client.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-client.obj -MD -MP -MF "$(DEPDIR)/directnetd-client.Tpo" -c -o directnetd-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-client.Tpo" "$(DEPDIR)/directnetd-client.Po"; else rm -f "$(DEPDIR)/directnetd-client.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnetd-client.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-client.obj: client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-client.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-client.Tpo" -c -o directnetcxx-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-client.Tpo" "$(DEPDIR)/directnetcxx-client.Po"; else rm -f "$(DEPDIR)/directnetcxx-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='client.c' object='directnetcxx-client.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
 
-directnetd-connection.o: connection.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-connection.o -MD -MP -MF "$(DEPDIR)/directnetd-connection.Tpo" -c -o directnetd-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-connection.Tpo" "$(DEPDIR)/directnetd-connection.Po"; else rm -f "$(DEPDIR)/directnetd-connection.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnetd-connection.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-connection.o: connection.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-connection.o -MD -MP -MF "$(DEPDIR)/directnetcxx-connection.Tpo" -c -o directnetcxx-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-connection.Tpo" "$(DEPDIR)/directnetcxx-connection.Po"; else rm -f "$(DEPDIR)/directnetcxx-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnetcxx-connection.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-connection.o `test -f 'connection.c' || echo '$(srcdir)/'`connection.c
 
-directnetd-connection.obj: connection.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-connection.obj -MD -MP -MF "$(DEPDIR)/directnetd-connection.Tpo" -c -o directnetd-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-connection.Tpo" "$(DEPDIR)/directnetd-connection.Po"; else rm -f "$(DEPDIR)/directnetd-connection.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnetd-connection.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-connection.obj: connection.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-connection.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-connection.Tpo" -c -o directnetcxx-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-connection.Tpo" "$(DEPDIR)/directnetcxx-connection.Po"; else rm -f "$(DEPDIR)/directnetcxx-connection.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='connection.c' object='directnetcxx-connection.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-connection.obj `if test -f 'connection.c'; then $(CYGPATH_W) 'connection.c'; else $(CYGPATH_W) '$(srcdir)/connection.c'; fi`
 
-directnetd-directnet.o: directnet.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-directnet.o -MD -MP -MF "$(DEPDIR)/directnetd-directnet.Tpo" -c -o directnetd-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-directnet.Tpo" "$(DEPDIR)/directnetd-directnet.Po"; else rm -f "$(DEPDIR)/directnetd-directnet.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetd-directnet.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-directnet.o: directnet.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-directnet.o -MD -MP -MF "$(DEPDIR)/directnetcxx-directnet.Tpo" -c -o directnetcxx-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-directnet.Tpo" "$(DEPDIR)/directnetcxx-directnet.Po"; else rm -f "$(DEPDIR)/directnetcxx-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetcxx-directnet.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-directnet.o `test -f 'directnet.c' || echo '$(srcdir)/'`directnet.c
 
-directnetd-directnet.obj: directnet.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-directnet.obj -MD -MP -MF "$(DEPDIR)/directnetd-directnet.Tpo" -c -o directnetd-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-directnet.Tpo" "$(DEPDIR)/directnetd-directnet.Po"; else rm -f "$(DEPDIR)/directnetd-directnet.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetd-directnet.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-directnet.obj: directnet.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-directnet.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-directnet.Tpo" -c -o directnetcxx-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-directnet.Tpo" "$(DEPDIR)/directnetcxx-directnet.Po"; else rm -f "$(DEPDIR)/directnetcxx-directnet.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='directnet.c' object='directnetcxx-directnet.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-directnet.obj `if test -f 'directnet.c'; then $(CYGPATH_W) 'directnet.c'; else $(CYGPATH_W) '$(srcdir)/directnet.c'; fi`
 
-directnetd-hash.o: hash.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-hash.o -MD -MP -MF "$(DEPDIR)/directnetd-hash.Tpo" -c -o directnetd-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-hash.Tpo" "$(DEPDIR)/directnetd-hash.Po"; else rm -f "$(DEPDIR)/directnetd-hash.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetd-hash.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-hash.o: hash.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-hash.o -MD -MP -MF "$(DEPDIR)/directnetcxx-hash.Tpo" -c -o directnetcxx-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-hash.Tpo" "$(DEPDIR)/directnetcxx-hash.Po"; else rm -f "$(DEPDIR)/directnetcxx-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetcxx-hash.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
 
-directnetd-hash.obj: hash.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-hash.obj -MD -MP -MF "$(DEPDIR)/directnetd-hash.Tpo" -c -o directnetd-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-hash.Tpo" "$(DEPDIR)/directnetd-hash.Po"; else rm -f "$(DEPDIR)/directnetd-hash.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetd-hash.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-hash.obj: hash.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-hash.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-hash.Tpo" -c -o directnetcxx-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-hash.Tpo" "$(DEPDIR)/directnetcxx-hash.Po"; else rm -f "$(DEPDIR)/directnetcxx-hash.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetcxx-hash.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
 
-directnetd-lock.o: lock.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-lock.o -MD -MP -MF "$(DEPDIR)/directnetd-lock.Tpo" -c -o directnetd-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-lock.Tpo" "$(DEPDIR)/directnetd-lock.Po"; else rm -f "$(DEPDIR)/directnetd-lock.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetd-lock.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-lock.o: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-lock.o -MD -MP -MF "$(DEPDIR)/directnetcxx-lock.Tpo" -c -o directnetcxx-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-lock.Tpo" "$(DEPDIR)/directnetcxx-lock.Po"; else rm -f "$(DEPDIR)/directnetcxx-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetcxx-lock.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
 
-directnetd-lock.obj: lock.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-lock.obj -MD -MP -MF "$(DEPDIR)/directnetd-lock.Tpo" -c -o directnetd-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-lock.Tpo" "$(DEPDIR)/directnetd-lock.Po"; else rm -f "$(DEPDIR)/directnetd-lock.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetd-lock.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-lock.obj: lock.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-lock.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-lock.Tpo" -c -o directnetcxx-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-lock.Tpo" "$(DEPDIR)/directnetcxx-lock.Po"; else rm -f "$(DEPDIR)/directnetcxx-lock.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='directnetcxx-lock.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
 
-directnetd-server.o: server.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-server.o -MD -MP -MF "$(DEPDIR)/directnetd-server.Tpo" -c -o directnetd-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-server.Tpo" "$(DEPDIR)/directnetd-server.Po"; else rm -f "$(DEPDIR)/directnetd-server.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetd-server.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-server.o: server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-server.o -MD -MP -MF "$(DEPDIR)/directnetcxx-server.Tpo" -c -o directnetcxx-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-server.Tpo" "$(DEPDIR)/directnetcxx-server.Po"; else rm -f "$(DEPDIR)/directnetcxx-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetcxx-server.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-server.o `test -f 'server.c' || echo '$(srcdir)/'`server.c
 
-directnetd-server.obj: server.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -MT directnetd-server.obj -MD -MP -MF "$(DEPDIR)/directnetd-server.Tpo" -c -o directnetd-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetd-server.Tpo" "$(DEPDIR)/directnetd-server.Po"; else rm -f "$(DEPDIR)/directnetd-server.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetd-server.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-server.obj: server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-server.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-server.Tpo" -c -o directnetcxx-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-server.Tpo" "$(DEPDIR)/directnetcxx-server.Po"; else rm -f "$(DEPDIR)/directnetcxx-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='directnetcxx-server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetd_CFLAGS) $(CFLAGS) -c -o directnetd-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
 
 directnethub-chat.o: chat.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-chat.o -MD -MP -MF "$(DEPDIR)/directnethub-chat.Tpo" -c -o directnethub-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \
@@ -844,19 +863,19 @@ directnethub-server.obj: server.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
-directnet-fake.o: fake.cc
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-fake.o -MD -MP -MF "$(DEPDIR)/directnet-fake.Tpo" -c -o directnet-fake.o `test -f 'fake.cc' || echo '$(srcdir)/'`fake.cc; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-fake.Tpo" "$(DEPDIR)/directnet-fake.Po"; else rm -f "$(DEPDIR)/directnet-fake.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fake.cc' object='directnet-fake.o' libtool=no @AMDEPBACKSLASH@
+directnetcxx-fake.o: fake.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CXXFLAGS) $(CXXFLAGS) -MT directnetcxx-fake.o -MD -MP -MF "$(DEPDIR)/directnetcxx-fake.Tpo" -c -o directnetcxx-fake.o `test -f 'fake.cc' || echo '$(srcdir)/'`fake.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-fake.Tpo" "$(DEPDIR)/directnetcxx-fake.Po"; else rm -f "$(DEPDIR)/directnetcxx-fake.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fake.cc' object='directnetcxx-fake.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-fake.o `test -f 'fake.cc' || echo '$(srcdir)/'`fake.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CXXFLAGS) $(CXXFLAGS) -c -o directnetcxx-fake.o `test -f 'fake.cc' || echo '$(srcdir)/'`fake.cc
 
-directnet-fake.obj: fake.cc
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-fake.obj -MD -MP -MF "$(DEPDIR)/directnet-fake.Tpo" -c -o directnet-fake.obj `if test -f 'fake.cc'; then $(CYGPATH_W) 'fake.cc'; else $(CYGPATH_W) '$(srcdir)/fake.cc'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-fake.Tpo" "$(DEPDIR)/directnet-fake.Po"; else rm -f "$(DEPDIR)/directnet-fake.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fake.cc' object='directnet-fake.obj' libtool=no @AMDEPBACKSLASH@
+directnetcxx-fake.obj: fake.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CXXFLAGS) $(CXXFLAGS) -MT directnetcxx-fake.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-fake.Tpo" -c -o directnetcxx-fake.obj `if test -f 'fake.cc'; then $(CYGPATH_W) 'fake.cc'; else $(CYGPATH_W) '$(srcdir)/fake.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-fake.Tpo" "$(DEPDIR)/directnetcxx-fake.Po"; else rm -f "$(DEPDIR)/directnetcxx-fake.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fake.cc' object='directnetcxx-fake.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-fake.obj `if test -f 'fake.cc'; then $(CYGPATH_W) 'fake.cc'; else $(CYGPATH_W) '$(srcdir)/fake.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CXXFLAGS) $(CXXFLAGS) -c -o directnetcxx-fake.obj `if test -f 'fake.cc'; then $(CYGPATH_W) 'fake.cc'; else $(CYGPATH_W) '$(srcdir)/fake.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1065,7 +1084,7 @@ maintainer-clean-generic:
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-gaimLTLIBRARIES clean-generic \
-	clean-libtool mostlyclean-am
+	clean-libtool clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -1118,14 +1137,14 @@ uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
 	clean clean-binPROGRAMS clean-gaimLTLIBRARIES clean-generic \
-	clean-libtool clean-recursive ctags ctags-recursive distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-recursive distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-gaimLTLIBRARIES install-info install-info-am \
-	install-man install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
+	clean-libtool clean-noinstPROGRAMS clean-recursive ctags \
+	ctags-recursive distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-recursive distclean-tags distdir \
+	dvi dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am install-exec \
+	install-exec-am install-gaimLTLIBRARIES install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic maintainer-clean-recursive \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
@@ -1133,6 +1152,9 @@ uninstall-info: uninstall-info-recursive
 	uninstall-binPROGRAMS uninstall-gaimLTLIBRARIES \
 	uninstall-info-am
 
+
+directnet: $(REALBIN)
+	cp -f $(REALBIN) $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
