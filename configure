@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS CURSES_LIBS CURSES_INCLUDEDIR READLINE_LIBS READLINE_INCLUDES UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE PKG_CONFIG GAIM_CFLAGS GAIM_LIBS GAIM_PLUGIN_DIR GAIM_PLUGIN_TRUE GAIM_PLUGIN_FALSE HUB_NAME HUB_DIR MAKE_HUB_TRUE MAKE_HUB_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL acx_pthread_config PTHREAD_CC PTHREAD_LIBS PTHREAD_CFLAGS FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX_TRUE UI_CXX_FALSE PKG_CONFIG GAIM_CFLAGS GAIM_LIBS GAIM_PLUGIN_DIR GAIM_PLUGIN_TRUE GAIM_PLUGIN_FALSE HUB_NAME HUB_DIR MAKE_HUB_TRUE MAKE_HUB_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1036,14 +1036,11 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-ui[=fltk|dumb]
-                set the UI
-  --enable-gaim-plugin
-                enable the Gaim Plugin - must have Gaim 1.2.0 or higher development libraries
-  --enable-hub=name
-                enable hub mode - name is the name of the hub "user"
-  --enable-enc=cyfer
-                set the encryption (cyfer or fake)
+  --enable-ui=fltk|dumb set the UI
+  --enable-gaim-plugin    enable the Gaim Plugin - must have Gaim 1.2.0 or
+                          higher development libraries
+  --enable-hub=name       enable hub mode - name is the name of the hub "user"
+  --enable-enc=cyfer|fake set the encryption (cyfer or fake)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1055,11 +1052,6 @@ Optional Packages:
                           include additional configurations [automatic]
   --with-fltk-prefix=PFX   Prefix where FLTK is installed (optional)
   --with-fltk-exec-prefix=PFX Exec prefix where FLTK is installed (optional)
-  --with-sunos-curses     Used to force SunOS 4.x curses
-  --with-osf1-curses      Used to force OSF/1 curses
-  --with-vcurses=incdir Used to force SysV curses
-  --with-ncurses=dir  Compile with ncurses/locate base dir
-  --with-readline=dir  Compile with readline/locate base dir no compile
 
 Some influential environment variables:
   CC          C compiler command
@@ -1965,7 +1957,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
           ac_config_headers="$ac_config_headers config.h"
 
 
-                                                                                                    ac_config_files="$ac_config_files Makefile src/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/gaim-plugin/Makefile src/hub/Makefile src/ui-curses/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile"
+                                                                                                    ac_config_files="$ac_config_files Makefile src/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/enc-gpg/Makefile src/gaim-plugin/Makefile src/hub/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-slang/Makefile"
 
 
 if test ! -e ${srcdir}/src/enc-cyfer/gmp
@@ -4390,7 +4382,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4393 "configure"' > conftest.$ac_ext
+  echo '#line 4385 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5271,7 +5263,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5274:" \
+echo "$as_me:5266:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6328,11 +6320,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6331: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6323: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6335: \$? = $ac_status" >&5
+   echo "$as_me:6327: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6571,11 +6563,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6574: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6566: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6578: \$? = $ac_status" >&5
+   echo "$as_me:6570: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6631,11 +6623,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6634: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6626: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:6638: \$? = $ac_status" >&5
+   echo "$as_me:6630: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8816,7 +8808,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8819 "configure"
+#line 8811 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8914,7 +8906,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8917 "configure"
+#line 8909 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11107,11 +11099,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11110: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11102: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11114: \$? = $ac_status" >&5
+   echo "$as_me:11106: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11167,11 +11159,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11170: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11162: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11174: \$? = $ac_status" >&5
+   echo "$as_me:11166: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12528,7 +12520,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12531 "configure"
+#line 12523 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12626,7 +12618,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12629 "configure"
+#line 12621 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13463,11 +13455,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13466: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13458: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13470: \$? = $ac_status" >&5
+   echo "$as_me:13462: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13523,11 +13515,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13526: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13518: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13530: \$? = $ac_status" >&5
+   echo "$as_me:13522: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15558,11 +15550,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15561: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15553: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15565: \$? = $ac_status" >&5
+   echo "$as_me:15557: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15801,11 +15793,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15804: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15796: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15808: \$? = $ac_status" >&5
+   echo "$as_me:15800: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15861,11 +15853,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15864: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15856: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15868: \$? = $ac_status" >&5
+   echo "$as_me:15860: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18046,7 +18038,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18049 "configure"
+#line 18041 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18144,7 +18136,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18147 "configure"
+#line 18139 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20010,7 +20002,7 @@ if test "${enable_ui+set}" = set; then
   case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
-        curses) ui=curses ;;
+        slang) ui=slang ;;
         *) { { echo "$as_me:$LINENO: error: Invalid UI chosen." >&5
 echo "$as_me: error: Invalid UI chosen." >&2;}
    { (exit 1); exit 1; }; } ;;
@@ -20174,584 +20166,246 @@ echo "$as_me: Using dumb UI" >&6;}
 fi
 
 
-if test "x$ui" = "xcurses" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "no" )
+if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
-
-	search_ncurses=true
-	screen_manager=""
-	has_curses=false
-
-	CFLAGS=${CFLAGS--O}
-
-
-
-
-
-# Check whether --with-sunos-curses or --without-sunos-curses was given.
-if test "${with_sunos_curses+set}" = set; then
-  withval="$with_sunos_curses"
-
-	  if test x$withval = xyes; then
-
-	search_ncurses=false
-	screen_manager="SunOS 4.x /usr/5include curses"
-	echo "$as_me:$LINENO: result: Using SunOS 4.x /usr/5include curses" >&5
-echo "${ECHO_T}Using SunOS 4.x /usr/5include curses" >&6
-	cat >>confdefs.h <<\_ACEOF
-#define USE_SUNOS_CURSES 1
-_ACEOF
-
-	cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-	has_curses=true
-	cat >>confdefs.h <<\_ACEOF
-#define NO_COLOR_CURSES 1
-_ACEOF
-
-	cat >>confdefs.h <<\_ACEOF
-#define USE_SYSV_CURSES 1
-_ACEOF
-
-	CURSES_INCLUDEDIR="-I/usr/5include"
-	CURSES_LIBS="/usr/5lib/libcurses.a /usr/5lib/libtermcap.a"
-	echo "$as_me:$LINENO: result: Please note that some screen refreshs may fail" >&5
-echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
-
-	  fi
-
-fi;
-
-
-# Check whether --with-osf1-curses or --without-osf1-curses was given.
-if test "${with_osf1_curses+set}" = set; then
-  withval="$with_osf1_curses"
-
-	  if test x$withval = xyes; then
-
-       echo "$as_me:$LINENO: result: Using OSF1 curses" >&5
-echo "${ECHO_T}Using OSF1 curses" >&6
-       search_ncurses=false
-       screen_manager="OSF1 curses"
-       cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-       has_curses=true
-       cat >>confdefs.h <<\_ACEOF
-#define NO_COLOR_CURSES 1
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define USE_SYSV_CURSES 1
-_ACEOF
-
-       CURSES_LIBS="-lcurses"
-
-	  fi
-
-fi;
-
-
-# Check whether --with-vcurses or --without-vcurses was given.
-if test "${with_vcurses+set}" = set; then
-  withval="$with_vcurses"
-  if test x$withval != xyes; then
-		CURSES_INCLUDEDIR="-I$withval"
-	  fi
-
-	echo "$as_me:$LINENO: result: Using SysV curses" >&5
-echo "${ECHO_T}Using SysV curses" >&6
-	cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-	has_curses=true
-	cat >>confdefs.h <<\_ACEOF
-#define USE_SYSV_CURSES 1
-_ACEOF
-
-	search_ncurses=false
-	screen_manager="SysV/curses"
-	CURSES_LIBS="-lcurses"
-
-
-fi;
-
-
-# Check whether --with-ncurses or --without-ncurses was given.
-if test "${with_ncurses+set}" = set; then
-  withval="$with_ncurses"
-  if test x$withval = xno ; then
-		search_ncurses=false
-	  elif test x$withval != xyes ; then
-		CURSES_LIBS="$LIBS -L$withval/lib -lncurses"
-		CURSES_INCLUDEDIR="-I$withval/include"
-		search_ncurses=false
-		screen_manager="ncurses"
-		cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-		cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-		has_curses=true
-	  fi
-
-fi;
-
-	if $search_ncurses
-	then
-
-    { echo "$as_me:$LINENO: checking \"location of ncurses.h file\"..." >&5
-echo "$as_me: checking \"location of ncurses.h file\"..." >&6;}
-
-
-    if $search_ncurses
-    then
-        if test -f /usr/include/ncurses.h
-	then
-	    echo "$as_me:$LINENO: result: Found ncurses on /usr/include/ncurses.h" >&5
-echo "${ECHO_T}Found ncurses on /usr/include/ncurses.h" >&6
- 	    CURSES_LIBS="-lncurses"
-	    CURSES_INCLUDEDIR=""
-	    search_ncurses=false
-	    screen_manager="ncurses on /usr/include"
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-            has_curses=true
-	    cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-	fi
-    fi
-
-
-    if $search_ncurses
-    then
-        if test -f /usr/include/ncurses/ncurses.h
-	then
-	    echo "$as_me:$LINENO: result: Found ncurses on /usr/include/ncurses/ncurses.h" >&5
-echo "${ECHO_T}Found ncurses on /usr/include/ncurses/ncurses.h" >&6
- 	    CURSES_LIBS="-lncurses"
-	    CURSES_INCLUDEDIR="-I/usr/include/ncurses"
-	    search_ncurses=false
-	    screen_manager="ncurses on /usr/include/ncurses"
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-            has_curses=true
-	    cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-	fi
-    fi
-
-
-    if $search_ncurses
-    then
-        if test -f /usr/local/include/ncurses.h
-	then
-	    echo "$as_me:$LINENO: result: Found ncurses on /usr/local/include/ncurses.h" >&5
-echo "${ECHO_T}Found ncurses on /usr/local/include/ncurses.h" >&6
- 	    CURSES_LIBS="-L/usr/local/lib -lncurses"
-	    CURSES_INCLUDEDIR="-I/usr/local/include"
-	    search_ncurses=false
-	    screen_manager="ncurses on /usr/local"
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-            has_curses=true
-	    cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-	fi
-    fi
-
-
-    if $search_ncurses
-    then
-        if test -f /usr/local/include/ncurses/ncurses.h
-	then
-	    echo "$as_me:$LINENO: result: Found ncurses on /usr/local/include/ncurses/ncurses.h" >&5
-echo "${ECHO_T}Found ncurses on /usr/local/include/ncurses/ncurses.h" >&6
- 	    CURSES_LIBS="-L/usr/local/lib -L/usr/local/lib/ncurses -lncurses"
-	    CURSES_INCLUDEDIR="-I/usr/local/include/ncurses"
-	    search_ncurses=false
-	    screen_manager="ncurses on /usr/local/include/ncurses"
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-            has_curses=true
-	    cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-	fi
-    fi
-
-
-
-    if $search_ncurses
-    then
-        if test -f /usr/local/include/ncurses/curses.h
-	then
-	    echo "$as_me:$LINENO: result: Found ncurses on /usr/local/include/ncurses/curses.h" >&5
-echo "${ECHO_T}Found ncurses on /usr/local/include/ncurses/curses.h" >&6
- 	    CURSES_LIBS="-L/usr/local/lib -lncurses"
-	    CURSES_INCLUDEDIR="-I/usr/local/include/ncurses -DRENAMED_NCURSES"
-	    search_ncurses=false
-	    screen_manager="renamed ncurses on /usr/local/.../ncurses"
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-            has_curses=true
-	    cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-	fi
-    fi
-
-
-
-    if $search_ncurses
-    then
-        if test -f /usr/include/ncurses/curses.h
-	then
-	    echo "$as_me:$LINENO: result: Found ncurses on /usr/include/ncurses/curses.h" >&5
-echo "${ECHO_T}Found ncurses on /usr/include/ncurses/curses.h" >&6
- 	    CURSES_LIBS="-lncurses"
-	    CURSES_INCLUDEDIR="-I/usr/include/ncurses -DRENAMED_NCURSES"
-	    search_ncurses=false
-	    screen_manager="renamed ncurses on /usr/include/ncurses"
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-            has_curses=true
-	    cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-	fi
-    fi
-
-
-                if $search_ncurses
-    then
-        cat >conftest.$ac_ext <<_ACEOF
+        if test "${ac_cv_header_slang_slang_h+set}" = set; then
+  echo "$as_me:$LINENO: checking for slang/slang.h" >&5
+echo $ECHO_N "checking for slang/slang.h... $ECHO_C" >&6
+if test "${ac_cv_header_slang_slang_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_slang_slang_h" >&5
+echo "${ECHO_T}$ac_cv_header_slang_slang_h" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking slang/slang.h usability" >&5
+echo $ECHO_N "checking slang/slang.h usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include </usr/include/curses.h>
-
+$ac_includes_default
+#include <slang/slang.h>
 _ACEOF
-if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
-  $EGREP "init_color" >/dev/null 2>&1; then
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
 
-	echo "$as_me:$LINENO: result: Using SysV curses" >&5
-echo "${ECHO_T}Using SysV curses" >&6
-	cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-	has_curses=true
-	cat >>confdefs.h <<\_ACEOF
-#define USE_SYSV_CURSES 1
-_ACEOF
-
-	search_ncurses=false
-	screen_manager="SysV/curses"
-	CURSES_LIBS="-lcurses"
-
+ac_header_compiler=no
 fi
-rm -f conftest*
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
 
-	cat >conftest.$ac_ext <<_ACEOF
+# Is the header present?
+echo "$as_me:$LINENO: checking slang/slang.h presence" >&5
+echo $ECHO_N "checking slang/slang.h presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-
-#include <curses.h>
-#ifdef __NCURSES_H
-#undef USE_NCURSES
-USE_NCURSES
-#endif
-
+#include <slang/slang.h>
 _ACEOF
-if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
-  $EGREP "USE_NCURSES" >/dev/null 2>&1; then
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
 
-	CURSES_INCLUDEDIR="$CURSES_INCLUDEDIR -DRENAMED_NCURSES"
-        cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
 
-	has_curses=true
-        cat >>confdefs.h <<\_ACEOF
-#define USE_NCURSES 1
-_ACEOF
-
-        search_ncurses=false
-        screen_manager="ncurses installed as curses"
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: slang/slang.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h: proceeding with the compiler's result" >&5
+echo "$as_me: WARNING: slang/slang.h: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h: present but cannot be compiled" >&5
+echo "$as_me: WARNING: slang/slang.h: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h:     check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: slang/slang.h:     check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h: see the Autoconf documentation" >&5
+echo "$as_me: WARNING: slang/slang.h: see the Autoconf documentation" >&2;}
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h:     section \"Present But Cannot Be Compiled\"" >&5
+echo "$as_me: WARNING: slang/slang.h:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: slang/slang.h: proceeding with the preprocessor's result" >&2;}
+    { echo "$as_me:$LINENO: WARNING: slang/slang.h: in the future, the compiler will take precedence" >&5
+echo "$as_me: WARNING: slang/slang.h: in the future, the compiler will take precedence" >&2;}
+    (
+      cat <<\_ASBOX
+## ---------------------------------------------- ##
+## Report this to cdgregorr@users.sourceforge.net ##
+## ---------------------------------------------- ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+echo "$as_me:$LINENO: checking for slang/slang.h" >&5
+echo $ECHO_N "checking for slang/slang.h... $ECHO_C" >&6
+if test "${ac_cv_header_slang_slang_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_cv_header_slang_slang_h=$ac_header_preproc
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_slang_slang_h" >&5
+echo "${ECHO_T}$ac_cv_header_slang_slang_h" >&6
 
 fi
-rm -f conftest*
-
-    fi
-
-                        if $search_ncurses
-    then
-	if test -f /usr/5include/curses.h
-	then
-
-	search_ncurses=false
-	screen_manager="SunOS 4.x /usr/5include curses"
-	echo "$as_me:$LINENO: result: Using SunOS 4.x /usr/5include curses" >&5
-echo "${ECHO_T}Using SunOS 4.x /usr/5include curses" >&6
-	cat >>confdefs.h <<\_ACEOF
-#define USE_SUNOS_CURSES 1
-_ACEOF
-
-	cat >>confdefs.h <<\_ACEOF
-#define HAS_CURSES 1
-_ACEOF
-
-	has_curses=true
-	cat >>confdefs.h <<\_ACEOF
-#define NO_COLOR_CURSES 1
-_ACEOF
-
-	cat >>confdefs.h <<\_ACEOF
-#define USE_SYSV_CURSES 1
-_ACEOF
-
-	CURSES_INCLUDEDIR="-I/usr/5include"
-	CURSES_LIBS="/usr/5lib/libcurses.a /usr/5lib/libtermcap.a"
-	echo "$as_me:$LINENO: result: Please note that some screen refreshs may fail" >&5
-echo "${ECHO_T}Please note that some screen refreshs may fail" >&6
-
-        fi
-    else
-        # check for ncurses version, to properly ifdef mouse-fix
-	echo "$as_me:$LINENO: checking for ncurses version" >&5
-echo $ECHO_N "checking for ncurses version... $ECHO_C" >&6
-	ncurses_version=unknown
-cat > conftest.$ac_ext <<EOF
-#line 20558 "configure"
-#include "confdefs.h"
-#ifdef RENAMED_NCURSES
-#include <curses.h>
-#else
-#include <ncurses.h>
-#endif
-#undef VERSION
-VERSION:NCURSES_VERSION
-EOF
-        if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
-  egrep "VERSION:" >conftest.out 2>&1; then
-            ncurses_version=`cat conftest.out|sed -e 's/^[^"]*"//' -e 's/".*//'`
-	fi
-	rm -rf conftest*
-        echo "$as_me:$LINENO: result: $ncurses_version" >&5
-echo "${ECHO_T}$ncurses_version" >&6
-	case "$ncurses_version" in
-	4.[01])
-            cat >>confdefs.h <<\_ACEOF
-#define NCURSES_970530 2
-_ACEOF
-
-            ;;
-	1.9.9g)
-            cat >>confdefs.h <<\_ACEOF
-#define NCURSES_970530 1
-_ACEOF
-
-            ;;
-	1*)
-            cat >>confdefs.h <<\_ACEOF
-#define NCURSES_970530 0
-_ACEOF
-
-            ;;
-	esac
-    fi
-
-	fi
-
-
-
-
-        if test "x$has_curses" != "xtrue"
-        then
-                if test "x$ui" = "xcurses"
-                then
-                        { { echo "$as_me:$LINENO: error:
-The chosen UI (curses) is unconfigurable.
-The appropriate libraries could not be found.
-                        " >&5
-echo "$as_me: error:
-The chosen UI (curses) is unconfigurable.
-The appropriate libraries could not be found.
-                        " >&2;}
+if test $ac_cv_header_slang_slang_h = yes; then
+  :
+else
+  { { echo "$as_me:$LINENO: error: You must have libslang installed to use the slang UI!" >&5
+echo "$as_me: error: You must have libslang installed to use the slang UI!" >&2;}
    { (exit 1); exit 1; }; }
-                fi
-        else
-                UI_CFLAGS=$CURSES_INCLUDEDIR
-                UI_CPPFLAGS=
-                UI_CXXFLAGS=$CURSES_INCLUDEDIR
-                UI_CXX=true
-                UI_LIBS=$CURSES_LIBS
-                UI_LDFLAGS=
-                UI_DIR=ui-curses
-                found_ui=yes
-                ui=curses
-                { echo "$as_me:$LINENO: Using curses UI" >&5
-echo "$as_me: Using curses UI" >&6;}
-
-                # Can we use readline?
-
-	search_readline=true
-	has_readline=false
-
-
-
-
-
-
-# Check whether --with-readline or --without-readline was given.
-if test "${with_readline+set}" = set; then
-  withval="$with_readline"
-  if test "x$withval" = "xno" ; then
-		search_readline=false
-	  elif test "x$withval" != "xyes" ; then
-		READLINE_LIBS="$LIBS -L$withval/lib -lreadline"
-		READLINE_INCLUDES="-I$withval/include"
-		search_readline=false
-		cat >>confdefs.h <<\_ACEOF
-#define HAS_READLINE 1
-_ACEOF
-
-		has_readline=true
-	  else
-	  	search_readline=true
-	  fi
-
-fi;
-
-	if $search_readline
-	then
-
-    { echo "$as_me:$LINENO: checking \"location of readline.h file\"..." >&5
-echo "$as_me: checking \"location of readline.h file\"..." >&6;}
-
-
-    if $search_readline
-    then
-        if test -f /usr/include/readline.h
-	then
-	    echo "$as_me:$LINENO: result: Found readline on /usr/include/readline.h" >&5
-echo "${ECHO_T}Found readline on /usr/include/readline.h" >&6
- 	    READLINE_LIBS="-lreadline"
-	    READLINE_INCLUDES=""
-	    search_readline=false
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_READLINE 1
-_ACEOF
-
-            has_readline=true
-	fi
-    fi
-
-
-    if $search_readline
-    then
-        if test -f /usr/include/readline/readline.h
-	then
-	    echo "$as_me:$LINENO: result: Found readline on /usr/include/readline/readline.h" >&5
-echo "${ECHO_T}Found readline on /usr/include/readline/readline.h" >&6
- 	    READLINE_LIBS="-lreadline"
-	    READLINE_INCLUDES="-I/usr/include/readline"
-	    search_readline=false
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_READLINE 1
-_ACEOF
-
-            has_readline=true
-	fi
-    fi
-
-
-    if $search_readline
-    then
-        if test -f /usr/local/include/readline.h
-	then
-	    echo "$as_me:$LINENO: result: Found readline on /usr/local/include/readline.h" >&5
-echo "${ECHO_T}Found readline on /usr/local/include/readline.h" >&6
- 	    READLINE_LIBS="-L/usr/local/lib -lreadline"
-	    READLINE_INCLUDES="-I/usr/local/include"
-	    search_readline=false
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_READLINE 1
-_ACEOF
-
-            has_readline=true
-	fi
-    fi
-
-
-    if $search_readline
-    then
-        if test -f /usr/local/include/readline/readline.h
-	then
-	    echo "$as_me:$LINENO: result: Found readline on /usr/local/include/readline/readline.h" >&5
-echo "${ECHO_T}Found readline on /usr/local/include/readline/readline.h" >&6
- 	    READLINE_LIBS="-L/usr/local/lib -L/usr/local/lib/readline -lreadline"
-	    READLINE_INCLUDES="-I/usr/local/include/readline"
-	    search_readline=false
-            cat >>confdefs.h <<\_ACEOF
-#define HAS_READLINE 1
-_ACEOF
-
-            has_readline=true
-	fi
-    fi
-
-
-	fi
-
-
-
-
-                if test "x$has_readline" = "xtrue"
-                then
-                        UI_CFLAGS="$UI_CFLAGS $READLINE_INCLUDES"
-                        UI_LIBS="$UI_LIBS $READLINE_LIBS"
-                        { echo "$as_me:$LINENO: Readline enabled" >&5
-echo "$as_me: Readline enabled" >&6;}
-                else
-                        { echo "$as_me:$LINENO: Readline disabled" >&5
-echo "$as_me: Readline disabled" >&6;}
-                fi
-        fi
 fi
+
+
+
+echo "$as_me:$LINENO: checking for SLtt_cls in -lslang" >&5
+echo $ECHO_N "checking for SLtt_cls in -lslang... $ECHO_C" >&6
+if test "${ac_cv_lib_slang_SLtt_cls+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lslang  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char SLtt_cls ();
+int
+main ()
+{
+SLtt_cls ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_slang_SLtt_cls=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_slang_SLtt_cls=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_slang_SLtt_cls" >&5
+echo "${ECHO_T}$ac_cv_lib_slang_SLtt_cls" >&6
+if test $ac_cv_lib_slang_SLtt_cls = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBSLANG 1
+_ACEOF
+
+  LIBS="-lslang $LIBS"
+
+else
+  { { echo "$as_me:$LINENO: error: You must have libslang installed to use the slang UI!" >&5
+echo "$as_me: error: You must have libslang installed to use the slang UI!" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_CXX=true
+        UI_LIBS=-lslang
+        UI_LDFLAGS=
+        UI_DIR=ui-slang
+        found_ui=yes
+        ui=slang
+        { echo "$as_me:$LINENO: Using slang UI" >&5
+echo "$as_me: Using slang UI" >&6;}
+fi
+
 
 if test "x$found_ui" = "xno"
 then
@@ -22904,9 +22558,9 @@ do
   "src/enc-gpg/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-gpg/Makefile" ;;
   "src/gaim-plugin/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gaim-plugin/Makefile" ;;
   "src/hub/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/hub/Makefile" ;;
-  "src/ui-curses/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-curses/Makefile" ;;
   "src/ui-dumb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
   "src/ui-fltk/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-fltk/Makefile" ;;
+  "src/ui-slang/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-slang/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -23066,10 +22720,6 @@ s,@PTHREAD_CFLAGS@,$PTHREAD_CFLAGS,;t t
 s,@FLTK_CONFIG@,$FLTK_CONFIG,;t t
 s,@FLTK_CFLAGS@,$FLTK_CFLAGS,;t t
 s,@FLTK_LIBS@,$FLTK_LIBS,;t t
-s,@CURSES_LIBS@,$CURSES_LIBS,;t t
-s,@CURSES_INCLUDEDIR@,$CURSES_INCLUDEDIR,;t t
-s,@READLINE_LIBS@,$READLINE_LIBS,;t t
-s,@READLINE_INCLUDES@,$READLINE_INCLUDES,;t t
 s,@UI_CFLAGS@,$UI_CFLAGS,;t t
 s,@UI_CPPFLAGS@,$UI_CPPFLAGS,;t t
 s,@UI_CXXFLAGS@,$UI_CXXFLAGS,;t t
