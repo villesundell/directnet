@@ -295,12 +295,15 @@ void fAwayMsg(Fl_Input *w, void *ignore)
 {
     char *am = strdup(w->value());
     setAway(am);
+    bw->bSetAway->color(FL_RED);
     awayMWin->hide();
     free(am);
 }
 
 void fBack(Fl_Button *w, void *ignore)
 {
+    bw->bSetAway->color(FL_GRAY);
+    Fl::redraw();
     setAway(NULL);
 }
 
