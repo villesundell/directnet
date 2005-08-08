@@ -1052,7 +1052,7 @@ Fl_Double_Window* NameWindow::make_window() {
   { Fl_Double_Window* o = nameWindow = new Fl_Double_Window(255, 90, "DirectNet");
     w = o;
     o->color(FL_FOREGROUND_COLOR);
-    o->user_data((void*)(this));
+    o->callback((Fl_Callback*)mainWinClosed, (void*)(this));
     { Fl_Input* o = nameIn = new Fl_Input(0, 65, 255, 25, "  Nickname:");
       o->image(image_dn);
       o->labelcolor(FL_BACKGROUND2_COLOR);
