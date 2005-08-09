@@ -39,7 +39,7 @@
 int establishClient(char *destination)
 {
     int pthreadres, curfd;
-    int *onfd_ptr;
+    struct communInfo *ci_ptr;
     struct hostent *he;
     struct sockaddr_in addr;
     //struct in_addr inIP;
@@ -97,11 +97,12 @@ int establishClient(char *destination)
     }
     dn_unlock(&dn_fd_lock);
     
-    onfd_ptr = malloc(sizeof(int));
-    *onfd_ptr = curfd;
+    ci_ptr = malloc(sizeof(struct communInfo));
+    ci_ptr->fdnum = curfd;
+    ci_ptr->pthreadnum = onpthread;
     pthread_attr_init(&ptattr);
     pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
-    pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
+    pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) ci_ptr);
 
     onpthread++;
     

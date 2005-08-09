@@ -28,6 +28,7 @@
 #endif
 
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,12 +50,20 @@ int handleNLUnroutedMsg(char **params);
 int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params);
 int sendMsgB(char *to, char *msg, char away);
 
+void consigterm_handler(int sig)
+{
+    pthread_exit(0);
+}
+
 void *communicator(void *fdnum_voidptr)
 {
-    int fdnum, byterec, origstrlen;
+    int fdnum, pthreadnum, byterec, origstrlen;
     char buf[DN_CMD_LEN];
     
-    fdnum = *((int *) fdnum_voidptr);
+    signal(SIGTERM, consigterm_handler);
+    
+    fdnum = ((struct communInfo *) fdnum_voidptr)->fdnum;
+    pthreadnum = ((struct communInfo *) fdnum_voidptr)->pthreadnum;
     free(fdnum_voidptr);
     
     dn_lockInit(pipe_locks+fdnum);
@@ -101,6 +110,9 @@ void *communicator(void *fdnum_voidptr)
             return NULL;
         }
     }
+    
+    free(pthreads[pthreadnum]);
+    pthreads[pthreadnum] = NULL;
     
     return NULL;
 }
