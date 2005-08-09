@@ -63,6 +63,11 @@ extern char uiLoaded;
 
 extern char dn_localip[24];
 
+struct communInfo {
+    int fdnum;
+    int pthreadnum;
+};
+
 void newTransKey(char *into);
 
 #endif // DN_DIRECTNET_H
