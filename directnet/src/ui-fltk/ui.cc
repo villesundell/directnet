@@ -314,7 +314,7 @@ void fBack(Fl_Button *w, void *ignore)
     setAway(NULL);
 }
 
-void flDispMsg(char *window, char *from, char *msg)
+void flDispMsg(char *window, char *from, char *msg, char *authmsg)
 {
     ChatWindow *cw;
     char *dispmsg;
@@ -323,8 +323,13 @@ void flDispMsg(char *window, char *from, char *msg)
     
     dn_lock(&displayLock);
     
-    dispmsg = (char *) alloca((strlen(from) + strlen(msg) + 4) * sizeof(char));
-    sprintf(dispmsg, "%s: %s\n", from, msg);
+    dispmsg = (char *) alloca((strlen(from) + (authmsg ? strlen(authmsg) : 0) +
+                               strlen(msg) + 7) * sizeof(char));
+    if (authmsg) {
+        sprintf(dispmsg, "%s [%s]: %s\n", from, authmsg, msg);
+    } else {
+        sprintf(dispmsg, "%s: %s\n", from, msg);
+    }
     
     cw = getWindow(window);
     
@@ -333,9 +338,9 @@ void flDispMsg(char *window, char *from, char *msg)
     dn_unlock(&displayLock);
 }
 
-extern "C" void uiDispMsg(char *from, char *msg)
+extern "C" void uiDispMsg(char *from, char *msg, char *authmsg)
 {
-    flDispMsg(from, from, msg);
+    flDispMsg(from, from, msg, authmsg);
 }
 
 extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)
@@ -345,7 +350,7 @@ extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)
     chatWHash[0] = '#';
     strcpy(chatWHash + 1, chat);
     
-    flDispMsg(chatWHash, from, msg);
+    flDispMsg(chatWHash, from, msg, NULL);
 }
 
 extern "C" void uiEstConn(char *from)
