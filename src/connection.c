@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "auth.h"
 #include "chat.h"
 #include "client.h"
 #include "connection.h"
@@ -330,7 +331,7 @@ void handleMsg(char *inbuf, int fdnum)
                 locip_len = sizeof(struct sockaddr);
                 if (getsockname(firfd, &locip, &locip_len) == 0) {
                     locip_i = (struct sockaddr_in *) &locip;
-                    /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
+                    / *params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
                     outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
                 } else {
                     return;
@@ -880,7 +881,7 @@ void *fndPthread(void *name_voidptr)
         locip_len = sizeof(struct sockaddr);
         if (getsockname(firfd, &locip, &locip_len) == 0) {
             locip_i = (struct sockaddr_in *) &locip;
-            /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
+            / *params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
             params[2] = strdup(inet_ntoa(locip_i->sin_addr));
         } else {
             return NULL;
@@ -895,6 +896,7 @@ void *fndPthread(void *name_voidptr)
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
     }*/
+    return NULL;
 }
 
 /* Commands used by the UI */
