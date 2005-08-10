@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -18,16 +18,35 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_GPG_H
-#define DN_GPG_H
+#include <stdlib.h>
 
-extern char gpghomedir[256];
+#include "auth.h"
 
-int findGPG(char **envp);
-char *gpgTo(char *from, char *to, char *msg);
-char *gpgFrom(char *from, char *to, char *msg);
-char *gpgCreateKey();
-char *gpgExportKey();
-char *gpgImportKey(char *name, char *key);
+int authInit()
+{
+    return 1;
+}
 
-#endif // DN_GPG_H
+int authNeedPW()
+{
+    return 0;
+}
+
+void authSetPW(char *nm, char *pswd) {}
+
+char *authSign(char *msg)
+{
+    return strdup(msg);
+}
+
+char *authVerify(char *msg, char **who, int *status)
+{
+    *who = NULL;
+    *status = -1;
+    return strdup(msg);
+}
+
+int authImport(char *msg)
+{
+    return 1;
+}
