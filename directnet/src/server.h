@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -23,7 +23,10 @@
 
 #include <pthread.h>
 
+/* The fd of the server's socket */
 extern int server_sock;
+
+/* Set up the server (a pthread) */
 pthread_t *establishServer();
 
 #endif // DN_SERVER_H

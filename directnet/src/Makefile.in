@@ -39,12 +39,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@MAKE_HUB_FALSE@@UI_CXX_FALSE@bin_PROGRAMS = directnet$(EXEEXT)
-@MAKE_HUB_FALSE@@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT)
-@MAKE_HUB_TRUE@@UI_CXX_FALSE@bin_PROGRAMS = directnet$(EXEEXT) \
-@MAKE_HUB_TRUE@@UI_CXX_FALSE@	directnethub$(EXEEXT)
-@MAKE_HUB_TRUE@@UI_CXX_TRUE@bin_PROGRAMS = directnet$(EXEEXT) \
-@MAKE_HUB_TRUE@@UI_CXX_TRUE@	directnethub$(EXEEXT)
+@MAKE_HUB_FALSE@bin_PROGRAMS = directnet$(EXEEXT)
+@MAKE_HUB_TRUE@bin_PROGRAMS = directnet$(EXEEXT) directnethub$(EXEEXT)
 @UI_CXX_FALSE@noinst_PROGRAMS = directnetc$(EXEEXT)
 @UI_CXX_TRUE@noinst_PROGRAMS = directnetcxx$(EXEEXT)
 subdir = src
@@ -156,6 +152,12 @@ AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
 AR = @AR@
+AUTH_CFLAGS = @AUTH_CFLAGS@
+AUTH_CPPFLAGS = @AUTH_CPPFLAGS@
+AUTH_CXXFLAGS = @AUTH_CXXFLAGS@
+AUTH_DIR = @AUTH_DIR@
+AUTH_LDFLAGS = @AUTH_LDFLAGS@
+AUTH_LIBS = @AUTH_LIBS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -279,7 +281,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@ 
+SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@ 
 @UI_CXX_TRUE@directnetcxx_SOURCES = chat.c \
 @UI_CXX_TRUE@client.c \
 @UI_CXX_TRUE@connection.c \
@@ -289,11 +291,13 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @UI_CXX_TRUE@server.c \
 @UI_CXX_TRUE@fake.cc
 
-@UI_CXX_TRUE@directnetcxx_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
-@UI_CXX_TRUE@directnetcxx_CXXFLAGS = @PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@
-@UI_CXX_TRUE@directnetcxx_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@
-@UI_CXX_TRUE@directnetcxx_DEPENDENCIES = @UI_DIR@/libui.a  @ENC_DIR@/libenc.a
-@UI_CXX_TRUE@directnetcxx_LDADD = @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+@UI_CXX_TRUE@directnetcxx_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
+@UI_CXX_TRUE@directnetcxx_CXXFLAGS = @PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
+@UI_CXX_TRUE@directnetcxx_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
+@UI_CXX_TRUE@directnetcxx_DEPENDENCIES = @UI_DIR@/libui.a  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
+@UI_CXX_TRUE@directnetcxx_LDADD = @PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a \
+@UI_CXX_TRUE@ @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @UI_LIBS@ @ENC_LIBS@ @AUTH_LIBS@
+
 @UI_CXX_FALSE@directnetc_SOURCES = chat.c \
 @UI_CXX_FALSE@client.c \
 @UI_CXX_FALSE@connection.c \
@@ -302,10 +306,12 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @UI_CXX_FALSE@lock.c \
 @UI_CXX_FALSE@server.c
 
-@UI_CXX_FALSE@directnetc_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@
-@UI_CXX_FALSE@directnetc_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@
-@UI_CXX_FALSE@directnetc_DEPENDENCIES = @UI_DIR@/libui.a @ENC_DIR@/libenc.a
-@UI_CXX_FALSE@directnetc_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a @UI_LIBS@ @ENC_LIBS@
+@UI_CXX_FALSE@directnetc_CFLAGS = @PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
+@UI_CXX_FALSE@directnetc_LDFLAGS = @PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
+@UI_CXX_FALSE@directnetc_DEPENDENCIES = @UI_DIR@/libui.a @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
+@UI_CXX_FALSE@directnetc_LDADD = @PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a \
+@UI_CXX_FALSE@ @AUTH_DIR@/libauth.a @UI_LIBS@ @ENC_LIBS@ @AUTH_LIBS@
+
 @MAKE_HUB_TRUE@directnethub_SOURCES = chat.c \
 @MAKE_HUB_TRUE@client.c \
 @MAKE_HUB_TRUE@connection.c \
@@ -314,10 +320,12 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @MAKE_HUB_TRUE@lock.c \
 @MAKE_HUB_TRUE@server.c
 
-@MAKE_HUB_TRUE@directnethub_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@
-@MAKE_HUB_TRUE@directnethub_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@
-@MAKE_HUB_TRUE@directnethub_DEPENDENCIES = @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a
-@MAKE_HUB_TRUE@directnethub_LDADD = @PTHREAD_LIBS@ @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a @ENC_LIBS@
+@MAKE_HUB_TRUE@directnethub_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
+@MAKE_HUB_TRUE@directnethub_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
+@MAKE_HUB_TRUE@directnethub_DEPENDENCIES = @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
+@MAKE_HUB_TRUE@directnethub_LDADD = @PTHREAD_LIBS@ @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a \
+@MAKE_HUB_TRUE@ @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@
+
 @GAIM_PLUGIN_TRUE@gaimdir = $(libdir)/gaim
 @GAIM_PLUGIN_TRUE@gaim_LTLIBRARIES = libdirectnet_gaim.la
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_SOURCES = chat.c \
@@ -328,10 +336,18 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @GAIM_PLUGIN_DIR@
 @GAIM_PLUGIN_TRUE@lock.c \
 @GAIM_PLUGIN_TRUE@server.c
 
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@ -module -avoid-version -Wl,--export-dynamic
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a @ENC_DIR@/libenc.a @ENC_LIBS@ @GAIM_LIBS@
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @PTHREAD_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@ \
+@GAIM_PLUGIN_TRUE@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
+
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LDFLAGS = @PTHREAD_CFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@ \
+@GAIM_PLUGIN_TRUE@ -module -avoid-version -Wl,--export-dynamic
+
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @GAIM_PLUGIN_DIR@/libgaim_plugin.a \
+@GAIM_PLUGIN_TRUE@ @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
+
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a \
+@GAIM_PLUGIN_TRUE@ @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@ @GAIM_LIBS@
+
 @UI_CXX_FALSE@REALBIN = directnetc$(EXEEXT)
 @UI_CXX_TRUE@REALBIN = directnetcxx$(EXEEXT)
 all: all-recursive

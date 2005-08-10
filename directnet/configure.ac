@@ -12,9 +12,10 @@ AC_CONFIG_FILES(
 [
 Makefile
 src/Makefile
+src/auth-gpg/Makefile
+src/auth-none/Makefile
 src/enc-cyfer/Makefile
 src/enc-fake/Makefile
-src/enc-gpg/Makefile
 src/gaim-plugin/Makefile
 src/hub/Makefile
 src/ui-dumb/Makefile
@@ -243,7 +244,6 @@ AS_HELP_STRING([--enable-enc[[=cyfer|fake]]], [set the encryption (cyfer or fake
 [case "$enableval" in
         cyfer) enc=cyfer ;;
         fake) enc=fake ;;
-        gpg) enc=gpg ;;
         *) AC_MSG_ERROR([Invalid encryption chosen.]) ;;
 esac], [enc=determine])
 
@@ -292,20 +292,6 @@ then
         AS_MESSAGE([Using fake encryption])
 fi
 
-if test "x$enc" = "xgpg" || ( test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
-then
-        ENC_CFLAGS=
-        ENC_CPPFLAGS=
-        ENC_CXXFLAGS=
-        ENC_CXX=false
-        ENC_LIBS=
-        ENC_LDFLAGS=
-        ENC_DIR=enc-gpg
-        found_enc=yes
-        enc=gpg
-        AS_MESSAGE([Using GPG encryption])
-fi
-
 if test "x$found_enc" = "xno"
 then
         AC_MSG_ERROR([Couldn't find a working encryption library.])
@@ -317,6 +303,60 @@ AC_SUBST(ENC_CXXFLAGS)
 AC_SUBST(ENC_LIBS)
 AC_SUBST(ENC_LDFLAGS)
 AC_SUBST(ENC_DIR)
+
+
+# Check which authentication to use
+AC_ARG_ENABLE(auth,
+AS_HELP_STRING([--enable-auth[[=gpg|none]]], [set the encryption (gpg or none)]),
+[case "$enableval" in
+        gpg) auth=gpg ;;
+        none) auth=none ;;
+        *) AC_MSG_ERROR([Invalid authentication chosen.]) ;;
+esac], [auth=determine])
+
+AS_MESSAGE([checking which authentication to use...])
+
+found_auth=no
+
+if test "x$auth" = "xgpg" || test "x$auth" = "xdetermine"
+then
+        AUTH_CFLAGS=
+        AUTH_CPPFLAGS=
+        AUTH_CXXFLAGS=
+        AUTH_CXX=false
+        AUTH_LIBS=
+        AUTH_LDFLAGS=
+        AUTH_DIR=auth-gpg
+        found_auth=yes
+        auth=gpg
+        AS_MESSAGE([Using GPG authentication.])
+fi
+
+if test "x$auth" = "xnone" || (test "x$auth" = "xdetermine" && test "x$found_auth" = "xno" )
+then
+        AUTH_CFLAGS=
+        AUTH_CPPFLAGS=
+        AUTH_CXXFLAGS=
+        AUTH_CXX=false
+        AUTH_LIBS=
+        AUTH_LDFLAGS=
+        AUTH_DIR=auth-none
+        found_auth=yes
+        auth=none
+        AS_MESSAGE([Using no authentication.])
+fi
+
+if test "x$found_auth" = "xno"
+then
+        AC_MSG_ERROR([Couldn't find a working authentication library.])
+fi
+
+AC_SUBST(AUTH_CFLAGS)
+AC_SUBST(AUTH_CPPFLAGS)
+AC_SUBST(AUTH_CXXFLAGS)
+AC_SUBST(AUTH_LIBS)
+AC_SUBST(AUTH_LDFLAGS)
+AC_SUBST(AUTH_DIR)
 
 
 # Checks for header files.

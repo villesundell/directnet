@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -39,7 +39,7 @@
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
-#include "gpg.h"
+#include "enc.h"
 #include "hash.h"
 #include "ui.h"
 
@@ -71,7 +71,7 @@ void *communicator(void *fdnum_voidptr)
     // Immediately send our name and key unless it's not set
     while (!dn_name_set) sleep(0);
     buildCmd(buf, "key", 1, 1, dn_name);
-    addParam(buf, gpgExportKey());
+    addParam(buf, encExportKey());
     sendCmd(fdnum, buf);
     
     buf[0] = '\0';
@@ -259,7 +259,7 @@ void handleMsg(char *inbuf, int fdnum)
             // Yay, chat for us!
             
             // Decrypt it
-            unenmsg = gpgFrom(params[2], dn_name, params[5]);
+            unenmsg = encFrom(params[2], dn_name, params[5]);
             if (unenmsg[0] == '\0') {
                 free(unenmsg);
                 return;
@@ -281,7 +281,7 @@ void handleMsg(char *inbuf, int fdnum)
                     continue;
                 }
                 
-                outParams[5] = gpgTo(dn_name, users[i], unenmsg);
+                outParams[5] = encTo(dn_name, users[i], unenmsg);
                 
                 handleRoutedMsg("cms", 1, 1, outParams);
                 
@@ -431,13 +431,13 @@ void handleMsg(char *inbuf, int fdnum)
                 hashSSet(dn_routes, params[1], reverseRoute);
             
                 // and public key,
-                gpgImportKey(params[1], params[3]);
+                encImportKey(params[1], params[3]);
                 
                 // then send your route back to him
                 outparams[0] = reverseRoute;
                 outparams[1] = dn_name;
                 outparams[2] = params[0];
-                outparams[3] = gpgExportKey();
+                outparams[3] = encExportKey();
                 handleRoutedMsg("fnr", 1, 1, outparams);
                 
                 uiEstRoute(params[1]);
@@ -610,7 +610,7 @@ void handleMsg(char *inbuf, int fdnum)
             hashSSet(dn_routes, params[1], newroute);
             
             // 2) Key
-            gpgImportKey(params[1], params[3]);
+            encImportKey(params[1], params[3]);
             
             uiEstRoute(params[1]);
         }
@@ -632,7 +632,7 @@ void handleMsg(char *inbuf, int fdnum)
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
         
-        gpgImportKey(params[0], params[1]);
+        encImportKey(params[0], params[1]);
         
         uiEstRoute(params[0]);
 
@@ -651,9 +651,34 @@ void handleMsg(char *inbuf, int fdnum)
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message
-            char *dispmsg = gpgFrom(params[1], dn_name, params[2]);
-            uiDispMsg(params[1], dispmsg);
+            char *unencmsg, *dispmsg, *sig, *sigm;
+            int austat;
+            
+            // Decrypt it
+            unencmsg = encFrom(params[1], dn_name, params[2]);
+            
+            // And verify the signature
+            dispmsg = authVerify(unencmsg, &sig, &austat);
+            free(unencmsg);
+            
+            // Make our signature tag
+            if (austat == -1) {
+                sigm = strdup("n");
+            } else if (austat == 0) {
+                sigm = strdup("u");
+            } else if (austat == 1 && sig) {
+                sigm = (char *) malloc((strlen(sig) + 3) * sizeof(char));
+                sprintf(sigm, "s %s", sig);
+            } else if (austat == 1 && !sig) {
+                sigm = strdup("s");
+            } else {
+                sigm = strdup("?");
+            }
+            if (sig) free(sig);
+            
+            uiDispMsg(params[1], dispmsg, sigm);
             free(dispmsg);
+            free(sigm);
             
             // Are we away?
             if (awayMsg && strncmp(command, "msa", 3)) {
@@ -908,6 +933,7 @@ int establishConnection(char *to)
 int sendMsgB(char *to, char *msg, char away)
 {
     char *outparams[DN_MAX_PARAMS], *route;
+    char *signedmsg, *encdmsg;
     
     memset(outparams, 0, DN_MAX_PARAMS * sizeof(char *));
         
@@ -919,14 +945,23 @@ int sendMsgB(char *to, char *msg, char away)
 
     outparams[0] = route;
     outparams[1] = dn_name;
-    outparams[2] = gpgTo(dn_name, to, msg);
+    
+    // Sign ...
+    signedmsg = authSign(msg);
+    if (!signedmsg) return 0;
+    
+    // and encrypt the message
+    encdmsg = encTo(dn_name, to, signedmsg);
+    free(signedmsg);
+    
+    outparams[2] = encdmsg;
     if (away) {
         handleRoutedMsg("msa", 1, 1, outparams);
     } else {
         handleRoutedMsg("msg", 1, 1, outparams);
     }
         
-    free(outparams[2]);
+    free(encdmsg);
     
     return 1;
 }
@@ -944,7 +979,7 @@ void sendFnd(char *to)
     buildCmd(outbuf, "fnd", 1, 1, "");
     addParam(outbuf, dn_name);
     addParam(outbuf, to);
-    addParam(outbuf, gpgExportKey());
+    addParam(outbuf, encExportKey());
         
     emitUnroutedMsg(-1, outbuf);
 }
@@ -1022,7 +1057,7 @@ void sendChat(char *to, char *msg)
             continue;
         }
         
-        outParams[5] = gpgTo(dn_name, users[i], msg);
+        outParams[5] = encTo(dn_name, users[i], msg);
         
         handleRoutedMsg("cms", 1, 1, outParams);
         

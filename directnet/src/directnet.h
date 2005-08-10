@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -62,6 +62,8 @@ extern DN_LOCK displayLock;
 extern char uiLoaded;
 
 extern char dn_localip[24];
+
+extern char *homedir;
 
 struct communInfo {
     int fdnum;

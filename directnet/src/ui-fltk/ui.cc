@@ -24,10 +24,11 @@ extern "C" {
 #include <string.h>
 #include <unistd.h>
 
+#include "auth.h"
 #include "connection.h"
 #include "directnet.h"
 #include "globals.h"
-#include "gpg.h"
+#include "enc.h"
 #include "lock.h"
 #include "ui.h"
 }
@@ -55,14 +56,20 @@ ChatWindow *showcw = NULL;
 
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
-    /* Always start by finding GPG */
-    if (findGPG(envp) == -1) {
-        printf("GPG was not found on your PATH!\n");
+    /* Always start by finding encryption */
+    if (findEnc(envp) == -1) {
+        printf("No encryption binaries were found on your PATH!\n");
+        return -1;
+    }
+    
+    /* Then authentication */
+    if (!authInit()) {
+        printf("Authentication failed to initialize!\n");
         return -1;
     }
 
     /* And creating the key */
-    gpgCreateKey();
+    encCreateKey();
     
     /* blank our array of windows */
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
