@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -26,11 +26,31 @@
 extern struct hashS *dn_chats;
 extern DN_LOCK dn_chat_lock;
 
+/* Am I on this channel?
+ * channel: the channel to query
+ * returns: 1 if on the channel, 0 otherwise */
 char chatOnChannel(const char *channel);
+
+/* Add a user to my perception of a chat room
+ * channel: the channel
+ * name: the user */
 void chatAddUser(const char *channel, const char *name);
+
+/* Remove a user from my perception of a chat room
+ * channel: the channel
+ * name: the user */
 void chatRemUser(const char *channel, const char *name);
+
+/* Get a list of all users on a channel
+ * channel: the channel */
 char **chatUsers(const char *channel);
+
+/* Join a chat
+ * channel: the channel */
 void chatJoin(const char *channel);
+
+/* Leave a chat
+ * channel: the channel */
 void chatLeave(const char *channel);
 
 #endif

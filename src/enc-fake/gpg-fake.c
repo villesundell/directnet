@@ -22,32 +22,32 @@
 
 #include "directnet.h"
 
-char gpghomedir[256], gpgbinloc[256];
+char encbinloc[256];
 
-int findGPG(char **envp)
+int findEnc(char **envp)
 {
     return 0;
 }
     
-char *gpgTo(char *from, char *to, char *msg)
+char *encTo(char *from, char *to, char *msg)
 {
     return strdup(msg);
 }
 
-char *gpgFrom(char *from, char *to, char *msg)
+char *encFrom(char *from, char *to, char *msg)
 {
     return strdup(msg);
 }
 
-char *gpgCreateKey()
+char *encCreateKey()
 {
     return "";
 }
 
-char *gpgExportKey() {
+char *encExportKey() {
     return "nokey";
 }
 
-char *gpgImportKey(char *name, char *key) {
+char *encImportKey(char *name, char *key) {
     return "";
 }

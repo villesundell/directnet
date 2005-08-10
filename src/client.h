@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -21,6 +21,9 @@
 #ifndef DN_CLIENT_H
 #define DN_CLIENT_H
 
+/* Connect to a hostname or IP
+ * destination: the hostname or IP
+ * returns: 1 on success, 0 otherwise */
 int establishClient(char *destination);
 
 #endif // DN_CLIENT_H

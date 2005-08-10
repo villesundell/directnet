@@ -493,8 +493,8 @@ static void gp_close(GaimConnection *gc)
         my_account = NULL;
         my_gc = NULL;
         
-		serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
-    
+        serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
+        
         for (i = 0; i < onpthread; i++) {
             pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
         }

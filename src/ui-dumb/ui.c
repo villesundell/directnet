@@ -23,10 +23,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "auth.h"
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
-#include "gpg.h"
+#include "enc.h"
 #include "ui.h"
 
 char *currentPartner;
@@ -39,10 +40,42 @@ int uiInit(int argc, char ** argv, char **envp)
     int charin, ostrlen;
     char cmdbuf[32256];
     
-    // Always start by finding GPG
-    if (findGPG(envp) == -1) {
-        printf("GPG was not found on your PATH!\n");
+    // Always start by finding encryption
+    if (findEnc(envp) == -1) {
+        printf("Necessary encryption programs were not found on your PATH!\n");
         return -1;
+    }
+    
+    /* Then authentication */
+    if (!authInit()) {
+        printf("Authentication failed to initialize!\n");
+        return -1;
+    } else if (authNeedPW()) {
+        char *nm, *pswd;
+        int osl;
+        
+        /* name */
+        nm = (char *) malloc(256 * sizeof(char));
+        printf("Authentication username: ");
+        fflush(stdout);
+        nm[255] = '\0';
+        fgets(nm, 255, stdin);
+        osl = strlen(nm) - 1;
+        if (nm[osl] == '\n') nm[osl] = '\0';
+        
+        /* password */
+        pswd = (char *) malloc(256 * sizeof(char));
+        /* lame way to cover it */
+        printf("Authentication password: \x1b[30;40m");
+        fflush(stdout);
+        pswd[255] = '\0';
+        fgets(pswd, 255, stdin);
+        osl = strlen(pswd) - 1;
+        if (pswd[osl] == '\n') pswd[osl] = '\0';
+        printf("\x1b[0m");
+        fflush(stdout);
+        
+        authSetPW(nm, pswd);
     }
     
     // Then asking for the nick
@@ -56,7 +89,7 @@ int uiInit(int argc, char ** argv, char **envp)
     }
     
     // And creating the key
-    printf("%s\n", gpgCreateKey());
+    printf("%s\n", encCreateKey());
     
     // You start in a conversation with nobody
     currentPartner = (char *) malloc(DN_NAME_LEN * sizeof(char));
@@ -166,10 +199,10 @@ int handleUInput(char *inp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg)
+void uiDispMsg(char *from, char *msg, char *authmsg)
 {
     while (!uiLoaded) sleep(0);
-    printf("\n%s: %s\n%s> ", from, msg, currentPartner);
+    printf("\n%s [%s]: %s\n%s> ", from, authmsg, msg, currentPartner);
     fflush(stdout);
 }
 

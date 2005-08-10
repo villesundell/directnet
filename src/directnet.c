@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -32,7 +32,7 @@
 #include "chat.h"
 #include "directnet.h"
 #include "globals.h"
-#include "gpg.h"
+#include "enc.h"
 #include "hash.h"
 #include "lock.h"
 #include "server.h"
@@ -69,6 +69,8 @@ char uiLoaded;
 DN_LOCK displayLock; // Only one thread writing at a time.
 
 char dn_localip[24];
+
+char *homedir;
 
 char *findHome(char **envp);
 
@@ -162,9 +164,9 @@ int pluginMain(int argc, char **argv, char **envp)
     // Establish the server
     serverPthread = establishServer();
 
-    // Set GPG's home directory
-    sprintf(gpghomedir, "%.245s/.directnet", findHome(envp));
-
+    // Set home directory
+    homedir = strdup(findHome(envp));
+    
     // Start the UI
     uiInit(argc, argv, envp);
 

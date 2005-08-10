@@ -31,7 +31,7 @@
 
 #include "directnet.h"
 
-char gpghomedir[256], gpgbinloc[256];
+char encbinloc[256];
 
 struct cyf_key {
     char *name;
@@ -201,12 +201,12 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
     return out;
 }
 
-int findGPG(char **envp)
+int findEnc(char **envp)
 {
     return 0;
 }
     
-char *gpgTo(char *from, char *to, char *msg)
+char *encTo(char *from, char *to, char *msg)
 {
     int len;
     char *enc, *enc2;
@@ -222,7 +222,7 @@ char *gpgTo(char *from, char *to, char *msg)
     return enc;
 }
 
-char *gpgFrom(char *from, char *to, char *msg)
+char *encFrom(char *from, char *to, char *msg)
 {
     int len;
     char *enc, *enc2;
@@ -238,7 +238,7 @@ char *gpgFrom(char *from, char *to, char *msg)
     return enc;
 }
 
-char *gpgCreateKey()
+char *encCreateKey()
 {
     CYFER_PK_CTX *ctx;
     int privlen, publen;
@@ -265,11 +265,11 @@ char *gpgCreateKey()
     return mypukey;
 }
 
-char *gpgExportKey() {
+char *encExportKey() {
     return mypukey;
 }
 
-char *gpgImportKey(char *name, char *key) {
+char *encImportKey(char *name, char *key) {
     if (cyf_key_head) {
         struct cyf_key *cur = cyf_key_head;
         while (cur->next) {

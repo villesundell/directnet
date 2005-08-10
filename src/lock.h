@@ -1,5 +1,5 @@
 /*
- * Copyright 2004 Gregor Richards
+ * Copyright 2004, 2005  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -24,8 +24,16 @@
 #define DN_LOCK pthread_mutex_t
 #include <pthread.h>
 
+/* Initialize a DN_LOCK
+ * lockVal: a pointer to the lock to initialize */
 void dn_lockInit(DN_LOCK *lockVal);
+
+/* Lock a DN_LOCK
+ * lockVal: a pointer to the lock to lock */
 void dn_lock(DN_LOCK *lockVal);
+
+/* Unlock a DN_LOCK
+ * lockVal: a pointer to the lock to unlock */
 void dn_unlock(DN_LOCK *lockVal);
 
 #endif // DN_LOCK_H
