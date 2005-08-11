@@ -55,4 +55,8 @@ char *authVerify(char *msg, char **who, int *status);
  * returns: 1 on success, 0 otherwise */
 int authImport(char *msg);
 
+/* Export your signature
+ * returns: a MALLOC'D buffer with the user's signature or NULL on error */
+char *authExport();
+
 #endif

@@ -73,8 +73,7 @@ char *gpgWrap(char *inp, char *args, int pass)
     /* 5) extract the content of fo */
     fseek(fo, 0, SEEK_SET);
     co = (char *) malloc(10240 * sizeof(char));
-    fread(co, 1, 10240, fo);
-    co[10239] = '\0';
+    co[fread(co, 1, 10240, fo)] = '\0';
     
     fclose(fi);
     fclose(fo);
@@ -109,8 +108,8 @@ char *authSign(char *msg)
 {
     char *arg, *outp;
     
-    arg = (char *) malloc((16 + strlen(GPG_name)) * sizeof(char));
-    sprintf(arg, "--clearsign -u %s", GPG_name);
+    arg = (char *) malloc((18 + strlen(GPG_name)) * sizeof(char));
+    sprintf(arg, "--clearsign -u \"%s\"", GPG_name);
     
     outp = gpgWrap(msg, arg, 1);
     free(arg);
@@ -123,6 +122,43 @@ char *authVerify(char *msg, char **who, int *status)
     
     *who = NULL;
     *status = -1;
+    
+    /* the special case is that this is a key */
+    if (!strncmp(msg, "-----BEGIN PGP PUBLIC KEY BLOCK-----\n", 37)) {
+        /* figure out who */
+        if ((validity = gpgWrap(msg, "", 0))) {
+            /* look for "pub" */
+            char *curl = validity;
+            while (curl) {
+                if (!strncmp(curl, "pub  ", 5)) {
+                    /* Look for the name, after two ' 's */
+                    curl += 5;
+                    curl = strchr(curl, ' ');
+                    if (curl) {
+                        curl = strchr(++curl, ' ');
+                        if (curl) {
+                            /* This seems valid! */
+                            tmp = strchr(++curl, '\n');
+                            if (tmp) {
+                                /* Now we have the whole string */
+                                *tmp = '\0';
+                                *who = strdup(curl);
+                                *status = 2;
+                                *tmp = '\n';
+                            }
+                        }
+                    }
+                    curl = NULL;
+                } else {
+                    curl = strchr(curl, '\n');
+                    if (curl) curl++;
+                }
+            }
+            
+            free(validity);
+        }
+        return NULL;
+    }
     
     /* sanity check */
     if (strncmp(msg, "-----BEGIN PGP SIGNED MESSAGE-----\n", 35)) {
@@ -204,7 +240,7 @@ char *authVerify(char *msg, char **who, int *status)
             curl = strchr(curl, '\n');
         }
     }
-        
+    
     if (toret) return toret;
     
     return strdup(msg);
@@ -212,5 +248,24 @@ char *authVerify(char *msg, char **who, int *status)
 
 int authImport(char *msg)
 {
-    return 1;
+    /* all we can do is try, so do so */
+    char *try = gpgWrap(msg, "--import", 0);
+    if (try) {
+        free(try);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+char *authExport()
+{
+    char *cmd, *ret;
+    cmd = (char *) malloc((15 + strlen(GPG_name)) * sizeof(char));
+    sprintf(cmd, "-a --export \"%s\"", GPG_name);
+    
+    ret = gpgWrap("", cmd, 1);
+    free(cmd);
+    
+    return ret;
 }

@@ -25,7 +25,7 @@
 #define DN_TRANSKEY_LEN 34
 #define DN_MAX_CONNS 1024
 #define DN_MAX_ROUTES 2048
-#define DN_CMD_LEN 2048
+#define DN_CMD_LEN 4096
 #define DN_ROUTE_LEN 512
 #define DN_MAX_PARAMS 50
 #define DN_HOSTNAME_LEN 256

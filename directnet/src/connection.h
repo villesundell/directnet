@@ -32,6 +32,11 @@ int establishConnection(char *to);
  * returns: 1 on success, 0 otherwise */
 int sendMsg(char *to, char *msg);
 
+/* Send your authentication key (for use by the UI)
+ * to: user to send to
+ * returns: 1 on success, 0 otherwise */
+int sendAuthKey(char *to);
+
 /* Send a find (for use by the UI)
  * to: user to search for */
 void sendFnd(char *to);

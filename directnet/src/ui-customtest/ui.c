@@ -31,6 +31,8 @@
 #include "ui.h"
 
 char *currentPartner;
+char *crossinput;
+int cinp, cinpd;
 
 int handleUInput(char *inp);
 
@@ -39,6 +41,10 @@ int uiInit(int argc, char ** argv, char **envp)
     // This is the most basic UI
     int charin, ostrlen;
     char cmdbuf[32256];
+    
+    cinp = 0;
+    cinpd = 0;
+    crossinput = NULL;
     
     // Always start by finding encryption
     if (findEnc(envp) == -1) {
@@ -121,6 +127,14 @@ int uiInit(int argc, char ** argv, char **envp)
 
 int handleUInput(char *inp)
 {
+    // Is it crossinput?
+    if (cinp) {
+        cinp = 0;
+        crossinput = strdup(inp);
+        cinpd = 1;
+        return 0;
+    }
+    
     // Is it a command?
     if (inp[0] == '/') {
         char *params[50];
@@ -140,8 +154,7 @@ int handleUInput(char *inp)
             }
         }
         
-        
-        if (!strncmp(params[0]+1, "a", 1)) {
+        if (params[0][1] == 'a') {
             setAway(params[1]);
             if (params[1]) {
                 printf("\nAway message set.\n");
@@ -149,7 +162,7 @@ int handleUInput(char *inp)
                 printf("\nAway message unset.\n");
             }
             return 0;
-        } else if (!strncmp(params[0]+1, "c", 1)) {
+        } else if (params[0][1] == 'c') {
             if (params[1] == NULL) {
                 return 0;
             }
@@ -157,13 +170,22 @@ int handleUInput(char *inp)
             // Connect to a given hostname or user
             establishConnection(params[1]);
             return 0;
-        } else if (!strncmp(params[0]+1, "f", 1)) {
+        } else if (params[0][1] == 'f') {
             if (params[1] == NULL) {
                 return 0;
             }
             
             sendFnd(params[1]);
-        } else if (!strncmp(params[0]+1, "t", 1)) {
+        } else if (params[0][1] == 'k') {
+            if (currentPartner[0] == '\0') {
+                printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n");
+                fflush(stdout);
+                return 0;
+            }
+            if (currentPartner[0] == '#') return 0;
+            
+            sendAuthKey(currentPartner);
+        } else if (params[0][1] == 't') {
             if (params[1] == NULL) {
                 return 0;
             }
@@ -174,7 +196,7 @@ int handleUInput(char *inp)
                 // Join the chat
                 joinChat(currentPartner+1);
             }
-        } else if (!strncmp(params[0]+1, "q", 1)) {
+        } else if (params[0][1] == 'q') {
             return 1;
         }
         
@@ -204,6 +226,23 @@ void uiDispMsg(char *from, char *msg, char *authmsg)
     while (!uiLoaded) sleep(0);
     printf("\n%s [%s]: %s\n%s> ", from, authmsg, msg, currentPartner);
     fflush(stdout);
+}
+
+void uiAskAuthImport(char *from, char *msg, char *sig)
+{
+    while (!uiLoaded) sleep(0);
+    printf("\n%s has asked you to import the key %s.  Do you accept?\n? ", from, sig);
+    fflush(stdout);
+    
+    cinpd = 0;
+    cinp = 1;
+    while (!cinpd) sleep(0);
+    
+    if (crossinput[0] == 'y' || crossinput[0] == 'Y') {
+        printf("\nImporting %s ...\n%s> ", sig, currentPartner);
+        authImport(msg);
+    }
+    free(crossinput);
 }
 
 void uiDispChatMsg(char *chat, char *from, char *msg)

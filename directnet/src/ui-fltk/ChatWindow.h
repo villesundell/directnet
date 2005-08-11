@@ -8,6 +8,8 @@ extern void closeChat(Fl_Double_Window*, void*);
 #include <FL/Fl_Input.H>
 extern void sendInput(Fl_Input*, void*);
 #include <FL/Fl_Text_Display.H>
+#include <FL/Fl_Button.H>
+extern void flSendAuthKey(Fl_Button*, void*);
 
 class ChatWindow {
 public:
@@ -15,5 +17,6 @@ public:
   Fl_Double_Window *chatWindow;
   Fl_Input *textIn;
   Fl_Text_Display *textOut;
+  Fl_Button *bSndKey;
 };
 #endif

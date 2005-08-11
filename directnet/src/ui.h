@@ -34,6 +34,12 @@ int uiInit(int argc, char **argv, char **envp);
  * authmsg: the authentication message */
 void uiDispMsg(char *from, char *msg, char *authmsg);
 
+/* Ask the user if (s)he wants to import a key.
+ * from: the sender of the key
+ * msg: the key in message format
+ * sig: the name in the key */
+void uiAskAuthImport(char *from, char *msg, char *sig);
+
 /* Display a chat message
  * chat: the chat that the message is on
  * from: the person who sent the message

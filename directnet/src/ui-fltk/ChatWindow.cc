@@ -4,7 +4,7 @@
 
 Fl_Double_Window* ChatWindow::make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(360, 290, "User");
+  { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(360, 315, "User");
     w = o;
     o->callback((Fl_Callback*)closeChat, (void*)(this));
     { Fl_Input* o = textIn = new Fl_Input(0, 265, 360, 25);
@@ -15,6 +15,9 @@ Fl_Double_Window* ChatWindow::make_window() {
       Fl_Group::current()->resizable(o);
       textOut->buffer(new Fl_Text_Buffer(32256));
       textOut->wrap_mode(1, 0);
+    }
+    { Fl_Button* o = bSndKey = new Fl_Button(0, 290, 360, 25, "Send Authentication Key");
+      o->callback((Fl_Callback*)flSendAuthKey);
     }
     o->end();
   }
