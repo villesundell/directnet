@@ -49,7 +49,7 @@ char *awayMsg = NULL;
 void handleMsg(char *inbuf, int fdnum);
 int handleNLUnroutedMsg(char **params);
 int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params);
-int sendMsgB(char *to, char *msg, char away);
+int sendMsgB(char *to, char *msg, char away, char sign);
 
 void consigterm_handler(int sig)
 {
@@ -653,37 +653,46 @@ void handleMsg(char *inbuf, int fdnum)
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This is our message
             char *unencmsg, *dispmsg, *sig, *sigm;
-            int austat;
+            int austat, iskey;
             
             // Decrypt it
             unencmsg = encFrom(params[1], dn_name, params[2]);
             
             // And verify the signature
             dispmsg = authVerify(unencmsg, &sig, &austat);
-            free(unencmsg);
             
             // Make our signature tag
+            iskey = 0;
             if (austat == -1) {
+                free(unencmsg);
                 sigm = strdup("n");
             } else if (austat == 0) {
+                free(unencmsg);
                 sigm = strdup("u");
             } else if (austat == 1 && sig) {
+                free(unencmsg);
                 sigm = (char *) malloc((strlen(sig) + 3) * sizeof(char));
                 sprintf(sigm, "s %s", sig);
             } else if (austat == 1 && !sig) {
+                free(unencmsg);
                 sigm = strdup("s");
+            } else if (austat == 2) {
+                /* this IS a signature, totally different response */
+                uiAskAuthImport(params[1], unencmsg, sig);
+                iskey = 1;
             } else {
+                free(unencmsg);
                 sigm = strdup("?");
             }
             if (sig) free(sig);
             
-            uiDispMsg(params[1], dispmsg, sigm);
+            if (!iskey) uiDispMsg(params[1], dispmsg, sigm);
             free(dispmsg);
             free(sigm);
             
             // Are we away?
             if (awayMsg && strncmp(command, "msa", 3)) {
-                sendMsgB(params[1], awayMsg, 1);
+                sendMsgB(params[1], awayMsg, 1, 1);
             }
             
             return;
@@ -932,7 +941,7 @@ int establishConnection(char *to)
     }
 }
 
-int sendMsgB(char *to, char *msg, char away)
+int sendMsgB(char *to, char *msg, char away, char sign)
 {
     char *outparams[DN_MAX_PARAMS], *route;
     char *signedmsg, *encdmsg;
@@ -949,8 +958,12 @@ int sendMsgB(char *to, char *msg, char away)
     outparams[1] = dn_name;
     
     // Sign ...
-    signedmsg = authSign(msg);
-    if (!signedmsg) return 0;
+    if (sign) {
+        signedmsg = authSign(msg);
+        if (!signedmsg) return 0;
+    } else {
+        signedmsg = strdup(msg);
+    }
     
     // and encrypt the message
     encdmsg = encTo(dn_name, to, signedmsg);
@@ -970,7 +983,22 @@ int sendMsgB(char *to, char *msg, char away)
 
 int sendMsg(char *to, char *msg)
 {
-    return sendMsgB(to, msg, 0);
+    return sendMsgB(to, msg, 0, 1);
+}
+
+int sendAuthKey(char *to)
+{
+    char *msg;
+    int ret;
+    
+    msg = authExport();
+    if (msg) {
+        ret = sendMsgB(to, msg, 0, 0);
+        free(msg);
+        return ret;
+    } else {
+        return 0;
+    }
 }
 
 void sendFnd(char *to)

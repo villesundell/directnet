@@ -77,15 +77,15 @@ char *mkhex(int len, unsigned char *inp)
         hi = (inp[i] & 240) >> 4;
         
         if (hi < 10) {
-            out[i * 2] = '0' + hi;
+            out[i << 1] = '0' + hi;
         } else {
-            out[i * 2] = 'A' + hi - 10;
+            out[i << 1] = 'A' + hi - 10;
         }
         
         if (lo < 10) {
-            out[(i * 2) + 1] = '0' + lo;
+            out[(i << 1) + 1] = '0' + lo;
         } else {
-            out[(i * 2) + 1] = 'A' + lo - 10;
+            out[(i << 1) + 1] = 'A' + lo - 10;
         }
     }
     out[i << 1] = '\0';
@@ -101,13 +101,13 @@ char *dehex(int *len, unsigned char *inp)
     
     osl = strlen(inp);
     *len = osl / 2;
-    out = (char *) malloc((*len + 1) * sizeof(char));
+    out = (unsigned char *) malloc((*len + 1) * sizeof(unsigned char));
     out[*len] = '\0';
     
     for (i = 0; i < osl; i += 2) {
         ol = i >> 1;
         out[ol] = 0;
-
+        
         if (inp[i] >= '0' && inp[i] <= '9') {
             out[ol] += (inp[i] - '0') << 4;
         } else {

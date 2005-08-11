@@ -35,6 +35,8 @@ extern "C" {
 
 #include <iostream>
 
+#include "Fl/fl_ask.h"
+
 #include "AwayWindow.h"
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
@@ -54,6 +56,28 @@ using namespace std;
 static int uiQuit = 0;
 ChatWindow *showcw = NULL;
 
+int flt1_ask(const char *msg, int t1)
+{
+    static char *umsg = NULL;
+    static int theret = 0;
+    
+    if (t1) {
+        /* I'm thread one, just try to display */
+        if (!umsg) return 0;
+        Fl::flush();
+        theret = fl_ask(umsg);
+        free(umsg);
+        umsg = NULL;
+        return 0;
+    } else {
+        /* I'm not thread one, wait for the answer */
+        while (umsg) sleep(0);
+        umsg = strdup(msg);
+        while (umsg) sleep(0);
+        return theret;
+    }
+}
+
 extern "C" int uiInit(int argc, char **argv, char **envp)
 {
     /* Always start by finding encryption */
@@ -66,6 +90,17 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     if (!authInit()) {
         printf("Authentication failed to initialize!\n");
         return -1;
+    } else if (authNeedPW()) {
+        char *nm, *pswd;
+        int osl;
+        
+        /* name */
+        nm = strdup(fl_input("Authentication Username", NULL));
+        
+        /* password */
+        pswd = strdup(fl_password("Authentication Password", NULL));
+        
+        authSetPW(nm, pswd);
     }
 
     /* And creating the key */
@@ -88,6 +123,8 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
             dn_unlock(&displayLock);
         }
         
+        /* check for questions */
+        flt1_ask(NULL, 1);
         
         Fl::wait(1);        
     }
@@ -292,6 +329,31 @@ void sendInput(Fl_Input *w, void *ignore)
     dn_unlock(&displayLock);
 }
 
+void flSendAuthKey(Fl_Button *w, void *ignore)
+{
+    /* sad way to figure out what window we're in ... */
+    int i;
+    
+    dn_lock(&displayLock);
+    
+    for (i = 0; cws[i] != NULL; i++) {
+        if (cws[i]->bSndKey == w) {
+            /* this is our window */
+            char *to;
+            
+            to = strdup(cws[i]->chatWindow->label());
+            
+            sendAuthKey(to);
+            
+            dn_unlock(&displayLock);
+            
+            return;
+        }
+    }
+    
+    dn_unlock(&displayLock);
+}
+
 void fSetAway(Fl_Button *w, void *ignore)
 {
     awayWindow();
@@ -341,6 +403,18 @@ void flDispMsg(char *window, char *from, char *msg, char *authmsg)
 extern "C" void uiDispMsg(char *from, char *msg, char *authmsg)
 {
     flDispMsg(from, from, msg, authmsg);
+}
+
+void uiAskAuthImport(char *from, char *msg, char *sig)
+{
+    while (!uiLoaded) sleep(0);
+    
+    char *q = (char *) malloc((strlen(from) + strlen(sig) + 51) * sizeof(char));
+    sprintf(q, "%s has asked you to import the key %s.  Do you accept?", from, sig);
+    if (flt1_ask(q, 0)) {
+        authImport(msg);
+    }
+    free(q);
 }
 
 extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)

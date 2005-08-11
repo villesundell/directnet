@@ -8,8 +8,8 @@ class ChatWindow {open
   } {
     Fl_Window chatWindow {
       label User
-      callback closeChat open selected
-      xywh {372 89 360 290} type Double resizable visible
+      callback closeChat open
+      xywh {372 89 360 315} type Double resizable visible
     } {
       Fl_Input textIn {
         callback sendInput
@@ -19,6 +19,11 @@ class ChatWindow {open
         xywh {0 0 360 260} resizable
         code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
         code1 {textOut->wrap_mode(1, 0);}
+      }
+      Fl_Button bSndKey {
+        label {Send Authentication Key}
+        callback flSendAuthKey selected
+        xywh {0 290 360 25}
       }
     }
   }

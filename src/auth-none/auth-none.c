@@ -50,3 +50,8 @@ int authImport(char *msg)
 {
     return 1;
 }
+
+char *authExport()
+{
+    return NULL;
+}
