@@ -101,6 +101,8 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         pswd = strdup(fl_password("Authentication Password", NULL));
         
         authSetPW(nm, pswd);
+        free(nm);
+        free(pswd);
     }
 
     /* And creating the key */

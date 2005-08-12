@@ -45,7 +45,7 @@ extern char **environ;
 #include "connection.h"
 #include "directnet.h"
 #include "gaim-plugin.h"
-#include "gpg.h"
+#include "enc.h"
 #include "hash.h"
 // Make sure we get DN server.h, not Gaim server.h
 #include "../server.h"
@@ -63,7 +63,7 @@ struct BuddyList {
 struct BuddyList *bltop = NULL;
 
 static GaimPluginProtocolInfo prpl_info = {
-    OPT_PROTO_NO_PASSWORD,
+    0, /* OPT_PROTO_NO_PASSWORD */
     NULL,
     NULL,
     NO_BUDDY_ICONS,
@@ -188,6 +188,7 @@ GMainContext *ctx;
 struct ipc_msg {
     char *from;
     char *msg;
+    char *authmsg;
 };
 #define IPC_STATE 2
 struct ipc_state {
@@ -206,15 +207,27 @@ struct ipc_chat_join {
     int id;
     char *chan;
 };
+#define IPC_AUTH_ASK 5
+struct ipc_auth_ask {
+    char *from;
+    char *msg;
+    char *q;
+};
 
 
 gboolean idle_got_im(struct ipc_msg *ma) 
 {
+    char *dispnm = (char *) malloc((strlen(ma->from) + strlen(ma->authmsg) + 4) * sizeof(char));
+    sprintf(dispnm, "%s [%s]", ma->from, ma->authmsg);
+    
+    serv_got_alias(my_gc, ma->from, dispnm);
     serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
   
     free(ma->from);
     free(ma->msg);
+    free(ma->authmsg);
     free(ma);
+    free(dispnm);
 
     pthread_mutex_unlock(&ipclock);
 
@@ -258,12 +271,43 @@ gboolean idle_chat_join(struct ipc_chat_join *cja)
     return FALSE;
 }
 
-void ipc_got_im(char *who, char *msg)
+gboolean idle_auth_ask_y_cb(struct ipc_auth_ask *aaa)
+{
+    authImport(aaa->msg);
+    free(aaa->from);
+    free(aaa->msg);
+    free(aaa->q);
+    free(aaa);
+    return FALSE;
+}
+
+gboolean idle_auth_ask_n_cb(struct ipc_auth_ask *aaa)
+{
+    free(aaa->from);
+    free(aaa->msg);
+    free(aaa->q);
+    free(aaa);
+    return FALSE;
+}
+
+gboolean idle_auth_ask(struct ipc_auth_ask *aaa)
+{
+    gaim_request_accept_cancel(my_gc, "Authentication", aaa->q,
+                               NULL, 1, aaa,
+                               idle_auth_ask_y_cb, idle_auth_ask_n_cb);
+    
+    pthread_mutex_unlock(&ipclock);
+    
+    return FALSE;
+}
+
+void ipc_got_im(char *who, char *msg, char *authmsg)
 {
     struct ipc_msg *a = (struct ipc_msg *) malloc(sizeof(struct ipc_msg));
 
     a->from = strdup(who);
     a->msg = strdup(msg);
+    a->authmsg = strdup(authmsg);
     
     pthread_mutex_lock(&ipclock);
     
@@ -308,8 +352,28 @@ void ipc_chat_join(int id, char *chan)
     g_idle_add((GSourceFunc)idle_chat_join, a);
 }
 
+void ipc_auth_ask(char *from, char *msg, char *q)
+{
+    struct ipc_auth_ask *a = (struct ipc_auth_ask *) malloc(sizeof(struct ipc_auth_ask));
+    
+    a->from = strdup(from);
+    a->msg = strdup(msg);
+    
+    a->q = (char *) malloc((strlen(from) + strlen(q) + 51) * sizeof(char));
+    sprintf(a->q, "%s has asked you to import the key %s.  Do you accept?", from, q);
+    
+    pthread_mutex_lock(&ipclock);
+    
+    g_idle_add((GSourceFunc)idle_auth_ask, a);
+}
+
 static void init_plugin(GaimPlugin *plugin)
 {
+    GaimAccountOption *option;
+    
+    option = gaim_account_option_string_new("Auth User", "authuser", "");
+    prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+    
     my_protocol = plugin;
 }
 
@@ -322,9 +386,15 @@ int uiInit(int argc, char ** argv, char **envp)
     char cmdbuf[32256];
     char *homedir, *dnhomefile;
     
-    // Always start by finding GPG
-    if (findGPG(envp) == -1) {
-        printf("GPG was not found on your PATH!\n");
+    // Always start by finding encryption
+    if (findEnc(envp) == -1) {
+        printf("Necessary encryption programs were not found on your PATH!\n");
+        return -1;
+    }
+    
+    /* Then authentication */
+    if (!authInit()) {
+        printf("Authentication failed to initialize!\n");
         return -1;
     }
     
@@ -333,16 +403,23 @@ int uiInit(int argc, char ** argv, char **envp)
     memset(chat_ids, 0, sizeof(int) * 256);
     
     // And create the key
-    gpgCreateKey();
+    encCreateKey();
     
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg)
+void uiDispMsg(char *from, char *msg, char *authmsg)
 {
     while (!uiLoaded) sleep(0);
+    
+    ipc_got_im(from, msg, authmsg);
+}
 
-    ipc_got_im(from, msg);
+void uiAskAuthImport(char *from, char *msg, char *sig)
+{
+    while (!uiLoaded) sleep(0);
+    
+    ipc_auth_ask(from, msg, sig);
 }
 
 void uiDispChatMsg(char *chat, char *from, char *msg)
@@ -376,7 +453,7 @@ void uiEstRoute(char *from)
     if (buddy && buddy->present == 0) {
         ipc_set_state(from, 1);
     } else if (!buddy) {
-        ipc_got_im(from, "[DirectNet]: Route established.");
+        ipc_got_im(from, "[DirectNet]: Route established.", "sys");
     }
 }
 
@@ -452,7 +529,30 @@ static void gp_login(GaimAccount *account)
     dn_name_set = 1; 
     
     my_account = account;
-
+    
+    /* set auth password */
+    if (authNeedPW()) {
+        char *nm, *pswd;
+        int osl;
+        
+        /* name */
+        nm = strdup(gaim_account_get_string(account, "authname", ""));
+        if (nm[0] == '\0') {
+            free(nm);
+            nm = strdup(dn_name);
+        }
+        
+        /* password */
+        pswd = (char *) gaim_account_get_password(my_account);
+        if (pswd) {
+            pswd = strdup(pswd);
+            authSetPW(nm, pswd);
+            free(pswd);
+        }
+        
+        free(nm);
+    }
+    
     // Prepare the IPC pipe
     pthread_mutex_init(&ipclock, NULL);
     

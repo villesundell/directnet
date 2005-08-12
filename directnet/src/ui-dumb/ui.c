@@ -82,6 +82,8 @@ int uiInit(int argc, char ** argv, char **envp)
         fflush(stdout);
         
         authSetPW(nm, pswd);
+        free(nm);
+        free(pswd);
     }
     
     // Then asking for the nick

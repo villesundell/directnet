@@ -26,7 +26,10 @@
 #include "auth.h"
 
 int GPG_have;
-char *GPG_name, *GPG_pass;
+char *GPG_name = NULL;
+char *GPG_pass = NULL;
+
+#define CPASS if (!GPG_name || !GPG_pass) 
 
 /* Wrap for GPG
  * inp: input to GPG
@@ -108,6 +111,8 @@ char *authSign(char *msg)
 {
     char *arg, *outp;
     
+    CPASS return strdup(msg);
+    
     arg = (char *) malloc((18 + strlen(GPG_name)) * sizeof(char));
     sprintf(arg, "--clearsign -u \"%s\"", GPG_name);
     
@@ -125,6 +130,7 @@ char *authVerify(char *msg, char **who, int *status)
     
     /* the special case is that this is a key */
     if (!strncmp(msg, "-----BEGIN PGP PUBLIC KEY BLOCK-----\n", 37)) {
+        CPASS return strdup("");
         /* figure out who */
         if ((validity = gpgWrap(msg, "", 0))) {
             /* look for "pub" */
@@ -166,6 +172,7 @@ char *authVerify(char *msg, char **who, int *status)
     }
     
     /* first test the validity */
+    CPASS goto getmsg;
     if ((validity = gpgWrap(msg, "--verify --status-fd 1", 0))) {
         char *curl = validity;
         while (curl) {
@@ -211,9 +218,10 @@ char *authVerify(char *msg, char **who, int *status)
         free(validity);
     }
     
-    /* just grab out the message portiono */
+    /* just grab out the message portion */
     /* look for the first blank line */
     char *curl;
+    getmsg:
     toret = NULL;
     curl = strchr(msg, '\n');
     while (curl) {
