@@ -198,7 +198,7 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
     free(key); free(inbuf); free(outbuf);
     
     *len = oloc;
-    return out;
+    return out ? out : strdup("");
 }
 
 int findEnc(char **envp)

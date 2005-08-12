@@ -1,11 +1,13 @@
 #ifndef DN_GAIM_PLUGIN_H
 #define DN_GAIM_PLUGIN_H
 
+#include <accountopt.h>
 #include <internal.h>
 #include <prpl.h>
 #include <debug.h>
 #include <version.h>
 #include <conversation.h>
+#include <request.h>
 
 static const char *gp_listicon(GaimAccount *a, GaimBuddy *b);
 static GList *gp_chatinfo(GaimConnection *gc);

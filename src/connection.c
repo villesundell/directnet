@@ -686,9 +686,11 @@ void handleMsg(char *inbuf, int fdnum)
             }
             if (sig) free(sig);
             
-            if (!iskey) uiDispMsg(params[1], dispmsg, sigm);
+            if (!iskey) {
+                uiDispMsg(params[1], dispmsg, sigm);
+                free(sigm);
+            }
             free(dispmsg);
-            free(sigm);
             
             // Are we away?
             if (awayMsg && strncmp(command, "msa", 3)) {
