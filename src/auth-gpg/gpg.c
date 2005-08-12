@@ -29,7 +29,7 @@ int GPG_have;
 char *GPG_name = NULL;
 char *GPG_pass = NULL;
 
-#define CPASS if (!GPG_name || !GPG_pass) 
+#define CPASS if (!GPG_name || !GPG_pass || !GPG_have) 
 
 /* Wrap for GPG
  * inp: input to GPG
@@ -93,6 +93,8 @@ int authInit()
         free(ret);
         GPG_have = 1;
     }
+    GPG_name = NULL;
+    GPG_pass = NULL;
     return 1;
 }
 
@@ -103,8 +105,10 @@ int authNeedPW()
 
 void authSetPW(char *nm, char *pswd)
 {
-    GPG_name = strdup(nm);
-    GPG_pass = strdup(pswd);
+    if (nm[0]) {
+        GPG_name = strdup(nm);
+        GPG_pass = strdup(pswd);
+    }
 }
 
 char *authSign(char *msg)
