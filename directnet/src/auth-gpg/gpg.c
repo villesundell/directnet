@@ -25,6 +25,12 @@
 
 #include "auth.h"
 
+/* MingW32 pipe: */
+#ifdef _WIN32
+#include <fcntl.h>
+#define pipe(a) _pipe((a), 0, _O_BINARY | _O_NOINHERIT)
+#endif
+
 int GPG_have;
 char *GPG_name = NULL;
 char *GPG_pass = NULL;
