@@ -99,6 +99,6 @@ else
 REALBIN=directnetc$(EXEEXT)
 endif
 
-directnet: $(REALBIN)
+directnet$(EXEEXT): $(REALBIN)
 	cp -f $(REALBIN) $@
 
