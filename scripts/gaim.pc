@@ -1,9 +1,3 @@
-prefix=
-exec_prefix=
-libdir=
-includedir=
-datadir=
- 
 Name: Gaim
 Description: Gaim is a GTK2-based instant messenger application.
 Version: 1.5.0

@@ -1,0 +1,3 @@
+Name: GTK+
+Description: GIMP Tool Kit
+Version: 2.6.0
