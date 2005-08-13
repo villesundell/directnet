@@ -292,7 +292,7 @@ gboolean idle_auth_ask_n_cb(struct ipc_auth_ask *aaa)
 
 gboolean idle_auth_ask(struct ipc_auth_ask *aaa)
 {
-    gaim_request_accept_cancel(my_gc, "Authentication", aaa->q,
+    gaim_request_yes_no(my_gc, "Authentication", aaa->q,
                                NULL, 1, aaa,
                                idle_auth_ask_y_cb, idle_auth_ask_n_cb);
     
@@ -355,16 +355,50 @@ void ipc_chat_join(int id, char *chan)
 void ipc_auth_ask(char *from, char *msg, char *q)
 {
     struct ipc_auth_ask *a = (struct ipc_auth_ask *) malloc(sizeof(struct ipc_auth_ask));
+    char *qa;
+    int i, j, l;
     
     a->from = strdup(from);
     a->msg = strdup(msg);
     
-    a->q = (char *) malloc((strlen(from) + strlen(q) + 51) * sizeof(char));
-    sprintf(a->q, "%s has asked you to import the key %s.  Do you accept?", from, q);
+    qa = (char *) malloc((strlen(from) + strlen(q) + 53) * sizeof(char));
+    sprintf(qa, "%s has asked you to import the key '%s'.  Do you accept?", from, q);
+    
+    /* No <s or >s allowed! */
+    l = strlen(qa) + 1;
+    a->q = (char *) malloc(l * sizeof(char));
+    
+    j = 0;
+    for (i = 0; qa[i]; i++) {
+        switch (qa[i]) {
+            case '<':
+                a->q = (char *) realloc(a->q, l += 3);
+                strncpy(a->q + j, "&lt;", 4);
+                j += 4;
+                break;
+            case '>':
+                a->q = (char *) realloc(a->q, l += 3);
+                strncpy(a->q + j, "&gt;", 4);
+                j += 4;
+                break;
+            default:
+                (a->q)[j] = qa[i];
+                j++;
+                break;
+        }
+    }
+    (a->q)[j] = '\0';
+    free(qa);
     
     pthread_mutex_lock(&ipclock);
     
     g_idle_add((GSourceFunc)idle_auth_ask, a);
+}
+
+gboolean dnsndkey(GaimConversation *gc, gchar *cmd, gchar **args, gchar **error, void *data)
+{
+    sendAuthKey(gc->name);
+    return FALSE;
 }
 
 static void init_plugin(GaimPlugin *plugin)
@@ -373,6 +407,9 @@ static void init_plugin(GaimPlugin *plugin)
     
     option = gaim_account_option_string_new("Auth User", "authuser", "");
     prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
+    
+    gaim_cmd_register("k", "", 0, GAIM_CMD_FLAG_IM, "DirectNet", (GaimCmdFunc) dnsndkey,
+                      "k:  Send your DirectNet authentication key.", NULL);
     
     my_protocol = plugin;
 }

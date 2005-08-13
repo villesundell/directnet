@@ -233,7 +233,7 @@ void uiDispMsg(char *from, char *msg, char *authmsg)
 void uiAskAuthImport(char *from, char *msg, char *sig)
 {
     while (!uiLoaded) sleep(0);
-    printf("\n%s has asked you to import the key %s.  Do you accept?\n? ", from, sig);
+    printf("\n%s has asked you to import the key '%s'.  Do you accept?\n? ", from, sig);
     fflush(stdout);
     
     cinpd = 0;
