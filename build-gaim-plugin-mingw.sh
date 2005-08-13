@@ -40,6 +40,8 @@ ${CRCP}gcc -shared * \
  -o ../../../libdirectnet_gaim.dll \
  -lwsock32 -lpthread \
  ../../../../gaim-$GVER/win32-install-dir/gaim.dll \
+ ../../../../win32-dev/gtk_2_0/lib/libgtk-win32-2.0.dll.a \
+ ../../../../win32-dev/gtk_2_0/lib/libgobject-2.0.dll.a \
  ../../../../win32-dev/gtk_2_0/lib/libglib-2.0.dll.a || exit 1
 
 echo 'Finished: the file is libdirectnet_gaim.dll'
