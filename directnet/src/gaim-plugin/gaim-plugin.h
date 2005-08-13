@@ -10,6 +10,8 @@
 #include <cmds.h>
 #include <request.h>
 
+#include <gtkconv.h>
+
 static const char *gp_listicon(GaimAccount *a, GaimBuddy *b);
 static GList *gp_chatinfo(GaimConnection *gc);
 GHashTable *gp_chatinfo_defaults(GaimConnection *gc, const char *chat_name);

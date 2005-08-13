@@ -242,6 +242,7 @@ void uiAskAuthImport(char *from, char *msg, char *sig)
     
     if (crossinput[0] == 'y' || crossinput[0] == 'Y') {
         printf("\nImporting %s ...\n%s> ", sig, currentPartner);
+        fflush(stdout);
         authImport(msg);
     }
     free(crossinput);

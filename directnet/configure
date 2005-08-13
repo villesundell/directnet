@@ -20541,23 +20541,23 @@ fi
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo "$as_me:$LINENO: checking for gaim >= 1.2.0 gaim < 2.0.0" >&5
-echo $ECHO_N "checking for gaim >= 1.2.0 gaim < 2.0.0... $ECHO_C" >&6
+        echo "$as_me:$LINENO: checking for gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0" >&5
+echo $ECHO_N "checking for gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0... $ECHO_C" >&6
 
-        if $PKG_CONFIG --exists "gaim >= 1.2.0 gaim < 2.0.0" ; then
+        if $PKG_CONFIG --exists "gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0" ; then
             echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
             succeeded=yes
 
             echo "$as_me:$LINENO: checking GAIM_CFLAGS" >&5
 echo $ECHO_N "checking GAIM_CFLAGS... $ECHO_C" >&6
-            GAIM_CFLAGS=`$PKG_CONFIG --cflags "gaim >= 1.2.0 gaim < 2.0.0"`
+            GAIM_CFLAGS=`$PKG_CONFIG --cflags "gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0"`
             echo "$as_me:$LINENO: result: $GAIM_CFLAGS" >&5
 echo "${ECHO_T}$GAIM_CFLAGS" >&6
 
             echo "$as_me:$LINENO: checking GAIM_LIBS" >&5
 echo $ECHO_N "checking GAIM_LIBS... $ECHO_C" >&6
-            GAIM_LIBS=`$PKG_CONFIG --libs "gaim >= 1.2.0 gaim < 2.0.0"`
+            GAIM_LIBS=`$PKG_CONFIG --libs "gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0"`
             echo "$as_me:$LINENO: result: $GAIM_LIBS" >&5
 echo "${ECHO_T}$GAIM_LIBS" >&6
         else
@@ -20565,7 +20565,7 @@ echo "${ECHO_T}$GAIM_LIBS" >&6
             GAIM_LIBS=""
             ## If we have a custom action on failure, don't print errors, but
             ## do set a variable so people can do so.
-            GAIM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gaim >= 1.2.0 gaim < 2.0.0"`
+            GAIM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0"`
 
         fi
 

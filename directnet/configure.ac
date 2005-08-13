@@ -197,7 +197,7 @@ GAIM_PLUGIN=yes
 
 # Check for Gaim
 PKG_CHECK_MODULES(GAIM,
-[gaim >= 1.2.0 gaim < 2.0.0],
+[gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0],
 [
         AC_DEFINE(HAVE_GAIM, 1, [Define if gaim-devel is available.])
 ],

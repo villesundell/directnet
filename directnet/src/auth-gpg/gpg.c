@@ -279,6 +279,9 @@ int authImport(char *msg)
 char *authExport()
 {
     char *cmd, *ret;
+    
+    CPASS return NULL;
+    
     cmd = (char *) malloc((15 + strlen(GPG_name)) * sizeof(char));
     sprintf(cmd, "-a --export \"%s\"", GPG_name);
     

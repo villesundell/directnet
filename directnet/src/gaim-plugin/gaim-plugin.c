@@ -401,15 +401,43 @@ gboolean dnsndkey(GaimConversation *gc, gchar *cmd, gchar **args, gchar **error,
     return FALSE;
 }
 
+void dnsndkey_vptr(GtkButton *butotn, void *name)
+{
+    sendAuthKey((char *) name);
+}
+
+void dn_crcon_button(GaimConversation *gc, gpointer data)
+{
+    GaimGtkConversation *gtkconv;
+    gulong handle;
+    GtkWidget *button = NULL;
+    
+    if((gtkconv = GAIM_GTK_CONVERSATION(gc)) == NULL)
+        return;
+    
+    button = gaim_gtkconv_button_new("DNKey", "DN Key", "Send DirectNet Authentication Key",
+                                     NULL, dnsndkey_vptr, gc->name);
+    g_object_set_data(G_OBJECT(button), "conv", gc);
+    gtk_box_pack_end(GTK_BOX(gtkconv->bbox), button, TRUE, TRUE, 0);
+    gtk_widget_show(button);
+    gtk_size_group_add_widget(gtkconv->sg, button);
+}
+
 static void init_plugin(GaimPlugin *plugin)
 {
     GaimAccountOption *option;
+    void *conv_handle = gaim_conversations_get_handle();
     
     option = gaim_account_option_string_new("Auth User", "authuser", "");
     prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
     
+    /* register the key command */
     gaim_cmd_register("k", "", 0, GAIM_CMD_FLAG_IM, "DirectNet", (GaimCmdFunc) dnsndkey,
                       "k:  Send your DirectNet authentication key.", NULL);
+    
+    /* register the function to add buttons to conversation windows */
+    gaim_signal_connect(conv_handle, "conversation-created", plugin,
+                        GAIM_CALLBACK(dn_crcon_button), NULL);
     
     my_protocol = plugin;
 }
@@ -567,6 +595,15 @@ static void gp_login(GaimAccount *account)
     
     my_account = account;
     
+    // Prepare the IPC pipe
+    pthread_mutex_init(&ipclock, NULL);
+    
+    /* call "main" */
+    pluginMain(1, argv, environ);
+
+    // pthreads are magical
+    sleep(1);
+    
     /* set auth password */
     if (authNeedPW()) {
         char *nm, *pswd;
@@ -589,15 +626,6 @@ static void gp_login(GaimAccount *account)
         
         free(nm);
     }
-    
-    // Prepare the IPC pipe
-    pthread_mutex_init(&ipclock, NULL);
-    
-    /* call "main" */
-    pluginMain(1, argv, environ);
-
-    // pthreads are magical
-    sleep(1);
     
     gc = gaim_account_get_connection(account);
     gaim_connection_set_state(gc, GAIM_CONNECTED);
