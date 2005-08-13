@@ -7,6 +7,7 @@
 #include <debug.h>
 #include <version.h>
 #include <conversation.h>
+#include <cmds.h>
 #include <request.h>
 
 static const char *gp_listicon(GaimAccount *a, GaimBuddy *b);

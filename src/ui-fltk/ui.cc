@@ -411,8 +411,8 @@ void uiAskAuthImport(char *from, char *msg, char *sig)
 {
     while (!uiLoaded) sleep(0);
     
-    char *q = (char *) malloc((strlen(from) + strlen(sig) + 51) * sizeof(char));
-    sprintf(q, "%s has asked you to import the key %s.  Do you accept?", from, sig);
+    char *q = (char *) malloc((strlen(from) + strlen(sig) + 53) * sizeof(char));
+    sprintf(q, "%s has asked you to import the key '%s'.  Do you accept?", from, sig);
     if (flt1_ask(q, 0)) {
         authImport(msg);
     }
