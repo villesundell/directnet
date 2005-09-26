@@ -26,7 +26,7 @@
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
-#include "gpg.h"
+#include "enc.h"
 #include "ui.h"
 
 int uiInit(int argc, char ** argv, char **envp)
@@ -36,9 +36,9 @@ int uiInit(int argc, char ** argv, char **envp)
     char cmdbuf[32256];
     char *homedir, *dnhomefile;
     
-    // Always start by finding GPG
-    if (findGPG(envp) == -1) {
-        printf("GPG was not found on your PATH!\n");
+    // Always start by finding encryption
+    if (findEnc(envp) == -1) {
+        printf("Necessary encryption programs were not found on your PATH!\n");
         return -1;
     }
     
@@ -52,7 +52,7 @@ int uiInit(int argc, char ** argv, char **envp)
     }
     
     // And create the key
-    gpgCreateKey();
+    encCreateKey();
     
     // OK, the UI is ready
     uiLoaded = 1;
