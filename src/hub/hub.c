@@ -95,11 +95,15 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg)
+void uiDispMsg(char *from, char *msg, char *authmsg)
 {
     while (!uiLoaded) sleep(0);
     /* just respond that this is a hub */
     sendMsg(from, "This is a hub, and cannot respond.");
+}
+
+void uiAskAuthImport(char *from, char *msg, char *sig)
+{
 }
 
 void uiDispChatMsg(char *chat, char *from, char *msg)
