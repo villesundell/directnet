@@ -2,11 +2,7 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 
 CC=@PTHREAD_CC@
 
-if MAKE_HUB
-bin_PROGRAMS=directnet directnethub
-else
 bin_PROGRAMS=directnet
-endif
 
 if UI_CXX
 
@@ -19,6 +15,7 @@ directnet.c \
 hash.c \
 lock.c \
 server.c \
+whereami.c \
 fake.cc
 
 directnetcxx_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
@@ -38,7 +35,8 @@ connection.c \
 directnet.c \
 hash.c \
 lock.c \
-server.c
+server.c \
+whereami.c
 
 directnetc_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
 directnetc_LDFLAGS=@PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
@@ -51,13 +49,16 @@ endif
 
 if MAKE_HUB
 
+bin_PROGRAMS+=directnethub
+
 directnethub_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
 hash.c \
 lock.c \
-server.c
+server.c \
+whereami.c
 
 directnethub_CFLAGS=@PTHREAD_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
 directnethub_LDFLAGS=@PTHREAD_CFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
@@ -93,6 +94,7 @@ libdirectnet_gaim_la_LIBADD=@PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a \
 
 endif
 
+
 if UI_CXX
 REALBIN=directnetcxx$(EXEEXT)
 else
@@ -101,4 +103,3 @@ endif
 
 directnet$(EXEEXT): $(REALBIN)
 	cp -f $(REALBIN) $@
-

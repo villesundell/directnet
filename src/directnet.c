@@ -37,6 +37,7 @@
 #include "lock.h"
 #include "server.h"
 #include "ui.h"
+#include "whereami.h"
 
 pthread_t *serverPthread;
 int serv_port = 3336;
@@ -70,7 +71,7 @@ DN_LOCK displayLock; // Only one thread writing at a time.
 
 char dn_localip[24];
 
-char *homedir;
+char *homedir, *bindir;
 
 char *findHome(char **envp);
 
@@ -80,8 +81,23 @@ int main(int argc, char **argv, char **envp)
 int pluginMain(int argc, char **argv, char **envp)
 #endif
 {
-    serverPthread = NULL;
     int i;
+    char *binloc, *binnm;
+    
+    serverPthread = NULL;
+    
+    // check our installed path
+#ifndef GAIM_PLUGIN
+    binloc = whereAmI(argv[0], &bindir, &binnm);
+    if (binloc) {
+        // we only need bindir
+        free(binloc);
+        free(binnm);
+    } else {
+        // make it up :(
+        bindir = strdup("/usr/bin");
+    }
+#endif
     
     if (argc >= 2) {
         for (i = 1; i < argc; i++) {

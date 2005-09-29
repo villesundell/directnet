@@ -21,9 +21,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "auth.h"
+#include "directnet.h"
 
 /* MingW32 pipe: */
 #ifdef _WIN32
@@ -32,6 +35,7 @@
 #endif
 
 int GPG_have;
+char *GPG_bin = NULL;
 char *GPG_name = NULL;
 char *GPG_pass = NULL;
 
@@ -46,7 +50,7 @@ char *gpgWrap(char *inp, char *args, int pass)
 {
     FILE *fi, *fo;
     char *co;
-    int pspp[2];
+    int pspp[2], res;
     char *cmd, *pspc;
     
     /* 1) open files */
@@ -60,7 +64,7 @@ char *gpgWrap(char *inp, char *args, int pass)
     fseek(fi, 0, SEEK_SET);
     
     /* 3) pipe the passphrase */
-    pspc = "";
+    pspc = strdup(" ");
     if (pass) {
         if (pipe(pspp) == -1) {
             perror("pipe");
@@ -70,14 +74,17 @@ char *gpgWrap(char *inp, char *args, int pass)
         close(pspp[1]);
         
         /* pspc contains the --passphrase-fd arg */
+        free(pspc);
         pspc = (char *) malloc(25 * sizeof(char));
         sprintf(pspc, "--passphrase-fd %d", pspp[0]);
     }
     
     /* 4) run the command */
-    cmd = (char *) malloc((strlen(args) + strlen(pspc) + 44) * sizeof(char));
-    sprintf(cmd, "gpg %s %s --no-tty <&%d >&%d 2> /dev/null", args, pspc, fileno(fi), fileno(fo));
-    if (system(cmd) == 127) return NULL;
+    cmd = (char *) malloc((strlen(GPG_bin) + strlen(args) + strlen(pspc) + 41) * sizeof(char));
+    sprintf(cmd, "%s %s %s --no-tty <&%d >&%d 2> /dev/null", GPG_bin, args, pspc, fileno(fi), fileno(fo));
+    
+    res = system(cmd);
+    if (WEXITSTATUS(res) == 127) return NULL;
     
     /* 5) extract the content of fo */
     fseek(fo, 0, SEEK_SET);
@@ -86,15 +93,33 @@ char *gpgWrap(char *inp, char *args, int pass)
     
     fclose(fi);
     fclose(fo);
+    free(pspc);
     return co;
 }
 
 int authInit()
 {
     char *ret;
+    // try no path first
+    GPG_bin = strdup("gpg");
     ret = gpgWrap("", "--version", 0);
     if (ret == NULL) {
-        GPG_have = 0;
+        // now try with bindir
+        free(GPG_bin);
+        
+        GPG_bin = (char *) malloc(strlen(bindir) + 5);
+        if (!GPG_bin) { perror("malloc"); exit(1); }
+        
+        sprintf(GPG_bin, "%s/gpg", bindir);
+        ret = gpgWrap("", "--version", 0);
+        if (ret == NULL) {
+            // it's not here
+            free(GPG_bin);
+            GPG_have = 0;
+        } else {
+            free(ret);
+            GPG_have = 1;
+        }
     } else {
         free(ret);
         GPG_have = 1;

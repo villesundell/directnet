@@ -63,7 +63,7 @@ extern char uiLoaded;
 
 extern char dn_localip[24];
 
-extern char *homedir;
+extern char *homedir, *bindir;
 
 struct communInfo {
     int fdnum;

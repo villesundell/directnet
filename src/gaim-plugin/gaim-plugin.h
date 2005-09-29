@@ -9,6 +9,7 @@
 #include <conversation.h>
 #include <cmds.h>
 #include <request.h>
+#include <prefix.h>
 
 #include <gtkconv.h>
 
