@@ -628,8 +628,8 @@ static void gp_login(GaimAccount *account)
     }
     
     gc = gaim_account_get_connection(account);
+    gaim_connection_update_progress(gc, _("Connected"), 1, 2);
     gaim_connection_set_state(gc, GAIM_CONNECTED);
-    gaim_connection_update_progress(gc, _("Connected"), 0, 1);
     
     my_gc = gc;
 
