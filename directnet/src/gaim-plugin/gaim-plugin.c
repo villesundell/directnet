@@ -598,6 +598,13 @@ static void gp_login(GaimAccount *account)
     // Prepare the IPC pipe
     pthread_mutex_init(&ipclock, NULL);
     
+    // find our location - if prefix.h worked, it's LIBDIR
+#ifndef LIBDIR
+    // sad...
+#define LIBDIR "/usr/lib/gaim"
+#endif
+    bindir = strdup(LIBDIR);
+    
     /* call "main" */
     pluginMain(1, argv, environ);
 
