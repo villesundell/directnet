@@ -687,7 +687,7 @@ void handleMsg(char *inbuf, int fdnum)
             if (sig) free(sig);
             
             if (!iskey) {
-                uiDispMsg(params[1], dispmsg, sigm);
+                uiDispMsg(params[1], dispmsg, sigm, !strncmp(command, "msa", 3));
                 free(sigm);
             }
             free(dispmsg);

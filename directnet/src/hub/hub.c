@@ -54,6 +54,9 @@ int uiInit(int argc, char ** argv, char **envp)
     // And create the key
     encCreateKey();
     
+    // mark away
+    setAway("This is a hub, there is no human reading your messages.");
+    
     // OK, the UI is ready
     uiLoaded = 1;
     
@@ -95,11 +98,8 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg, char *authmsg)
+void uiDispMsg(char *from, char *msg, char *authmsg, int away)
 {
-    while (!uiLoaded) sleep(0);
-    /* just respond that this is a hub */
-    sendMsg(from, "This is a hub, and cannot respond.");
 }
 
 void uiAskAuthImport(char *from, char *msg, char *sig)

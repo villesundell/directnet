@@ -223,10 +223,10 @@ int handleUInput(char *inp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg, char *authmsg)
+void uiDispMsg(char *from, char *msg, char *authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
-    printf("\n%s [%s]: %s\n%s> ", from, authmsg, msg, currentPartner);
+    printf("\n%s [%s]%s: %s\n%s> ", from, authmsg, away ? " [away]" : "", msg, currentPartner);
     fflush(stdout);
 }
 
