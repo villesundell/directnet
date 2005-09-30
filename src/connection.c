@@ -1097,7 +1097,7 @@ void sendChat(char *to, char *msg)
     }
 }
 
-void setAway(char *msg)
+void setAway(const char *msg)
 {
     char *oldam;
     oldam = awayMsg;
