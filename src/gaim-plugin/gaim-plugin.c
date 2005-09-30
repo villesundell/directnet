@@ -473,10 +473,11 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg, char *authmsg)
+void uiDispMsg(char *from, char *msg, char *authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
     
+    // ignore away status for the moment
     ipc_got_im(from, msg, authmsg);
 }
 

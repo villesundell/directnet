@@ -402,8 +402,9 @@ void flDispMsg(char *window, char *from, char *msg, char *authmsg)
     dn_unlock(&displayLock);
 }
 
-extern "C" void uiDispMsg(char *from, char *msg, char *authmsg)
+extern "C" void uiDispMsg(char *from, char *msg, char *authmsg, int away)
 {
+    // for the moment, away messages are undistinguished
     flDispMsg(from, from, msg, authmsg);
 }
 

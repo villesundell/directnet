@@ -31,8 +31,9 @@ int uiInit(int argc, char **argv, char **envp);
 /* Display a message
  * from: the sender of the message
  * msg: the message
- * authmsg: the authentication message */
-void uiDispMsg(char *from, char *msg, char *authmsg);
+ * authmsg: the authentication message 
+ * away: 1 if the user is away*/
+void uiDispMsg(char *from, char *msg, char *authmsg, int away);
 
 /* Ask the user if (s)he wants to import a key.
  * from: the sender of the key
