@@ -56,7 +56,7 @@ void sendChat(char *to, char *msg);
 
 /* Set away status (for use by the UI)
  * msg: the away message */
-void setAway(char *msg);
+void setAway(const char *msg);
 
 /* Build the top of a command buffer
  * into: buffer to fill
