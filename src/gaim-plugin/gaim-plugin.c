@@ -814,6 +814,7 @@ static void gp_removebuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *grou
                 free(todel);
                 return;
             }
+            cur = cur->next;
         }
     }
 }
