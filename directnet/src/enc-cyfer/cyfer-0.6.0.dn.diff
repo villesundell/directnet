@@ -1,6 +1,6 @@
 diff -ru cyfer-0.6.0/configure cyfer/configure
 --- cyfer-0.6.0/configure	2004-09-25 18:43:58.000000000 -0700
-+++ cyfer/configure	2005-06-13 22:57:21.591940104 -0700
++++ cyfer/configure	2005-10-01 00:06:23.412556729 -0700
 @@ -1,11 +1,10 @@
  #! /bin/sh
  # Guess values for system-dependent variables and create Makefiles.
@@ -3002,7 +3002,7 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
    	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
 diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
 --- cyfer-0.6.0/configure.in	2004-09-25 18:43:03.000000000 -0700
-+++ cyfer/configure.in	2005-06-13 22:56:53.955141536 -0700
++++ cyfer/configure.in	2005-10-01 00:06:19.026057899 -0700
 @@ -26,7 +26,6 @@
  AC_TYPE_SIZE_T
  
@@ -3024,7 +3024,7 @@ diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
  
 diff -ru cyfer-0.6.0/examples/Makefile.in cyfer/examples/Makefile.in
 --- cyfer-0.6.0/examples/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/examples/Makefile.in	2005-06-13 22:56:32.110462432 -0700
++++ cyfer/examples/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -2,7 +2,7 @@
  LIBTOOL = @LIBTOOL@
  CC = @CC@
@@ -3036,7 +3036,7 @@ diff -ru cyfer-0.6.0/examples/Makefile.in cyfer/examples/Makefile.in
  
 diff -ru cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.installed
 --- cyfer-0.6.0/examples/Makefile.installed	2004-09-25 07:36:14.000000000 -0700
-+++ cyfer/examples/Makefile.installed	2005-06-13 22:56:32.111462280 -0700
++++ cyfer/examples/Makefile.installed	2005-06-13 20:48:38.000000000 -0700
 @@ -1,5 +1,5 @@
  CC = gcc
 -WARN = -Wall -Wmissing-declarations -Wmissing-prototypes -Werror
@@ -3044,9 +3044,51 @@ diff -ru cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.install
  CFLAGS = $(WARN) -I/usr/local/include -g -O2
  LDFLAGS = -L/usr/local/include -lcyfer
  
+diff -ru cyfer-0.6.0/include/config.h.in cyfer/include/config.h.in
+--- cyfer-0.6.0/include/config.h.in	2004-09-25 18:45:14.000000000 -0700
++++ cyfer/include/config.h.in	2005-10-01 00:06:23.819417491 -0700
+@@ -1,4 +1,4 @@
+-/* config.h.in.  Generated from configure.in by autoheader.  */
++/* include/config.h.in.  Generated from configure.in by autoheader.  */
+ 
+ /* Define to 1 if you have the <dlfcn.h> header file. */
+ #undef HAVE_DLFCN_H
+@@ -6,13 +6,6 @@
+ /* Define to 1 if you have the <inttypes.h> header file. */
+ #undef HAVE_INTTYPES_H
+ 
+-/* Define to 1 if you have the `gmp' library (-lgmp). */
+-#undef HAVE_LIBGMP
+-
+-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
+-   to 0 otherwise. */
+-#undef HAVE_MALLOC
+-
+ /* Define to 1 if you have the `memmove' function. */
+ #undef HAVE_MEMMOVE
+ 
+@@ -74,13 +67,11 @@
+ /* Define to empty if `const' does not conform to ANSI C. */
+ #undef const
+ 
+-/* Define as `__inline' if that's what the C compiler calls it, or to nothing
+-   if it is not supported. */
++/* Define to `__inline__' or `__inline' if that's what the C compiler
++   calls it, or to nothing if 'inline' is not supported under any name.  */
++#ifndef __cplusplus
+ #undef inline
+-
+-/* Define to rpl_malloc if the replacement function should be used. */
+-#undef malloc
++#endif
+ 
+ /* Define to `unsigned' if <sys/types.h> does not define. */
+ #undef size_t
+-
+Only in cyfer/include: config.h.in~
 diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
 --- cyfer-0.6.0/include/cyfer/cyfer.h	2004-09-25 08:12:43.000000000 -0700
-+++ cyfer/include/cyfer/cyfer.h	2005-06-13 22:56:32.111462280 -0700
++++ cyfer/include/cyfer/cyfer.h	2005-06-13 20:48:38.000000000 -0700
 @@ -59,7 +59,8 @@
  #include <stdlib.h>
  
@@ -3059,7 +3101,7 @@ diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
  #define true (!0)
 diff -ru cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
 --- cyfer-0.6.0/lib/asym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/asym/Makefile.in	2005-06-13 22:56:32.112462128 -0700
++++ cyfer/lib/asym/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -3071,7 +3113,7 @@ diff -ru cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
  OBJS = rsa.o elgamal.o luc.o dh.o pkiutil.o pk.o keyex.o
 diff -ru cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
 --- cyfer-0.6.0/lib/hash/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/hash/Makefile.in	2005-06-13 22:56:32.112462128 -0700
++++ cyfer/lib/hash/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -3083,7 +3125,7 @@ diff -ru cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
  OBJS = md4.o md5.o sha1.o rmd160.o adler32.o snefru.o crc32.o md2.o sha256.o hash.o 
 diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
 --- cyfer-0.6.0/lib/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/Makefile.in	2005-06-13 22:56:32.112462128 -0700
++++ cyfer/lib/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -13,10 +13,14 @@
  all:	libcyfer.la
  
@@ -3103,7 +3145,7 @@ diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
  
 diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
 --- cyfer-0.6.0/lib/sym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/sym/Makefile.in	2005-06-13 22:56:32.113461976 -0700
++++ cyfer/lib/sym/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -3115,7 +3157,7 @@ diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
  BCIPHERS = blowfish.o des.o desx.o rc2.o rc5.o rc6.o tripledes.o idea.o aes.o deal.o threeway.o 
 diff -ru cyfer-0.6.0/Makefile.in cyfer/Makefile.in
 --- cyfer-0.6.0/Makefile.in	2004-09-25 19:11:27.000000000 -0700
-+++ cyfer/Makefile.in	2005-06-13 22:56:32.113461976 -0700
++++ cyfer/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -8,7 +8,7 @@
  
  CC = @CC@
@@ -3127,7 +3169,7 @@ diff -ru cyfer-0.6.0/Makefile.in cyfer/Makefile.in
  INSTALL_INCLUDES = include/cyfer/*.h
 diff -ru cyfer-0.6.0/test/Makefile.in cyfer/test/Makefile.in
 --- cyfer-0.6.0/test/Makefile.in	2004-09-25 07:49:44.000000000 -0700
-+++ cyfer/test/Makefile.in	2005-06-13 22:56:32.114461824 -0700
++++ cyfer/test/Makefile.in	2005-06-13 20:48:38.000000000 -0700
 @@ -2,7 +2,7 @@
  LIBTOOL = @LIBTOOL@
  CC = @CC@
