@@ -1,3 +1,6 @@
+Beta 0.7 from Beta 0.6:
+        - Authentication support through GPG
+
 Beta 0.6 from Beta 0.5:
         - Distribution changes (configure, etc)
         - Updated (no longer inaccurate) README

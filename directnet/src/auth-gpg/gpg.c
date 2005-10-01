@@ -22,16 +22,22 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include "auth.h"
 #include "directnet.h"
 
-/* MingW32 pipe: */
+/* MingW32 pipe &c: */
 #ifdef _WIN32
 #include <fcntl.h>
 #define pipe(a) _pipe((a), 0, _O_BINARY | _O_NOINHERIT)
+
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(s)  ((s) & 0xff)
+#endif
+
+#else
+#include <sys/wait.h>
 #endif
 
 int GPG_have;
