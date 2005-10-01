@@ -767,8 +767,7 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
         /* if it's in the list, we're done */
         cur = bltop;
         while (cur) {
-            if (cur->buddy->name && buddy->name)
-                if (!strcmp(cur->buddy->name, buddy->name)) return;
+            if (!strcmp(cur->buddy->name, buddy->name)) return;
             cur = cur->next;
         }
         
@@ -793,7 +792,30 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
 
 static void gp_removebuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
 {
-    /* put code here 8-D */
+    /* remove the buddy from our buddy list */
+    struct BuddyList *cur, *todel;
+    
+    if (bltop) {
+        /* maybe it is the top! */
+        if (!strcmp(bltop->buddy->name, buddy->name)) {
+            /* remove it */
+            todel = bltop;
+            bltop = bltop->next;
+            free(todel);
+            return;
+        }
+        
+        cur = bltop;
+        while (cur->next) {
+            if (!strcmp(cur->next->buddy->name, buddy->name)) {
+                /* remove it */
+                todel = cur->next;
+                cur->next = cur->next->next;
+                free(todel);
+                return;
+            }
+        }
+    }
 }
 
 static void gp_joinchat(GaimConnection *gc, GHashTable *data)
