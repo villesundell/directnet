@@ -134,7 +134,7 @@ static GaimPluginInfo info = {
     
     "prpl-directnet", /* id */
     "DirectNet", /* name */
-    "b0.6", /* version */
+    "b0.7", /* version */
     
     N_("DirectNet Protocol Plugin"), /* summary */
     N_("DirectNet Protocol Plugin"), /* full ;) description */
