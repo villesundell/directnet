@@ -189,6 +189,7 @@ struct ipc_msg {
     char *from;
     char *msg;
     char *authmsg;
+    int away;
 };
 #define IPC_STATE 2
 struct ipc_state {
@@ -217,8 +218,8 @@ struct ipc_auth_ask {
 
 gboolean idle_got_im(struct ipc_msg *ma) 
 {
-    char *dispnm = (char *) malloc((strlen(ma->from) + strlen(ma->authmsg) + 4) * sizeof(char));
-    sprintf(dispnm, "%s [%s]", ma->from, ma->authmsg);
+    char *dispnm = (char *) malloc((strlen(ma->from) + strlen(ma->authmsg) + 11) * sizeof(char));
+    sprintf(dispnm, "%s [%s]%s", ma->from, ma->authmsg, ma->away ? " [away]" : "");
     
     serv_got_alias(my_gc, ma->from, dispnm);
     serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
@@ -301,13 +302,14 @@ gboolean idle_auth_ask(struct ipc_auth_ask *aaa)
     return FALSE;
 }
 
-void ipc_got_im(char *who, char *msg, char *authmsg)
+void ipc_got_im(char *who, char *msg, char *authmsg, int away)
 {
     struct ipc_msg *a = (struct ipc_msg *) malloc(sizeof(struct ipc_msg));
 
     a->from = strdup(who);
     a->msg = strdup(msg);
     a->authmsg = strdup(authmsg);
+    a->away = away;
     
     pthread_mutex_lock(&ipclock);
     
@@ -477,8 +479,7 @@ void uiDispMsg(char *from, char *msg, char *authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
     
-    // ignore away status for the moment
-    ipc_got_im(from, msg, authmsg);
+    ipc_got_im(from, msg, authmsg, away);
 }
 
 void uiAskAuthImport(char *from, char *msg, char *sig)
@@ -519,7 +520,7 @@ void uiEstRoute(char *from)
     if (buddy && buddy->present == 0) {
         ipc_set_state(from, 1);
     } else if (!buddy) {
-        ipc_got_im(from, "[DirectNet]: Route established.", "sys");
+        ipc_got_im(from, "[DirectNet]: Route established.", "sys", 0);
     }
 }
 
@@ -766,7 +767,8 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
         /* if it's in the list, we're done */
         cur = bltop;
         while (cur) {
-            if (!strcmp(cur->buddy->name, buddy->name)) return;
+            if (cur->buddy->name && buddy->name)
+                if (!strcmp(cur->buddy->name, buddy->name)) return;
             cur = cur->next;
         }
         
