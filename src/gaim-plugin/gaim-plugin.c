@@ -63,7 +63,11 @@ struct BuddyList {
 struct BuddyList *bltop = NULL;
 
 static GaimPluginProtocolInfo prpl_info = {
-    0, /* OPT_PROTO_NO_PASSWORD */
+#ifndef __WIN32
+    OPT_PROTO_PASSWORD_OPTIONAL,
+#else
+    OPT_PROTO_NO_PASSWORD, /* authentication unsupported on Windows */
+#endif
     NULL,
     NULL,
     NO_BUDDY_ICONS,
@@ -134,7 +138,7 @@ static GaimPluginInfo info = {
     
     "prpl-directnet", /* id */
     "DirectNet", /* name */
-    "b0.7", /* version */
+    "1.0.0", /* version */
     
     N_("DirectNet Protocol Plugin"), /* summary */
     N_("DirectNet Protocol Plugin"), /* full ;) description */

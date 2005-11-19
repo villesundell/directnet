@@ -52,6 +52,7 @@ int uiInit(int argc, char ** argv, char **envp)
         return -1;
     }
     
+#ifndef __WIN32
     /* Then authentication */
     if (!authInit()) {
         printf("Authentication failed to initialize!\n");
@@ -62,29 +63,39 @@ int uiInit(int argc, char ** argv, char **envp)
         
         /* name */
         nm = (char *) malloc(256 * sizeof(char));
-        printf("Authentication username: ");
+        printf("Authentication username (blank for none): ");
         fflush(stdout);
         nm[255] = '\0';
         fgets(nm, 255, stdin);
         osl = strlen(nm) - 1;
         if (nm[osl] == '\n') nm[osl] = '\0';
         
-        /* password */
-        pswd = (char *) malloc(256 * sizeof(char));
-        /* lame way to cover it */
-        printf("Authentication password: \x1b[30;40m");
-        fflush(stdout);
-        pswd[255] = '\0';
-        fgets(pswd, 255, stdin);
-        osl = strlen(pswd) - 1;
-        if (pswd[osl] == '\n') pswd[osl] = '\0';
-        printf("\x1b[0m");
-        fflush(stdout);
+        /* don't input the pass if the UN was 0-length */
+        if (nm[0]) {
+            /* password */
+            pswd = (char *) malloc(256 * sizeof(char));
+            /* lame way to cover it */
+            printf("Authentication password: \x1b[30;40m");
+            fflush(stdout);
+            pswd[255] = '\0';
+            fgets(pswd, 255, stdin);
+            osl = strlen(pswd) - 1;
+            if (pswd[osl] == '\n') pswd[osl] = '\0';
+            printf("\x1b[0m");
+            fflush(stdout);
         
-        authSetPW(nm, pswd);
+            authSetPW(nm, pswd);
+        } else {
+            pswd[0] = '\0';
+            authSetPW(nm, pswd);
+        }
+        
         free(nm);
         free(pswd);
     }
+#else
+    authSetPW("", "");
+#endif
     
     // Then asking for the nick
     printf("What is your nick? ");

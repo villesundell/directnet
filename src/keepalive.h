@@ -18,19 +18,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_GLOBALS_H
-#define DN_GLOBALS_H
+#ifndef DN_KEEPALIVE_H
+#define DN_KEEPALIVE_H
 
-#define DN_NAME_LEN 24
-#define DN_TRANSKEY_LEN 34
-#define DN_MAX_CONNS 1024
-#define DN_MAX_ROUTES 2048
-#define DN_CMD_LEN 4096
-#define DN_ROUTE_LEN 512
-#define DN_MAX_PARAMS 50
-#define DN_HOSTNAME_LEN 256
-#define DN_KEEPALIVE_TIMER (60*5)
-
-#define SF_strncpy(x,y,z) if (z > 0) { strncpy(x,y,z); *(x+z-1) = '\0'; }
+/* establish the keepalive thread */
+pthread_t *establishKeepalive();
 
 #endif
