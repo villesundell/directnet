@@ -34,12 +34,13 @@
 #include "globals.h"
 #include "enc.h"
 #include "hash.h"
+#include "keepalive.h"
 #include "lock.h"
 #include "server.h"
 #include "ui.h"
 #include "whereami.h"
 
-pthread_t *serverPthread;
+pthread_t *serverPthread, *keepalivePthread;
 int serv_port = 3336;
 
 int *fds, *pipe_fds, onpthread;
@@ -179,6 +180,9 @@ int pluginMain(int argc, char **argv, char **envp)
     
     // Establish the server
     serverPthread = establishServer();
+    
+    // and the keepalive
+    keepalivePthread = establishKeepalive();
 
     // Set home directory
     homedir = strdup(findHome(envp));
@@ -190,6 +194,7 @@ int pluginMain(int argc, char **argv, char **envp)
     
     // When the UI has exited, we're done.
     serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
+    keepalivePthread ? pthread_kill(*keepalivePthread, SIGTERM) : 0;
     
     for (i = 0; i < onpthread; i++) {
         //kill(pids[i], SIGTERM);

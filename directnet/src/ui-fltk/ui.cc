@@ -86,6 +86,7 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         return -1;
     }
     
+#ifndef __WIN32
     /* Then authentication */
     if (!authInit()) {
         printf("Authentication failed to initialize!\n");
@@ -95,15 +96,23 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         int osl;
         
         /* name */
-        nm = strdup(fl_input("Authentication Username", NULL));
+        nm = strdup(fl_input("Authentication Username (blank for none)", NULL));
         
-        /* password */
-        pswd = strdup(fl_password("Authentication Password", NULL));
+        /* only if we got a name do we get a pass */
+        if (nm[0]) {
+            /* password */
+            pswd = strdup(fl_password("Authentication Password", NULL));
+        } else {
+            pswd = strdup("");
+        }
         
         authSetPW(nm, pswd);
         free(nm);
         free(pswd);
     }
+#else
+    authSetPW("", "");
+#endif
 
     /* And creating the key */
     encCreateKey();

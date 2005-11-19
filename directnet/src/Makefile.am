@@ -13,6 +13,7 @@ client.c \
 connection.c \
 directnet.c \
 hash.c \
+keepalive.c \
 lock.c \
 server.c \
 whereami.c \
@@ -34,6 +35,7 @@ client.c \
 connection.c \
 directnet.c \
 hash.c \
+keepalive.c \
 lock.c \
 server.c \
 whereami.c
@@ -56,6 +58,7 @@ client.c \
 connection.c \
 directnet.c \
 hash.c \
+keepalive.c \
 lock.c \
 server.c \
 whereami.c
@@ -80,6 +83,7 @@ client.c \
 connection.c \
 directnet.c \
 hash.c \
+keepalive.c \
 lock.c \
 server.c
 

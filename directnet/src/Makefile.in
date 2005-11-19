@@ -62,13 +62,14 @@ am__installdirs = "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"
 gaimLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(gaim_LTLIBRARIES)
 am__libdirectnet_gaim_la_SOURCES_DIST = chat.c client.c connection.c \
-	directnet.c hash.c lock.c server.c
+	directnet.c hash.c keepalive.c lock.c server.c
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS =  \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-chat.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-client.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-connection.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-directnet.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-hash.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-keepalive.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-lock.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-server.lo
 libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
@@ -80,35 +81,39 @@ directnet_SOURCES = directnet.c
 directnet_OBJECTS = directnet.$(OBJEXT)
 directnet_LDADD = $(LDADD)
 am__directnetc_SOURCES_DIST = chat.c client.c connection.c directnet.c \
-	hash.c lock.c server.c whereami.c
+	hash.c keepalive.c lock.c server.c whereami.c
 @UI_CXX_FALSE@am_directnetc_OBJECTS = directnetc-chat.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-client.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-connection.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-directnet.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-hash.$(OBJEXT) \
+@UI_CXX_FALSE@	directnetc-keepalive.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-lock.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-server.$(OBJEXT) \
 @UI_CXX_FALSE@	directnetc-whereami.$(OBJEXT)
 directnetc_OBJECTS = $(am_directnetc_OBJECTS)
 am__directnetcxx_SOURCES_DIST = chat.c client.c connection.c \
-	directnet.c hash.c lock.c server.c whereami.c fake.cc
+	directnet.c hash.c keepalive.c lock.c server.c whereami.c \
+	fake.cc
 @UI_CXX_TRUE@am_directnetcxx_OBJECTS = directnetcxx-chat.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-client.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-connection.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-directnet.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-hash.$(OBJEXT) \
+@UI_CXX_TRUE@	directnetcxx-keepalive.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-lock.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-server.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-whereami.$(OBJEXT) \
 @UI_CXX_TRUE@	directnetcxx-fake.$(OBJEXT)
 directnetcxx_OBJECTS = $(am_directnetcxx_OBJECTS)
 am__directnethub_SOURCES_DIST = chat.c client.c connection.c \
-	directnet.c hash.c lock.c server.c whereami.c
+	directnet.c hash.c keepalive.c lock.c server.c whereami.c
 @MAKE_HUB_TRUE@am_directnethub_OBJECTS = directnethub-chat.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-client.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-connection.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-directnet.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-hash.$(OBJEXT) \
+@MAKE_HUB_TRUE@	directnethub-keepalive.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-lock.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-server.$(OBJEXT) \
 @MAKE_HUB_TRUE@	directnethub-whereami.$(OBJEXT)
@@ -289,6 +294,7 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 @UI_CXX_TRUE@connection.c \
 @UI_CXX_TRUE@directnet.c \
 @UI_CXX_TRUE@hash.c \
+@UI_CXX_TRUE@keepalive.c \
 @UI_CXX_TRUE@lock.c \
 @UI_CXX_TRUE@server.c \
 @UI_CXX_TRUE@whereami.c \
@@ -306,6 +312,7 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 @UI_CXX_FALSE@connection.c \
 @UI_CXX_FALSE@directnet.c \
 @UI_CXX_FALSE@hash.c \
+@UI_CXX_FALSE@keepalive.c \
 @UI_CXX_FALSE@lock.c \
 @UI_CXX_FALSE@server.c \
 @UI_CXX_FALSE@whereami.c
@@ -321,6 +328,7 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 @MAKE_HUB_TRUE@connection.c \
 @MAKE_HUB_TRUE@directnet.c \
 @MAKE_HUB_TRUE@hash.c \
+@MAKE_HUB_TRUE@keepalive.c \
 @MAKE_HUB_TRUE@lock.c \
 @MAKE_HUB_TRUE@server.c \
 @MAKE_HUB_TRUE@whereami.c
@@ -338,6 +346,7 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 @GAIM_PLUGIN_TRUE@connection.c \
 @GAIM_PLUGIN_TRUE@directnet.c \
 @GAIM_PLUGIN_TRUE@hash.c \
+@GAIM_PLUGIN_TRUE@keepalive.c \
 @GAIM_PLUGIN_TRUE@lock.c \
 @GAIM_PLUGIN_TRUE@server.c
 
@@ -474,6 +483,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-connection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-keepalive.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetc-whereami.Po@am__quote@
@@ -483,6 +493,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-keepalive.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnetcxx-whereami.Po@am__quote@
@@ -491,6 +502,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-connection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-keepalive.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnethub-whereami.Po@am__quote@
@@ -499,6 +511,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-connection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-directnet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-keepalive.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-lock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-server.Plo@am__quote@
 
@@ -557,6 +570,13 @@ libdirectnet_gaim_la-hash.lo: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='libdirectnet_gaim_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+
+libdirectnet_gaim_la-keepalive.lo: keepalive.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-keepalive.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-keepalive.Tpo" -c -o libdirectnet_gaim_la-keepalive.lo `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-keepalive.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-keepalive.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='libdirectnet_gaim_la-keepalive.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-keepalive.lo `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c
 
 libdirectnet_gaim_la-lock.lo: lock.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-lock.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-lock.Tpo" -c -o libdirectnet_gaim_la-lock.lo `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
@@ -641,6 +661,20 @@ directnetc-hash.obj: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnetc-hash.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
+
+directnetc-keepalive.o: keepalive.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-keepalive.o -MD -MP -MF "$(DEPDIR)/directnetc-keepalive.Tpo" -c -o directnetc-keepalive.o `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-keepalive.Tpo" "$(DEPDIR)/directnetc-keepalive.Po"; else rm -f "$(DEPDIR)/directnetc-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='directnetc-keepalive.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-keepalive.o `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c
+
+directnetc-keepalive.obj: keepalive.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-keepalive.obj -MD -MP -MF "$(DEPDIR)/directnetc-keepalive.Tpo" -c -o directnetc-keepalive.obj `if test -f 'keepalive.c'; then $(CYGPATH_W) 'keepalive.c'; else $(CYGPATH_W) '$(srcdir)/keepalive.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetc-keepalive.Tpo" "$(DEPDIR)/directnetc-keepalive.Po"; else rm -f "$(DEPDIR)/directnetc-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='directnetc-keepalive.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -c -o directnetc-keepalive.obj `if test -f 'keepalive.c'; then $(CYGPATH_W) 'keepalive.c'; else $(CYGPATH_W) '$(srcdir)/keepalive.c'; fi`
 
 directnetc-lock.o: lock.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-lock.o -MD -MP -MF "$(DEPDIR)/directnetc-lock.Tpo" -c -o directnetc-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
@@ -754,6 +788,20 @@ directnetcxx-hash.obj: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
 
+directnetcxx-keepalive.o: keepalive.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-keepalive.o -MD -MP -MF "$(DEPDIR)/directnetcxx-keepalive.Tpo" -c -o directnetcxx-keepalive.o `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-keepalive.Tpo" "$(DEPDIR)/directnetcxx-keepalive.Po"; else rm -f "$(DEPDIR)/directnetcxx-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='directnetcxx-keepalive.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-keepalive.o `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c
+
+directnetcxx-keepalive.obj: keepalive.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-keepalive.obj -MD -MP -MF "$(DEPDIR)/directnetcxx-keepalive.Tpo" -c -o directnetcxx-keepalive.obj `if test -f 'keepalive.c'; then $(CYGPATH_W) 'keepalive.c'; else $(CYGPATH_W) '$(srcdir)/keepalive.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-keepalive.Tpo" "$(DEPDIR)/directnetcxx-keepalive.Po"; else rm -f "$(DEPDIR)/directnetcxx-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='directnetcxx-keepalive.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -c -o directnetcxx-keepalive.obj `if test -f 'keepalive.c'; then $(CYGPATH_W) 'keepalive.c'; else $(CYGPATH_W) '$(srcdir)/keepalive.c'; fi`
+
 directnetcxx-lock.o: lock.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetcxx_CFLAGS) $(CFLAGS) -MT directnetcxx-lock.o -MD -MP -MF "$(DEPDIR)/directnetcxx-lock.Tpo" -c -o directnetcxx-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnetcxx-lock.Tpo" "$(DEPDIR)/directnetcxx-lock.Po"; else rm -f "$(DEPDIR)/directnetcxx-lock.Tpo"; exit 1; fi
@@ -865,6 +913,20 @@ directnethub-hash.obj: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hash.c' object='directnethub-hash.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
+
+directnethub-keepalive.o: keepalive.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-keepalive.o -MD -MP -MF "$(DEPDIR)/directnethub-keepalive.Tpo" -c -o directnethub-keepalive.o `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-keepalive.Tpo" "$(DEPDIR)/directnethub-keepalive.Po"; else rm -f "$(DEPDIR)/directnethub-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='directnethub-keepalive.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-keepalive.o `test -f 'keepalive.c' || echo '$(srcdir)/'`keepalive.c
+
+directnethub-keepalive.obj: keepalive.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-keepalive.obj -MD -MP -MF "$(DEPDIR)/directnethub-keepalive.Tpo" -c -o directnethub-keepalive.obj `if test -f 'keepalive.c'; then $(CYGPATH_W) 'keepalive.c'; else $(CYGPATH_W) '$(srcdir)/keepalive.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnethub-keepalive.Tpo" "$(DEPDIR)/directnethub-keepalive.Po"; else rm -f "$(DEPDIR)/directnethub-keepalive.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='keepalive.c' object='directnethub-keepalive.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -c -o directnethub-keepalive.obj `if test -f 'keepalive.c'; then $(CYGPATH_W) 'keepalive.c'; else $(CYGPATH_W) '$(srcdir)/keepalive.c'; fi`
 
 directnethub-lock.o: lock.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnethub_CFLAGS) $(CFLAGS) -MT directnethub-lock.o -MD -MP -MF "$(DEPDIR)/directnethub-lock.Tpo" -c -o directnethub-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \

@@ -116,3 +116,9 @@ msg(1)(1) (message)
                 route
                 local name
                 encrypted message
+
+pin(1)(1) (ping)
+        purpose: ping a connection for keepalive (no pong yet)
+        type: direct
+        parameters: none
+
