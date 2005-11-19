@@ -45,6 +45,10 @@ char *GPG_bin = NULL;
 char *GPG_name = NULL;
 char *GPG_pass = NULL;
 
+/* Username and pass strings */
+char authUsername[] = "GPG Username (blank for none)";
+char authPW[] = "GPG Password";
+
 #define CPASS if (!GPG_name || !GPG_pass || !GPG_have) 
 
 /* Wrap for GPG
@@ -106,30 +110,48 @@ char *gpgWrap(char *inp, char *args, int pass)
 int authInit()
 {
     char *ret;
-    // try no path first
-    GPG_bin = strdup("gpg");
-    ret = gpgWrap("", "--version", 0);
-    if (ret == NULL) {
-        // now try with bindir
-        free(GPG_bin);
-        
-        GPG_bin = (char *) malloc(strlen(bindir) + 5);
-        if (!GPG_bin) { perror("malloc"); exit(1); }
-        
-        sprintf(GPG_bin, "%s/gpg", bindir);
-        ret = gpgWrap("", "--version", 0);
-        if (ret == NULL) {
-            // it's not here
-            free(GPG_bin);
-            GPG_have = 0;
-        } else {
-            free(ret);
-            GPG_have = 1;
+    int i;
+    
+    GPG_have = 0;
+    
+    // try a number of possible paths
+    for (i = 0; i < 3; i++) {
+        switch (i) {
+            case 0:
+                // try no path first
+                GPG_bin = strdup("gpg");
+                if (!GPG_bin) { perror("strdup"); exit(1); }
+                ret = gpgWrap("", "--version", 0);
+                break;
+                
+            case 1:
+                // now try with bindir
+                GPG_bin = (char *) malloc(strlen(bindir) + 5);
+                if (!GPG_bin) { perror("malloc"); exit(1); }
+                
+                sprintf(GPG_bin, "%s/gpg", bindir);
+                ret = gpgWrap("", "--version", 0);
+                break;
+                
+            case 2:
+                // now try with /sw/bin (for Fink)
+                GPG_bin = strdup("/sw/bin/gpg");
+                if (!GPG_bin) { perror("strdup"); exit(1); }
+                ret = gpgWrap("", "--version", 0);
+                break;
         }
-    } else {
-        free(ret);
-        GPG_have = 1;
+        
+        if (ret == NULL) {
+            // nope!
+            free(GPG_bin);
+        } else {
+            // this is it
+            GPG_have = 1;
+            free(ret);
+            break;
+        }
     }
+    
     GPG_name = NULL;
     GPG_pass = NULL;
     return 1;

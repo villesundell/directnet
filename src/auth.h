@@ -59,4 +59,8 @@ int authImport(char *msg);
  * returns: a MALLOC'D buffer with the user's signature or NULL on error */
 char *authExport();
 
+/* Some text for UIs */
+extern char authUsername[];
+extern char authPW[];
+
 #endif

@@ -96,12 +96,12 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         int osl;
         
         /* name */
-        nm = strdup(fl_input("Authentication Username (blank for none)", NULL));
+        nm = strdup(fl_input(authUsername, NULL));
         
         /* only if we got a name do we get a pass */
         if (nm[0]) {
             /* password */
-            pswd = strdup(fl_password("Authentication Password", NULL));
+            pswd = strdup(fl_password(authPW, NULL));
         } else {
             pswd = strdup("");
         }
