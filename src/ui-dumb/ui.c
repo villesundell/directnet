@@ -85,13 +85,12 @@ int uiInit(int argc, char ** argv, char **envp)
             fflush(stdout);
         
             authSetPW(nm, pswd);
+            free(pswd);
         } else {
-            pswd[0] = '\0';
-            authSetPW(nm, pswd);
+            authSetPW(nm, "");
         }
         
         free(nm);
-        free(pswd);
     }
 #else
     authSetPW("", "");

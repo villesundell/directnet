@@ -39,6 +39,7 @@ struct cyf_key {
     struct cyf_key *next;
 };
 
+pthread_mutex_t cyf_key_lock;
 struct cyf_key *cyf_key_head = NULL;
 
 char *mypukey, *myprkey;
@@ -141,6 +142,8 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
     ctx = init_ctx(pk);
 
     if (name != NULL) {
+        pthread_mutex_lock(&cyf_key_lock);
+        
         cur = cyf_key_head;
         while (cur) {
             if (!strcmp(cur->name, name)) {
@@ -149,6 +152,7 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
             }
             cur = cur->next;
         }
+        pthread_mutex_unlock(&cyf_key_lock);
         if (!cur) return strdup("");
     } else {
         key = dehex(&klen, myprkey);
@@ -203,6 +207,7 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
 
 int findEnc(char **envp)
 {
+    pthread_mutex_init(&cyf_key_lock, NULL);
     return 0;
 }
     
@@ -269,18 +274,24 @@ char *encExportKey() {
     return mypukey;
 }
 
-char *encImportKey(char *name, char *key) {
+char *encImportKey(char *name, char *key)
+{
+    pthread_mutex_lock(&cyf_key_lock);
+    
     if (cyf_key_head) {
         struct cyf_key *cur = cyf_key_head;
+        
         while (cur->next) {
             if (!strcmp(cur->name, name)) {
                 cur->key = strdup(key);
+                pthread_mutex_unlock(&cyf_key_lock);
                 return "";
             }
             cur = cur->next;
         }
         if (!strcmp(cur->name, name)) {
             cur->key = strdup(key);
+            pthread_mutex_unlock(&cyf_key_lock);
             return "";
         }
         
@@ -294,6 +305,7 @@ char *encImportKey(char *name, char *key) {
         cyf_key_head->key = strdup(key);
         cyf_key_head->next = NULL;
     }
+    pthread_mutex_unlock(&cyf_key_lock);
     
     return "";
 }

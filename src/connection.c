@@ -299,7 +299,9 @@ void handleMsg(char *inbuf, int fdnum)
         REQ_PARAMS(3);
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
-            /*if (!strncmp(command, "dcr", 3) &&
+            // This doesn't work on OSX
+#ifndef __APPLE__
+            if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
                 // dcr echos
                 char *outParams[DN_MAX_PARAMS];
@@ -331,7 +333,7 @@ void handleMsg(char *inbuf, int fdnum)
                 locip_len = sizeof(struct sockaddr);
                 if (getsockname(firfd, &locip, &locip_len) == 0) {
                     locip_i = (struct sockaddr_in *) &locip;
-                    / *params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
+                    /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
                     outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
                 } else {
                     return;
@@ -345,7 +347,8 @@ void handleMsg(char *inbuf, int fdnum)
             }
             
             // Then, attempt the connection
-            establishClient(params[2]);*/
+            establishClient(params[2]);
+#endif
         }
 
     } else if (!strncmp(command, "fnd", 3) &&
@@ -864,8 +867,9 @@ void *fndPthread(void *name_voidptr)
         return NULL;
     }
     
-    // If it's weak, send a dcr (direct connect request)
-    /*{
+    // If it's weak, send a dcr (direct connect request) (except on OSX where it doesn't work)
+#ifndef __APPLE__
+    {
         char *params[DN_MAX_PARAMS], *first;
         struct sockaddr locip;
         struct sockaddr_in *locip_i;
@@ -892,7 +896,7 @@ void *fndPthread(void *name_voidptr)
         locip_len = sizeof(struct sockaddr);
         if (getsockname(firfd, &locip, &locip_len) == 0) {
             locip_i = (struct sockaddr_in *) &locip;
-            / *params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));* /
+            /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
             params[2] = strdup(inet_ntoa(locip_i->sin_addr));
         } else {
             return NULL;
@@ -906,7 +910,8 @@ void *fndPthread(void *name_voidptr)
         
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
         return NULL;
-    }*/
+    }
+#endif
     return NULL;
 }
 

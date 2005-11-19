@@ -417,12 +417,28 @@ extern "C" void uiDispMsg(char *from, char *msg, char *authmsg, int away)
     flDispMsg(from, from, msg, authmsg);
 }
 
-void uiAskAuthImport(char *from, char *msg, char *sig)
+extern "C" void uiAskAuthImport(char *from, char *msg, char *sig)
 {
+    int i;
+    
     while (!uiLoaded) sleep(0);
     
-    char *q = (char *) malloc((strlen(from) + strlen(sig) + 53) * sizeof(char));
-    sprintf(q, "%s has asked you to import the key '%s'.  Do you accept?", from, sig);
+    char *q = (char *) malloc((strlen(from) + strlen(sig) + 51) * sizeof(char));
+    sprintf(q, "%s has asked you to import the key\n'%s'\nDo you accept?", from, sig);
+    
+    // fix the @ sign, which breaks fl_ask
+    for (i = 0; q[i]; i++) {
+        if (q[i] == '@') {
+            // slide it over
+            q = (char *) realloc(q, strlen(q) + 2);
+            if (!q) { perror("realloc"); exit(-1); }
+            
+            memmove(q + i + 2, q + i + 1, strlen(q) - i);
+            q[i + 1] = '@';
+            i++;
+        }
+    }
+    
     if (flt1_ask(q, 0)) {
         authImport(msg);
     }
