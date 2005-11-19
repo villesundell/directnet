@@ -18,8 +18,17 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef WIN32
+#include <sys/socket.h>
+#else
+#include <winsock.h>
+#endif
+
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "directnet.h"
 #include "globals.h"
@@ -35,9 +44,17 @@ void k_sigterm_handler(int sig)
 pthread_t *establishKeepalive()
 {
     pthread_t *newthread;
+    pthread_attr_t ptattr;
     int pthreadres;
     
-    pthreadres = pthread_create(newthread, NULL, keepaliveLoop, NULL);
+    newthread = (pthread_t *) malloc(sizeof(pthread_t));
+    if (newthread == NULL) {
+        perror("malloc");
+        exit(-1);
+    }
+    
+    pthread_attr_init(&ptattr);
+    pthreadres = pthread_create(newthread, &ptattr, keepaliveLoop, NULL);
     
     if (pthreadres == -1) {
         perror("pthread_create");

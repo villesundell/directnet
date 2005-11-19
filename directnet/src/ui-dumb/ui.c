@@ -63,7 +63,7 @@ int uiInit(int argc, char ** argv, char **envp)
         
         /* name */
         nm = (char *) malloc(256 * sizeof(char));
-        printf("Authentication username (blank for none): ");
+        printf("%s: ", authUsername);
         fflush(stdout);
         nm[255] = '\0';
         fgets(nm, 255, stdin);
@@ -75,7 +75,7 @@ int uiInit(int argc, char ** argv, char **envp)
             /* password */
             pswd = (char *) malloc(256 * sizeof(char));
             /* lame way to cover it */
-            printf("Authentication password: \x1b[30;40m");
+            printf("%s: \x1b[30;40m", authPW);
             fflush(stdout);
             pswd[255] = '\0';
             fgets(pswd, 255, stdin);

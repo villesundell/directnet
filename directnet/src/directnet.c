@@ -86,6 +86,7 @@ int pluginMain(int argc, char **argv, char **envp)
     char *binloc, *binnm;
     
     serverPthread = NULL;
+    keepalivePthread = NULL;
     
     // check our installed path
 #ifndef GAIM_PLUGIN
@@ -193,12 +194,22 @@ int pluginMain(int argc, char **argv, char **envp)
 #ifndef GAIM_PLUGIN
     
     // When the UI has exited, we're done.
-    serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
-    keepalivePthread ? pthread_kill(*keepalivePthread, SIGTERM) : 0;
+    if (serverPthread) {
+        pthread_kill(*serverPthread, SIGTERM);
+        pthread_join(*serverPthread, NULL);
+    }
+    
+    if (keepalivePthread) {
+        pthread_kill(*keepalivePthread, SIGTERM);
+        pthread_join(*keepalivePthread, NULL);
+    }
     
     for (i = 0; i < onpthread; i++) {
         //kill(pids[i], SIGTERM);
-        pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
+        if (pthreads[i]) {
+            pthread_kill(*(pthreads[i]), SIGTERM);
+            pthread_join(*(pthreads[i]), NULL);
+        }
         //waitpid(pids[i], NULL, 0);
     }
     
