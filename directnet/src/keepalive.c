@@ -18,17 +18,17 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef WIN32
-#include <sys/socket.h>
-#else
-#include <winsock.h>
-#endif
-
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifndef WIN32
+#include <sys/socket.h>
+#else
+#include <winsock.h>
+#endif
 
 #include "directnet.h"
 #include "globals.h"
