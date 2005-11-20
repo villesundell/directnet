@@ -89,7 +89,7 @@ int establishClient(char *destination)
     memset(&(addr.sin_zero), '\0', 8);
 
     if (connect(fds[curfd], (struct sockaddr *)&addr, sizeof(struct sockaddr)) == -1) {
-        perror("connect");
+        //perror("connect");
         free(hostname);
         fds[curfd] = 0;
         dn_unlock(&dn_fd_lock);
