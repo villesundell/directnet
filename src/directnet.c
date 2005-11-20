@@ -56,7 +56,7 @@ struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for later fn
 struct hashP *recFndPthreads;
 struct hashS *weakRoutes; // List of weak routes
 
-char dn_name[DN_NAME_LEN];
+char dn_name[DN_NAME_LEN+1];
 char dn_name_set = 0;
 struct hashI *dn_fds;
 

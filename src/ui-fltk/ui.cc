@@ -190,6 +190,7 @@ void setName(Fl_Input *w, void *ignore)
     dn_lock(&displayLock);
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
+    dn_name[DN_NAME_LEN] = '\0';
     dn_name_set = 1;
     nw->nameWindow->hide();
     
