@@ -93,15 +93,20 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         return -1;
     } else if (authNeedPW()) {
         char *nm, *pswd;
+        const char *cnm, *cpswd;
         int osl;
         
         /* name */
-        nm = strdup(fl_input(authUsername, NULL));
+        cnm = fl_input(authUsername, NULL);
+        if (cnm) nm = strdup(cnm);
+        else nm = strdup("");
         
         /* only if we got a name do we get a pass */
         if (nm[0]) {
             /* password */
-            pswd = strdup(fl_password(authPW, NULL));
+            cpswd = fl_password(authPW, NULL);
+            if (cpswd) pswd = strdup(cpswd);
+            else pswd = strdup("");
         } else {
             pswd = strdup("");
         }
