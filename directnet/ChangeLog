@@ -3,6 +3,7 @@ CVS from 1.0.0rc1:
         - Got rid of a rather pointless perror()
         - Fixed a problem with OSX calling the GUI client.
         - Fixed some FLTK issues with fl_ask etc.
+        - Fixed a potentially nasty buffer overflow with dn_name.
 
 1.0.0rc1 from Beta 0.6:
         - Authentication support through GPG

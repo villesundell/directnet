@@ -551,7 +551,7 @@ void handleMsg(char *inbuf, int fdnum)
         if (!handleit) {
             // This isn't our route, but do add intermediate routes
             int i, ostrlen;
-            char endu[DN_NAME_LEN], myn[DN_NAME_LEN], newroute[DN_ROUTE_LEN];
+            char endu[DN_NAME_LEN+1], myn[DN_NAME_LEN+1], newroute[DN_ROUTE_LEN];
             char checknext, usenext;
             
             // Fix our pararms[0]
@@ -560,7 +560,7 @@ void handleMsg(char *inbuf, int fdnum)
             
             // Who's the end user?
             for (i = strlen(params[0])-2; params[0][i] != '\n' && params[0][i] != '\0' && i >= 0; i--);
-            SF_strncpy(endu, params[0]+i+1, DN_NAME_LEN);
+            SF_strncpy(endu, params[0]+i+1, DN_NAME_LEN+1);
             endu[strlen(endu)-1] = '\0';
             
             // And add an intermediate route
@@ -837,11 +837,11 @@ void emitUnroutedMsg(int fromfd, char *outbuf)
 // fndPthread is the pthread that harvests late fnds
 void *fndPthread(void *name_voidptr)
 {
-    char name[DN_NAME_LEN];
+    char name[DN_NAME_LEN+1];
     char isWeak = 0;
     char *curWRoute;
     
-    SF_strncpy(name, (char *) name_voidptr, DN_NAME_LEN);
+    SF_strncpy(name, (char *) name_voidptr, DN_NAME_LEN+1);
     free(name_voidptr);
     
     sleep(15);

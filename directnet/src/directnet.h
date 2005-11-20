@@ -47,7 +47,7 @@ extern struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for l
 extern struct hashP *recFndPthreads; // And the pthreads themselves
 extern struct hashS *weakRoutes; // List of weak routes
 
-extern char dn_name[DN_NAME_LEN];
+extern char dn_name[DN_NAME_LEN+1];
 extern char dn_name_set;
 extern struct hashI *dn_fds;
 
