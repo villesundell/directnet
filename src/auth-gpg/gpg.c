@@ -18,9 +18,11 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -60,7 +62,7 @@ char *gpgWrap(char *inp, char *args, int pass)
 {
     FILE *fi, *fo;
     char *co;
-    int pspp[2], res;
+    int pspp[2], res, pid;
     char *cmd, *pspc;
     
     /* 1) open files */
@@ -89,11 +91,30 @@ char *gpgWrap(char *inp, char *args, int pass)
         sprintf(pspc, "--passphrase-fd %d", pspp[0]);
     }
     
-    /* 4) run the command */
-    cmd = (char *) malloc((strlen(GPG_bin) + strlen(args) + strlen(pspc) + 41) * sizeof(char));
-    sprintf(cmd, "%s %s %s --no-tty <&%d >&%d 2> /dev/null", GPG_bin, args, pspc, fileno(fi), fileno(fo));
+    /* 4) fork and run the command */
+    pid = fork();
+    if (pid == 0) {
+        cmd = (char *) malloc((strlen(GPG_bin) + strlen(args) + strlen(pspc) + 12) * sizeof(char));
+        if (cmd == NULL) { exit(-1); }
+        sprintf(cmd, "%s %s %s --no-tty", GPG_bin, args, pspc);
+        
+        dup2(fileno(fi), 0);
+        dup2(fileno(fo), 1);
+        res = open("/dev/null", O_WRONLY);
+        if (res > -1) {
+            dup2(res, 2);
+        }
+        
+        execl("/bin/sh", "/bin/sh", "-c", cmd, NULL);
+        exit(1);
+    } else if (pid > 0) {
+        /* wait for the child */
+        waitpid(pid, &res, 0);
+    } else if (pid < 0) {
+        perror("fork");
+        return NULL;
+    }
     
-    res = system(cmd);
     if (WEXITSTATUS(res) == 127) return NULL;
     
     /* 5) extract the content of fo */
