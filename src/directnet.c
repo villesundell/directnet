@@ -106,6 +106,8 @@ int pluginMain(int argc, char **argv, char **envp)
             if (!strncmp(argv[1], "-v", 2)) {
                 printf("DirectNet version ALPHA 0.4\n");
                 exit(0);
+            } else if (!strncmp(argv[i], "-psn", 4)) {
+                /* this is just here because OSX is weird */
             } else if (!strncmp(argv[i], "-p", 2)) {
                 i++;
                 if (!argv[i]) {
