@@ -1,4 +1,4 @@
-CVS from 1.0.0rc1:
+1.0.0rc2 from 1.0.0rc1:
         - Fixed a problem that made GPG malfunction on OpenBSD.
         - Got rid of a rather pointless perror()
         - Fixed a problem with OSX calling the GUI client.
