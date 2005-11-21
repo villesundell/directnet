@@ -1,5 +1,6 @@
 CVS from 1.0.0rc2:
         - Fixed a bug in the lost-route detection (probably a NASTY one).
+          - And another one! (Must ... not ... break ... lost-route detection!)
         - Added interruption routes whenever standard routes are added.
 
 1.0.0rc2 from 1.0.0rc1:
