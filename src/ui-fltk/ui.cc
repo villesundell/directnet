@@ -540,10 +540,10 @@ extern "C" void uiNoRoute(char *to)
     
     while (!uiLoaded) sleep(0);
     
-    dn_lock(&displayLock);
+    // dn_lock(&displayLock); We're already locked here, don't freeeeeze!
     
     cw = getWindow(to);
     putOutput(cw, "You do not have a route to this user.\n");
     
-    dn_unlock(&displayLock);
+    // dn_unlock(&displayLock); Already locked
 }
