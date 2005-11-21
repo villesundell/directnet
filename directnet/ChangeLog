@@ -1,3 +1,7 @@
+CVS from 1.0.0rc2:
+        - Fixed a bug in the lost-route detection (probably a NASTY one).
+        - Added interruption routes whenever standard routes are added.
+
 1.0.0rc2 from 1.0.0rc1:
         - Fixed a problem that made GPG malfunction on OpenBSD.
         - Got rid of a rather pointless perror()

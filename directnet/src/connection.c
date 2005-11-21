@@ -433,6 +433,7 @@ void handleMsg(char *inbuf, int fdnum)
                 
                 // Add his route,
                 hashSSet(dn_routes, params[1], reverseRoute);
+                hashSSet(dn_iRoutes, params[1], reverseRoute);
             
                 // and public key,
                 encImportKey(params[1], params[3]);
@@ -612,6 +613,7 @@ void handleMsg(char *inbuf, int fdnum)
             SF_strncpy(newroute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
             
             hashSSet(dn_routes, params[1], newroute);
+            hashSSet(dn_iRoutes, params[1], newroute);
             
             // 2) Key
             encImportKey(params[1], params[3]);
@@ -635,6 +637,7 @@ void handleMsg(char *inbuf, int fdnum)
         
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
+        hashSSet(dn_iRoutes, params[0], route);
         
         encImportKey(params[0], params[1]);
         
@@ -735,7 +738,7 @@ int handleRoutedMsg(char *command, char vera, char verb, char **params)
             // Who's the end user?
             route[strlen(route)-1] = '\0';
             
-            for (i = strlen(route)-1; route[i] != '\n'; i--);
+            for (i = strlen(route)-1; i >= 0 && route[i] != '\n'; i--);
             endu = route+i+1;
             
             // If this is me, don't send the command, just display it
