@@ -37,6 +37,7 @@ extern int serv_port;
 
 extern int *fds, *pipe_fds, onfd, onpthread;
 extern pthread_t **pthreads;
+extern DN_LOCK pthread_lock;
 extern int onfd;
 extern DN_LOCK dn_fd_lock;
 

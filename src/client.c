@@ -101,10 +101,13 @@ int establishClient(char *destination)
     ci_ptr->fdnum = curfd;
     ci_ptr->pthreadnum = onpthread;
     pthread_attr_init(&ptattr);
+    
+    dn_lock(&pthread_lock);
     pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
     pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) ci_ptr);
 
     onpthread++;
+    dn_unlock(&pthread_lock);
     
     free(hostname);
     
