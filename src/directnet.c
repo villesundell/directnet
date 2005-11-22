@@ -139,6 +139,7 @@ int pluginMain(int argc, char **argv, char **envp)
     memset(pipe_locks, 0, DN_MAX_CONNS * sizeof(DN_LOCK));
     
     // pthreads is an array of every active connection's pthread_t
+    dn_lockInit(&pthread_lock);
     pthreads = (pthread_t **) malloc(DN_MAX_CONNS * sizeof(pthread_t *));
     memset(pthreads, 0, DN_MAX_CONNS * sizeof(pthread_t *));
     onpthread = 0;
