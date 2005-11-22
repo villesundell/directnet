@@ -155,10 +155,13 @@ void *serverAcceptLoop(void *ignore)
         *onfd_ptr = curfd;
         //pids[onpid] = clone(communicator, client_stack, SIGCHLD | CLONE_FILES | CLONE_VM, (void *) onfd_ptr);
         pthread_attr_init(&ptattr);
+        
+        dn_lock(&pthread_lock);
 	pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
         pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
         
         onpthread++;
+        dn_unlock(&pthread_lock);
     }
     
     return NULL;

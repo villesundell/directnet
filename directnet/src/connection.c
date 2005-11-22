@@ -60,6 +60,7 @@ void *communicator(void *fdnum_voidptr)
 {
     int fdnum, pthreadnum, byterec, origstrlen;
     char buf[DN_CMD_LEN];
+    pthread_t *mythread;
     
     signal(SIGTERM, consigterm_handler);
     
@@ -81,6 +82,7 @@ void *communicator(void *fdnum_voidptr)
     while (1) {
         // Receive a byte at a time
         origstrlen = strlen(buf);
+        if (origstrlen >= DN_CMD_LEN - 1) origstrlen = DN_CMD_LEN - 1;
         buf[origstrlen+1] = '\0';
         
         byterec = recv(fds[fdnum], buf+origstrlen, 1, 0);
@@ -108,12 +110,14 @@ void *communicator(void *fdnum_voidptr)
             
             close(fds[fdnum]);
             fds[fdnum] = 0;
-            return NULL;
+            break;
         }
     }
     
+    dn_lock(&pthread_lock);
     free(pthreads[pthreadnum]);
     pthreads[pthreadnum] = NULL;
+    dn_unlock(&pthread_lock);
     
     return NULL;
 }

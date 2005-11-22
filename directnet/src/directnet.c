@@ -45,6 +45,7 @@ int serv_port = 3336;
 
 int *fds, *pipe_fds, onpthread;
 pthread_t **pthreads;
+DN_LOCK pthread_lock;
 int onfd;
 DN_LOCK dn_fd_lock;
 
@@ -206,6 +207,7 @@ int pluginMain(int argc, char **argv, char **envp)
         pthread_join(*keepalivePthread, NULL);
     }
     
+    dn_lock(&pthread_lock);
     for (i = 0; i < onpthread; i++) {
         //kill(pids[i], SIGTERM);
         if (pthreads[i]) {
@@ -214,6 +216,7 @@ int pluginMain(int argc, char **argv, char **envp)
         }
         //waitpid(pids[i], NULL, 0);
     }
+    dn_unlock(&pthread_lock);
     
     free(fds);
     free(pipe_fds);
