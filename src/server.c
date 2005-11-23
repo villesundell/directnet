@@ -120,7 +120,8 @@ pthread_t *establishServer()
 void *serverAcceptLoop(void *ignore)
 {
     int sin_size, pthreadres, curfd;
-    int *onfd_ptr, acceptfd;
+    int acceptfd;
+    struct communInfo *ci_ptr;
     struct sockaddr_in rem_addr;
     pthread_attr_t ptattr;
     
@@ -151,14 +152,15 @@ void *serverAcceptLoop(void *ignore)
 
         uiEstConn(inet_ntoa(rem_addr.sin_addr));
         
-        onfd_ptr = malloc(sizeof(int));
-        *onfd_ptr = curfd;
-        //pids[onpid] = clone(communicator, client_stack, SIGCHLD | CLONE_FILES | CLONE_VM, (void *) onfd_ptr);
+        dn_lock(&pthread_lock);
+        ci_ptr = malloc(sizeof(struct communInfo));
+        ci_ptr->fdnum = curfd;
+        ci_ptr->pthreadnum = onpthread;
+        
         pthread_attr_init(&ptattr);
         
-        dn_lock(&pthread_lock);
 	pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
-        pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) onfd_ptr);
+        pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) ci_ptr);
         
         onpthread++;
         dn_unlock(&pthread_lock);
