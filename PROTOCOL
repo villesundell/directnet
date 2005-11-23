@@ -122,3 +122,16 @@ pin(1)(1) (ping)
         type: direct
         parameters: none
 
+prm(1)(1) (promote) (unimplemented)
+        purpose: announce a node's promotion
+        type: nonrepeating unrouted (sort of)
+        parameters:
+                transmission key
+                current route
+                local name
+                adjusted level
+                        The level is sent as whatever level the node has
+                        promoted itself to, but each transmission, decreases by
+                        one.  When the level is at 1, the message does not
+                        continue.  Newly affiliated nodes send an fnr.
+
