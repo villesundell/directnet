@@ -1,7 +1,11 @@
 1.1.0CVS from 1.0.0 branch:
         - Added prm to the PROTOCOL file.
 
-CVS from 1.0.0rc3:
+CVS from 1.0.0rc4:
+        - Use pthread_cancel instead of signals (fix for Win32).
+        - Check and use Sleep instead of sleep (fix for Win32).
+
+1.0.0rc4 from 1.0.0rc3:
         - Properly initialized pthread_lock (fix for Win32)
         - Fixed a REALLY nasty bug on receiving connections.
 
