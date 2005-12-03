@@ -6,6 +6,13 @@ CVS from 1.0.0rc4:
         - Check and use Sleep instead of sleep (fix for Win32).
 
 1.0.0rc4 from 1.0.0rc3:
+        - Use pthread_cancel instead of signals (fix for Win32).
+        - Check and use Sleep instead of sleep (fix for Win32).
+        - Don't wait for other pthreads to close on Win32 (strange
+          win32-pthreads bug(?)).
+        - Const correctness.
+
+1.0.0rc4 from 1.0.0rc3:
         - Properly initialized pthread_lock (fix for Win32)
         - Fixed a REALLY nasty bug on receiving connections.
 

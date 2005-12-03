@@ -195,27 +195,26 @@ int pluginMain(int argc, char **argv, char **envp)
     // Start the UI
     uiInit(argc, argv, envp);
 
-#ifndef GAIM_PLUGIN
+#ifndef GAIM_PLUGIN /* The Gaim plugin can't do this cleanly (yet) */
+#ifndef __WIN32 /* win32-pthreads hangs in here, but exits cleanly on a normal exit */
     
     // When the UI has exited, we're done.
     if (serverPthread) {
-        pthread_kill(*serverPthread, SIGTERM);
+        pthread_cancel(*serverPthread);
         pthread_join(*serverPthread, NULL);
     }
     
     if (keepalivePthread) {
-        pthread_kill(*keepalivePthread, SIGTERM);
+        pthread_cancel(*keepalivePthread);
         pthread_join(*keepalivePthread, NULL);
     }
     
     dn_lock(&pthread_lock);
     for (i = 0; i < onpthread; i++) {
-        //kill(pids[i], SIGTERM);
         if (pthreads[i]) {
-            pthread_kill(*(pthreads[i]), SIGTERM);
+            pthread_cancel(*(pthreads[i]));
             pthread_join(*(pthreads[i]), NULL);
         }
-        //waitpid(pids[i], NULL, 0);
     }
     dn_unlock(&pthread_lock);
     
@@ -227,6 +226,7 @@ int pluginMain(int argc, char **argv, char **envp)
     
     pthread_exit(NULL);
     
+#endif
 #endif
     
     return 0;

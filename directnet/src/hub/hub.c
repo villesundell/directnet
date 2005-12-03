@@ -98,34 +98,34 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg, char *authmsg, int away)
+void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
 {
 }
 
-void uiAskAuthImport(char *from, char *msg, char *sig)
+void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 {
 }
 
-void uiDispChatMsg(char *chat, char *from, char *msg)
+void uiDispChatMsg(const char *chat, const char *from, const char *msg)
 {
 }
 
-void uiEstConn(char *from)
+void uiEstConn(const char *from)
 {
 }
 
-void uiEstRoute(char *from)
+void uiEstRoute(const char *from)
 {
 }
 
-void uiLoseConn(char *from)
+void uiLoseConn(const char *from)
 {
 }
 
-void uiLoseRoute(char *from)
+void uiLoseRoute(const char *from)
 {
 }
 
-void uiNoRoute(char *to)
+void uiNoRoute(const char *to)
 {
 }

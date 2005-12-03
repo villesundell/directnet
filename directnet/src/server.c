@@ -49,11 +49,6 @@ BOOL sockets_init = FALSE;
 
 void *serverAcceptLoop(void *ignore);
 
-void sigterm_handler(int sig)
-{
-    pthread_exit(0);
-}
-
 #ifdef WIN32
 void initSockets()
 {
@@ -125,12 +120,10 @@ void *serverAcceptLoop(void *ignore)
     struct sockaddr_in rem_addr;
     pthread_attr_t ptattr;
     
-    signal(SIGTERM, sigterm_handler);
-
     while(1) {
         sin_size = sizeof(struct sockaddr_in);
         
-        acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, &sin_size);
+        acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
         
         dn_lock(&dn_fd_lock);
         for (curfd = 0; curfd < DN_MAX_CONNS && fds[curfd]; curfd++);

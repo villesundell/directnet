@@ -65,7 +65,7 @@ static CYFER_PK_CTX *init_ctx(char *pk)
 }
 
 /* our keys need to be in hex */
-char *mkhex(int len, unsigned char *inp)
+char *mkhex(int len, const unsigned char *inp)
 {
     int i;
     unsigned char hi, lo;
@@ -94,13 +94,13 @@ char *mkhex(int len, unsigned char *inp)
     return out;
 }
 
-char *dehex(int *len, unsigned char *inp)
+char *dehex(int *len, const unsigned char *inp)
 {
     int i, osl, ol;
     
     unsigned char *out;
     
-    osl = strlen(inp);
+    osl = strlen((char *) inp);
     *len = osl / 2;
     out = (unsigned char *) malloc((*len + 1) * sizeof(unsigned char));
     out[*len] = '\0';
@@ -124,11 +124,11 @@ char *dehex(int *len, unsigned char *inp)
     ol = i >> 1;
     out[ol] = '\0';
     
-    return out;
+    return (char *) out;
 }
 
 /* Perform encryption or decryption. */
-char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
+char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
 {
     char *key;
     int klen, loc, oloc, osl;
@@ -147,7 +147,7 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
         cur = cyf_key_head;
         while (cur) {
             if (!strcmp(cur->name, name)) {
-                key = dehex(&klen, cur->key);
+                key = dehex(&klen, (unsigned char *) cur->key);
                 break;
             }
             cur = cur->next;
@@ -155,14 +155,14 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
         pthread_mutex_unlock(&cyf_key_lock);
         if (!cur) return strdup("");
     } else {
-        key = dehex(&klen, myprkey);
+        key = dehex(&klen, (unsigned char *) myprkey);
     }
     
     if (encrypt) {
-        import = CYFER_Pk_Import_Key(ctx, NULL, 0, key, klen);
+        import = CYFER_Pk_Import_Key(ctx, NULL, 0, (unsigned char *) key, klen);
         CYFER_Pk_Size(ctx, &in_len, &out_len);
     } else {
-        import = CYFER_Pk_Import_Key(ctx, key, klen, NULL, 0);
+        import = CYFER_Pk_Import_Key(ctx, (unsigned char *) key, klen, NULL, 0);
         CYFER_Pk_Size(ctx, &out_len, &in_len);
     }
 
@@ -189,9 +189,9 @@ char *encdec(char *pk, char *name, char *inp, int encrypt, int *len)
         out = (char *) realloc(out, oloc + out_len);
         
         if (encrypt)
-            CYFER_Pk_Encrypt(ctx, inbuf, outbuf);
+            CYFER_Pk_Encrypt(ctx, (unsigned char *) inbuf, (unsigned char *) outbuf);
         else
-            CYFER_Pk_Decrypt(ctx, inbuf, outbuf);
+            CYFER_Pk_Decrypt(ctx, (unsigned char *) inbuf, (unsigned char *) outbuf);
         
         memcpy(out + oloc, outbuf, out_len);
         
@@ -211,7 +211,7 @@ int findEnc(char **envp)
     return 0;
 }
     
-char *encTo(char *from, char *to, char *msg)
+char *encTo(const char *from, const char *to, const char *msg)
 {
     int len;
     char *enc, *enc2;
@@ -221,18 +221,18 @@ char *encTo(char *from, char *to, char *msg)
     enc2 = encdec("RSA", NULL, enc, 1, &len); // sign
     free(enc);
     
-    enc = mkhex(len, enc2); // hex
+    enc = mkhex(len, (unsigned char *) enc2); // hex
     free(enc2);
     
     return enc;
 }
 
-char *encFrom(char *from, char *to, char *msg)
+char *encFrom(const char *from, const char *to, const char *msg)
 {
     int len;
     char *enc, *enc2;
     
-    enc = dehex(&len, msg); // dehex
+    enc = dehex(&len, (unsigned char *) msg); // dehex
     
     enc2 = encdec("RSA", from, enc, 0, &len); // de-sign
     free(enc);
@@ -254,16 +254,16 @@ char *encCreateKey()
     
     /* Generate and export keys into temporary buffers */
     CYFER_Pk_Generate_Key(ctx, 1024);
-    CYFER_Pk_KeySize(ctx, &privlen, &publen);
+    CYFER_Pk_KeySize(ctx, (unsigned int *) &privlen, (unsigned int *) &publen);
 
     priv = malloc(privlen);
     pub = malloc(publen);
 
-    CYFER_Pk_Export_Key(ctx, priv, pub);
+    CYFER_Pk_Export_Key(ctx, (unsigned char *) priv, (unsigned char *) pub);
     CYFER_Pk_Finish(ctx);
     
-    myprkey = mkhex(privlen, priv);
-    mypukey = mkhex(publen, pub);
+    myprkey = mkhex(privlen, (unsigned char *) priv);
+    mypukey = mkhex(publen, (unsigned char *) pub);
     
     free(priv); free(pub);
     
@@ -274,7 +274,7 @@ char *encExportKey() {
     return mypukey;
 }
 
-char *encImportKey(char *name, char *key)
+char *encImportKey(const char *name, const char *key)
 {
     pthread_mutex_lock(&cyf_key_lock);
     

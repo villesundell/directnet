@@ -33,39 +33,39 @@ int uiInit(int argc, char **argv, char **envp);
  * msg: the message
  * authmsg: the authentication message 
  * away: 1 if the user is away*/
-void uiDispMsg(char *from, char *msg, char *authmsg, int away);
+void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away);
 
 /* Ask the user if (s)he wants to import a key.
  * from: the sender of the key
  * msg: the key in message format
  * sig: the name in the key */
-void uiAskAuthImport(char *from, char *msg, char *sig);
+void uiAskAuthImport(const char *from, const char *msg, const char *sig);
 
 /* Display a chat message
  * chat: the chat that the message is on
  * from: the person who sent the message
  * msg: the message */
-void uiDispChatMsg(char *chat, char *from, char *msg);
+void uiDispChatMsg(const char *chat, const char *from, const char *msg);
 
 /* Display that a connection has been established
  * from: the IP or hostname of the connector */
-void uiEstConn(char *from);
+void uiEstConn(const char *from);
 
 /* Display that a route has been established
  * from: the user to whom a route has been established */
-void uiEstRoute(char *from);
+void uiEstRoute(const char *from);
 
 /* Display that a connection has been lost
  * from: the user (or IP or hostname if no username is available) that has
  *       disconnected */
-void uiLoseConn(char *from);
+void uiLoseConn(const char *from);
 
 /* Display that a route has been lost
  * from: the user to whom there is no longer a route */
-void uiLoseRoute(char *from);
+void uiLoseRoute(const char *from);
 
 /* Display that a transmission has failed becausethere is no route
  * to: the user that the transmission was sent to */
-void uiNoRoute(char *to);
+void uiNoRoute(const char *to);
 
 #endif // DN_UI_H

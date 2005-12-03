@@ -26,7 +26,7 @@ else
 	export CRCP=""
 fi
 
-PKG_CONFIG_PATH=$PWD/scripts CFLAGS="-I$PWD/../gaim-$GVER/src -I$PWD/../gaim-$GVER/src/win32 -I$PWD/../win32-dev/gtk_2_0/include/glib-2.0 -I$PWD/../win32-dev/gtk_2_0/include/atk-1.0 -I$PWD/../win32-dev/gtk_2_0/include/pango-1.0 -I$PWD/../win32-dev/gtk_2_0/include/gtk-2.0 -I$PWD/../win32-dev/gtk_2_0/lib/glib-2.0/include -I$PWD/../win32-dev/gtk_2_0/lib/gtk-2.0/include" ./configure --enable-gaim-plugin --enable-ui=dumb --enable-enc=cyfer --enable-auth=gpg $CRCH || exit 1
+PKG_CONFIG_PATH=$PWD/scripts CFLAGS="-I$PWD/../gaim-$GVER/src -I$PWD/../gaim-$GVER/src/win32 -I$PWD/../win32-dev/gtk_2_0/include/glib-2.0 -I$PWD/../win32-dev/gtk_2_0/include/atk-1.0 -I$PWD/../win32-dev/gtk_2_0/include/pango-1.0 -I$PWD/../win32-dev/gtk_2_0/include/gtk-2.0 -I$PWD/../win32-dev/gtk_2_0/lib/glib-2.0/include -I$PWD/../win32-dev/gtk_2_0/lib/gtk-2.0/include" ./configure --enable-gaim-plugin --enable-ui=dumb --enable-enc=cyfer --enable-auth=none $CRCH || exit 1
 make all || exit 1
 cd src/.libs
 mkdir ext
@@ -36,7 +36,7 @@ ${CRCP}gcc -shared * \
  ../../enc-cyfer/libenc.a \
  ../../enc-cyfer/cyfer/lib/.libs/libcyfer.a \
  ../../enc-cyfer/gmp/.libs/libgmp.a \
- ../../auth-gpg/libauth.a \
+ ../../auth-none/libauth.a \
  -o ../../../libdirectnet_gaim.dll \
  -lwsock32 -lpthread \
  ../../../../gaim-$GVER/win32-install-dir/gaim.dll \

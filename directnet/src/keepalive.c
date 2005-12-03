@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -35,11 +36,6 @@
 #include "keepalive.h"
 
 void *keepaliveLoop(void *ignore);
-
-void k_sigterm_handler(int sig)
-{
-    pthread_exit(0);
-}
 
 pthread_t *establishKeepalive()
 {
@@ -68,11 +64,13 @@ void *keepaliveLoop(void *ignore)
 {
     int i;
     
-    signal(SIGTERM, k_sigterm_handler);
-    
     /* every five minutes, send a ping to all fds */
     while (1) {
+#ifndef __WIN32
         sleep(DN_KEEPALIVE_TIMER);
+#else
+        Sleep(DN_KEEPALIVE_TIMER * 1000);
+#endif
         
         for (i = 0; i < DN_MAX_CONNS; i++) {
             if (fds[i]) {

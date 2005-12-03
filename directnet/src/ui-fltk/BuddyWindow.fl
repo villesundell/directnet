@@ -8,7 +8,7 @@ class BuddyWindow {open
   } {
     Fl_Window buddyWindow {
       label DirectNet
-      callback mainWinClosed open selected
+      callback mainWinClosed open
       xywh {320 143 255 430} type Double color 0 resizable visible
     } {
       Fl_Browser onlineList {
@@ -22,7 +22,7 @@ class BuddyWindow {open
       }
       Fl_Input connectInput {
         label {  Connect to (IP or hostname):}
-        callback estConn
+        callback estConn selected
         xywh {0 285 255 25} labelcolor 7 align 5 when 8
       }
       Fl_Input findUser {

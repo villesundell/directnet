@@ -32,14 +32,14 @@ int findEnc(char **envp);
  * to: the remote user
  * msg: the message
  * returns: a MALLOC'D buffer with the encrypted message or NULL on failure */
-char *encTo(char *from, char *to, char *msg);
+char *encTo(const char *from, const char *to, const char *msg);
 
 /* Decrypt a message from a user
  * from: the remote user
  * to: the local user
  * msg: the message
  * returns: a MALLOC'D buffer with the decrypted message or NULL on failure */
-char *encFrom(char *from, char *to, char *msg);
+char *encFrom(const char *from, const char *to, const char *msg);
 
 /* Create the encryption key
  * returns: the created key or NULL on failure */
@@ -53,6 +53,6 @@ char *encExportKey();
  * name: the name of the owner of the key
  * key: the key
  * returns: some message describing the import, usually "" */
-char *encImportKey(char *name, char *key);
+char *encImportKey(const char *name, const char *key);
 
 #endif // DN_GPG_H
