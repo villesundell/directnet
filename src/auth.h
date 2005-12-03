@@ -32,12 +32,12 @@ int authNeedPW();
 /* Set the password for this scheme
  * nm: the (user)name
  * pswd: the password */
-void authSetPW(char *nm, char *pswd);
+void authSetPW(const char *nm, const char *pswd);
 
 /* Sign a message
  * msg: the message
  * returns: a MALLOC'D buffer with the signed message */
-char *authSign(char *msg);
+char *authSign(const char *msg);
 
 /* Verify a signature
  * msg: the message w/ signature
@@ -48,12 +48,12 @@ char *authSign(char *msg);
  *          1: valid signature
  *          2: is a signature (not a signed message)
  * returns: a MALLOC'D buffer with the unsigned message */
-char *authVerify(char *msg, char **who, int *status);
+char *authVerify(const char *msg, char **who, int *status);
 
 /* Import a signature
  * msg: the signature
  * returns: 1 on success, 0 otherwise */
-int authImport(char *msg);
+int authImport(const char *msg);
 
 /* Export your signature
  * returns: a MALLOC'D buffer with the user's signature or NULL on error */

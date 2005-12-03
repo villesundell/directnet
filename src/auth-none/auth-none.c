@@ -32,21 +32,21 @@ int authNeedPW()
     return 0;
 }
 
-void authSetPW(char *nm, char *pswd) {}
+void authSetPW(const char *nm, const char *pswd) {}
 
-char *authSign(char *msg)
+char *authSign(const char *msg)
 {
     return strdup(msg);
 }
 
-char *authVerify(char *msg, char **who, int *status)
+char *authVerify(const char *msg, char **who, int *status)
 {
     *who = NULL;
     *status = -1;
     return strdup(msg);
 }
 
-int authImport(char *msg)
+int authImport(const char *msg)
 {
     return 1;
 }

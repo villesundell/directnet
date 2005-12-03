@@ -58,7 +58,7 @@ char authPW[] = "GPG Password";
  * args: arguments to pass to GPG
  * pass: 1 if it needs a passphrase
  * returns: a MALLOC'D buffer with the output */
-char *gpgWrap(char *inp, char *args, int pass)
+char *gpgWrap(const char *inp, const char *args, int pass)
 {
     FILE *fi, *fo;
     char *co;
@@ -183,7 +183,7 @@ int authNeedPW()
     return 1;
 }
 
-void authSetPW(char *nm, char *pswd)
+void authSetPW(const char *nm, const char *pswd)
 {
     if (nm[0]) {
         GPG_name = strdup(nm);
@@ -191,7 +191,7 @@ void authSetPW(char *nm, char *pswd)
     }
 }
 
-char *authSign(char *msg)
+char *authSign(const char *msg)
 {
     char *arg, *outp;
     
@@ -205,7 +205,7 @@ char *authSign(char *msg)
     return outp ? outp : strdup(msg);
 }
 
-char *authVerify(char *msg, char **who, int *status)
+char *authVerify(const char *msg, char **who, int *status)
 {
     char *toret, *validity, *tmp, *tmp2;
     
@@ -338,7 +338,7 @@ char *authVerify(char *msg, char **who, int *status)
     return strdup(msg);
 }
 
-int authImport(char *msg)
+int authImport(const char *msg)
 {
     /* all we can do is try, so do so */
     char *try = gpgWrap(msg, "--import", 0);

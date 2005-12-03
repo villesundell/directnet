@@ -49,7 +49,7 @@ void hash##hshortn##Destroy(struct hash##hshortn *hash) \
     free(hash); \
 } \
 \
-htype hash##hshortn##Get(struct hash##hshortn *hash, char *key) \
+htype hash##hshortn##Get(struct hash##hshortn *hash, const char *key) \
 { \
     struct hashKey##hshortn *cur = hash->head; \
     \
@@ -77,7 +77,7 @@ char *hash##hshortn##RevGet(struct hash##hshortn *hash, htype value) \
     return NULL; \
 } \
 \
-void hash##hshortn##Set(struct hash##hshortn *hash, char *key, htype value) \
+void hash##hshortn##Set(struct hash##hshortn *hash, const char *key, htype value) \
 { \
     struct hashKey##hshortn *cur = hash->head; \
     struct hashKey##hshortn *toadd; \
@@ -134,7 +134,7 @@ void hashSDestroy(struct hashS *hash)
     free(hash);
 }
 
-char *hashSGet(struct hashS *hash, char *key)
+char *hashSGet(struct hashS *hash, const char *key)
 {
     struct hashKeyS *cur = hash->head;
     
@@ -148,7 +148,7 @@ char *hashSGet(struct hashS *hash, char *key)
     return NULL;
 }
 
-char *hashSRevGet(struct hashS *hash, char *value)
+char *hashSRevGet(struct hashS *hash, const char *value)
 {
     struct hashKeyS *cur = hash->head;
     
@@ -162,7 +162,7 @@ char *hashSRevGet(struct hashS *hash, char *value)
     return NULL;
 }
 
-void hashSSet(struct hashS *hash, char *key, char *value)
+void hashSSet(struct hashS *hash, const char *key, const char *value)
 {
     struct hashKeyS *cur = hash->head;
     struct hashKeyS *toadd;
@@ -190,7 +190,7 @@ void hashSSet(struct hashS *hash, char *key, char *value)
     }
 }
 
-void hashSDelKey(struct hashS *hash, char *key)
+void hashSDelKey(struct hashS *hash, const char *key)
 {
     struct hashKeyS *cur = hash->head;
     
@@ -231,7 +231,7 @@ void hashLDestroy(struct hashL *hash)
     free(hash);
 }
 
-DN_LOCK *hashLGet(struct hashL *hash, char *key)
+DN_LOCK *hashLGet(struct hashL *hash, const char *key)
 {
     struct hashKeyL *cur = hash->head;
     struct hashKeyL *toadd;

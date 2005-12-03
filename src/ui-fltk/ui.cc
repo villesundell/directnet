@@ -35,7 +35,7 @@ extern "C" {
 
 #include <iostream>
 
-#include "Fl/fl_ask.h"
+#include "FL/fl_ask.h"
 
 #include "AwayWindow.h"
 #include "BuddyWindow.h"
@@ -94,7 +94,6 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     } else if (authNeedPW()) {
         char *nm, *pswd;
         const char *cnm, *cpswd;
-        int osl;
         
         /* name */
         cnm = fl_input(authUsername, NULL);
@@ -393,7 +392,7 @@ void fBack(Fl_Button *w, void *ignore)
     setAway(NULL);
 }
 
-void flDispMsg(char *window, char *from, char *msg, char *authmsg)
+void flDispMsg(const char *window, const char *from, const char *msg, const char *authmsg)
 {
     ChatWindow *cw;
     char *dispmsg;
@@ -417,13 +416,13 @@ void flDispMsg(char *window, char *from, char *msg, char *authmsg)
     dn_unlock(&displayLock);
 }
 
-extern "C" void uiDispMsg(char *from, char *msg, char *authmsg, int away)
+extern "C" void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
 {
     // for the moment, away messages are undistinguished
     flDispMsg(from, from, msg, authmsg);
 }
 
-extern "C" void uiAskAuthImport(char *from, char *msg, char *sig)
+extern "C" void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 {
     int i;
     
@@ -451,7 +450,7 @@ extern "C" void uiAskAuthImport(char *from, char *msg, char *sig)
     free(q);
 }
 
-extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)
+extern "C" void uiDispChatMsg(const char *chat, const char *from, const char *msg)
 {
     char chatWHash[strlen(chat) + 2];
     
@@ -461,12 +460,12 @@ extern "C" void uiDispChatMsg(char *chat, char *from, char *msg)
     flDispMsg(chatWHash, from, msg, NULL);
 }
 
-extern "C" void uiEstConn(char *from)
+extern "C" void uiEstConn(const char *from)
 {
     /* what to use here...? */
 }
 
-extern "C" void uiEstRoute(char *from)
+extern "C" void uiEstRoute(const char *from)
 {
     ChatWindow *cw;
     int i, mustadd;
@@ -490,7 +489,7 @@ extern "C" void uiEstRoute(char *from)
     dn_unlock(&displayLock);
 }
 
-void removeFromList(char *name)
+void removeFromList(const char *name)
 {
     int i;
     
@@ -502,7 +501,7 @@ void removeFromList(char *name)
     }
 }
 
-extern "C" void uiLoseConn(char *from)
+extern "C" void uiLoseConn(const char *from)
 {
     ChatWindow *cw;
     
@@ -518,7 +517,7 @@ extern "C" void uiLoseConn(char *from)
     dn_unlock(&displayLock);
 }
 
-extern "C" void uiLoseRoute(char *from)
+extern "C" void uiLoseRoute(const char *from)
 {
     ChatWindow *cw;
     
@@ -534,7 +533,7 @@ extern "C" void uiLoseRoute(char *from)
     dn_unlock(&displayLock);
 }
 
-extern "C" void uiNoRoute(char *to)
+extern "C" void uiNoRoute(const char *to)
 {
     ChatWindow *cw;
     

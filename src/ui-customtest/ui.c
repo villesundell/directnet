@@ -34,7 +34,7 @@ char *currentPartner;
 char *crossinput;
 int cinp, cinpd;
 
-int handleUInput(char *inp);
+int handleUInput(const char *inp);
 
 int uiInit(int argc, char ** argv, char **envp)
 {
@@ -138,7 +138,7 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-int handleUInput(char *inp)
+int handleUInput(const char *inp)
 {
     // Is it crossinput?
     if (cinp) {
@@ -234,14 +234,14 @@ int handleUInput(char *inp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg, char *authmsg, int away)
+void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s [%s]%s: %s\n%s> ", from, authmsg, away ? " [away]" : "", msg, currentPartner);
     fflush(stdout);
 }
 
-void uiAskAuthImport(char *from, char *msg, char *sig)
+void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s has asked you to import the key '%s'.  Do you accept?\n? ", from, sig);
@@ -259,42 +259,42 @@ void uiAskAuthImport(char *from, char *msg, char *sig)
     free(crossinput);
 }
 
-void uiDispChatMsg(char *chat, char *from, char *msg)
+void uiDispChatMsg(const char *chat, const char *from, const char *msg)
 {
     while (!uiLoaded) sleep(0);
     printf("\n#%s: %s: %s\n%s> ", chat, from, msg, currentPartner);
     fflush(stdout);
 }
 
-void uiEstConn(char *from)
+void uiEstConn(const char *from)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s: Connection established.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
-void uiEstRoute(char *from)
+void uiEstRoute(const char *from)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s: Route established.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
-void uiLoseConn(char *from)
+void uiLoseConn(const char *from)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s: Connection lost.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
-void uiLoseRoute(char *from)
+void uiLoseRoute(const char *from)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s: Route lost.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
-void uiNoRoute(char *to)
+void uiNoRoute(const char *to)
 {
     while (!uiLoaded) sleep(0);
     printf("\n%s: No route to user.\n%s> ", to, currentPartner);

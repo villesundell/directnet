@@ -29,7 +29,7 @@
 struct hashS *dn_chats;
 DN_LOCK dn_chat_lock;
 
-char chatOnChannel(char *channel)
+char chatOnChannel(const char *channel)
 {
     dn_lock(&dn_chat_lock);
     
@@ -42,7 +42,7 @@ char chatOnChannel(char *channel)
     }
 }
 
-void chatAddUser(char *channel, char *name)
+void chatAddUser(const char *channel, const char *name)
 {
     char *prev, *new;
     
@@ -64,7 +64,7 @@ void chatAddUser(char *channel, char *name)
     dn_unlock(&dn_chat_lock);
 }
 
-void chatRemUser(char *channel, char *name)
+void chatRemUser(const char *channel, const char *name)
 {
     char *prev, *each[DN_MAX_PARAMS], *new, *newp;
     int i, j;
@@ -117,7 +117,7 @@ void chatRemUser(char *channel, char *name)
     dn_unlock(&dn_chat_lock);
 }
 
-char **chatUsers(char *channel)
+char **chatUsers(const char *channel)
 {
     char *prev, **each;
     int i, j;
@@ -154,7 +154,7 @@ char **chatUsers(char *channel)
     return each;
 }
 
-void chatJoin(char *channel)
+void chatJoin(const char *channel)
 {
     dn_lock(&dn_chat_lock);
     if (!hashSGet(dn_chats, channel)) {
@@ -163,7 +163,7 @@ void chatJoin(char *channel)
     dn_unlock(&dn_chat_lock);
 }
 
-void chatLeave(char *channel)
+void chatLeave(const char *channel)
 {
     dn_lock(&dn_chat_lock);
     hashSDelKey(dn_chats, channel);

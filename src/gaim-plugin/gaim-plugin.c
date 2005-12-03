@@ -138,7 +138,7 @@ static GaimPluginInfo info = {
     
     "prpl-directnet", /* id */
     "DirectNet", /* name */
-    "1.0.0rc3", /* version */
+    "1.0.0rc4", /* version */
     
     N_("DirectNet Protocol Plugin"), /* summary */
     N_("DirectNet Protocol Plugin"), /* full ;) description */
@@ -159,7 +159,7 @@ static GaimPluginInfo info = {
 char *chat_ids[256];
 pthread_mutex_t chat_lock;
 
-int regChat(char *name)
+int regChat(const char *name)
 {
     int i;
     
@@ -171,7 +171,7 @@ int regChat(char *name)
     return i;
 }
 
-int chatByName(char *name)
+int chatByName(const char *name)
 {
     int i;
     
@@ -190,33 +190,33 @@ pthread_mutex_t ipclock;
 GMainContext *ctx;
 #define IPC_MSG 1
 struct ipc_msg {
-    char *from;
-    char *msg;
-    char *authmsg;
+    const char *from;
+    const char *msg;
+    const char *authmsg;
     int away;
 };
 #define IPC_STATE 2
 struct ipc_state {
-    char *who;
+    const char *who;
     int state;
 };
 #define IPC_CHAT_MSG 3
 struct ipc_chat_msg {
     int id;
-    char *who;
-    char *chan;
-    char *msg;
+    const char *who;
+    const char *chan;
+    const char *msg;
 };
 #define IPC_CHAT_JOIN 4
 struct ipc_chat_join {
     int id;
-    char *chan;
+    const char *chan;
 };
 #define IPC_AUTH_ASK 5
 struct ipc_auth_ask {
-    char *from;
-    char *msg;
-    char *q;
+    const char *from;
+    const char *msg;
+    const char *q;
 };
 
 
@@ -306,7 +306,7 @@ gboolean idle_auth_ask(struct ipc_auth_ask *aaa)
     return FALSE;
 }
 
-void ipc_got_im(char *who, char *msg, char *authmsg, int away)
+void ipc_got_im(const char *who, const char *msg, const char *authmsg, int away)
 {
     struct ipc_msg *a = (struct ipc_msg *) malloc(sizeof(struct ipc_msg));
 
@@ -320,7 +320,7 @@ void ipc_got_im(char *who, char *msg, char *authmsg, int away)
     g_idle_add((GSourceFunc) idle_got_im, a);
 }
 
-void ipc_set_state(char *who, int state)
+void ipc_set_state(const char *who, int state)
 {
     struct ipc_state *a = (struct ipc_state *) malloc(sizeof(struct ipc_state));
 
@@ -332,7 +332,7 @@ void ipc_set_state(char *who, int state)
     g_idle_add((GSourceFunc)idle_set_state, a);
 }
 
-void ipc_chat_msg(int id, char *who, char *chan, char *msg)
+void ipc_chat_msg(int id, const char *who, const char *chan, const char *msg)
 {
     struct ipc_chat_msg *a = (struct ipc_chat_msg *) malloc(sizeof(struct ipc_chat_msg));
 
@@ -346,7 +346,7 @@ void ipc_chat_msg(int id, char *who, char *chan, char *msg)
     g_idle_add((GSourceFunc)idle_chat_msg, a);
 }
 
-void ipc_chat_join(int id, char *chan)
+void ipc_chat_join(int id, const char *chan)
 {
     struct ipc_chat_join *a = (struct ipc_chat_join *) malloc(sizeof(struct ipc_chat_join));
 
@@ -358,7 +358,7 @@ void ipc_chat_join(int id, char *chan)
     g_idle_add((GSourceFunc)idle_chat_join, a);
 }
 
-void ipc_auth_ask(char *from, char *msg, char *q)
+void ipc_auth_ask(const char *from, const char *msg, const char *q)
 {
     struct ipc_auth_ask *a = (struct ipc_auth_ask *) malloc(sizeof(struct ipc_auth_ask));
     char *qa;
@@ -479,21 +479,21 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-void uiDispMsg(char *from, char *msg, char *authmsg, int away)
+void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
     
     ipc_got_im(from, msg, authmsg, away);
 }
 
-void uiAskAuthImport(char *from, char *msg, char *sig)
+void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 {
     while (!uiLoaded) sleep(0);
     
     ipc_auth_ask(from, msg, sig);
 }
 
-void uiDispChatMsg(char *chat, char *from, char *msg)
+void uiDispChatMsg(const char *chat, const char *from, const char *msg)
 {
     int id;
     char *fullname = (char *) malloc(strlen(chat) + 2);
@@ -509,11 +509,11 @@ void uiDispChatMsg(char *chat, char *from, char *msg)
     free(fullname);
 }
 
-void uiEstConn(char *from)
+void uiEstConn(const char *from)
 {
 }
 
-void uiEstRoute(char *from)
+void uiEstRoute(const char *from)
 {
     while (!uiLoaded) sleep(0);
     
@@ -528,12 +528,12 @@ void uiEstRoute(char *from)
     }
 }
 
-void uiLoseConn(char *from)
+void uiLoseConn(const char *from)
 {
     uiLoseRoute(from);
 }
 
-void uiLoseRoute(char *from)
+void uiLoseRoute(const char *from)
 {
     while (!uiLoaded) sleep(0);
     
@@ -546,7 +546,7 @@ void uiLoseRoute(char *from)
     }
 }
 
-void uiNoRoute(char *to)
+void uiNoRoute(const char *to)
 {
 }
 

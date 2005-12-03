@@ -24,6 +24,6 @@
 /* Connect to a hostname or IP
  * destination: the hostname or IP
  * returns: 1 on success, 0 otherwise */
-int establishClient(char *destination);
+int establishClient(const char *destination);
 
 #endif // DN_CLIENT_H

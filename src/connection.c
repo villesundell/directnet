@@ -46,23 +46,15 @@
 
 char *awayMsg = NULL;
 
-void handleMsg(char *inbuf, int fdnum);
+void handleMsg(const char *inbuf, int fdnum);
 int handleNLUnroutedMsg(char **params);
-int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params);
-int sendMsgB(char *to, char *msg, char away, char sign);
-
-void consigterm_handler(int sig)
-{
-    pthread_exit(0);
-}
+int handleNRUnroutedMsg(int fromfd, const char *command, char vera, char verb, char **params);
+int sendMsgB(const char *to, const char *msg, char away, char sign);
 
 void *communicator(void *fdnum_voidptr)
 {
     int fdnum, pthreadnum, byterec, origstrlen;
     char buf[DN_CMD_LEN];
-    pthread_t *mythread;
-    
-    signal(SIGTERM, consigterm_handler);
     
     fdnum = ((struct communInfo *) fdnum_voidptr)->fdnum;
     pthreadnum = ((struct communInfo *) fdnum_voidptr)->pthreadnum;
@@ -123,7 +115,7 @@ void *communicator(void *fdnum_voidptr)
 }
 
 // Start building a command into a buffer
-void buildCmd(char *into, char *command, char vera, char verb, char *param)
+void buildCmd(char *into, const char *command, char vera, char verb, const char *param)
 {
     /*sprintf(into, "%s%c%c%s", command, vera, verb, param);*/
     SF_strncpy(into, command, 4);
@@ -146,7 +138,7 @@ void addParam(char *into, char *newparam)
 }
 
 // Send a command
-void sendCmd(int fdnum, char *buf)
+void sendCmd(int fdnum, const char *buf)
 {
     dn_lock(pipe_locks+fdnum);
     if (fds[fdnum]) {
@@ -166,18 +158,26 @@ void *fndPthread(void *fdnum_voidptr);
 	} \
 }
 			
-void handleMsg(char *inbuf, int fdnum)
+void handleMsg(const char *rdbuf, int fdnum)
 {
     char command[4], *params[DN_MAX_PARAMS];
+    char *inbuf;
     int i, onparam, ostrlen;
     
     // Get the command itself
+    inbuf = alloca(strlen(rdbuf)+1);
+    if (inbuf == NULL) { perror("strdup"); exit(1); }
+    strcpy(inbuf, rdbuf);
     strncpy(command, inbuf, 3);
     command[3] = '\0';
     
     memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
     
-    params[0] = inbuf+5;
+    params[0] = (char *) alloca(strlen(inbuf)-4);
+    if (!params[0]) { perror("alloca"); exit(1); }
+    
+    strcpy(params[0], inbuf + 5);
+    
     onparam = 1;
     
     // Divide up the buffer by ;, getting the parameters
@@ -335,7 +335,7 @@ void handleMsg(char *inbuf, int fdnum)
                 free(first);
                 // then turn the fd into a sockaddr
                 locip_len = sizeof(struct sockaddr);
-                if (getsockname(firfd, &locip, &locip_len) == 0) {
+                if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
                     locip_i = (struct sockaddr_in *) &locip;
                     /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
                     outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
@@ -690,6 +690,7 @@ void handleMsg(char *inbuf, int fdnum)
                 /* this IS a signature, totally different response */
                 uiAskAuthImport(params[1], unencmsg, sig);
                 iskey = 1;
+                sigm = NULL;
             } else {
                 free(unencmsg);
                 sigm = strdup("?");
@@ -712,7 +713,7 @@ void handleMsg(char *inbuf, int fdnum)
     }
 }
 
-int handleRoutedMsg(char *command, char vera, char verb, char **params)
+int handleRoutedMsg(const char *command, char vera, char verb, char **params)
 {
     int i, sendfd;
     char *route, *newroute, newbuf[DN_CMD_LEN];
@@ -809,7 +810,7 @@ int handleNLUnroutedMsg(char **params)
     return 1;
 }
 
-int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **params)
+int handleNRUnroutedMsg(int fromfd, const char *command, char vera, char verb, char **params)
 {
     // This part of handleUnroutedMsg decides whether to just delete it
     if (hashIGet(dn_trans_keys, params[0]) == -1) {
@@ -830,7 +831,7 @@ int handleNRUnroutedMsg(int fromfd, char *command, char vera, char verb, char **
     return 0;
 }
 
-void emitUnroutedMsg(int fromfd, char *outbuf)
+void emitUnroutedMsg(int fromfd, const char *outbuf)
 {
     // This emits an unrouted message
     int curfd;
@@ -852,7 +853,11 @@ void *fndPthread(void *name_voidptr)
     SF_strncpy(name, (char *) name_voidptr, DN_NAME_LEN+1);
     free(name_voidptr);
     
+#ifndef __WIN32
     sleep(15);
+#else
+    Sleep(15000);
+#endif
     
     /* FIXME
     this should lock the recFndLocks hash */
@@ -902,7 +907,7 @@ void *fndPthread(void *name_voidptr)
         free(first);
         // then turn the fd into a sockaddr
         locip_len = sizeof(struct sockaddr);
-        if (getsockname(firfd, &locip, &locip_len) == 0) {
+        if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
             locip_i = (struct sockaddr_in *) &locip;
             /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
             params[2] = strdup(inet_ntoa(locip_i->sin_addr));
@@ -924,7 +929,7 @@ void *fndPthread(void *name_voidptr)
 }
 
 /* Commands used by the UI */
-int establishConnection(char *to)
+int establishConnection(const char *to)
 {
     char *route;
     
@@ -956,7 +961,7 @@ int establishConnection(char *to)
     }
 }
 
-int sendMsgB(char *to, char *msg, char away, char sign)
+int sendMsgB(const char *to, const char *msg, char away, char sign)
 {
     char *outparams[DN_MAX_PARAMS], *route;
     char *signedmsg, *encdmsg;
@@ -996,12 +1001,12 @@ int sendMsgB(char *to, char *msg, char away, char sign)
     return 1;
 }
 
-int sendMsg(char *to, char *msg)
+int sendMsg(const char *to, const char *msg)
 {
     return sendMsgB(to, msg, 0, 1);
 }
 
-int sendAuthKey(char *to)
+int sendAuthKey(const char *to)
 {
     char *msg;
     int ret;
@@ -1016,20 +1021,24 @@ int sendAuthKey(char *to)
     }
 }
 
-void sendFnd(char *to)
+void sendFnd(const char *to)
 {
     char outbuf[DN_CMD_LEN];
+    char *toc = strdup(to);
+    if (toc == NULL) { perror("strdup"); exit(1); }
     
     // Find a user by name
     buildCmd(outbuf, "fnd", 1, 1, "");
     addParam(outbuf, dn_name);
-    addParam(outbuf, to);
+    addParam(outbuf, toc);
     addParam(outbuf, encExportKey());
         
     emitUnroutedMsg(-1, outbuf);
+    
+    free(toc);
 }
 
-void joinChat(char *chat)
+void joinChat(const char *chat)
 {
     struct hashKeyS *cur;
     
@@ -1040,7 +1049,9 @@ void joinChat(char *chat)
     char *outParams[4];
     
     memset(outParams, 0, 4 * sizeof(char *));
-    outParams[1] = chat;
+    outParams[1] = alloca(strlen(chat)+1);
+    if (outParams[1] == NULL) { perror("alloca"); exit(1); }
+    strcpy(outParams[1], chat);
     outParams[2] = dn_name;
     
     cur = dn_routes->head;
@@ -1054,7 +1065,7 @@ void joinChat(char *chat)
     }
 }
 
-void leaveChat(char *chat)
+void leaveChat(const char *chat)
 {
     struct hashKeyS *cur;
     
@@ -1065,7 +1076,9 @@ void leaveChat(char *chat)
     char *outParams[4];
     
     memset(outParams, 0, 4 * sizeof(char *));
-    outParams[1] = chat;
+    outParams[1] = alloca(strlen(chat)+1);
+    if (outParams[1] == NULL) { perror("alloca"); exit(1); }
+    strcpy(outParams[1], chat);
     outParams[2] = dn_name;
     
     cur = dn_routes->head;
@@ -1079,7 +1092,7 @@ void leaveChat(char *chat)
     }
 }
 
-void sendChat(char *to, char *msg)
+void sendChat(const char *to, const char *msg)
 {
     char **users;
     char *outParams[DN_MAX_PARAMS], key[DN_TRANSKEY_LEN];
@@ -1091,7 +1104,9 @@ void sendChat(char *to, char *msg)
     
     outParams[1] = key;
     outParams[2] = dn_name;
-    outParams[3] = to;
+    outParams[3] = alloca(strlen(to)+1);
+    if (outParams[3] == NULL) { perror("alloca"); exit(1); }
+    strcpy(outParams[3], to);
     outParams[4] = dn_name;
     
     users = chatUsers(to);

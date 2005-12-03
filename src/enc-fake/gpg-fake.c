@@ -29,12 +29,12 @@ int findEnc(char **envp)
     return 0;
 }
     
-char *encTo(char *from, char *to, char *msg)
+char *encTo(const char *from, const char *to, const char *msg)
 {
     return strdup(msg);
 }
 
-char *encFrom(char *from, char *to, char *msg)
+char *encFrom(const char *from, const char *to, const char *msg)
 {
     return strdup(msg);
 }
@@ -48,6 +48,6 @@ char *encExportKey() {
     return "nokey";
 }
 
-char *encImportKey(char *name, char *key) {
+char *encImportKey(const char *name, const char *key) {
     return "";
 }

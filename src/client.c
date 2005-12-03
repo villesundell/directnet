@@ -36,7 +36,7 @@
 #include "connection.h"
 #include "directnet.h"
 
-int establishClient(char *destination)
+int establishClient(const char *destination)
 {
     int pthreadres, curfd;
     struct communInfo *ci_ptr;
