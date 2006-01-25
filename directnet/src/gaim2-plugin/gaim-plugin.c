@@ -76,7 +76,7 @@ static GaimPluginProtocolInfo prpl_info = {
     NULL,
     NULL,
     NULL,
-    gp_awaystates, /* away states */
+    gp_statustypes, /* away states */
     NULL,
     gp_chatinfo,
     gp_chatinfo_defaults,
@@ -86,13 +86,12 @@ static GaimPluginProtocolInfo prpl_info = {
     NULL, /* set info */
     NULL, /* send "typing" */
     NULL, /* get info */
-    gp_setaway, /* set away */
+    gp_setstatus, /* set status */
     NULL,
     NULL,
     gp_addbuddy, /* add buddy */
     NULL,
     gp_removebuddy, /* remove buddy */
-    NULL,
     NULL,
     NULL,
     NULL,
@@ -106,6 +105,10 @@ static GaimPluginProtocolInfo prpl_info = {
     gp_leavechat, /* leave a chat */
     NULL,
     gp_saychat, /* chat send */
+    NULL,
+    NULL,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -191,33 +194,33 @@ pthread_mutex_t ipclock;
 GMainContext *ctx;
 #define IPC_MSG 1
 struct ipc_msg {
-    const char *from;
-    const char *msg;
-    const char *authmsg;
+    char *from;
+    char *msg;
+    char *authmsg;
     int away;
 };
 #define IPC_STATE 2
 struct ipc_state {
-    const char *who;
+    char *who;
     int state;
 };
 #define IPC_CHAT_MSG 3
 struct ipc_chat_msg {
     int id;
-    const char *who;
-    const char *chan;
-    const char *msg;
+    char *who;
+    char *chan;
+    char *msg;
 };
 #define IPC_CHAT_JOIN 4
 struct ipc_chat_join {
     int id;
-    const char *chan;
+    char *chan;
 };
 #define IPC_AUTH_ASK 5
 struct ipc_auth_ask {
-    const char *from;
-    const char *msg;
-    const char *q;
+    char *from;
+    char *msg;
+    char *q;
 };
 
 
@@ -242,7 +245,8 @@ gboolean idle_got_im(struct ipc_msg *ma)
 
 gboolean idle_set_state(struct ipc_state *sa)
 {
-    serv_got_update(my_gc, sa->who, sa->state, 0, 0, 0, 0);
+    gaim_prpl_got_user_status(my_account, sa->who,
+                              (sa->state == 1) ? "available" : "offline", NULL);
     
     free(sa->who);
     free(sa);
@@ -413,7 +417,7 @@ void dnsndkey_vptr(GtkButton *butotn, void *name)
     sendAuthKey((char *) name);
 }
 
-void dn_crcon_button(GaimConversation *gc, gpointer data)
+/*void dn_crcon_button(GaimConversation *gc, gpointer data)
 {
     GaimGtkConversation *gtkconv;
     gulong handle;
@@ -428,7 +432,7 @@ void dn_crcon_button(GaimConversation *gc, gpointer data)
     gtk_box_pack_end(GTK_BOX(gtkconv->bbox), button, TRUE, TRUE, 0);
     gtk_widget_show(button);
     gtk_size_group_add_widget(gtkconv->sg, button);
-}
+}*/
 
 static void init_plugin(GaimPlugin *plugin)
 {
@@ -443,8 +447,8 @@ static void init_plugin(GaimPlugin *plugin)
                       "k:  Send your DirectNet authentication key.", NULL);
     
     /* register the function to add buttons to conversation windows */
-    gaim_signal_connect(conv_handle, "conversation-created", plugin,
-                        GAIM_CALLBACK(dn_crcon_button), NULL);
+    /*gaim_signal_connect(conv_handle, "conversation-created", plugin,
+                        GAIM_CALLBACK(dn_crcon_button), NULL);*/
     
     my_protocol = plugin;
 }
@@ -454,7 +458,7 @@ GAIM_INIT_PLUGIN(DirectNet, init_plugin, info);
 int uiInit(int argc, char ** argv, char **envp)
 {
     // This is the most basic UI
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initializing.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initializing.\n");
     int charin, ostrlen;
     char cmdbuf[32256];
     char *homedir, *dnhomefile;
@@ -478,7 +482,7 @@ int uiInit(int argc, char ** argv, char **envp)
     // And create the key
     encCreateKey();
     
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initialized.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initialized.\n");
     return 0;
 }
 
@@ -511,12 +515,12 @@ void uiDispChatMsg(const char *chat, const char *from, const char *msg)
     
     free(fullname);
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Chat message received.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Chat message received.\n");
 }
 
 void uiEstConn(const char *from)
 {
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Connection established.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Connection established.\n");
 }
 
 void uiEstRoute(const char *from)
@@ -527,13 +531,13 @@ void uiEstRoute(const char *from)
 
     /* if they're on the buddy list, update them */
     buddy = gaim_find_buddy(my_account, from);
-    if (buddy && buddy->present == 0) {
+    if (buddy && !gaim_presence_is_online(buddy->presence)) {
         ipc_set_state(from, 1);
     } else if (!buddy) {
         ipc_got_im(from, "[DirectNet]: Route established.", "sys", 0);
     }
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Route established.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Route established.\n");
 }
 
 void uiLoseConn(const char *from)
@@ -549,10 +553,10 @@ void uiLoseRoute(const char *from)
 
     /* if they're on the buddy list, update them */
     buddy = gaim_find_buddy(my_account, from);
-    if (buddy && buddy->present != 0) {
+    if (buddy && gaim_presence_is_online(buddy->presence)) {
         ipc_set_state(from, 0);
     }
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Lost route.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Lost route.\n");
 }
 
 void uiNoRoute(const char *to)
@@ -574,7 +578,7 @@ static GList *gp_chatinfo(GaimConnection *gc)
     pce->identifier = "room";
     m = g_list_append(m, pce);
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Function gp_chatinfo.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Function gp_chatinfo.\n");
     return m;
 }
 
@@ -586,23 +590,38 @@ GHashTable *gp_chatinfo_defaults(GaimConnection *gc, const char *chat_name)
     if (chat_name != NULL)
         g_hash_table_insert(defaults, "room", g_strdup(chat_name));
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Function gp_chatinfo_defaults.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Function gp_chatinfo_defaults.\n");
     return defaults;
 }
 
-static GList *gp_awaystates(GaimConnection *gc)
+static GList *gp_statustypes(GaimAccount *ga)
 {
     GList *m = NULL;
 
-    m = g_list_append(m, GAIM_AWAY_CUSTOM);
-    m = g_list_append(m, _("Back"));
+    m = g_list_append(m,
+                      gaim_status_type_new_full(GAIM_STATUS_OFFLINE,
+                                                "offline",
+                                                _("Offline"), TRUE, TRUE, FALSE)
+                      );
+    m = g_list_append(m,
+                      gaim_status_type_new_full(GAIM_STATUS_AVAILABLE,
+                                                "available",
+                                                _("Available"), TRUE, TRUE, FALSE)
+                      );
+    m = g_list_append(m,
+                      gaim_status_type_new_with_attrs(GAIM_STATUS_AWAY,
+                                                      "away",
+                                                      _("Away"), TRUE, TRUE, FALSE,
+                                                      "message", _("Message"),
+                                                      gaim_value_new(GAIM_TYPE_STRING), NULL)
+                      );
 
     return m;
 }
 
 static void gp_login(GaimAccount *account)
 {
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Starting login....");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Starting login....\n");
 
     char *argv[] = {"plugin", NULL};
     GaimConnection *gc;
@@ -658,10 +677,10 @@ static void gp_login(GaimAccount *account)
     
     my_gc = gc;
 
-    serv_finish_login(gc);
+    /*serv_finish_login(gc);*/
     
     // OK, the UI is ready
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "...Login OK!");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "...Login OK!\n");
     uiLoaded = 1;
 }
 
@@ -701,7 +720,7 @@ static void gp_close(GaimConnection *gc)
             }
         }
     
-        gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Quiting...");
+        gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Quiting...\n");
         free(fds);
         free(pipe_fds);
         free(pipe_locks);
@@ -709,7 +728,7 @@ static void gp_close(GaimConnection *gc)
     }
 }
 
-static int gp_sendim(GaimConnection *gc, const char *who, const char *message, GaimConvImFlags flags)
+static int gp_sendim(GaimConnection *gc, const char *who, const char *message, GaimMessageFlags flags)
 {
     while (!uiLoaded) sleep(0);
     
@@ -723,16 +742,38 @@ static int gp_sendim(GaimConnection *gc, const char *who, const char *message, G
     sendMsg(nwho, nmsg);
     free(nwho);
     free(nmsg);
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Sent instant message.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Sent instant message.\n");
     exit:
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Leaving gp_sendim function.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Leaving gp_sendim function.\n");
     return 1;
 }
 
-static void gp_setaway(GaimConnection *gc, const char *state, const char *text)
+static void gp_setstatus(GaimAccount *account, GaimStatus *status)
 {
-    setAway(text);
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Setting away text.");
+    GaimStatusPrimitive primitive;
+    
+    if (!gaim_status_is_active(status))
+        return;
+
+    if (!gaim_account_is_connected(account))
+        return;
+    
+    primitive = gaim_status_type_get_primitive(
+        gaim_status_get_type(status));
+    
+    if (primitive == GAIM_STATUS_AVAILABLE) {
+        setAway(NULL);
+    } else if (primitive == GAIM_STATUS_AWAY) {
+        const char *txt = gaim_status_get_attr_string(status, "message");
+        if (txt == NULL || txt[0] == '\0') {
+            /* well, they're still away! */
+            txt = "Away";
+        }
+        
+        setAway(txt);
+    }
+    
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Setting status.\n");
 }
 
 //Notice! This function do not (yet) have debug
@@ -749,7 +790,7 @@ void *waitConn(void *to_vp)
     
     if (!strncmp(to->name, "con:", 4)) {
         if (establishConnection(to->name + 4)) {
-            if (to->present == 0) {
+            if (!gaim_presence_is_online(to->presence)) {
                 ipc_set_state(to->name, 1);
             }
         }
@@ -767,7 +808,7 @@ void *waitConn(void *to_vp)
     /* since this is a connection, try now to find offline buddies */
     cur = bltop;
     while (cur) {
-        if (cur->buddy->present == 0 && strncmp(cur->buddy->name, "con:", 4)) {
+        if (!gaim_presence_is_online(cur->buddy->presence) && strncmp(cur->buddy->name, "con:", 4)) {
             sendFnd(cur->buddy->name); /* FIXME: this should not go on all connections */
         }
         cur = cur->next;
@@ -810,7 +851,7 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
         /* and try to find it */
         pthread_create(&newthread, NULL, waitConn, buddy);
     }
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Buddy added.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Buddy added.\n");
 }
 
 static void gp_removebuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
@@ -840,7 +881,7 @@ static void gp_removebuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *grou
             cur = cur->next;
         }
     }
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Removed buddy.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Removed buddy.\n");
 }
 
 static void gp_joinchat(GaimConnection *gc, GHashTable *data)
@@ -858,7 +899,7 @@ static void gp_joinchat(GaimConnection *gc, GHashTable *data)
         free(fullname);
     }
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Joined chat.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Joined chat.\n");
 }
 
 static void gp_simplechatinvite() {}
@@ -874,10 +915,10 @@ static void gp_leavechat(GaimConnection *gc, int id)
     chat_ids[id] = NULL;
     pthread_mutex_unlock(&chat_lock);
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Left chat.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Left chat.\n");
 }
 
-static int gp_saychat(GaimConnection *gc, int id, const char *msg)
+static int gp_saychat(GaimConnection *gc, int id, const char *msg, GaimMessageFlags flags)
 {
     GaimConversation *gconv = gaim_find_chat(gc, id);
     char *omsg = strdup(msg);
@@ -887,7 +928,7 @@ static int gp_saychat(GaimConnection *gc, int id, const char *msg)
     
     free(omsg);
 
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Sent chat message.");
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Sent chat message.\n");
 
     return 1;
 }
