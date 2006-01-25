@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
-AC_INIT(directnet, [1.0.0rc4], [cdgregorr@users.sourceforge.net])
+AC_INIT(directnet, [1.0.0], [cdgregorr@users.sourceforge.net])
 AC_CONFIG_AUX_DIR([scripts])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/ui.h])
@@ -17,6 +17,7 @@ src/auth-none/Makefile
 src/enc-cyfer/Makefile
 src/enc-fake/Makefile
 src/gaim-plugin/Makefile
+src/gaim2-plugin/Makefile
 src/hub/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
@@ -187,7 +188,7 @@ AC_SUBST(UI_CXX)
 AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
 
 
-# Check if we should enable the Gaim plugin
+# Check if we should enable the Gaim (1) plugin
 AC_ARG_ENABLE(gaim-plugin,
 AS_HELP_STRING([--enable-gaim-plugin],
 [enable the Gaim Plugin - must have Gaim 1.2.0 or higher development libraries]),
@@ -219,6 +220,40 @@ fi
 
 AC_SUBST(GAIM_PLUGIN_DIR)
 AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM_PLUGIN" = "xyes")
+
+
+# Check if we should enable the Gaim2 plugin
+AC_ARG_ENABLE(gaim2-plugin,
+AS_HELP_STRING([--enable-gaim2-plugin],
+[enable the Gaim2 Plugin - must have Gaim 2.0.0beta1 or higher development libraries]),
+[
+
+GAIM2_PLUGIN=yes
+
+# Check for Gaim
+PKG_CHECK_MODULES(GAIM,
+[gaim >= 2.0.0beta1 gtk+-2.0],
+[
+        AC_DEFINE(HAVE_GAIM, 1, [Define if gaim-devel is available.])
+],
+[
+AC_MSG_ERROR([Gaim development libraries not found.])
+])
+
+AC_SUBST(GAIM_CFLAGS)
+AC_SUBST(GAIM_LIBS)
+
+], [GAIM2_PLUGIN=no], [GAIM2_PLUGIN=no])
+
+if test "x$GAIM2_PLUGIN" = "xyes"
+then
+        GAIM_PLUGIN_DIR=gaim2-plugin
+else
+        GAIM_PLUGIN_DIR=
+fi
+
+AC_SUBST(GAIM_PLUGIN_DIR)
+AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM2_PLUGIN" = "xyes")
 
 
 # Check if we should enable the hub

@@ -35,7 +35,7 @@ extern "C" {
 
 #include <iostream>
 
-#include "FL/fl_ask.h"
+#include "FL/fl_ask.H"
 
 #include "AwayWindow.h"
 #include "BuddyWindow.h"

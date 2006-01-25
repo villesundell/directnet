@@ -1,16 +1,21 @@
 1.1.0CVS from 1.0.0 branch:
         - Added prm to the PROTOCOL file.
 
-CVS from 1.0.0rc4:
-        - Use pthread_cancel instead of signals (fix for Win32).
-        - Check and use Sleep instead of sleep (fix for Win32).
+CVS from 1.0.0:
+        - Added gaim-plugin debug support.
 
-1.0.0rc4 from 1.0.0rc3:
+1.0.0 from 1.0.0.rc5:
+        - Fixed gaim-plugin const problem (just removed consts, no functional
+          difference).
+
+1.0.0rc5 from 1.0.0rc4:
         - Use pthread_cancel instead of signals (fix for Win32).
         - Check and use Sleep instead of sleep (fix for Win32).
         - Don't wait for other pthreads to close on Win32 (strange
           win32-pthreads bug(?)).
         - Const correctness.
+        - a CAPITALIZATION BUG THAT CAUSED IT NOT TO COMPILE ON SOME SYSTEMS
+          (PARTICULARLY dEBIAN)
 
 1.0.0rc4 from 1.0.0rc3:
         - Properly initialized pthread_lock (fix for Win32)
