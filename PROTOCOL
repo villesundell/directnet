@@ -1,18 +1,22 @@
 This is a short documentation of protocol commands.
 
-All protocol commands are a three-character command followed by a two-char version number followed
-by ;-delimited parameters followed by a null terminator.  Any message sent over the line in this
-format should be interpreted correctly.  There's no "handshaking" per-se to establish a new
-connection, though the "key" command must be the first to be sent.
+All protocol commands are a three-character command followed by a two-char
+version number followed by ;-delimited parameters followed by a null
+terminator. Any message sent over the line in this format should be interpreted
+correctly. There's no "handshaking" per-se to establish a new connection,
+though the "key" command must be the first to be sent.
 
-There are four types: direct, routed, nonlooping unrouted and nonrepeating unrouted.  Direct
-commands are sent directly over a connection and are not continued.  Routed commands have a set
-route as the first parameter, and all of the nodes along that route strip off their name then
-continue the transfer until the data is sent to the last node on the list (at which point it will
-have an empty route).  Urouted commands are the rare few that simply emit throughout the network.
-Nonlooping unrouted messages contain a parameter for the route that they have taken to get to
-the current node, and any other parameters.  Nonrepeating unrouted messages contain a parameter
-for the transmission key (so that they are not retransmitted), and any other necessary parameters.
+There are four types: direct, routed, nonlooping unrouted and nonrepeating
+unrouted. Direct commands are sent directly over a connection and are not
+continued. Routed commands have a set route as the first parameter, and all of
+the nodes along that route strip off their name then continue the transfer
+until the data is sent to the last node on the list (at which point it will
+have an empty route). Unrouted commands are the rare few that simply emit
+throughout the network. Nonlooping unrouted messages contain a parameter for
+the route that they have taken to get to the current node, and any other
+parameters. Nonrepeating unrouted messages contain a parameter for the
+transmission key (so that they are not retransmitted), and any other necessary
+parameters.
 
 cjo(1)(1) (chat join)
         purpose: Join a chat
@@ -118,12 +122,12 @@ msg(1)(1) (message)
                 encrypted message
 
 pin(1)(1) (ping)
-        purpose: ping a connection for keepalive (no pong yet)
+        purpose: Ping a connection for keepalive (no pong yet)
         type: direct
         parameters: none
 
 prm(1)(1) (promote) (unimplemented)
-        purpose: announce a node's promotion
+        purpose: Announce a node's promotion
         type: nonrepeating unrouted (sort of)
         parameters:
                 transmission key
@@ -134,4 +138,3 @@ prm(1)(1) (promote) (unimplemented)
                         promoted itself to, but each transmission, decreases by
                         one.  When the level is at 1, the message does not
                         continue.  Newly affiliated nodes send an fnr.
-
