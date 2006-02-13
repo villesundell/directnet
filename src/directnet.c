@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -59,6 +59,11 @@ struct hashS *weakRoutes; // List of weak routes
 
 char dn_name[DN_NAME_LEN+1];
 char dn_name_set = 0;
+
+char dn_leader[DN_NAME_LEN+1];
+char dn_led = 0;
+DN_LOCK dn_leader_lock;
+
 struct hashI *dn_fds;
 
 struct hashS *dn_routes;
@@ -125,6 +130,8 @@ int pluginMain(int argc, char **argv, char **envp)
         }
             
     }
+    
+    dn_lockInit(&dn_leader_lock);
     
     // fds is an array containing every file descriptor.  fdnums are indexes into this array
     fds = (int *) malloc(DN_MAX_CONNS * sizeof(int));

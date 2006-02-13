@@ -133,6 +133,7 @@ prm(1)(1) (promote) (unimplemented)
                 transmission key
                 current route
                 local name
+                public key
                 adjusted level
                         The level is sent as whatever level the node has
                         promoted itself to, but each transmission, decreases by

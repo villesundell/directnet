@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -48,23 +48,43 @@ extern struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for l
 extern struct hashP *recFndPthreads; // And the pthreads themselves
 extern struct hashS *weakRoutes; // List of weak routes
 
+// our name
 extern char dn_name[DN_NAME_LEN+1];
-extern char dn_name_set;
+extern char dn_name_set; // this is really a bool
+
+// our leader
+extern char dn_leader[DN_NAME_LEN+1];
+extern char dn_led; // really a bool
+extern DN_LOCK dn_leader_lock;
+
+// file descriptors by name
 extern struct hashI *dn_fds;
 
+// route by name
 extern struct hashS *dn_routes;
+
+// intermediate routes by name
 extern struct hashS *dn_iRoutes;
 
+// has a key been used yet?
 extern struct hashI *dn_trans_keys;
+
+// our position in the transkey list
 extern int currentTransKey;
+
+// lock on transkey stuff
 extern DN_LOCK dn_transKey_lock;
 
+// lock on display
 extern DN_LOCK displayLock;
 
+// is the ui loaded?
 extern char uiLoaded;
 
+// our IP
 extern char dn_localip[24];
 
+// stuff for relocatability
 extern char *homedir, *bindir;
 
 struct communInfo {
