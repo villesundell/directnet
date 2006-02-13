@@ -173,10 +173,7 @@ void handleMsg(const char *rdbuf, int fdnum)
     
     memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
     
-    params[0] = (char *) alloca(strlen(inbuf)-4);
-    if (!params[0]) { perror("alloca"); exit(1); }
-    
-    strcpy(params[0], inbuf + 5);
+    params[0] = inbuf + 5;
     
     onparam = 1;
     
