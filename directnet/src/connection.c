@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -50,6 +50,7 @@ void handleMsg(const char *inbuf, int fdnum);
 int handleNLUnroutedMsg(char **params);
 int handleNRUnroutedMsg(int fromfd, const char *command, char vera, char verb, char **params);
 int sendMsgB(const char *to, const char *msg, char away, char sign);
+void recvFnd(char *route, const char *name, const char *key);
 
 void *communicator(void *fdnum_voidptr)
 {
@@ -365,158 +366,7 @@ void handleMsg(const char *rdbuf, int fdnum)
         
         // Am I this person?
         if (!strncmp(params[2], dn_name, DN_NAME_LEN)) {
-            char *routeElement[DN_MAX_PARAMS], *outparams[5];
-            char reverseRoute[DN_ROUTE_LEN];
-            int onRE, i, ostrlen;
-            DN_LOCK *recFndLock;
-            pthread_t *curPthread;
-            
-            memset(routeElement, 0, DN_MAX_PARAMS * sizeof(char *));
-            memset(outparams, 0, 5 * sizeof(char *));
-            
-            // Get a fnd receive lock.  This is actually a lock on a hash of locks ... weird, I know
-            dn_lock(&recFndHashLock);
-        
-            // Now that we have the hash locked, lock our particular lock in the hash (gack)
-            recFndLock = hashLGet(recFndLocks, params[1]);
-            dn_lock(recFndLock);
-            
-            // And give up the lock on the hash
-            dn_unlock(&recFndHashLock);
-            
-            // Start with the current route
-            SF_strncpy(newroute, params[0], DN_ROUTE_LEN);
-            
-            // Then tokenize it by \n
-            routeElement[0] = newroute;
-            onRE = 1;
-            
-            ostrlen = strlen(newroute);
-            for (i = 0; i < ostrlen; i++) {
-                if (newroute[i] == '\n') {
-                    newroute[i] = '\0';
-                    if (newroute[i+1] != '\0') {
-                        routeElement[onRE] = newroute+i+1;
-                        onRE++;
-                    }
-                }
-            }
-
-            // Get the pthread
-            curPthread = hashPGet(recFndPthreads, params[1]);
-            
-            // If we haven't started one, good
-            if (curPthread == (pthread_t *) -1) {
-                pthread_attr_t ptattr;
-                void *route_voidptr;
-                
-                // This is the first fnd received, but ignore it if we already have a route
-                if (hashSGet(dn_routes, params[1])) {
-                    dn_unlock(recFndLock);
-                    return;
-                }
-                
-                // If we haven't already gotten the fastest route, this must be it
-                onRE--;
-                
-                // Build backwards route
-                reverseRoute[0] = '\0';
-                for (i = onRE; i >= 0; i--) {
-                    ostrlen = strlen(reverseRoute);
-                    SF_strncpy(reverseRoute + ostrlen, routeElement[i], DN_ROUTE_LEN - ostrlen);
-                    ostrlen += strlen(routeElement[i]);
-                    SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-                }
-                ostrlen = strlen(reverseRoute);
-                SF_strncpy(reverseRoute + ostrlen, params[1], DN_ROUTE_LEN - ostrlen);
-                ostrlen += strlen(params[1]);
-                SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-                
-                // Add his route,
-                hashSSet(dn_routes, params[1], reverseRoute);
-                hashSSet(dn_iRoutes, params[1], reverseRoute);
-            
-                // and public key,
-                encImportKey(params[1], params[3]);
-                
-                // then send your route back to him
-                outparams[0] = reverseRoute;
-                outparams[1] = dn_name;
-                outparams[2] = params[0];
-                outparams[3] = encExportKey();
-                handleRoutedMsg("fnr", 1, 1, outparams);
-                
-                uiEstRoute(params[1]);
-                
-                route_voidptr = (void *) malloc((strlen(params[1]) + 1) * sizeof(char));
-                strcpy((char *) route_voidptr, params[1]);
-                
-                pthread_attr_init(&ptattr);
-		curPthread = (pthread_t *) malloc(sizeof(pthread_attr_t));
-                pthread_create(curPthread, &ptattr, fndPthread, route_voidptr);
-
-		// Put it back where it belongs
-		hashPSet(recFndPthreads, params[1], curPthread);
-	    } else {
-                char oldWRoute[DN_ROUTE_LEN];
-                char *curWRoute;
-                char *newRouteElements[DN_MAX_PARAMS];
-                int onRE, x, y, ostrlen;
-                
-                memset(newRouteElements, 0, DN_MAX_PARAMS * sizeof(char *));
-                
-                curWRoute = hashSGet(weakRoutes, params[1]);
-                // If there is no current weakroute, just copy in the current route
-                if (!curWRoute) {
-                    char *curroute;
-                    
-                    curroute = hashSGet(dn_routes, params[1]);
-                    if (curroute == NULL) {
-                        dn_unlock(recFndLock);
-                        return;
-                    }
-                    
-                    hashSSet(weakRoutes, params[1], curroute);
-                    curWRoute = hashSGet(weakRoutes, params[1]);
-                }
-                
-                SF_strncpy(oldWRoute, curWRoute, DN_ROUTE_LEN);
-                
-                newRouteElements[0] = oldWRoute;
-                onRE = 1;
-                
-                ostrlen = strlen(oldWRoute);
-                for (x = 0; x < ostrlen; x++) {
-                    if (oldWRoute[x] == '\n') {
-                        oldWRoute[x] = '\0';
-                        
-                        if (oldWRoute[x+1] != '\0') {
-                            newRouteElements[onRE] = oldWRoute+x+1;
-                            onRE++;
-                        }
-                    }
-                }
-                
-                // Now compare the two into a new one
-                curWRoute[0] = '\0';
-                
-                for (x = 0; newRouteElements[x] != NULL; x++) {
-                    for (y = 0; routeElement[y] != NULL; y++) {
-                        if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
-                            // It's a match, copy it in.
-                            ostrlen = strlen(curWRoute);
-                            SF_strncpy(curWRoute + ostrlen, routeElement[y], DN_ROUTE_LEN - ostrlen);
-                            ostrlen += strlen(routeElement[y]);
-                            SF_strncpy(curWRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-                        }
-                    }
-                }
-                
-                // And put it back in the hash
-                hashSSet(weakRoutes, params[1], curWRoute);
-            }
-            
-            dn_unlock(recFndLock);
+            recvFnd(params[0], params[1], params[3]);
             return;
         }
         
@@ -707,6 +557,45 @@ void handleMsg(const char *rdbuf, int fdnum)
             
             return;
         }
+        
+    } else if (!strncmp(command, "prm", 3) &&
+               inbuf[3] == 1 && inbuf[4] == 1) {
+        int level;
+        
+        REQ_PARAMS(5);
+        
+        /* TODO: a list of previous leaders should be kept, to make sure that
+         * nobody tries to lead over and over */
+        
+        // before handling, should we resend this?
+        level = atoi(params[4]);
+        if (level <= 0) return; // must be at least 1
+        
+        else if (level == 1 && hashIGet(dn_trans_keys, params[0]) != -1)
+            return; // no repeats
+        
+        else {
+            level--;
+            
+            /* adjust the parameter to the new level
+             * (this can safely be done with sprintf since the length is
+             * guaranteed to be at worst the same) */
+            sprintf(params[3], "%d", level);
+            
+            if (!handleNRUnroutedMsg(fdnum, command, inbuf[3], inbuf[4], params))
+                return;
+        }
+        
+        // receive it like a "find"
+        recvFnd(params[1], params[2], params[3]);
+        
+        /* new promotions always outweight old ones, so simply ignore whoever
+         * led before */
+        dn_lock(&dn_leader_lock);
+        strncpy(params[2], dn_leader, DN_NAME_LEN);
+        dn_leader[DN_NAME_LEN] = '\0';
+        dn_led = 1;
+        dn_unlock(&dn_leader_lock);
     }
 }
 
@@ -838,6 +727,164 @@ void emitUnroutedMsg(int fromfd, const char *outbuf)
             sendCmd(curfd, outbuf);
         }
     }
+}
+
+// recvFnd handles the situation that we've just been "found"
+void recvFnd(char *route, const char *name, const char *key)
+{
+    char *routeElement[DN_MAX_PARAMS], *outparams[5];
+    char reverseRoute[DN_ROUTE_LEN];
+    int onRE, i, ostrlen;
+    DN_LOCK *recFndLock;
+    pthread_t *curPthread;
+    char newroute[DN_ROUTE_LEN];
+    
+    memset(routeElement, 0, DN_MAX_PARAMS * sizeof(char *));
+    memset(outparams, 0, 5 * sizeof(char *));
+    
+    // Get a fnd receive lock.  This is actually a lock on a hash of locks ... weird, I know
+    dn_lock(&recFndHashLock);
+        
+    // Now that we have the hash locked, lock our particular lock in the hash (gack)
+    recFndLock = hashLGet(recFndLocks, name);
+    dn_lock(recFndLock);
+            
+    // And give up the lock on the hash
+    dn_unlock(&recFndHashLock);
+            
+    // Start with the current route
+    SF_strncpy(newroute, route, DN_ROUTE_LEN);
+            
+    // Then tokenize it by \n
+    routeElement[0] = newroute;
+    onRE = 1;
+            
+    ostrlen = strlen(newroute);
+    for (i = 0; i < ostrlen; i++) {
+        if (newroute[i] == '\n') {
+            newroute[i] = '\0';
+            if (newroute[i+1] != '\0') {
+                routeElement[onRE] = newroute+i+1;
+                onRE++;
+            }
+        }
+    }
+
+    // Get the pthread
+    curPthread = hashPGet(recFndPthreads, name);
+            
+    // If we haven't started one, good
+    if (curPthread == (pthread_t *) -1) {
+        pthread_attr_t ptattr;
+        void *route_voidptr;
+                
+        // This is the first fnd received, but ignore it if we already have a route
+        if (hashSGet(dn_routes, name)) {
+            dn_unlock(recFndLock);
+            return;
+        }
+                
+        // If we haven't already gotten the fastest route, this must be it
+        onRE--;
+                
+        // Build backwards route
+        reverseRoute[0] = '\0';
+        for (i = onRE; i >= 0; i--) {
+            ostrlen = strlen(reverseRoute);
+            SF_strncpy(reverseRoute + ostrlen, routeElement[i], DN_ROUTE_LEN - ostrlen);
+            ostrlen += strlen(routeElement[i]);
+            SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
+        }
+        ostrlen = strlen(reverseRoute);
+        SF_strncpy(reverseRoute + ostrlen, name, DN_ROUTE_LEN - ostrlen);
+        ostrlen += strlen(name);
+        SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
+                
+        // Add his route,
+        hashSSet(dn_routes, name, reverseRoute);
+        hashSSet(dn_iRoutes, name, reverseRoute);
+            
+        // and public key,
+        encImportKey(name, key);
+        
+        // then send your route back to him
+        outparams[0] = reverseRoute;
+        outparams[1] = dn_name;
+        outparams[2] = route;
+        outparams[3] = encExportKey();
+        handleRoutedMsg("fnr", 1, 1, outparams);
+        
+        uiEstRoute(name);
+        
+        route_voidptr = (void *) malloc((strlen(name) + 1) * sizeof(char));
+        strcpy((char *) route_voidptr, name);
+        
+        pthread_attr_init(&ptattr);
+        curPthread = (pthread_t *) malloc(sizeof(pthread_attr_t));
+        pthread_create(curPthread, &ptattr, fndPthread, route_voidptr);
+        
+        // Put it back where it belongs
+        hashPSet(recFndPthreads, name, curPthread);
+    } else {
+        char oldWRoute[DN_ROUTE_LEN];
+        char *curWRoute;
+        char *newRouteElements[DN_MAX_PARAMS];
+        int onRE, x, y, ostrlen;
+        
+        memset(newRouteElements, 0, DN_MAX_PARAMS * sizeof(char *));
+        
+        curWRoute = hashSGet(weakRoutes, name);
+        // If there is no current weakroute, just copy in the current route
+        if (!curWRoute) {
+            char *curroute;
+            
+            curroute = hashSGet(dn_routes, name);
+            if (curroute == NULL) {
+                dn_unlock(recFndLock);
+                return;
+            }
+            
+            hashSSet(weakRoutes, name, curroute);
+            curWRoute = hashSGet(weakRoutes, name);
+        }
+        
+        SF_strncpy(oldWRoute, curWRoute, DN_ROUTE_LEN);
+        
+        newRouteElements[0] = oldWRoute;
+        onRE = 1;
+        
+        ostrlen = strlen(oldWRoute);
+        for (x = 0; x < ostrlen; x++) {
+            if (oldWRoute[x] == '\n') {
+                oldWRoute[x] = '\0';
+                        
+                if (oldWRoute[x+1] != '\0') {
+                    newRouteElements[onRE] = oldWRoute+x+1;
+                    onRE++;
+                }
+            }
+        }
+                
+        // Now compare the two into a new one
+        curWRoute[0] = '\0';
+                
+        for (x = 0; newRouteElements[x] != NULL; x++) {
+            for (y = 0; routeElement[y] != NULL; y++) {
+                if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
+                    // It's a match, copy it in.
+                    ostrlen = strlen(curWRoute);
+                    SF_strncpy(curWRoute + ostrlen, routeElement[y], DN_ROUTE_LEN - ostrlen);
+                    ostrlen += strlen(routeElement[y]);
+                    SF_strncpy(curWRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
+                }
+            }
+        }
+        
+        // And put it back in the hash
+        hashSSet(weakRoutes, name, curWRoute);
+    }
+    
+    dn_unlock(recFndLock);
 }
 
 // fndPthread is the pthread that harvests late fnds
