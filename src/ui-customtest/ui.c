@@ -138,8 +138,11 @@ int uiInit(int argc, char ** argv, char **envp)
     return 0;
 }
 
-int handleUInput(const char *inp)
+int handleUInput(const char *originp)
 {
+    char *inp = alloca(strlen(originp)+1);
+    strcpy(inp, originp);
+    
     // Is it crossinput?
     if (cinp) {
         cinp = 0;
@@ -155,7 +158,7 @@ int handleUInput(const char *inp)
         
         // Tokenize the parameters by ' '
         memset(params, 0, 50 * sizeof(char *));
-    
+        
         params[0] = inp;
         onparam = 1;
     
