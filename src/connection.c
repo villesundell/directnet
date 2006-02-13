@@ -56,6 +56,7 @@ void *communicator(void *fdnum_voidptr)
 {
     int fdnum, pthreadnum, byterec, origstrlen;
     char buf[DN_CMD_LEN];
+    int connCount, curfd;
     
     fdnum = ((struct communInfo *) fdnum_voidptr)->fdnum;
     pthreadnum = ((struct communInfo *) fdnum_voidptr)->pthreadnum;
@@ -68,6 +69,18 @@ void *communicator(void *fdnum_voidptr)
     buildCmd(buf, "key", 1, 1, dn_name);
     addParam(buf, encExportKey());
     sendCmd(fdnum, buf);
+    
+    // Count the number of connections to see if we should promote
+    /* TODO: This should have a timer: don't promote if you've been down from
+     * promotion for under ten minutes */
+    dn_lock(&dn_fd_lock);
+    for (curfd = 0; curfd < onfd; curfd++)
+        if (fds[curfd]) connCount++;
+    dn_unlock(&dn_fd_lock);
+    
+    if (connCount > 4) {
+        // TODO: promote();
+    }
     
     buf[0] = '\0';
     
@@ -595,6 +608,8 @@ void handleMsg(const char *rdbuf, int fdnum)
         strncpy(params[2], dn_leader, DN_NAME_LEN);
         dn_leader[DN_NAME_LEN] = '\0';
         dn_led = 1;
+        dn_is_leader = 0;
+        // TODO: start a don't-be-a-leader-until thread
         dn_unlock(&dn_leader_lock);
     }
 }

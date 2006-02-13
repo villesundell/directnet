@@ -62,6 +62,7 @@ char dn_name_set = 0;
 
 char dn_leader[DN_NAME_LEN+1];
 char dn_led = 0;
+char dn_is_leader = 0;
 DN_LOCK dn_leader_lock;
 
 struct hashI *dn_fds;
