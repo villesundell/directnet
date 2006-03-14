@@ -30,6 +30,7 @@
 #include <unistd.h>
 
 #include "chat.h"
+#include "config.h"
 #include "directnet.h"
 #include "globals.h"
 #include "enc.h"
@@ -111,7 +112,7 @@ int pluginMain(int argc, char **argv, char **envp)
     if (argc >= 2) {
         for (i = 1; i < argc; i++) {
             if (!strncmp(argv[1], "-v", 2)) {
-                printf("DirectNet version ALPHA 0.4\n");
+                printf("DirectNet version %s\n", VERSION);
                 exit(0);
             } else if (!strncmp(argv[i], "-psn", 4)) {
                 /* this is just here because OSX is weird */
