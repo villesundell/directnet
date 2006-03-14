@@ -24,10 +24,6 @@ src/ui-fltk/Makefile
 src/ui-slang/Makefile
 ])
 
-if test ! -e ${srcdir}/src/enc-cyfer/gmp
-then
-        AC_MSG_ERROR([ERROR: You must download gmp before configuring!  Run getcyfer.sh])
-fi
 if test ! -e ${srcdir}/src/enc-cyfer/cyfer
 then
         AC_MSG_ERROR([ERROR: You must download cyfer before configuring!  Run getcyfer.sh])
@@ -288,15 +284,13 @@ found_enc=no
 
 if test "x$enc" = "xcyfer" || test "x$enc" = "xdetermine"
 then
-        CYFCF="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -I`pwd`/$srcdir/src/enc-cyfer/cyfer/include"
-        GMPCF="-L`pwd`/$srcdir/src/enc-cyfer/gmp -I`pwd`/$srcdir/src/enc-cyfer/gmp"
-        ENC_CFLAGS="$CYFCF $GMPCF"
+        AC_CHECK_LIB([gmp], [__gmpz_export],[
+        ENC_CFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -I`pwd`/$srcdir/src/enc-cyfer/cyfer/include"
         ENC_CPPFLAGS=
         ENC_CXXFLAGS=
         ENC_CXX=false
-        ENC_LIBS="`pwd`/$srcdir/src/enc-cyfer/cyfer/lib/.libs/libcyfer.a"
-        ENC_LIBS="$ENC_LIBS `pwd`/$srcdir/src/enc-cyfer/gmp/.libs/libgmp.a"
-        ENC_LDFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -L`pwd`/$srcdir/src/enc-cyfer/gmp"
+        ENC_LIBS="`pwd`/$srcdir/src/enc-cyfer/cyfer/lib/.libs/libcyfer.a -lgmp"
+        ENC_LDFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib"
         ENC_DIR=enc-cyfer
         found_enc=yes
         enc=cyfer
@@ -304,13 +298,11 @@ then
         
         ORIGDIR=`pwd`
         export ORIGDIR
-        cd $ORIGDIR/$srcdir/src/enc-cyfer/gmp
-        CC="$CC" CFLAGS="$CFLAGS" ./configure --enable-static --disable-shared --host=$host_alias \
-                --build=$build_alias || exit 1
         cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
         CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure --enable-static \
                 --disable-shared --host=$host_alias --build=$build_alias || exit 1
         cd $ORIGDIR
+        ], [AC_MSG_ERROR([You need GMP to support Cyfer encryption.])])
 fi
 
 if test "x$enc" = "xfake" || (test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
