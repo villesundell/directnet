@@ -1,9 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=DirectNet
-Exec=directnet
-#Icon=gaim.png
-Terminal=false
-Type=Application
-Categories=Application;Network;
-StartupNotify=true
