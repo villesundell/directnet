@@ -35,6 +35,7 @@
 
 #include "connection.h"
 #include "directnet.h"
+#include "dnconfig.h"
 
 int establishClient(const char *destination)
 {
@@ -45,7 +46,7 @@ int establishClient(const char *destination)
     //struct in_addr inIP;
     pthread_attr_t ptattr;
     char *hostname;
-    int i, port;
+    int i, port, firstc;
 
     /* split 'destination' into 'hostname' and 'port' */
     hostname = strdup(destination);
@@ -65,11 +66,18 @@ int establishClient(const char *destination)
     }
 
     dn_lock(&dn_fd_lock);
+    firstc = 0;
+    
     for (curfd = 0; curfd < DN_MAX_CONNS && fds[curfd]; curfd++);
     if (curfd == DN_MAX_CONNS) {
 	    /* no more room! */
 	    dn_unlock(&dn_fd_lock);
 	    return 0;
+    }
+    
+    if (curfd == 0 && !fds[1]) {
+        // this is the first connection
+        firstc = 1;
     }
     
     fds[curfd] = socket(AF_INET, SOCK_STREAM, 0);
@@ -105,9 +113,12 @@ int establishClient(const char *destination)
     
     pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
     pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) ci_ptr);
-
+    
     onpthread++;
     dn_unlock(&pthread_lock);
+    
+    // if this is the first connection, do autofind
+    if (firstc) autoFind();
     
     free(hostname);
     

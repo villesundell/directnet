@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #ifdef HAVE_SYS_WAIT
 #include <sys/wait.h>
@@ -32,6 +33,7 @@
 #include "chat.h"
 #include "config.h"
 #include "directnet.h"
+#include "dnconfig.h"
 #include "globals.h"
 #include "enc.h"
 #include "hash.h"
@@ -91,7 +93,9 @@ int pluginMain(int argc, char **argv, char **envp)
 #endif
 {
     int i;
-    char *binloc, *binnm;
+    char *binloc, *binnm, *cfgdir;
+    pthread_t ac_pthrd;
+    pthread_attr_t ac_pthrd_attr;
     
     serverPthread = NULL;
     keepalivePthread = NULL;
@@ -130,7 +134,7 @@ int pluginMain(int argc, char **argv, char **envp)
                 exit(1);
             }
         }
-            
+        
     }
     
     dn_lockInit(&dn_leader_lock);
@@ -201,9 +205,25 @@ int pluginMain(int argc, char **argv, char **envp)
     // Set home directory
     homedir = strdup(findHome(envp));
     
+    // initialize configuration
+    initConfig();
+    
+    // autoconnect in a thread
+    if (pthread_attr_init(&ac_pthrd_attr) != 0) {
+        perror("pthread_attr_init");
+        exit(1);
+    }
+    if (pthread_create(&ac_pthrd, &ac_pthrd_attr, autoConnectThread, NULL) != 0) {
+        perror("pthread_create");
+        exit(1);
+    }
+    
     // Start the UI
     uiInit(argc, argv, envp);
-
+    
+    // make sure autoconnect is done
+    pthread_join(ac_pthrd, NULL);
+    
 #ifndef GAIM_PLUGIN /* The Gaim plugin can't do this cleanly (yet) */
 #ifndef __WIN32 /* win32-pthreads hangs in here, but exits cleanly on a normal exit */
     

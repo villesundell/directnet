@@ -12,6 +12,7 @@ directnetcxx_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
+dnconfig.c \
 hash.c \
 keepalive.c \
 lock.c \
@@ -34,6 +35,7 @@ directnetc_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
+dnconfig.c \
 hash.c \
 keepalive.c \
 lock.c \
@@ -57,6 +59,7 @@ directnethub_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
+dnconfig.c \
 hash.c \
 keepalive.c \
 lock.c \
@@ -82,6 +85,7 @@ libdirectnet_gaim_la_SOURCES=chat.c \
 client.c \
 connection.c \
 directnet.c \
+dnconfig.c \
 hash.c \
 keepalive.c \
 lock.c \

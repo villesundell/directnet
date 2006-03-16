@@ -74,6 +74,7 @@ void *communicator(void *fdnum_voidptr)
     /* TODO: This should have a timer: don't promote if you've been down from
      * promotion for under ten minutes */
     dn_lock(&dn_fd_lock);
+    connCount = 0;
     for (curfd = 0; curfd < onfd; curfd++)
         if (fds[curfd]) connCount++;
     dn_unlock(&dn_fd_lock);
@@ -1085,6 +1086,9 @@ void sendFnd(const char *to)
     char outbuf[DN_CMD_LEN];
     char *toc = strdup(to);
     if (toc == NULL) { perror("strdup"); exit(1); }
+    
+    // this can happen before dn_name is set, don't jump the gun
+    while (!dn_name_set) sleep(0);
     
     // Find a user by name
     buildCmd(outbuf, "fnd", 1, 1, "");
