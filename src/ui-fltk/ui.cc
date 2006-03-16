@@ -52,12 +52,13 @@ NameWindow *nw;
 BuddyWindow *bw;
 ChatWindow *cws[1024];
 
+bool wantLock;
+DN_LOCK wantLock_lock;
+
 using namespace std;
 
 static int uiQuit = 0;
 ChatWindow *showcw = NULL;
-
-DN_LOCK uiNotLock;
 
 int flt1_ask(const char *msg, int t1)
 {
@@ -124,8 +125,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     /* And creating the key */
     encCreateKey();
     
-    /* uiNotLock locks while the UI is idle (so that a thread can force the UI to idle) */
-    dn_lockInit(&uiNotLock);
+    /* wantlock allows other threads to get the display lock */
+    wantLock = false;
+    dn_lockInit(&wantLock_lock);
     
     /* blank our array of windows */
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
@@ -136,9 +138,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     nw->nameWindow->show();
     
     /*Fl::run();*/
-    dn_lock(&uiNotLock);
     while (!uiQuit) {
-        dn_unlock(&uiNotLock);
+        while (wantLock) sleep(0);
+        
         if (showcw) {
             dn_lock(&displayLock);
             showcw->chatWindow->show();
@@ -152,10 +154,26 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         dn_lock(&displayLock);
         Fl::wait(1);
         dn_unlock(&displayLock);
-        dn_lock(&uiNotLock);
     }
 
     return 0;
+}
+
+void lockDisplay()
+{
+    while (true) {
+        if (!wantLock) {
+            dn_lock(&wantLock_lock);
+            if (wantLock) {
+                dn_unlock(&wantLock_lock);
+                continue;
+            }
+            wantLock = true;
+            dn_unlock(&wantLock_lock);
+            break;
+        }
+        sleep(0);
+    }
 }
 
 ChatWindow *getWindow(const char *name)
@@ -385,9 +403,7 @@ void flDispMsg(const char *window, const char *from, const char *msg, const char
     
     while (!uiLoaded) sleep(0);
     
-    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
-    dn_unlock(&uiNotLock);
     
     dispmsg = (char *) alloca((strlen(from) + (authmsg ? strlen(authmsg) : 0) +
                                strlen(msg) + 7) * sizeof(char));
@@ -535,9 +551,7 @@ extern "C" void uiEstRoute(const char *from)
     
     while (!uiLoaded) sleep(0);
     
-    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
-    dn_unlock(&uiNotLock);
     
     // Only add if necessary
     mustadd = 1;
@@ -593,9 +607,7 @@ extern "C" void uiLoseConn(const char *from)
     
     while (!uiLoaded) sleep(0);
     
-    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
-    dn_unlock(&uiNotLock);
     
     removeFromList(from);
     
@@ -611,9 +623,7 @@ extern "C" void uiLoseRoute(const char *from)
     
     while (!uiLoaded) sleep(0);
     
-    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
-    dn_unlock(&uiNotLock);
     
     removeFromList(from);
     
