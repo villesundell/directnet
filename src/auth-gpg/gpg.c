@@ -60,6 +60,7 @@ char authPW[] = "GPG Password";
  * returns: a MALLOC'D buffer with the output */
 char *gpgWrap(const char *inp, const char *args, int pass)
 {
+#ifndef __WIN32
     FILE *fi, *fo;
     char *co;
     int pspp[2], res, pid;
@@ -126,6 +127,9 @@ char *gpgWrap(const char *inp, const char *args, int pass)
     fclose(fo);
     free(pspc);
     return co;
+#else
+    return NULL;
+#endif
 }
 
 int authInit()

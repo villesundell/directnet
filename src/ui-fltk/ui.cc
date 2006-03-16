@@ -57,6 +57,8 @@ using namespace std;
 static int uiQuit = 0;
 ChatWindow *showcw = NULL;
 
+DN_LOCK uiNotLock;
+
 int flt1_ask(const char *msg, int t1)
 {
     static char *umsg = NULL;
@@ -122,6 +124,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     /* And creating the key */
     encCreateKey();
     
+    /* uiNotLock locks while the UI is idle (so that a thread can force the UI to idle) */
+    dn_lockInit(&uiNotLock);
+    
     /* blank our array of windows */
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
 
@@ -131,7 +136,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     nw->nameWindow->show();
     
     /*Fl::run();*/
+    dn_lock(&uiNotLock);
     while (!uiQuit) {
+        dn_unlock(&uiNotLock);
         if (showcw) {
             dn_lock(&displayLock);
             showcw->chatWindow->show();
@@ -145,6 +152,7 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         dn_lock(&displayLock);
         Fl::wait(1);
         dn_unlock(&displayLock);
+        dn_lock(&uiNotLock);
     }
 
     return 0;
@@ -197,7 +205,6 @@ void putOutput(ChatWindow *w, const char *txt)
 void setName(Fl_Input *w, void *ignore)
 {
     int i;
-    //dn_lock(&displayLock);
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
@@ -221,15 +228,11 @@ void setName(Fl_Input *w, void *ignore)
     dn_unlock(&dn_af_lock);
     
     uiLoaded = 1;
-    
-    //dn_unlock(&displayLock);
 }
 
 void mainWinClosed(Fl_Double_Window *w, void *ignore)
 {
     int i;
-    
-    //dn_lock(&displayLock);
     
     for (i = 0; cws[i] != NULL; i++) {
         cws[i]->chatWindow->hide();
@@ -238,43 +241,31 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
     w->hide();
     
     uiQuit = 1;
-    
-    //dn_unlock(&displayLock);
 }
 
 void estConn(Fl_Input *w, void *ignore)
 {
     char *connTo;
     
-    //dn_lock(&displayLock);
-    
     connTo = strdup(w->value());
     w->value("");
     establishConnection(connTo);
     free(connTo);
-    
-    //dn_unlock(&displayLock);
 }
 
 void estFnd(Fl_Input *w, void *ignore)
 {
     char *connTo;
     
-    //dn_lock(&displayLock);
-    
     connTo = strdup(w->value());
     w->value("");
     sendFnd(connTo);
     free(connTo);
-    
-    //dn_unlock(&displayLock);
 }
 
 void estCht(Fl_Input *w, void *ignore)
 {
     char chatOn[strlen(w->value()) + 2];
-    
-    //dn_lock(&displayLock);
     
     if (*w->value() == '#') {
         strcpy(chatOn, w->value());
@@ -287,15 +278,11 @@ void estCht(Fl_Input *w, void *ignore)
 
     joinChat(chatOn + 1);
     getWindow(chatOn);
-    
-    //dn_unlock(&displayLock);
 }
 
 void closeChat(Fl_Double_Window *w, void *ignore)
 {
     char *name;
-    
-    //dn_lock(&displayLock);
     
     name = strdup(w->label());
     
@@ -307,30 +294,22 @@ void closeChat(Fl_Double_Window *w, void *ignore)
     w->hide();
     
     free(name);
-    
-    //dn_unlock(&displayLock);
 }
 
 void talkTo(Fl_Button *b, void *ignore)
 {
     int sel;
     
-    //dn_lock(&displayLock);
-    
     sel = bw->onlineList->value();
     if (sel != 0) {
         getWindow(bw->onlineList->text(sel) + 2);
     }
-    
-    //dn_unlock(&displayLock);
 }
 
 void sendInput(Fl_Input *w, void *ignore)
 {
     /* sad way to figure out what window we're in ... */
     int i;
-    
-    //dn_lock(&displayLock);
     
     for (i = 0; cws[i] != NULL; i++) {
         if (cws[i]->textIn == w) {
@@ -358,13 +337,9 @@ void sendInput(Fl_Input *w, void *ignore)
             free(to);
             free(msg);
             
-            //dn_unlock(&displayLock);
-            
             return;
         }
     }
-    
-    //dn_unlock(&displayLock);
 }
 
 void flSendAuthKey(Fl_Button *w, void *ignore)
@@ -410,7 +385,9 @@ void flDispMsg(const char *window, const char *from, const char *msg, const char
     
     while (!uiLoaded) sleep(0);
     
+    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
+    dn_unlock(&uiNotLock);
     
     dispmsg = (char *) alloca((strlen(from) + (authmsg ? strlen(authmsg) : 0) +
                                strlen(msg) + 7) * sizeof(char));
@@ -558,7 +535,9 @@ extern "C" void uiEstRoute(const char *from)
     
     while (!uiLoaded) sleep(0);
     
+    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
+    dn_unlock(&uiNotLock);
     
     // Only add if necessary
     mustadd = 1;
@@ -614,7 +593,9 @@ extern "C" void uiLoseConn(const char *from)
     
     while (!uiLoaded) sleep(0);
     
+    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
+    dn_unlock(&uiNotLock);
     
     removeFromList(from);
     
@@ -630,7 +611,9 @@ extern "C" void uiLoseRoute(const char *from)
     
     while (!uiLoaded) sleep(0);
     
+    dn_lock(&uiNotLock);
     dn_lock(&displayLock);
+    dn_unlock(&uiNotLock);
     
     removeFromList(from);
     
@@ -646,10 +629,6 @@ extern "C" void uiNoRoute(const char *to)
     
     while (!uiLoaded) sleep(0);
     
-    // dn_lock(&displayLock); We're already locked here, don't freeeeeze!
-    
     cw = getWindow(to);
     putOutput(cw, "You do not have a route to this user.\n");
-    
-    // dn_unlock(&displayLock); Already locked
 }
