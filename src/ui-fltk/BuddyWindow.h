@@ -6,6 +6,7 @@
 #include <FL/Fl_Double_Window.H>
 extern void mainWinClosed(Fl_Double_Window*, void*);
 #include <FL/Fl_Browser.H>
+extern void flSelectBuddy(Fl_Browser*, void*);
 #include <FL/Fl_Button.H>
 extern void talkTo(Fl_Button*, void*);
 #include <FL/Fl_Input.H>

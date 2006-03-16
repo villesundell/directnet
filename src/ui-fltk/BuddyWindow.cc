@@ -1057,7 +1057,9 @@ Fl_Double_Window* BuddyWindow::make_window() {
       o->type(2);
       o->image(image_dn);
       o->labelcolor(FL_BACKGROUND2_COLOR);
+      o->callback((Fl_Callback*)flSelectBuddy);
       o->align(FL_ALIGN_TOP_LEFT);
+      o->when(3);
       Fl_Group::current()->resizable(o);
     }
     { Fl_Button* o = chatButton = new Fl_Button(0, 235, 255, 25, "Chat");

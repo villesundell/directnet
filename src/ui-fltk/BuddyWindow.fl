@@ -13,7 +13,8 @@ class BuddyWindow {open
     } {
       Fl_Browser onlineList {
         label {  Route list:}
-        image {dn-toplogo.ppm} xywh {0 65 255 165} type Hold labelcolor 7 align 5 resizable
+        callback flSelectBuddy
+        image {dn-toplogo.ppm} xywh {0 65 255 165} type Hold labelcolor 7 align 5 when 3 resizable
       }
       Fl_Button chatButton {
         label Chat
@@ -22,7 +23,7 @@ class BuddyWindow {open
       }
       Fl_Input connectInput {
         label {  Connect to (IP or hostname):}
-        callback estConn selected
+        callback estConn
         xywh {0 285 255 25} labelcolor 7 align 5 when 8
       }
       Fl_Input findUser {

@@ -38,6 +38,7 @@ extern "C" {
 
 #include "FL/fl_ask.H"
 
+#include "AutoConnWindow.h"
 #include "AwayWindow.h"
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
@@ -51,9 +52,13 @@ extern "C" {
 NameWindow *nw;
 BuddyWindow *bw;
 ChatWindow *cws[1024];
+AutoConnWindow *acw;
 
 bool wantLock;
 DN_LOCK wantLock_lock;
+
+// keep track of where the buddies end and the connection list begins in onlineLis
+int olConnsLoc;
 
 using namespace std;
 
@@ -238,6 +243,9 @@ void setName(Fl_Input *w, void *ignore)
     bw->make_window();
     bw->buddyWindow->show();
     
+    /* prep the onlineList */
+    bw->onlineList->add("@c@mBuddies");
+    
     /* add the autofind list */
     dn_lock(&dn_af_lock);
     for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
@@ -248,6 +256,22 @@ void setName(Fl_Input *w, void *ignore)
         free(toadd);
     }
     dn_unlock(&dn_af_lock);
+    
+    /* add the autoconnect list */
+    bw->onlineList->add("@c@mAutomatic Connections");
+    olConnsLoc = bw->onlineList->size();
+    dn_lock(&dn_ac_lock);
+    for (i = 0; i < DN_MAX_ROUTES && dn_ac_list[i]; i++) {
+        char *toadd = (char *) malloc(strlen(dn_ac_list[i]) + 3);
+        if (!toadd) { perror("malloc"); exit(1); }
+        sprintf(toadd, "%s", dn_ac_list[i]);
+        bw->onlineList->add(toadd);
+        free(toadd);
+    }
+    dn_unlock(&dn_ac_lock);
+    
+    /* finally, the option to add new autoconnections */
+    bw->onlineList->add("@c@iAdd new autoconnection");
     
     uiLoaded = 1;
 }
@@ -318,13 +342,54 @@ void closeChat(Fl_Double_Window *w, void *ignore)
     free(name);
 }
 
+void flSelectBuddy(Fl_Browser *flb, void *ignore)
+{
+    int i = flb->value();
+
+    // ignore selection of the headers
+    if (i == 1 || i == olConnsLoc) {
+        flb->deselect();
+        return;
+    }
+    
+    // change the chat button depending on where in the list we are
+    if (i < olConnsLoc) {
+        bw->chatButton->label("Chat");
+    } else if (i < flb->size()) {
+        bw->chatButton->label("Remove from Autoconnection List");
+    } else {
+        bw->chatButton->label("Add new Autoconnection");
+    }
+}
+
 void talkTo(Fl_Button *b, void *ignore)
 {
     int sel;
     
     sel = bw->onlineList->value();
-    if (sel != 0) {
+    if (sel == 0) return;
+    
+    // this could either be a chat ...
+    if (sel > 1 && sel < olConnsLoc) {
         getWindow(bw->onlineList->text(sel) + 2);
+    }
+    
+    // or a removal
+    else if (sel > olConnsLoc && sel < bw->onlineList->size()) {
+        remAutoConnect(bw->onlineList->text(sel));
+        bw->onlineList->remove(sel);
+    }
+    
+    // or an addition
+    else {
+        if (!acw) {
+            acw = new AutoConnWindow();
+            acw->make_window();
+            acw->autoConnWindow->show();
+        } else {
+            acw->hostname->value("");
+            acw->autoConnWindow->show();
+        }
     }
 }
 
@@ -442,7 +507,7 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
                 btn->label("Add to Autofind List");
                 
                 // now search through the online list for the user
-                for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+                for (i = 2; i < olConnsLoc && bw->onlineList->text(i) != NULL; i++) {
                     if (!strcmp(bw->onlineList->text(i) + 2, who)) {
                         // this is the user.  Either unbold or remove an italic entry
                         if (bw->onlineList->text(i)[1] == 'b') {
@@ -455,6 +520,7 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
                         } else {
                             // remove
                             bw->onlineList->remove(i);
+                            olConnsLoc--;
                         }
                         
                         break;
@@ -469,7 +535,7 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
                 
                 // now search through the online list for the user
                 found = 0;
-                for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+                for (i = 2; i < olConnsLoc && bw->onlineList->text(i) != NULL; i++) {
                     if (!strcmp(bw->onlineList->text(i) + 2, who)) {
                         char *newtext;
                         
@@ -491,7 +557,8 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
                     char *utext = (char *) malloc(strlen(who) + 3);
                     if (!utext) return;
                     sprintf(utext, "@i%s", who);
-                    bw->onlineList->add(utext);
+                    bw->onlineList->insert(olConnsLoc, utext);
+                    olConnsLoc++;
                     free(utext);
                 }
             }
@@ -499,6 +566,13 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
             return;
         }
     }
+}
+
+void flAddAC(Fl_Input *hostname, void *ignore)
+{
+    addAutoConnect(hostname->value());
+    bw->onlineList->insert(bw->onlineList->size(), hostname->value());
+    acw->autoConnWindow->hide();
 }
 
 extern "C" void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
@@ -563,9 +637,9 @@ extern "C" void uiEstRoute(const char *from)
     
     // Only add if necessary
     mustadd = 1;
-    addbefore = bw->onlineList->size() + 1;
+    addbefore = olConnsLoc;
     
-    for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+    for (i = 2; i < olConnsLoc && bw->onlineList->text(i) != NULL; i++) {
         // make sure to add this before any offline users
         if (bw->onlineList->text(i)[1] == 'i' &&
             addbefore > i)
@@ -577,6 +651,7 @@ extern "C" void uiEstRoute(const char *from)
                 mustadd = 0;
             } else {
                 bw->onlineList->remove(i);
+                olConnsLoc--;
                 i--;
             }
         }
@@ -588,6 +663,7 @@ extern "C" void uiEstRoute(const char *from)
                 checkAutoFind(from) ? 'b' : '.',
                 from);
         bw->onlineList->insert(addbefore, toadd);
+        olConnsLoc++;
         free(toadd);
     }
     
@@ -601,9 +677,10 @@ void removeFromList(const char *name)
 {
     int i;
     
-    for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+    for (i = 2; i < olConnsLoc && bw->onlineList->text(i) != NULL; i++) {
         if (!strcmp(bw->onlineList->text(i) + 2, name)) {
             bw->onlineList->remove(i);
+            olConnsLoc--;
             i--;
         }
     }
