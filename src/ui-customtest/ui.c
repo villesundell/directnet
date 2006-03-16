@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005 Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -27,7 +27,9 @@
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
+#include "dnconfig.h"
 #include "enc.h"
+#include "lock.h"
 #include "ui.h"
 
 char *currentPartner;
@@ -35,6 +37,7 @@ char *crossinput;
 int cinp, cinpd;
 
 int handleUInput(const char *inp);
+int handleAuto(char **params);
 
 int uiInit(int argc, char ** argv, char **envp)
 {
@@ -100,7 +103,6 @@ int uiInit(int argc, char ** argv, char **envp)
     printf("What is your nick? ");
     fgets(dn_name, DN_NAME_LEN, stdin);
     dn_name[DN_NAME_LEN] = '\0';
-    dn_name_set = 1;
     
     charin = strlen(dn_name);
     if (dn_name[charin-1] == '\n') {
@@ -108,7 +110,10 @@ int uiInit(int argc, char ** argv, char **envp)
     }
     
     // And creating the key
-    printf("%s\n", encCreateKey());
+    encCreateKey();
+    
+    // dn_name_set is overloaded, it also means key is created
+    dn_name_set = 1;
     
     // You start in a conversation with nobody
     currentPartner = (char *) malloc(DN_NAME_LEN * sizeof(char));
@@ -212,6 +217,9 @@ int handleUInput(const char *originp)
                 // Join the chat
                 joinChat(currentPartner+1);
             }
+        } else if (params[0][1] == 'u') {
+            // auto*
+            handleAuto(params);
         } else if (params[0][1] == 'q') {
             return 1;
         }
@@ -235,6 +243,103 @@ int handleUInput(const char *originp)
     }
     
     return 0;
+}
+
+/* just received a /u, so handle auto-something */
+int handleAuto(char **params)
+{
+    int i;
+    
+    switch (params[1][0]) {
+        case 'c':
+        case 'C':
+            /* autoconnections ... */
+            switch (params[2][0]) {
+                case 'l':
+                case 'L':
+                    /* autoconnection list */
+                    printf("Autoconnection list:\n");
+                    dn_lock(&dn_ac_lock);
+                    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
+                        printf("%s\n", dn_ac_list[i]);
+                    }
+                    dn_unlock(&dn_ac_lock);
+                    break;
+                    
+                case 'a':
+                case 'A':
+                    /* autoconnection add */
+                    if (!params[3]) {
+                        printf("Use: /u c a <hostname>\n");
+                        break;
+                    }
+                    addAutoConnect(params[3]);
+                    break;
+                    
+                case 'r':
+                case 'R':
+                    /* autoconnection remove */
+                    if (!params[3]) {
+                        printf("Use: /u c r <hostname>\n");
+                        break;
+                    }
+                    remAutoConnect(params[3]);
+                    break;
+                    
+                default:
+                    printf("Use: /u c {a|r} <hostname>\n");
+                    break;
+            }
+            break;
+            
+        case 'f':
+        case 'F':
+            /* autofinds ... */
+            switch (params[2][0]) {
+                case 'l':
+                case 'L':
+                    /* autofind list */
+                    printf("Autoconnection list:\n");
+                    dn_lock(&dn_af_lock);
+                    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
+                        printf("%s\n", dn_af_list[i]);
+                    }
+                    dn_unlock(&dn_af_lock);
+                    break;
+                    
+                case 'a':
+                case 'A':
+                    /* autofind add */
+                    if (!params[3]) {
+                        printf("Use: /u f a <nick>\n");
+                        break;
+                    }
+                    addAutoFind(params[3]);
+                    break;
+                    
+                case 'r':
+                case 'R':
+                    /* autofind remove */
+                    if (!params[3]) {
+                        printf("Use: /u f r <nick>\n");
+                        break;
+                    }
+                    remAutoFind(params[3]);
+                    break;
+                    
+                default:
+                    printf("Use: /u f {l|a|r} <nick>\n");
+                    break;
+            }
+            break;
+            
+        default:
+            printf("Use: /u {c|f} {l|a|r} {<hostname>|<nick>}\n"
+                   "     c for autoconnections, f for autofinds\n"
+                   "     l to list auto*\n"
+                   "     a to add a hostname or nick\n"
+                   "     r to remove a hostname or nick\n");
+    }
 }
 
 void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)

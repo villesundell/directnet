@@ -5,19 +5,31 @@ help you understand what's going on.
 
 Here's a quick overview of the commands:
 
+/a [away msg]
+        Set yourself away or back (if the away message is left out, set back)
+        Example: /a I'm AFK right now.
+
 /c <host>
         Connect to another user running DirectNet by hostname or IP address, and establish a route
        to the user.
         Example: /c 192.168.1.1
+
+/f <name>
+        Establish a route to someone you don't have a direct connection to.
+        Example: /f Gregor
+
+/k
+        Send your authentication key to the person with whom you're chatting.
 
 /t <name>
         Enable chatting with a certain user.  After enabling chatting, anything you type that
        doesn't start with '/' will be sent as a message to the user you're chatting with.
         Example: /t Gregor
 
-/f <name>
-        Establish a route to someone you don't have a direct connection to.
-        Example: /f Gregor
+/u {c|f} {l|a|r} {<hostname>|<nick>}
+        Autoconnection and autofind support.
+        The first parameter is c for autoconnections, f for autofinds.
+        The second parameter is l to list, a to add, and r to remove.
 
 /q
         Quit

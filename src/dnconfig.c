@@ -122,6 +122,9 @@ void initConfig()
                     osl--;
                 }
                 
+                // make sure it's longer than 0
+                if (!line[0]) continue;
+                
                 // add to our list
                 dn_af_list[i] = strdup(line);
                 i++;
