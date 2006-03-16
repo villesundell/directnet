@@ -185,7 +185,9 @@ ChatWindow *getWindow(const char *name)
             /*cws[i]->chatWindow->show();*/
             dn_unlock(&displayLock);
             while (showcw) sleep(0);
+            wantDisplayLock();
             dn_lock(&displayLock);
+            wantLock = false;
             showcw = cws[i];
             return cws[i];
         }
@@ -204,7 +206,9 @@ ChatWindow *getWindow(const char *name)
     /*cws[i]->chatWindow->show();*/
     dn_unlock(&displayLock);
     while (showcw) sleep(0);
+    wantDisplayLock();
     dn_lock(&displayLock);
+    wantLock = false;
     showcw = cws[i];
     
     return cws[i];
@@ -569,7 +573,7 @@ extern "C" void uiEstRoute(const char *from)
         
         if (!strcmp(bw->onlineList->text(i) + 2, from)) {
             // if this is @i (italic, offline), still must be added
-            if (bw->onlineList->text(i)[1] == 'i') {
+            if (bw->onlineList->text(i)[1] != 'i') {
                 mustadd = 0;
             } else {
                 bw->onlineList->remove(i);
