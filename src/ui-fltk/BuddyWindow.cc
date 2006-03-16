@@ -1053,7 +1053,7 @@ Fl_Double_Window* BuddyWindow::make_window() {
     w = o;
     o->color(FL_FOREGROUND_COLOR);
     o->callback((Fl_Callback*)mainWinClosed, (void*)(this));
-    { Fl_Browser* o = onlineList = new Fl_Browser(0, 65, 255, 165, "  Route list:");
+    { Fl_Browser* o = onlineList = new Fl_Browser(0, 50, 255, 180);
       o->type(2);
       o->image(image_dn);
       o->labelcolor(FL_BACKGROUND2_COLOR);
