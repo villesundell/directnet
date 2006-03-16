@@ -667,9 +667,6 @@ extern "C" void uiEstRoute(const char *from)
         free(toadd);
     }
     
-    cw = getWindow(from);
-    putOutput(cw, "Route established.\n");
-    
     dn_unlock(&displayLock);
 }
 
@@ -715,9 +712,6 @@ extern "C" void uiLoseRoute(const char *from)
     wantLock = false;
     
     removeFromList(from);
-    
-    cw = getWindow(from);
-    putOutput(cw, "Route lost.\n");
     
     dn_unlock(&displayLock);
 }
