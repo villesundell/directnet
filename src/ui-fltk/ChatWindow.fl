@@ -11,10 +11,6 @@ class ChatWindow {open
       callback closeChat open
       xywh {320 253 360 315} type Double resizable visible
     } {
-      Fl_Input textIn {
-        callback sendInput
-        xywh {0 265 360 25} when 8
-      }
       Fl_Text_Display textOut {
         xywh {0 0 360 260} resizable
         code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
@@ -29,6 +25,10 @@ class ChatWindow {open
         label {Add to Autofind List}
         callback flAddRemAutoFind
         xywh {180 290 180 25}
+      }
+      Fl_Input textIn {
+        callback sendInput
+        xywh {0 265 360 25} when 8
       }
     }
   }

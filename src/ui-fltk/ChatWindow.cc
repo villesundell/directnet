@@ -7,10 +7,6 @@ Fl_Double_Window* ChatWindow::make_window() {
   { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(360, 315, "User");
     w = o;
     o->callback((Fl_Callback*)closeChat, (void*)(this));
-    { Fl_Input* o = textIn = new Fl_Input(0, 265, 360, 25);
-      o->callback((Fl_Callback*)sendInput);
-      o->when(FL_WHEN_ENTER_KEY);
-    }
     { Fl_Text_Display* o = textOut = new Fl_Text_Display(0, 0, 360, 260);
       Fl_Group::current()->resizable(o);
       textOut->buffer(new Fl_Text_Buffer(32256));
@@ -21,6 +17,10 @@ Fl_Double_Window* ChatWindow::make_window() {
     }
     { Fl_Button* o = bAutoFind = new Fl_Button(180, 290, 180, 25, "Add to Autofind List");
       o->callback((Fl_Callback*)flAddRemAutoFind);
+    }
+    { Fl_Input* o = textIn = new Fl_Input(0, 265, 360, 25);
+      o->callback((Fl_Callback*)sendInput);
+      o->when(FL_WHEN_ENTER_KEY);
     }
     o->end();
   }
