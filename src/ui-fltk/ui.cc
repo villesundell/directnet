@@ -159,7 +159,7 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     return 0;
 }
 
-void lockDisplay()
+void wantDisplayLock()
 {
     while (true) {
         if (!wantLock) {
@@ -403,7 +403,9 @@ void flDispMsg(const char *window, const char *from, const char *msg, const char
     
     while (!uiLoaded) sleep(0);
     
+    wantDisplayLock();
     dn_lock(&displayLock);
+    wantLock = false;
     
     dispmsg = (char *) alloca((strlen(from) + (authmsg ? strlen(authmsg) : 0) +
                                strlen(msg) + 7) * sizeof(char));
@@ -551,7 +553,9 @@ extern "C" void uiEstRoute(const char *from)
     
     while (!uiLoaded) sleep(0);
     
+    wantDisplayLock();
     dn_lock(&displayLock);
+    wantLock = false;
     
     // Only add if necessary
     mustadd = 1;
@@ -607,7 +611,9 @@ extern "C" void uiLoseConn(const char *from)
     
     while (!uiLoaded) sleep(0);
     
+    wantDisplayLock();
     dn_lock(&displayLock);
+    wantLock = false;
     
     removeFromList(from);
     
@@ -623,7 +629,9 @@ extern "C" void uiLoseRoute(const char *from)
     
     while (!uiLoaded) sleep(0);
     
+    wantDisplayLock();
     dn_lock(&displayLock);
+    wantLock = false;
     
     removeFromList(from);
     
