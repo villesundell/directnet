@@ -673,13 +673,25 @@ extern "C" void uiEstRoute(const char *from)
 void removeFromList(const char *name)
 {
     int i;
+    char demote = 0;
     
     for (i = 2; i < olConnsLoc && bw->onlineList->text(i) != NULL; i++) {
         if (!strcmp(bw->onlineList->text(i) + 2, name)) {
+            /* only demote it if it's bolded */
+            if (bw->onlineList->text(i)[1] == 'b')
+                demote = 1;
             bw->onlineList->remove(i);
             olConnsLoc--;
-            i--;
+            break;
         }
+    }
+    
+    if (demote) {
+        char *toadd = (char *) malloc(strlen(name) + 3);
+        if (!toadd) return;
+        sprintf(toadd, "@i%s", name);
+        bw->onlineList->insert(olConnsLoc, toadd);
+        free(toadd);
     }
 }
 
