@@ -1088,7 +1088,11 @@ void sendFnd(const char *to)
     if (toc == NULL) { perror("strdup"); exit(1); }
     
     // this can happen before dn_name is set, don't jump the gun
-    while (!dn_name_set) sleep(0);
+    if (!dn_name_set) {
+        while (!dn_name_set) sleep(0);
+        // a very silly way to make sure that 'key' has been sent
+        sleep(1);
+    }
     
     // Find a user by name
     buildCmd(outbuf, "fnd", 1, 1, "");
