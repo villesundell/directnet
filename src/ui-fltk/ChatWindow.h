@@ -10,6 +10,7 @@ extern void sendInput(Fl_Input*, void*);
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Button.H>
 extern void flSendAuthKey(Fl_Button*, void*);
+extern void flAddRemAutoFind(Fl_Button*, void*);
 
 class ChatWindow {
 public:
@@ -18,5 +19,6 @@ public:
   Fl_Input *textIn;
   Fl_Text_Display *textOut;
   Fl_Button *bSndKey;
+  Fl_Button *bAutoFind;
 };
 #endif

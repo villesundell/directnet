@@ -9,7 +9,7 @@ class ChatWindow {open
     Fl_Window chatWindow {
       label User
       callback closeChat open
-      xywh {372 89 360 315} type Double resizable visible
+      xywh {320 253 360 315} type Double resizable visible
     } {
       Fl_Input textIn {
         callback sendInput
@@ -22,8 +22,13 @@ class ChatWindow {open
       }
       Fl_Button bSndKey {
         label {Send Authentication Key}
-        callback flSendAuthKey selected
-        xywh {0 290 360 25}
+        callback flSendAuthKey
+        xywh {0 290 180 25}
+      }
+      Fl_Button bAutoFind {
+        label {Add to Autofind List}
+        callback flAddRemAutoFind
+        xywh {180 290 180 25}
       }
     }
   }

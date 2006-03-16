@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Gregor Richards
+ * Copyright 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -27,6 +27,7 @@ extern "C" {
 #include "auth.h"
 #include "connection.h"
 #include "directnet.h"
+#include "dnconfig.h"
 #include "globals.h"
 #include "enc.h"
 #include "lock.h"
@@ -141,7 +142,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         /* check for questions */
         flt1_ask(NULL, 1);
         
-        Fl::wait(1);        
+        dn_lock(&displayLock);
+        Fl::wait(1);
+        dn_unlock(&displayLock);
     }
 
     return 0;
@@ -165,6 +168,13 @@ ChatWindow *getWindow(const char *name)
     cws[i] = new ChatWindow();
     cws[i]->make_window();
     cws[i]->chatWindow->label(strdup(name));
+    
+    if (checkAutoFind(name)) {
+        cws[i]->bAutoFind->label("Remove from Autofind List");
+    } else {
+        cws[i]->bAutoFind->label("Add to Autofind List");
+    }
+    
     /*cws[i]->chatWindow->show();*/
     dn_unlock(&displayLock);
     while (showcw) sleep(0);
@@ -186,7 +196,8 @@ void putOutput(ChatWindow *w, const char *txt)
 
 void setName(Fl_Input *w, void *ignore)
 {
-    dn_lock(&displayLock);
+    int i;
+    //dn_lock(&displayLock);
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
@@ -197,17 +208,28 @@ void setName(Fl_Input *w, void *ignore)
     bw = new BuddyWindow();
     bw->make_window();
     bw->buddyWindow->show();
-
+    
+    /* add the autofind list */
+    dn_lock(&dn_af_lock);
+    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
+        char *toadd = (char *) malloc(strlen(dn_af_list[i]) + 3);
+        if (!toadd) { perror("malloc"); exit(1); }
+        sprintf(toadd, "@i%s", dn_af_list[i]);
+        bw->onlineList->add(toadd);
+        free(toadd);
+    }
+    dn_unlock(&dn_af_lock);
+    
     uiLoaded = 1;
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void mainWinClosed(Fl_Double_Window *w, void *ignore)
 {
     int i;
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     for (i = 0; cws[i] != NULL; i++) {
         cws[i]->chatWindow->hide();
@@ -217,42 +239,42 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
     
     uiQuit = 1;
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void estConn(Fl_Input *w, void *ignore)
 {
     char *connTo;
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     connTo = strdup(w->value());
     w->value("");
     establishConnection(connTo);
     free(connTo);
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void estFnd(Fl_Input *w, void *ignore)
 {
     char *connTo;
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     connTo = strdup(w->value());
     w->value("");
     sendFnd(connTo);
     free(connTo);
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void estCht(Fl_Input *w, void *ignore)
 {
     char chatOn[strlen(w->value()) + 2];
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     if (*w->value() == '#') {
         strcpy(chatOn, w->value());
@@ -266,14 +288,14 @@ void estCht(Fl_Input *w, void *ignore)
     joinChat(chatOn + 1);
     getWindow(chatOn);
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void closeChat(Fl_Double_Window *w, void *ignore)
 {
     char *name;
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     name = strdup(w->label());
     
@@ -286,21 +308,21 @@ void closeChat(Fl_Double_Window *w, void *ignore)
     
     free(name);
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void talkTo(Fl_Button *b, void *ignore)
 {
     int sel;
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     sel = bw->onlineList->value();
     if (sel != 0) {
-        getWindow(bw->onlineList->text(sel));
+        getWindow(bw->onlineList->text(sel) + 2);
     }
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void sendInput(Fl_Input *w, void *ignore)
@@ -308,7 +330,7 @@ void sendInput(Fl_Input *w, void *ignore)
     /* sad way to figure out what window we're in ... */
     int i;
     
-    dn_lock(&displayLock);
+    //dn_lock(&displayLock);
     
     for (i = 0; cws[i] != NULL; i++) {
         if (cws[i]->textIn == w) {
@@ -336,13 +358,13 @@ void sendInput(Fl_Input *w, void *ignore)
             free(to);
             free(msg);
             
-            dn_unlock(&displayLock);
+            //dn_unlock(&displayLock);
             
             return;
         }
     }
     
-    dn_unlock(&displayLock);
+    //dn_unlock(&displayLock);
 }
 
 void flSendAuthKey(Fl_Button *w, void *ignore)
@@ -350,24 +372,13 @@ void flSendAuthKey(Fl_Button *w, void *ignore)
     /* sad way to figure out what window we're in ... */
     int i;
     
-    dn_lock(&displayLock);
-    
     for (i = 0; cws[i] != NULL; i++) {
         if (cws[i]->bSndKey == w) {
             /* this is our window */
-            char *to;
-            
-            to = strdup(cws[i]->chatWindow->label());
-            
-            sendAuthKey(to);
-            
-            dn_unlock(&displayLock);
-            
+            sendAuthKey(cws[i]->chatWindow->label());
             return;
         }
     }
-    
-    dn_unlock(&displayLock);
 }
 
 void fSetAway(Fl_Button *w, void *ignore)
@@ -414,6 +425,81 @@ void flDispMsg(const char *window, const char *from, const char *msg, const char
     putOutput(cw, dispmsg);
     
     dn_unlock(&displayLock);
+}
+
+void flAddRemAutoFind(Fl_Button *btn, void *)
+{
+    /* sad way to figure out what window we're in ... */
+    int i;
+    
+    for (i = 0; cws[i] != NULL; i++) {
+        if (cws[i]->bAutoFind == btn) {
+            /* this is our window */
+            const char *who = cws[i]->chatWindow->label();
+            
+            if (checkAutoFind(who)) {
+                // this is a removal
+                remAutoFind(who);
+                btn->label("Add to Autofind List");
+                
+                // now search through the online list for the user
+                for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+                    if (!strcmp(bw->onlineList->text(i) + 2, who)) {
+                        // this is the user.  Either unbold or remove an italic entry
+                        if (bw->onlineList->text(i)[1] == 'b') {
+                            // unbold
+                            char *newtext = strdup(bw->onlineList->text(i));
+                            if (!newtext) return;
+                            newtext[1] = '.';
+                            bw->onlineList->text(i, newtext);
+                            free(newtext);
+                        } else {
+                            // remove
+                            bw->onlineList->remove(i);
+                        }
+                        
+                        break;
+                    }
+                }
+            } else {
+                char found;
+                
+                // this is an addition
+                addAutoFind(who);
+                btn->label("Remove from Autofind List");
+                
+                // now search through the online list for the user
+                found = 0;
+                for (i = 1; bw->onlineList->text(i) != NULL; i++) {
+                    if (!strcmp(bw->onlineList->text(i) + 2, who)) {
+                        char *newtext;
+                        
+                        found = 1;
+                        
+                        // this is the user.  Bold it
+                        newtext = strdup(bw->onlineList->text(i));
+                        if (!newtext) return;
+                        newtext[1] = 'b';
+                        bw->onlineList->text(i, newtext);
+                        free(newtext);
+                        
+                        break;
+                    }
+                }
+                
+                // if the user wasn't in the list, add
+                if (!found) {
+                    char *utext = (char *) malloc(strlen(who) + 3);
+                    if (!utext) return;
+                    sprintf(utext, "@i%s", who);
+                    bw->onlineList->add(utext);
+                    free(utext);
+                }
+            }
+            
+            return;
+        }
+    }
 }
 
 extern "C" void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
@@ -468,7 +554,7 @@ extern "C" void uiEstConn(const char *from)
 extern "C" void uiEstRoute(const char *from)
 {
     ChatWindow *cw;
-    int i, mustadd;
+    int i, mustadd, addbefore;
     
     while (!uiLoaded) sleep(0);
     
@@ -476,12 +562,33 @@ extern "C" void uiEstRoute(const char *from)
     
     // Only add if necessary
     mustadd = 1;
+    addbefore = bw->onlineList->size() + 1;
+    
     for (i = 1; bw->onlineList->text(i) != NULL; i++) {
-        if (!strcmp(bw->onlineList->text(i), from)) {
-            mustadd = 0;
+        // make sure to add this before any offline users
+        if (bw->onlineList->text(i)[1] == 'i' &&
+            addbefore > i)
+            addbefore = i;
+        
+        if (!strcmp(bw->onlineList->text(i) + 2, from)) {
+            // if this is @i (italic, offline), still must be added
+            if (bw->onlineList->text(i)[1] == 'i') {
+                mustadd = 0;
+            } else {
+                bw->onlineList->remove(i);
+                i--;
+            }
         }
     }
-    if (mustadd) bw->onlineList->add(from);
+    if (mustadd) {
+        char *toadd = (char *) malloc(strlen(from) + 3);
+        if (!toadd) { perror("malloc"); exit(1); }
+        sprintf(toadd, "@%c%s",
+                checkAutoFind(from) ? 'b' : '.',
+                from);
+        bw->onlineList->insert(addbefore, toadd);
+        free(toadd);
+    }
     
     cw = getWindow(from);
     putOutput(cw, "Route established.\n");
@@ -494,7 +601,7 @@ void removeFromList(const char *name)
     int i;
     
     for (i = 1; bw->onlineList->text(i) != NULL; i++) {
-        if (!strcmp(bw->onlineList->text(i), name)) {
+        if (!strcmp(bw->onlineList->text(i) + 2, name)) {
             bw->onlineList->remove(i);
             i--;
         }

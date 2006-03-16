@@ -16,8 +16,11 @@ Fl_Double_Window* ChatWindow::make_window() {
       textOut->buffer(new Fl_Text_Buffer(32256));
       textOut->wrap_mode(1, 0);
     }
-    { Fl_Button* o = bSndKey = new Fl_Button(0, 290, 360, 25, "Send Authentication Key");
+    { Fl_Button* o = bSndKey = new Fl_Button(0, 290, 180, 25, "Send Authentication Key");
       o->callback((Fl_Callback*)flSendAuthKey);
+    }
+    { Fl_Button* o = bAutoFind = new Fl_Button(180, 290, 180, 25, "Add to Autofind List");
+      o->callback((Fl_Callback*)flAddRemAutoFind);
     }
     o->end();
   }
