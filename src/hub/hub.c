@@ -60,36 +60,6 @@ int uiInit(int argc, char ** argv, char **envp)
     // OK, the UI is ready
     uiLoaded = 1;
     
-    // Make initial connections from ~/.dnhub
-    homedir = getenv("HOME");
-    if (homedir != NULL) {
-        FILE *dnhf;
-        char line[1024];
-        int ostrlen;
-        
-        dnhomefile = (char *) malloc((strlen(homedir) + 8) * sizeof(char));
-        sprintf(dnhomefile, "%s/.dnhub", homedir);
-        
-        dnhf = fopen(dnhomefile, "r");
-        if (dnhf) {
-            while (!feof(dnhf)) {
-                fgets(line, 1024, dnhf);
-                
-                ostrlen = strlen(line);
-                if (line[ostrlen-1] == '\n') {
-                    line[ostrlen-1] = '\0';
-                }
-                if (line[0] != '\0' && line[0] != '#') {
-                    printf("Connecting to %s\n", line);
-                    establishConnection(line);
-                }
-            }
-            
-            fclose(dnhf);
-        }
-        free(dnhomefile);
-    }
-    
     while (1) {
         /* just spin */
         sleep(32256);
