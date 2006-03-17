@@ -785,6 +785,7 @@ void recvFnd(char *route, const char *name, const char *key)
             }
         }
     }
+    routeElement[onRE] = NULL;
 
     // Get the pthread
     curPthread = hashPGet(recFndPthreads, name);
@@ -880,10 +881,11 @@ void recvFnd(char *route, const char *name, const char *key)
                 }
             }
         }
+        oldWRoute[onRE] = NULL;
         
         // Now compare the two into a new one
         curWRoute[0] = '\0';
-                
+        
         for (x = 0; newRouteElements[x] != NULL; x++) {
             for (y = 0; routeElement[y] != NULL; y++) {
                 if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
