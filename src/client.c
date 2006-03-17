@@ -95,15 +95,16 @@ int establishClient(const char *destination)
     /*inet_aton(hostname, &inIP);
     addr.sin_addr = inIP;*/
     memset(&(addr.sin_zero), '\0', 8);
+    dn_unlock(&dn_fd_lock);
 
     if (connect(fds[curfd], (struct sockaddr *)&addr, sizeof(struct sockaddr)) == -1) {
         //perror("connect");
         free(hostname);
+        dn_lock(&dn_fd_lock);
         fds[curfd] = 0;
         dn_unlock(&dn_fd_lock);
         return 0;
     }
-    dn_unlock(&dn_fd_lock);
     
     dn_lock(&pthread_lock);
     ci_ptr = malloc(sizeof(struct communInfo));
