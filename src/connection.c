@@ -782,6 +782,7 @@ void recvFnd(char *route, const char *name, const char *key)
             if (newroute[i+1] != '\0') {
                 routeElement[onRE] = newroute+i+1;
                 onRE++;
+                if (onRE >= DN_MAX_PARAMS - 1) onRE--;
             }
         }
     }
@@ -878,6 +879,7 @@ void recvFnd(char *route, const char *name, const char *key)
                 if (oldWRoute[x+1] != '\0') {
                     newRouteElements[onRE] = oldWRoute+x+1;
                     onRE++;
+                    if (onRE >= DN_MAX_PARAMS - 1) onRE--;
                 }
             }
         }
