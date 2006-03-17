@@ -691,6 +691,7 @@ void removeFromList(const char *name)
         if (!toadd) return;
         sprintf(toadd, "@i%s", name);
         bw->onlineList->insert(olConnsLoc, toadd);
+        olConnsLoc++;
         free(toadd);
     }
 }
@@ -706,9 +707,6 @@ extern "C" void uiLoseConn(const char *from)
     wantLock = false;
     
     removeFromList(from);
-    
-    cw = getWindow(from);
-    putOutput(cw, "Connection lost.\n");
     
     dn_unlock(&displayLock);
 }
