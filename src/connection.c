@@ -883,7 +883,7 @@ void recvFnd(char *route, const char *name, const char *key)
                 }
             }
         }
-        oldWRoute[onRE] = NULL;
+        newRouteElements[onRE] = NULL;
         
         // Now compare the two into a new one
         curWRoute[0] = '\0';
