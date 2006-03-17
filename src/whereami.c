@@ -1,5 +1,5 @@
 /**********************************************************************************
-* Copyright (C) 2005  Gregor Richards                                             *
+* Copyright (C) 2005, 2006  Gregor Richards                                       *
 *                                                                                 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of *
 * this software and associated documentation files (the "Software"), to deal in   *
@@ -51,26 +51,46 @@ char *whereAmI(const char *argvz, char **dir, char **fil)
     char *pathelem[1024];
     int i, j, osl;
     struct stat sbuf;
+    char *argvzd = strdup(argvz);
+    if (!argvzd) { perror("strdup"); exit(1); }
+
+#ifdef __WIN32
+    for (i = 0; argvzd[i]; i++) {
+        if (argvzd[i] == '\\') {
+            argvzd[i] = '/';
+        }
+    }
+#endif
     
     /* 1: full path, yippee! */
-    if (argvz[0] == '/') {
-        dirAndFil(argvz, dir, fil);
-        return strdup(argvz);
+    if (argvzd[0] == '/') {
+        dirAndFil(argvzd, dir, fil);
+        return argvzd;
     }
     
+#ifdef __WIN32
+    /* 1.5: full path on Windows */
+    if (argvzd[1] == ':' &&
+        argvzd[2] == '/') {
+        dirAndFil(argvzd, dir, fil);
+        return argvzd;
+    }
+#endif
+    
     /* 2: relative path */
-    if (strchr(argvz, '/')) {
+    if (strchr(argvzd, '/')) {
         workd = (char *) malloc(1024 * sizeof(char));
         if (!workd) { perror("malloc"); exit(1); }
         
         if (getcwd(workd, 1024)) {
-            retname = (char *) malloc((strlen(workd) + strlen(argvz) + 2) * sizeof(char));
+            retname = (char *) malloc((strlen(workd) + strlen(argvzd) + 2) * sizeof(char));
             if (!retname) { perror("malloc"); exit(1); }
             
-            sprintf(retname, "%s/%s", workd, argvz);
+            sprintf(retname, "%s/%s", workd, argvzd);
             free(workd);
             
             dirAndFil(retname, dir, fil);
+            free(argvzd);
             return retname;
         }
     }
@@ -100,10 +120,10 @@ char *whereAmI(const char *argvz, char **dir, char **fil)
     
     /* go through every pathelem */
     for (i = 0; pathelem[i]; i++) {
-        retname = (char *) malloc((strlen(pathelem[i]) + strlen(argvz) + 2) * sizeof(char));
+        retname = (char *) malloc((strlen(pathelem[i]) + strlen(argvzd) + 2) * sizeof(char));
         if (!retname) { perror("malloc"); exit(1); }
         
-        sprintf(retname, "%s/%s", pathelem[i], argvz);
+        sprintf(retname, "%s/%s", pathelem[i], argvzd);
         
         if (stat(retname, &sbuf) == -1) {
             free(retname);
@@ -112,6 +132,7 @@ char *whereAmI(const char *argvz, char **dir, char **fil)
         
         if (sbuf.st_mode & S_IXUSR) {
             dirAndFil(retname, dir, fil);
+            free(argvzd);
             return retname;
         }
         
@@ -121,5 +142,6 @@ char *whereAmI(const char *argvz, char **dir, char **fil)
     /* 4: can't find it */
     dir = NULL;
     fil = NULL;
+    free(argvzd);
     return NULL;
 }
