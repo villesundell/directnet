@@ -272,8 +272,15 @@ char *findHome(char **envp)
     }
    
 #ifdef WIN32
-    // On Windoze we'll accept bindir
-    return bindir;
+    // On Windoze we'll accept curdir
+    {
+        char *cdir = (char *) malloc(1024);
+        if (!cdir) { perror("malloc"); exit(1); }
+        if (getcwd(cdir, 1024))
+            return cdir;
+        // if no curdir, just use bindir
+        return bindir;
+    }
 #endif
     
     fprintf(stderr, "Couldn't find your HOME directory.\n");
