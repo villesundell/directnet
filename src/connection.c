@@ -880,7 +880,7 @@ void recvFnd(char *route, const char *name, const char *key)
                 }
             }
         }
-                
+        
         // Now compare the two into a new one
         curWRoute[0] = '\0';
                 
@@ -919,8 +919,7 @@ void *fndPthread(void *name_voidptr)
     Sleep(15000);
 #endif
     
-    /* FIXME
-    this should lock the recFndLocks hash */
+    dn_lock(&recFndHashLock);
     
     // Figure out if there's a weak route
     curWRoute = hashSGet(weakRoutes, name);
@@ -937,6 +936,7 @@ void *fndPthread(void *name_voidptr)
     
     if (!isWeak) {
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
+        dn_unlock(&recFndHashLock);
         return NULL;
     }
     
@@ -956,13 +956,19 @@ void *fndPthread(void *name_voidptr)
         
         // grab before the first \n for the next name in the line
         rfe = strchr(params[0], '\n');
-        if (rfe == NULL) return NULL;
+        if (rfe == NULL) {
+            dn_unlock(&recFndHashLock);
+            return NULL;
+        }
         first = (char *) strdup(params[0]);
         first[rfe - params[0]] = '\0';
         
         // then get the fd
         firfd = hashIGet(dn_fds, first);
-        if (firfd == -1) return NULL;
+        if (firfd == -1) {
+            dn_unlock(&recFndHashLock);
+            return NULL;
+        }
         firfd = fds[firfd];
         free(first);
         // then turn the fd into a sockaddr
@@ -972,6 +978,7 @@ void *fndPthread(void *name_voidptr)
             /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
             params[2] = strdup(inet_ntoa(locip_i->sin_addr));
         } else {
+            dn_unlock(&recFndHashLock);
             return NULL;
         }
         params[2] = realloc(params[2], strlen(params[2]) + 7);
@@ -982,9 +989,11 @@ void *fndPthread(void *name_voidptr)
         free(params[2]);
         
         hashPSet(recFndPthreads, name, (pthread_t *) -1);
+        dn_unlock(&recFndHashLock);
         return NULL;
     }
 #endif
+    dn_unlock(&recFndHashLock);
     return NULL;
 }
 
