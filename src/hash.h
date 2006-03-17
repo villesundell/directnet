@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -31,6 +31,7 @@ struct hashKey##hshortn { \
 }; \
 struct hash##hshortn { \
     struct hashKey##hshortn *head; \
+    DN_LOCK hlock; \
 }; \
 struct hash##hshortn *hash##hshortn##Create(); \
 void hash##hshortn##Destroy(struct hash##hshortn *hash); \
@@ -49,6 +50,7 @@ struct hashKeyS {
 
 struct hashS {
     struct hashKeyS *head;
+    DN_LOCK hlock;
 };
 
 struct hashKeyL {
@@ -59,6 +61,7 @@ struct hashKeyL {
 
 struct hashL {
     struct hashKeyL *head;
+    DN_LOCK hlock;
 };
 
 struct hashS *hashSCreate();
