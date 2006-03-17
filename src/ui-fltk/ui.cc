@@ -39,6 +39,7 @@ extern "C" {
 #include "FL/fl_ask.H"
 
 #include "AutoConnWindow.h"
+#include "AutoConnYNWindow.h"
 #include "AwayWindow.h"
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
@@ -292,11 +293,19 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
 void estConn(Fl_Input *w, void *ignore)
 {
     char *connTo;
+    AutoConnYNWindow *acynw = new AutoConnYNWindow();
     
     connTo = strdup(w->value());
     w->value("");
     establishConnection(connTo);
-    free(connTo);
+    
+    if (!checkAutoConnect(connTo)) {
+        acynw->hostname = connTo;
+        acynw->make_window();
+        acynw->autoConnYNWindow->show();
+    } else {
+        free(connTo);
+    }
 }
 
 void estFnd(Fl_Input *w, void *ignore)
@@ -573,6 +582,31 @@ void flAddAC(Fl_Input *hostname, void *ignore)
     addAutoConnect(hostname->value());
     bw->onlineList->insert(bw->onlineList->size(), hostname->value());
     acw->autoConnWindow->hide();
+}
+
+void flACYNClose(Fl_Double_Window *w, AutoConnYNWindow *acynw)
+{
+    acynw->autoConnYNWindow->hide();
+    free(acynw->hostname);
+    delete acynw;
+}
+
+void flACYNYes(Fl_Button *w, AutoConnYNWindow *acynw)
+{
+    if (!checkAutoConnect(acynw->hostname)) {
+        addAutoConnect(acynw->hostname);
+        bw->onlineList->insert(bw->onlineList->size(), acynw->hostname);
+    }
+    acynw->autoConnYNWindow->hide();
+    free(acynw->hostname);
+    delete acynw;
+}
+
+void flACYNNo(Fl_Button *w, AutoConnYNWindow *acynw)
+{
+    acynw->autoConnYNWindow->hide();
+    free(acynw->hostname);
+    delete acynw;
 }
 
 extern "C" void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
