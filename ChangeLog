@@ -1,9 +1,7 @@
-1.1.0CVS from 1.0.0 branch:
-        - Added prm to the PROTOCOL file.
-        - First rudimentary support for prm.
-
 CVS from 1.0.0:
         - Added gaim-plugin debug support.
+        - No longer include an internal copy of GMP.
+        - Autoconnection and autofind support.
 
 1.0.0 from 1.0.0.rc5:
         - Fixed gaim-plugin const problem (just removed consts, no functional
