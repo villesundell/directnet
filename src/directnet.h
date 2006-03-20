@@ -52,12 +52,6 @@ extern struct hashS *weakRoutes; // List of weak routes
 extern char dn_name[DN_NAME_LEN+1];
 extern char dn_name_set; // this is really a bool
 
-// our leader
-extern char dn_leader[DN_NAME_LEN+1];
-extern char dn_led; // really a bool
-extern char dn_is_leader; // really a bool
-extern DN_LOCK dn_leader_lock;
-
 // file descriptors by name
 extern struct hashI *dn_fds;
 
