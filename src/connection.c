@@ -70,19 +70,6 @@ void *communicator(void *fdnum_voidptr)
     addParam(buf, encExportKey());
     sendCmd(fdnum, buf);
     
-    // Count the number of connections to see if we should promote
-    /* TODO: This should have a timer: don't promote if you've been down from
-     * promotion for under ten minutes */
-    dn_lock(&dn_fd_lock);
-    connCount = 0;
-    for (curfd = 0; curfd < onfd; curfd++)
-        if (fds[curfd]) connCount++;
-    dn_unlock(&dn_fd_lock);
-    
-    if (connCount > 4) {
-        // TODO: promote();
-    }
-    
     buf[0] = '\0';
     
     // Input loop
@@ -571,47 +558,6 @@ void handleMsg(const char *rdbuf, int fdnum)
             
             return;
         }
-        
-    } else if (!strncmp(command, "prm", 3) &&
-               inbuf[3] == 1 && inbuf[4] == 1) {
-        int level;
-        
-        REQ_PARAMS(5);
-        
-        /* TODO: a list of previous leaders should be kept, to make sure that
-         * nobody tries to lead over and over */
-        
-        // before handling, should we resend this?
-        level = atoi(params[4]);
-        if (level <= 0) return; // must be at least 1
-        
-        else if (level == 1 && hashIGet(dn_trans_keys, params[0]) != -1)
-            return; // no repeats
-        
-        else {
-            level--;
-            
-            /* adjust the parameter to the new level
-             * (this can safely be done with sprintf since the length is
-             * guaranteed to be at worst the same) */
-            sprintf(params[3], "%d", level);
-            
-            if (!handleNRUnroutedMsg(fdnum, command, inbuf[3], inbuf[4], params))
-                return;
-        }
-        
-        // receive it like a "find"
-        recvFnd(params[1], params[2], params[3]);
-        
-        /* new promotions always outweight old ones, so simply ignore whoever
-         * led before */
-        dn_lock(&dn_leader_lock);
-        strncpy(params[2], dn_leader, DN_NAME_LEN);
-        dn_leader[DN_NAME_LEN] = '\0';
-        dn_led = 1;
-        dn_is_leader = 0;
-        // TODO: start a don't-be-a-leader-until thread
-        dn_unlock(&dn_leader_lock);
     }
 }
 
