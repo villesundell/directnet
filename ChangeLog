@@ -1,4 +1,4 @@
-CVS from 1.0.0:
+SVN from 1.0.0:
         - Added gaim-plugin debug support.
         - No longer include an internal copy of GMP.
         - Autoconnection and autofind support.
