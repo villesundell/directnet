@@ -21,10 +21,7 @@
 #ifndef DN_CHAT_H
 #define DN_CHAT_H
 
-#include "lock.h"
-
 extern struct hashS *dn_chats;
-extern DN_LOCK dn_chat_lock;
 
 /* Am I on this channel?
  * channel: the channel to query

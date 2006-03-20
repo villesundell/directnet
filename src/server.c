@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -41,38 +42,36 @@
 #include "directnet.h"
 #include "server.h"
 #include "ui.h"
+#include "dn_event.h"
 
-int server_sock;
-#ifdef WIN32
-BOOL sockets_init = FALSE;
-#endif
+//void *serverAcceptLoop(void *ignore);
+static void serverActivity(int cond, dn_event_t *ev);
+static void serverAccept(int fd);
 
-void *serverAcceptLoop(void *ignore);
-
-#ifdef WIN32
-void initSockets()
+static void initSockets()
 {
-  WSADATA dw;
-  if (sockets_init) return;
-  if (WSAStartup(MAKEWORD(1,1), &dw) != 0) { /*check for version 1.1 */
-	perror("WSAStartup - initializing winsock failed");
-	exit(-1);
-  }
-  sockets_init = TRUE;
+#ifdef WIN32
+    static BOOL sockets_init = FALSE;
+    WSADATA dw;
+    if (sockets_init) return;
+    if (WSAStartup(MAKEWORD(1,1), &dw) != 0) { /*check for version 1.1 */
+        perror("WSAStartup - initializing winsock failed");
+        exit(-1);
+    }
+    sockets_init = TRUE;
+#endif
 }
-#endif
 
-pthread_t *establishServer()
+dn_event_t *establishServer()
 {
+    int server_sock;
     int pthreadres;
     int yes=1;
-    pthread_t *newthread;
-    pthread_attr_t ptattr;
+    int flags;
+    dn_event_t *listen_ev;
     
     struct sockaddr_in addr;
-#ifdef WIN32
-	initSockets();
-#endif
+    initSockets();
 
     server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock == -1) {
@@ -99,65 +98,47 @@ pthread_t *establishServer()
         perror("listen");
         exit(-1);
     }
+
+    flags = fcntl(server_sock, F_GETFL);
+    fcntl(server_sock, F_SETFL, flags | O_NONBLOCK);
     
-    pthread_attr_init(&ptattr);
-    newthread = (pthread_t *) malloc(sizeof(pthread_t));
-    pthreadres = pthread_create(newthread, &ptattr, serverAcceptLoop, NULL);
+    listen_ev = malloc(sizeof *listen_ev);
+    if (!listen_ev)
+        abort();
+    listen_ev->payload = NULL;
+    listen_ev->event_type = DN_EV_FD;
+    listen_ev->event_info.fd.fd = server_sock;
+    listen_ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT;
+    listen_ev->event_info.fd.trigger = serverActivity;
+
+    dn_event_activate(listen_ev);
     
-    if (pthreadres == -1) {
-        perror("pthread_create");
-        exit(-1);
-    }
-    
-    return newthread;
 }
 
-void *serverAcceptLoop(void *ignore)
-{
+static void serverActivity(int cond, dn_event_t *ev) {
+    if (cond & DN_EV_EXCEPT) {
+        fprintf(stderr, "Our server socket seems to have imploded. That sounds fun; I'll do it too.\n");
+        abort();
+    }
+    serverAccept(ev->event_info.fd.fd);
+}
+
+static void serverAccept(int server_sock) {
     int sin_size, pthreadres, curfd;
     int acceptfd;
     struct communInfo *ci_ptr;
     struct sockaddr_in rem_addr;
     pthread_attr_t ptattr;
     
-    while(1) {
-        sin_size = sizeof(struct sockaddr_in);
-        
-        acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
-        
-        dn_lock(&dn_fd_lock);
-        for (curfd = 0; curfd < DN_MAX_CONNS && fds[curfd]; curfd++);
-	if (curfd == DN_MAX_CONNS) {
-		/* no more room! */
-		dn_unlock(&dn_fd_lock);
-		continue;
-	}
-	
-        fds[curfd] = acceptfd;
-        if (fds[curfd] == -1) {
-            fds[curfd] = 0;
-            perror("accept");
-            dn_unlock(&dn_fd_lock);
-            continue;
-        }
-        if (curfd >= onfd) onfd = curfd + 1;
-        dn_unlock(&dn_fd_lock);
-
-        uiEstConn(inet_ntoa(rem_addr.sin_addr));
-        
-        dn_lock(&pthread_lock);
-        ci_ptr = malloc(sizeof(struct communInfo));
-        ci_ptr->fdnum = curfd;
-        ci_ptr->pthreadnum = onpthread;
-        
-        pthread_attr_init(&ptattr);
-        
-	pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
-        pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) ci_ptr);
-        
-        onpthread++;
-        dn_unlock(&pthread_lock);
+    acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
+    fprintf(stderr, "accept=%d\n", acceptfd);
+    if (acceptfd < 0) {
+        perror("accept failed");
+        return;
     }
     
-    return NULL;
+    if (setupPeerConnection(acceptfd))
+        uiEstConn(inet_ntoa(rem_addr.sin_addr));
+    else
+        close(acceptfd);
 }

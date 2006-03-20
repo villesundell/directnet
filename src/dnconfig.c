@@ -27,7 +27,6 @@
 #include "connection.h"
 #include "directnet.h"
 #include "dnconfig.h"
-#include "lock.h"
 #include "globals.h"
 
 extern int errno;
@@ -36,8 +35,6 @@ char *dn_ac_list_f;
 char *dn_ac_list[DN_MAX_CONNS+1];
 char *dn_af_list_f;
 char *dn_af_list[DN_MAX_ROUTES+1];
-DN_LOCK dn_ac_lock;
-DN_LOCK dn_af_lock;
 
 /* initConfig
  * Input: none
@@ -136,10 +133,6 @@ void initConfig()
         fclose(aff);
     }
     
-    // init the locks
-    dn_lockInit(&dn_ac_lock);
-    dn_lockInit(&dn_af_lock);
-    
     free(cfgdir);
 }
 
@@ -152,13 +145,10 @@ void autoConnect()
 {
     int i;
     
-    dn_lock(&dn_ac_lock);
-    
     for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
-        establishClient(dn_ac_list[i]);
+        async_establishClient(dn_ac_list[i]);
     }
     
-    dn_unlock(&dn_ac_lock);
 }
 
 /* autoConnectThread
@@ -181,13 +171,11 @@ void autoFind()
 {
     int i;
     
-    dn_lock(&dn_af_lock);
     
     for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
         sendFnd(dn_af_list[i]);
     }
     
-    dn_unlock(&dn_af_lock);
 }
 
 /* addAutoConnect
@@ -200,11 +188,9 @@ void addAutoConnect(const char *hostname)
     FILE *outf;
     int i;
     
-    dn_lock(&dn_ac_lock);
     
     for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++);
     if (i == DN_MAX_CONNS) {
-        dn_unlock(&dn_ac_lock);
         return;
     }
     
@@ -215,13 +201,11 @@ void addAutoConnect(const char *hostname)
     // and the file
     outf = fopen(dn_ac_list_f, "a");
     if (!outf) {
-        dn_unlock(&dn_ac_lock);
         return;
     }
     fprintf(outf, "%s\n", hostname);
     fclose(outf);
     
-    dn_unlock(&dn_ac_lock);
 }
 
 /* addAutoFind
@@ -234,11 +218,9 @@ void addAutoFind(const char *nick)
     FILE *outf;
     int i;
     
-    dn_lock(&dn_af_lock);
     
     for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++);
     if (i == DN_MAX_ROUTES) {
-        dn_unlock(&dn_af_lock);
         return;
     }
     
@@ -249,13 +231,11 @@ void addAutoFind(const char *nick)
     // and the file
     outf = fopen(dn_af_list_f, "a");
     if (!outf) {
-        dn_unlock(&dn_af_lock);
         return;
     }
     fprintf(outf, "%s\n", nick);
     fclose(outf);
     
-    dn_unlock(&dn_af_lock);
 }
 
 /* remAutoConnect
@@ -268,7 +248,6 @@ void remAutoConnect(const char *hostname)
     FILE *outf;
     int i;
     
-    dn_lock(&dn_ac_lock);
     
     for (i = 0;
          i < DN_MAX_CONNS &&
@@ -276,7 +255,6 @@ void remAutoConnect(const char *hostname)
          strcmp(dn_ac_list[i], hostname);
          i++);
     if (i == DN_MAX_CONNS) {
-        dn_unlock(&dn_ac_lock);
         return;
     }
     
@@ -290,7 +268,6 @@ void remAutoConnect(const char *hostname)
     // then write out the file
     outf = fopen(dn_ac_list_f, "w");
     if (!outf) {
-        dn_unlock(&dn_ac_lock);
         return;
     }
     
@@ -300,7 +277,6 @@ void remAutoConnect(const char *hostname)
     
     fclose(outf);
     
-    dn_unlock(&dn_ac_lock);
 }
 
 /* remAutoFind
@@ -313,7 +289,6 @@ void remAutoFind(const char *nick)
     FILE *outf;
     int i;
     
-    dn_lock(&dn_af_lock);
     
     for (i = 0;
          i < DN_MAX_ROUTES &&
@@ -321,7 +296,6 @@ void remAutoFind(const char *nick)
          strcmp(dn_af_list[i], nick);
          i++);
     if (i == DN_MAX_ROUTES) {
-        dn_unlock(&dn_af_lock);
         return;
     }
     
@@ -335,7 +309,6 @@ void remAutoFind(const char *nick)
     // then write out the file
     outf = fopen(dn_af_list_f, "w");
     if (!outf) {
-        dn_unlock(&dn_af_lock);
         return;
     }
     
@@ -345,7 +318,6 @@ void remAutoFind(const char *nick)
     
     fclose(outf);
     
-    dn_unlock(&dn_af_lock);
 }
 
 /* checkAutoConnect
@@ -358,7 +330,6 @@ char checkAutoConnect(const char *hostname)
 {
     int i;
     
-    dn_lock(&dn_ac_lock);
     
     for (i = 0;
          i < DN_MAX_CONNS &&
@@ -366,7 +337,6 @@ char checkAutoConnect(const char *hostname)
          strcmp(dn_ac_list[i], hostname);
          i++);
     
-    dn_unlock(&dn_ac_lock);
     
     if (i == DN_MAX_CONNS || !dn_ac_list[i]) return 0;
     return 1;    
@@ -382,7 +352,6 @@ char checkAutoFind(const char *nick)
 {
     int i;
     
-    dn_lock(&dn_af_lock);
     
     for (i = 0;
          i < DN_MAX_ROUTES &&
@@ -390,7 +359,6 @@ char checkAutoFind(const char *nick)
          strcmp(dn_af_list[i], nick);
          i++);
     
-    dn_unlock(&dn_af_lock);
     
     if (i == DN_MAX_ROUTES || !dn_af_list[i]) return 0;
     return 1;    

@@ -29,21 +29,49 @@
 #include "directnet.h"
 #include "dnconfig.h"
 #include "enc.h"
-#include "lock.h"
 #include "ui.h"
+#include "dn_event.h"
+
+#include <assert.h>
+
+#include <sys/time.h>
+#include <event.h>
 
 char *currentPartner;
 char *crossinput;
 int cinp, cinpd;
 
+int hub = 0;
+const char *hubname;
+
 int handleUInput(const char *inp);
 int handleAuto(char **params);
 
-int uiInit(int argc, char ** argv, char **envp)
+void resetInputPrompt();
+
+int main(int argc, char ** argv, char **envp)
 {
     // This is the most basic UI
-    int charin, ostrlen;
+    int charin, ostrlen, i;
     char cmdbuf[32256];
+
+    event_init();
+
+    // strip out --hub so dn_init won't explode
+    // XXX: need better cmdline handling
+    // boost?
+    
+    for (i = 1; i < argc - 1; i++) {
+        if (!strcmp(argv[i], "--hub")) {
+            hub = 1;
+            hubname = argv[i+1];
+            memmove(&argv[i], &argv[i+2], sizeof argv[i] * (argc - i - 2));
+            argc -= 2;
+            break;
+        }
+    }
+    
+    dn_init(argc, argv);
     
     cinp = 0;
     cinpd = 0;
@@ -55,75 +83,91 @@ int uiInit(int argc, char ** argv, char **envp)
         return -1;
     }
     
+    if (!hub) {
 #ifndef __WIN32
-    /* Then authentication */
-    if (!authInit()) {
-        printf("Authentication failed to initialize!\n");
-        return -1;
-    } else if (authNeedPW()) {
-        char *nm, *pswd;
-        int osl;
-        
-        /* name */
-        nm = (char *) malloc(256 * sizeof(char));
-        printf("%s: ", authUsername);
-        fflush(stdout);
-        nm[255] = '\0';
-        fgets(nm, 255, stdin);
-        osl = strlen(nm) - 1;
-        if (nm[osl] == '\n') nm[osl] = '\0';
-        
-        /* don't input the pass if the UN was 0-length */
-        if (nm[0]) {
-            /* password */
-            pswd = (char *) malloc(256 * sizeof(char));
-            /* lame way to cover it */
-            printf("%s: \x1b[30;40m", authPW);
+        /* Then authentication */
+        if (!authInit()) {
+            printf("Authentication failed to initialize!\n");
+            return -1;
+        } else if (authNeedPW()) {
+            char *nm, *pswd;
+            int osl;
+            
+            /* name */
+            nm = (char *) malloc(256 * sizeof(char));
+            printf("%s: ", authUsername);
             fflush(stdout);
-            pswd[255] = '\0';
-            fgets(pswd, 255, stdin);
-            osl = strlen(pswd) - 1;
-            if (pswd[osl] == '\n') pswd[osl] = '\0';
-            printf("\x1b[0m");
-            fflush(stdout);
-        
-            authSetPW(nm, pswd);
-            free(pswd);
-        } else {
-            authSetPW(nm, "");
+            nm[255] = '\0';
+            fgets(nm, 255, stdin);
+            osl = strlen(nm) - 1;
+            if (nm[osl] == '\n') nm[osl] = '\0';
+            
+            /* don't input the pass if the UN was 0-length */
+            if (nm[0]) {
+                /* password */
+                pswd = (char *) malloc(256 * sizeof(char));
+                /* lame way to cover it */
+                printf("%s: \x1b[30;40m", authPW);
+                fflush(stdout);
+                pswd[255] = '\0';
+                fgets(pswd, 255, stdin);
+                osl = strlen(pswd) - 1;
+                if (pswd[osl] == '\n') pswd[osl] = '\0';
+                printf("\x1b[0m");
+                fflush(stdout);
+            
+                authSetPW(nm, pswd);
+                free(pswd);
+            } else {
+                authSetPW(nm, "");
+            }
+            
+            free(nm);
         }
-        
-        free(nm);
-    }
 #else
-    authSetPW("", "");
+        authSetPW("", "");
 #endif
-    
-    // Then asking for the nick
-    printf("What is your nick? ");
-    fgets(dn_name, DN_NAME_LEN, stdin);
-    dn_name[DN_NAME_LEN] = '\0';
-    
-    charin = strlen(dn_name);
-    if (dn_name[charin-1] == '\n') {
-        dn_name[charin-1] = '\0';
+        
+        // Then asking for the nick
+        printf("What is your nick? ");
+        fgets(dn_name, DN_NAME_LEN, stdin);
+        dn_name[DN_NAME_LEN] = '\0';
+        
+        charin = strlen(dn_name);
+        if (dn_name[charin-1] == '\n') {
+            dn_name[charin-1] = '\0';
+        }
+    } else { // hub mode
+        authSetPW("", "");
+        strcpy(dn_name, hubname);
     }
+        
     
     // And creating the key
     encCreateKey();
     
-    // dn_name_set is overloaded, it also means key is created
-    dn_name_set = 1;
+    if (hub)
+        setAway("This is a hub, there is no human reading your messages.");
     
     // You start in a conversation with nobody
     currentPartner = (char *) malloc(DN_NAME_LEN * sizeof(char));
     currentPartner[0] = '\0';
     
-    // OK, the UI is ready
-    uiLoaded = 1;
+    dn_goOnline();
     
-    while (1) {
+    if (!hub) {
         printf("%s> ", currentPartner);
+        fflush(stdout);
+
+        resetInputPrompt();
+    }
+
+    event_loop(0);
+    return 0;
+}
+
+#if 0
+    while (1) {
         fflush(stdout);
         fgets(cmdbuf, 32256, stdin);
         
@@ -141,6 +185,49 @@ int uiInit(int argc, char ** argv, char **envp)
     }
     
     return 0;
+}
+#endif
+
+dn_event_t input_ev;
+
+char inputBuffer[65536];
+int ib_pos = 0;
+
+static void inputEvent(int cond, dn_event_t *ev);
+
+void resetInputPrompt() {
+    input_ev.event_type = DN_EV_FD;
+    input_ev.event_info.fd.fd = 0;
+    input_ev.event_info.fd.trigger = inputEvent;
+    input_ev.event_info.fd.watch_cond = DN_EV_READ;
+    dn_event_activate(&input_ev);
+}
+
+void inputEvent(int cond, dn_event_t *ev) {
+    int i;
+    int ret = read(0, inputBuffer + ib_pos, sizeof inputBuffer - ib_pos);
+    if (ret <= 0) {
+        perror ("console read error, shutting down");
+        exit(1);
+    }
+    ib_pos += ret;
+    while (ib_pos) {
+        for (i = 0; i < ib_pos; i++) {
+            if (inputBuffer[i] == '\n') {
+                inputBuffer[i] = '\0';
+                goto got_input;
+            }
+        }
+        return;
+got_input:
+        handleUInput(inputBuffer);
+        memmove(inputBuffer, inputBuffer + i + 1, ib_pos - i - 1);
+        ib_pos -= i + 1;
+    }
+    if (!ib_pos) {
+        printf("%s> ", currentPartner);
+        fflush(stdout);
+    }
 }
 
 int handleUInput(const char *originp)
@@ -259,11 +346,9 @@ int handleAuto(char **params)
                 case 'L':
                     /* autoconnection list */
                     printf("Autoconnection list:\n");
-                    dn_lock(&dn_ac_lock);
                     for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
                         printf("%s\n", dn_ac_list[i]);
                     }
-                    dn_unlock(&dn_ac_lock);
                     break;
                     
                 case 'a':
@@ -300,11 +385,9 @@ int handleAuto(char **params)
                 case 'L':
                     /* autofind list */
                     printf("Autoconnection list:\n");
-                    dn_lock(&dn_af_lock);
                     for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
                         printf("%s\n", dn_af_list[i]);
                     }
-                    dn_unlock(&dn_af_lock);
                     break;
                     
                 case 'a':
@@ -344,14 +427,12 @@ int handleAuto(char **params)
 
 void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s [%s]%s: %s\n%s> ", from, authmsg, away ? " [away]" : "", msg, currentPartner);
     fflush(stdout);
 }
 
 void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s has asked you to import the key '%s'.  Do you accept?\n? ", from, sig);
     fflush(stdout);
     
@@ -369,42 +450,104 @@ void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 
 void uiDispChatMsg(const char *chat, const char *from, const char *msg)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n#%s: %s: %s\n%s> ", chat, from, msg, currentPartner);
     fflush(stdout);
 }
 
 void uiEstConn(const char *from)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s: Connection established.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiEstRoute(const char *from)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s: Route established.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiLoseConn(const char *from)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s: Connection lost.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiLoseRoute(const char *from)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s: Route lost.\n%s> ", from, currentPartner);
     fflush(stdout);
 }
 
 void uiNoRoute(const char *to)
 {
-    while (!uiLoaded) sleep(0);
     printf("\n%s: No route to user.\n%s> ", to, currentPartner);
     fflush(stdout);
 }
+
+struct dn_event_private {
+    struct event cevt;
+    dn_event_t *parent;
+};
+
+static void callback(int fd, short cond, void *payload) {
+    dn_event_t *ev = payload;
+    if (ev->event_type == DN_EV_FD) {
+        int c = 0;
+        if (cond & EV_READ)
+            c |= DN_EV_READ;
+        if (cond & EV_WRITE)
+            c |= DN_EV_WRITE;
+        ev->event_info.fd.trigger(c, ev);
+    } else if (ev->event_type = DN_EV_TIMER) {
+        /* libevent clears the event for us in this case, clean up
+         * the private data
+         */
+        free(ev->priv);
+        ev->priv = NULL;
+        ev->event_info.timer.trigger(ev);
+    } else assert(0 == "bad event type");
+}
+    
+#undef dn_event_activate
+
+void dn_event_activate(dn_event_t *ev) {
+    struct dn_event_private *priv = malloc(sizeof *priv);
+    priv->parent = ev;
+    ev->priv = priv;
+    switch (ev->event_type) {
+        case DN_EV_FD:
+            {
+                int cond = EV_PERSIST;
+                if (ev->event_info.fd.watch_cond & DN_EV_READ)
+                    cond |= EV_READ;
+                if (ev->event_info.fd.watch_cond & DN_EV_WRITE)
+                    cond |= EV_WRITE;
+                event_set(&priv->cevt, ev->event_info.fd.fd, cond, callback, ev);
+                event_add(&priv->cevt, NULL);
+                return;
+            }
+        case DN_EV_TIMER:
+            {
+                struct timeval tv;
+                gettimeofday(&tv, NULL);
+                tv.tv_sec = ev->event_info.timer.t_sec - tv.tv_sec;
+                tv.tv_usec = ev->event_info.timer.t_usec - tv.tv_usec;
+                tv.tv_sec += tv.tv_usec / 1000000;
+                tv.tv_usec %= 1000000;
+                evtimer_set(&priv->cevt, callback, ev);
+                event_add(&priv->cevt, &tv);
+                return;
+            }
+        default:
+            assert(0 == "bad event type");
+    }
+}
+
+void dn_event_deactivate(dn_event_t *ev) {
+    if (ev->priv == NULL) return;
+    event_del(&ev->priv->cevt);
+    free(ev->priv);
+    ev->priv = NULL;
+}
+
+

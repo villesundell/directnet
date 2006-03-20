@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -34,86 +35,223 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "auth.h"
 #include "chat.h"
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
+#include "dn_event.h"
 #include "enc.h"
 #include "hash.h"
 #include "ui.h"
 
+#define BUFSZ 65536
+
 char *awayMsg = NULL;
 
-void handleMsg(const char *inbuf, int fdnum);
+void handleMsg(conn_t *conn, const char *inbuf);
 int handleNLUnroutedMsg(char **params);
-int handleNRUnroutedMsg(int fromfd, const char *command, char vera, char verb, char **params);
+int handleNRUnroutedMsg(conn_t *from, const char *command, char vera, char verb, char **params);
 int sendMsgB(const char *to, const char *msg, char away, char sign);
 void recvFnd(char *route, const char *name, const char *key);
 
-void *communicator(void *fdnum_voidptr)
-{
-    int fdnum, pthreadnum, byterec, origstrlen;
+enum cev_state {
+    CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
+};
+
+struct connection {
+    conn_t *prev, *next;
+    int fd;
+    enum cev_state state;
+      
+    unsigned char *inbuf, *outbuf;
+    size_t inbuf_sz, outbuf_sz;
+    size_t inbuf_p, outbuf_p;
+      
+    char *name;
+ 
+    dn_event_t ev, *ping_ev;
+};
+ 
+static conn_t ring_head = {
+    &ring_head, &ring_head,
+    -1,
+    CDN_EV_DYING
+    /* ignore missing initializer warnings here */
+};
+ 
+static void send_handshake(struct connection *cs);
+static void async_send_handshake(dn_event_t *ev);
+static void conn_notify(int cond, dn_event_t *ev);
+static void kill_connection(conn_t *conn);
+static void destroy_conn(conn_t *conn);
+static void ping_send_ev(dn_event_t *ev);
+//static void ping_timeout(dn_event_t *ev);
+ 
+static void schedule_ping(conn_t *conn) {
+    assert(!conn->ping_ev);
+    conn->ping_ev = dn_event_trigger_after(ping_send_ev, conn, DN_KEEPALIVE_TIMER, 1);
+}
+ 
+static void ping_send_ev(dn_event_t *ev) {
+    conn_t *conn = ev->payload;
+    assert(conn->ping_ev == ev);
+    dn_event_deactivate(ev);
+    free(ev);
+    conn->ping_ev = NULL;
+ 
+    sendCmd(conn, "pin\x01\x01;");
+    //    conn->ping_ev = dn_event_trigger_after(ping_timeout, conn, 30, 0);
+    schedule_ping(conn);
+}
+ 
+#if 0
+static void ping_timeout(dn_event_t *ev) {
+    conn_t *conn = ev->payload;
+    assert(conn->ping_ev == ev);
+    dn_event_deactivate(ev);
+    free(ev);
+    conn->ping_ev = NULL;
+ 
+    fprintf("ping timeout on conn %p, fd %d\n", (void *)conn, conn->fd);
+    kill_connection(conn);
+}
+#endif
+ 
+void init_comms(int fd) {
+    struct connection *cs;
+    assert(fd >= 0);
+    cs = malloc(sizeof *cs);
+    if (!cs) abort();
+    cs->fd = fd;
+    cs->inbuf_sz = cs->outbuf_sz = BUFSZ;
+    cs->inbuf_p = cs->outbuf_p = 0;
+    cs->inbuf = malloc(cs->inbuf_sz);
+    cs->outbuf = malloc(cs->outbuf_sz);
+    cs->ev.payload = cs;
+    cs->ev.event_type = DN_EV_FD;
+    cs->ev.event_info.fd.fd = fd;
+    cs->ev.event_info.fd.watch_cond = DN_EV_READ | DN_EV_WRITE | DN_EV_EXCEPT;
+    cs->ev.event_info.fd.trigger = conn_notify;
+    cs->state = CDN_EV_IDLE;
+    cs->name = NULL;
+    cs->ping_ev = NULL;
+      
+    send_handshake(cs);
+}
+ 
+void send_handshake(conn_t *cs) {
     char buf[DN_CMD_LEN];
-    int connCount, curfd;
-    
-    fdnum = ((struct communInfo *) fdnum_voidptr)->fdnum;
-    pthreadnum = ((struct communInfo *) fdnum_voidptr)->pthreadnum;
-    free(fdnum_voidptr);
-    
-    dn_lockInit(pipe_locks+fdnum);
-    
-    // Immediately send our name and key unless it's not set
-    while (!dn_name_set) sleep(0);
+ 
+    cs->prev = &ring_head;
+    cs->next = ring_head.next;
+    cs->next->prev = cs;
+    cs->prev->next = cs;
+ 
+    dn_event_activate(&cs->ev);
     buildCmd(buf, "key", 1, 1, dn_name);
     addParam(buf, encExportKey());
-    sendCmd(fdnum, buf);
-    
-    buf[0] = '\0';
-    
-    // Input loop
-    while (1) {
-        // Receive a byte at a time
-        origstrlen = strlen(buf);
-        if (origstrlen >= DN_CMD_LEN - 1) origstrlen = DN_CMD_LEN - 1;
-        buf[origstrlen+1] = '\0';
-        
-        byterec = recv(fds[fdnum], buf+origstrlen, 1, 0);
-        
-        if (byterec == 1) {
-            if  (buf[origstrlen] == '\0') {
-                // We just received a \0, the message is over, so handle it
-                handleMsg(buf, fdnum);
-                buf[0] = '\0';
-            }
-        } else if (byterec <= 0) {
-            char *name;
-            
-            if (byterec == -1) {
-                perror("recv");
-            }
-            
-            // Disconnect
-            name = hashIRevGet(dn_fds, fdnum);
-            if (name != NULL) {
-                uiLoseConn(name);
-                hashSDelKey(dn_routes, name);
-                hashISet(dn_fds, name, -1);
-            }
-            
-            close(fds[fdnum]);
-            fds[fdnum] = 0;
-            break;
+    sendCmd(cs, buf);
+ 
+    schedule_ping(cs);
+}
+ 
+static void conn_notify_core(int cond, conn_t *conn) {
+      
+    if (cond & DN_EV_EXCEPT) {
+        // disconnect
+        kill_connection(conn);
+        return;
+    }
+ 
+    if (cond & DN_EV_READ) {
+        int ret, len;
+        if (conn->inbuf_p == conn->inbuf_sz) {
+            // buffer is full, break the connection
+            kill_connection(conn);
+            return;
+        }
+        ret = read(conn->fd, conn->inbuf + conn->inbuf_p, conn->inbuf_sz - conn->inbuf_p);
+        if (ret == 0) {
+            // connection closed
+            kill_connection(conn);
+            return;
+        }
+        if (ret < 0) {
+            perror("read()");
+            kill_connection(conn);
+            return;
+        }
+        conn->inbuf_p += ret;
+        while (conn->inbuf_p) {
+            int i;
+            for (i = 0; i < conn->inbuf_p; i++)
+                if (!conn->inbuf[i]) break;
+            if (conn->inbuf_p == i) break;
+            // \0 in msg, process it
+            handleMsg(conn, (char *) conn->inbuf);
+            memmove(conn->inbuf, conn->inbuf + i + 1, conn->inbuf_p - i - 1);
+            conn->inbuf_p -= i + 1;
         }
     }
-    
-    dn_lock(&pthread_lock);
-    free(pthreads[pthreadnum]);
-    pthreads[pthreadnum] = NULL;
-    dn_unlock(&pthread_lock);
-    
-    return NULL;
+ 
+    if (cond & DN_EV_WRITE) {
+        int ret;
+        ret = write(conn->fd, conn->outbuf, conn->outbuf_p);
+        if (ret < 0) {
+            perror ("write()");
+            kill_connection(conn);
+            return;
+        }
+        memmove(conn->outbuf, conn->outbuf + ret, conn->outbuf_p - ret);
+        conn->outbuf_p -= ret;
+    }
+      
+    dn_event_deactivate(&conn->ev);
+    conn->ev.event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT | (conn->outbuf_p ? DN_EV_WRITE : 0);
+    dn_event_activate(&conn->ev);
+}
+ 
+static void kill_connection(conn_t *conn) {
+    if (conn->state == CDN_EV_EVENT)
+        conn->state = CDN_EV_DYING;
+    else if (conn->state == CDN_EV_IDLE)
+        destroy_conn(conn);
+}
+ 
+static void conn_notify(int cond, dn_event_t *ev) {
+    conn_t *conn = ev->payload;
+    conn->state = CDN_EV_EVENT;
+    conn_notify_core(cond, conn);
+    if (conn->state == CDN_EV_DYING) {
+        destroy_conn(conn);
+    } else {
+        conn->state = CDN_EV_IDLE;
+    }
+}
+ 
+void destroy_conn(conn_t *conn) {
+    close(conn->fd);
+    if (conn->name) {
+        uiLoseConn(conn->name);
+        hashSDelKey(dn_routes, conn->name);
+    }
+    dn_event_deactivate(&conn->ev);
+    if (conn->ping_ev) {
+        dn_event_deactivate(conn->ping_ev);
+        free(conn->ping_ev);
+    }
+         
+    free(conn->name);
+    free(conn->inbuf);
+    free(conn->outbuf);
+ 
+    conn->next->prev = conn->prev;
+    conn->prev->next = conn->next;
+      
+    free(conn);
 }
 
 // Start building a command into a buffer
@@ -127,7 +265,7 @@ void buildCmd(char *into, const char *command, char vera, char verb, const char 
 }
 
 // Add a parameter into a command buffer
-void addParam(char *into, char *newparam)
+void addParam(char *into, const char *newparam)
 {
     /*sprintf(into+strlen(into), ";%s", newparam);*/
     into[DN_CMD_LEN - 2] = '\0';
@@ -140,16 +278,47 @@ void addParam(char *into, char *newparam)
 }
 
 // Send a command
-void sendCmd(int fdnum, const char *buf)
+void sendCmd(struct connection *conn, const char *buf)
 {
-    dn_lock(pipe_locks+fdnum);
-    if (fds[fdnum]) {
-        send(fds[fdnum], buf, strlen(buf)+1, 0);
+    int len, p;
+    size_t newsz = conn->outbuf_sz;
+
+    if (conn->fd < 0 || conn->state == CDN_EV_DYING)
+        return;
+    
+    len = strlen(buf) + 1;
+    p = 0;
+    if (conn->outbuf_p == 0) {
+        // try an immediate send, as an optimization
+        p = write(conn->fd, buf, len);
+        if (p < 0) {
+            /* Whoops, something broke.
+             * Let the event handler clean up.
+             */
+            p = 0;
+        }
+        if (p == len) /* all sent! */
+            return;
     }
-    dn_unlock(pipe_locks+fdnum);
+
+    while (conn->outbuf_p + len - p > newsz)
+        newsz += 16384;
+    if (newsz != conn->outbuf_sz) {
+        fprintf(stderr, "WARNING: Output buffer full for conn %p (%zu < %zu), expanding to %zu\n", (void *)conn, conn->outbuf_sz, conn->outbuf_p + len - p, newsz);
+        conn->outbuf = realloc(conn->outbuf, newsz);
+        if (!conn->outbuf) abort();
+        conn->outbuf_sz = newsz;
+    }
+
+    memcpy(conn->outbuf + conn->outbuf_p, buf + p, len - p);
+    conn->outbuf_p += len - p;
+
+    dn_event_deactivate(&conn->ev);
+    conn->ev.event_info.fd.watch_cond |= DN_EV_WRITE;
+    dn_event_activate(&conn->ev);
 }
 
-void *fndPthread(void *fdnum_voidptr);
+static void reap_fnd_later(const char *name);
 
 #define REQ_PARAMS(x) if (params[x-1] == NULL) return
 #define REJOIN_PARAMS(x) { \
@@ -160,12 +329,12 @@ void *fndPthread(void *fdnum_voidptr);
 	} \
 }
 			
-void handleMsg(const char *rdbuf, int fdnum)
+void handleMsg(conn_t *conn, const char *rdbuf)
 {
     char command[4], *params[DN_MAX_PARAMS];
     char *inbuf;
     int i, onparam, ostrlen;
-    
+
     // Get the command itself
     inbuf = alloca(strlen(rdbuf)+1);
     if (inbuf == NULL) { perror("strdup"); exit(1); }
@@ -246,12 +415,9 @@ void handleMsg(const char *rdbuf, int fdnum)
             int i;
             
             // Should we just ignore it?
-            dn_lock(&dn_transKey_lock);
             if (hashIGet(dn_trans_keys, params[1]) == -1) {
                 hashISet(dn_trans_keys, params[1], 1);
-                dn_unlock(&dn_transKey_lock);
             } else {
-                dn_unlock(&dn_transKey_lock);
                 return;
             }
         
@@ -303,12 +469,13 @@ void handleMsg(const char *rdbuf, int fdnum)
         
         if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
             // This doesn't work on OSX
-#ifndef __APPLE__
+#if 1 && !defined(__APPLE__)
             if (!strncmp(command, "dcr", 3) &&
                 inbuf[3] == 1 && inbuf[4] == 1) {
                 // dcr echos
                 char *outParams[DN_MAX_PARAMS];
                 char *rfe, *first;
+                conn_t *firc;
                 int firfd, locip_len;
                 struct sockaddr locip;
                 struct sockaddr_in *locip_i;
@@ -324,14 +491,14 @@ void handleMsg(const char *rdbuf, int fdnum)
                 
                 // grab before the first \n for the next name in the line
                 rfe = strchr(outParams[0], '\n');
-                if (rfe == NULL) return;
+                if (rfe == NULL) goto try_connect;
                 first = (char *) strdup(outParams[0]);
                 first[rfe - outParams[0]] = '\0';
                 // then get the fd
-                firfd = hashIGet(dn_fds, first);
-                if (firfd == -1) return;
-                firfd = fds[firfd];
+                firc = hashVGet(dn_conn, first);
                 free(first);
+                if (!firc) goto try_connect;
+                firfd = firc->fd;
                 // then turn the fd into a sockaddr
                 locip_len = sizeof(struct sockaddr);
                 if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
@@ -339,7 +506,7 @@ void handleMsg(const char *rdbuf, int fdnum)
                     /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
                     outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
                 } else {
-                    return;
+                    goto try_connect;
                 }
                 outParams[2] = realloc(outParams[2], strlen(outParams[2]) + 7);
                 sprintf(outParams[2] + strlen(outParams[2]), ":%d", serv_port);
@@ -348,15 +515,16 @@ void handleMsg(const char *rdbuf, int fdnum)
                 
                 free(outParams[2]);
             }
+try_connect:
             
             // Then, attempt the connection
-            establishClient(params[2]);
+            async_establishClient(params[2]);
 #endif
         }
 
     } else if (!strncmp(command, "fnd", 3) &&
         inbuf[3] == 1 && inbuf[4] == 1) {
-        int remfd;
+        conn_t *remc;
         char newroute[DN_ROUTE_LEN], ostrlen, outbuf[DN_CMD_LEN];
         
         REQ_PARAMS(4);
@@ -384,14 +552,14 @@ void handleMsg(const char *rdbuf, int fdnum)
         addParam(outbuf, params[3]);
         
         // Do I have a connection to this person?
-        remfd = hashIGet(dn_fds, params[2]);
-        if (remfd != -1) {
-            sendCmd(remfd, outbuf);
+        remc  = hashVGet(dn_conn, params[2]);
+        if (remc) {
+            sendCmd(remc, outbuf);
             return;
         }
         
         // If all else fails, continue the chain
-        emitUnroutedMsg(fdnum, outbuf);
+        emitUnroutedMsg(conn, outbuf);
     
     } else if (!strncmp(command, "fnr", 3) &&
                inbuf[3] == 1 && inbuf[4] == 1) {
@@ -485,7 +653,9 @@ void handleMsg(const char *rdbuf, int fdnum)
         }
         
         // now accept the new FD
-        hashISet(dn_fds, params[0], fdnum);
+        hashVSet(dn_conn, params[0], conn);
+        conn->name = strdup(params[0]);
+        if (!conn->name) abort();
         
         sprintf(route, "%s\n", params[0]);
         hashSSet(dn_routes, params[0], route);
@@ -563,7 +733,8 @@ void handleMsg(const char *rdbuf, int fdnum)
 
 int handleRoutedMsg(const char *command, char vera, char verb, char **params)
 {
-    int i, sendfd;
+    int i;
+    conn_t *sendc;
     char *route, *newroute, newbuf[DN_CMD_LEN];
     
     if (strlen(params[0]) == 0) {
@@ -576,9 +747,9 @@ int handleRoutedMsg(const char *command, char vera, char verb, char **params)
     route[i] = '\0';
     newroute = route+i+1;
     
-    sendfd = hashIGet(dn_fds, route);
+    sendc = hashVGet(dn_conn, route);
         
-    if (sendfd == -1) {
+    if (!sendc) {
         // We need to tell the other side that this route is dead!
         if (strncmp(command, "lst", 3)) {
             char *newparams[DN_MAX_PARAMS], *endu, *iroute;
@@ -619,7 +790,7 @@ int handleRoutedMsg(const char *command, char vera, char verb, char **params)
         addParam(newbuf, params[i]);
     }
     
-    sendCmd(sendfd, newbuf);
+    sendCmd(sendc, newbuf);
     
     free(route);
     return 0;
@@ -658,8 +829,7 @@ int handleNLUnroutedMsg(char **params)
     return 1;
 }
 
-int handleNRUnroutedMsg(int fromfd, const char *command, char vera, char verb, char **params)
-{
+int handleNRUnroutedMsg(conn_t *from, const char *command, char vera, char verb, char **params) {
     // This part of handleUnroutedMsg decides whether to just delete it
     if (hashIGet(dn_trans_keys, params[0]) == -1) {
         char outbuf[DN_CMD_LEN];
@@ -672,22 +842,24 @@ int handleNRUnroutedMsg(int fromfd, const char *command, char vera, char verb, c
         for (i = 1; params[i]; i++) {
             addParam(outbuf, params[i]);
         }
-        emitUnroutedMsg(fromfd, outbuf);
+        emitUnroutedMsg(from, outbuf);
         
         return 1;
     }
     return 0;
 }
 
-void emitUnroutedMsg(int fromfd, const char *outbuf)
+void emitUnroutedMsg(conn_t *from, const char *outbuf)
 {
     // This emits an unrouted message
-    int curfd;
+    conn_t *p;
+    if (!from)
+        from = &ring_head;
+    p = from->next;
 
-    for (curfd = 0; curfd < onfd; curfd++) {
-        if (curfd != fromfd) {
-            sendCmd(curfd, outbuf);
-        }
+    while (p != from) {
+        sendCmd(p, outbuf);
+        p = p->next;
     }
 }
 
@@ -697,23 +869,11 @@ void recvFnd(char *route, const char *name, const char *key)
     char *routeElement[DN_MAX_PARAMS], *outparams[5];
     char reverseRoute[DN_ROUTE_LEN];
     int onRE, i, ostrlen;
-    DN_LOCK *recFndLock;
-    pthread_t *curPthread;
     char newroute[DN_ROUTE_LEN];
     
     memset(routeElement, 0, DN_MAX_PARAMS * sizeof(char *));
     memset(outparams, 0, 5 * sizeof(char *));
     
-    // Get a fnd receive lock.  This is actually a lock on a hash of locks ... weird, I know
-    dn_lock(&recFndHashLock);
-        
-    // Now that we have the hash locked, lock our particular lock in the hash (gack)
-    recFndLock = hashLGet(recFndLocks, name);
-    dn_lock(recFndLock);
-            
-    // And give up the lock on the hash
-    dn_unlock(&recFndHashLock);
-            
     // Start with the current route
     SF_strncpy(newroute, route, DN_ROUTE_LEN);
             
@@ -734,17 +894,15 @@ void recvFnd(char *route, const char *name, const char *key)
     }
     routeElement[onRE] = NULL;
 
+    // FIXME: needs event hash
     // Get the pthread
-    curPthread = hashPGet(recFndPthreads, name);
+    // curPthread = hashPGet(recFndPthreads, name);
             
     // If we haven't started one, good
-    if (curPthread == (pthread_t *) -1) {
-        pthread_attr_t ptattr;
-        void *route_voidptr;
-                
-        // This is the first fnd received, but ignore it if we already have a route
+//    if (curPthread == (pthread_t *) -1) {
+    if (1) {
+    // This is the first fnd received, but ignore it if we already have a route
         if (hashSGet(dn_routes, name)) {
-            dn_unlock(recFndLock);
             return;
         }
                 
@@ -780,15 +938,10 @@ void recvFnd(char *route, const char *name, const char *key)
         
         uiEstRoute(name);
         
-        route_voidptr = (void *) malloc((strlen(name) + 1) * sizeof(char));
-        strcpy((char *) route_voidptr, name);
-        
-        pthread_attr_init(&ptattr);
-        curPthread = (pthread_t *) malloc(sizeof(pthread_attr_t));
-        pthread_create(curPthread, &ptattr, fndPthread, route_voidptr);
+        reap_fnd_later(name);
         
         // Put it back where it belongs
-        hashPSet(recFndPthreads, name, curPthread);
+        // hashPSet(recFndPthreads, name, curPthread);
     } else {
         char oldWRoute[DN_ROUTE_LEN];
         char *curWRoute;
@@ -804,7 +957,6 @@ void recvFnd(char *route, const char *name, const char *key)
             
             curroute = hashSGet(dn_routes, name);
             if (curroute == NULL) {
-                dn_unlock(recFndLock);
                 return;
             }
             
@@ -850,26 +1002,28 @@ void recvFnd(char *route, const char *name, const char *key)
         hashSSet(weakRoutes, name, curWRoute);
     }
     
-    dn_unlock(recFndLock);
 }
 
-// fndPthread is the pthread that harvests late fnds
-void *fndPthread(void *name_voidptr)
+static void fnd_reap(dn_event_t *ev);
+
+static void reap_fnd_later(const char *name_p) {
+    char *name;
+    if (!name_p) abort();
+    name = strdup(name_p);
+    if (!name) abort();
+    dn_event_trigger_after(fnd_reap, name, 15, 0);
+}
+    
+
+static void fnd_reap(dn_event_t *ev)
 {
-    char name[DN_NAME_LEN+1];
+    char *name = ev->payload;
     char isWeak = 0;
     char *curWRoute;
     
-    SF_strncpy(name, (char *) name_voidptr, DN_NAME_LEN+1);
-    free(name_voidptr);
+    dn_event_deactivate(ev);
+    free(ev);
     
-#ifndef __WIN32
-    sleep(15);
-#else
-    Sleep(15000);
-#endif
-    
-    dn_lock(&recFndHashLock);
     
     // Figure out if there's a weak route
     curWRoute = hashSGet(weakRoutes, name);
@@ -885,9 +1039,8 @@ void *fndPthread(void *name_voidptr)
     }
     
     if (!isWeak) {
-        hashPSet(recFndPthreads, name, (pthread_t *) -1);
-        dn_unlock(&recFndHashLock);
-        return NULL;
+        //hashPSet(recFndPthreads, name, (pthread_t *) -1);
+        return;
     }
     
     // If it's weak, send a dcr (direct connect request) (except on OSX where it doesn't work)
@@ -898,6 +1051,7 @@ void *fndPthread(void *name_voidptr)
         struct sockaddr_in *locip_i;
         char *rfe;
         int firfd, locip_len;
+        conn_t *firc;
         
         memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
         
@@ -907,20 +1061,18 @@ void *fndPthread(void *name_voidptr)
         // grab before the first \n for the next name in the line
         rfe = strchr(params[0], '\n');
         if (rfe == NULL) {
-            dn_unlock(&recFndHashLock);
-            return NULL;
+            return;
         }
         first = (char *) strdup(params[0]);
         first[rfe - params[0]] = '\0';
         
         // then get the fd
-        firfd = hashIGet(dn_fds, first);
-        if (firfd == -1) {
-            dn_unlock(&recFndHashLock);
-            return NULL;
-        }
-        firfd = fds[firfd];
+        firc = hashVGet(dn_conn, first);
         free(first);
+        if (!firc) {
+            return;
+        }
+        firfd = firc->fd;
         // then turn the fd into a sockaddr
         locip_len = sizeof(struct sockaddr);
         if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
@@ -928,8 +1080,7 @@ void *fndPthread(void *name_voidptr)
             /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
             params[2] = strdup(inet_ntoa(locip_i->sin_addr));
         } else {
-            dn_unlock(&recFndHashLock);
-            return NULL;
+            return;
         }
         params[2] = realloc(params[2], strlen(params[2]) + 7);
         sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
@@ -938,17 +1089,15 @@ void *fndPthread(void *name_voidptr)
         
         free(params[2]);
         
-        hashPSet(recFndPthreads, name, (pthread_t *) -1);
-        dn_unlock(&recFndHashLock);
-        return NULL;
+//        hashPSet(recFndPthreads, name, (pthread_t *) -1);
+        return;
     }
 #endif
-    dn_unlock(&recFndHashLock);
-    return NULL;
+    return;
 }
 
 /* Commands used by the UI */
-int establishConnection(const char *to)
+void establishConnection(const char *to)
 {
     char *route;
     
@@ -972,11 +1121,9 @@ int establishConnection(const char *to)
         handleRoutedMsg("dcr", 1, 1, params);
         
         free(params[2]);
-        
-        return 1;
     } else {
         // It's a hostname or IP
-        return establishClient(to);
+        async_establishClient(to);
     }
 }
 
@@ -1040,18 +1187,8 @@ int sendAuthKey(const char *to)
     }
 }
 
-void sendFnd(const char *to)
-{
+void sendFnd(const char *toc) {
     char outbuf[DN_CMD_LEN];
-    char *toc = strdup(to);
-    if (toc == NULL) { perror("strdup"); exit(1); }
-    
-    // this can happen before dn_name is set, don't jump the gun
-    if (!dn_name_set) {
-        while (!dn_name_set) sleep(0);
-        // a very silly way to make sure that 'key' has been sent
-        sleep(1);
-    }
     
     // Find a user by name
     buildCmd(outbuf, "fnd", 1, 1, "");
@@ -1059,9 +1196,7 @@ void sendFnd(const char *to)
     addParam(outbuf, toc);
     addParam(outbuf, encExportKey());
         
-    emitUnroutedMsg(-1, outbuf);
-    
-    free(toc);
+    emitUnroutedMsg(NULL, outbuf);
 }
 
 void joinChat(const char *chat)

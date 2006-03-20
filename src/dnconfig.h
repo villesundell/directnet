@@ -21,8 +21,6 @@
 #ifndef DN_DNCONFIG_H
 #define DN_DNCONFIG_H
 
-#include "lock.h"
-
 // configuration functions
 
 /* initConfig
@@ -102,7 +100,5 @@ extern char *dn_ac_list_f;
 extern char *dn_ac_list[DN_MAX_CONNS+1];
 extern char *dn_af_list_f;
 extern char *dn_af_list[DN_MAX_ROUTES+1];
-extern DN_LOCK dn_ac_lock;
-extern DN_LOCK dn_af_lock;
 
 #endif

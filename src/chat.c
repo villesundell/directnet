@@ -24,20 +24,15 @@
 
 #include "globals.h"
 #include "hash.h"
-#include "lock.h"
 
 struct hashS *dn_chats;
-DN_LOCK dn_chat_lock;
 
 char chatOnChannel(const char *channel)
 {
-    dn_lock(&dn_chat_lock);
     
     if (hashSGet(dn_chats, channel) != NULL) {
-        dn_unlock(&dn_chat_lock);
         return 1;
     } else {
-        dn_unlock(&dn_chat_lock);
         return 0;
     }
 }
@@ -46,7 +41,6 @@ void chatAddUser(const char *channel, const char *name)
 {
     char *prev, *new;
     
-    dn_lock(&dn_chat_lock);
     
     prev = hashSGet(dn_chats, channel);
     if (!prev) {
@@ -61,7 +55,6 @@ void chatAddUser(const char *channel, const char *name)
     
     free(new);
     
-    dn_unlock(&dn_chat_lock);
 }
 
 void chatRemUser(const char *channel, const char *name)
@@ -69,7 +62,6 @@ void chatRemUser(const char *channel, const char *name)
     char *prev, *each[DN_MAX_PARAMS], *new, *newp;
     int i, j;
     
-    dn_lock(&dn_chat_lock);
     
     memset(each, 0, DN_MAX_PARAMS * sizeof(char *));
     
@@ -114,7 +106,6 @@ void chatRemUser(const char *channel, const char *name)
     
     free(new);
     
-    dn_unlock(&dn_chat_lock);
 }
 
 char **chatUsers(const char *channel)
@@ -122,7 +113,6 @@ char **chatUsers(const char *channel)
     char *prev, **each;
     int i, j;
     
-    dn_lock(&dn_chat_lock);
     
     each = (char **) malloc(DN_MAX_PARAMS * sizeof(char *));
     
@@ -149,23 +139,18 @@ char **chatUsers(const char *channel)
         }
     }
     
-    dn_unlock(&dn_chat_lock);
     
     return each;
 }
 
 void chatJoin(const char *channel)
 {
-    dn_lock(&dn_chat_lock);
     if (!hashSGet(dn_chats, channel)) {
         hashSSet(dn_chats, channel, "");
     }
-    dn_unlock(&dn_chat_lock);
 }
 
 void chatLeave(const char *channel)
 {
-    dn_lock(&dn_chat_lock);
     hashSDelKey(dn_chats, channel);
-    dn_unlock(&dn_chat_lock);
 }

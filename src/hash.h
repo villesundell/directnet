@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -21,8 +22,6 @@
 #ifndef DN_HASH_H
 #define DN_HASH_H
 
-#include "lock.h"
-
 #define DN_HASH_INTLIKE_H(htype, hshortn) \
 struct hashKey##hshortn { \
     char *key; \
@@ -31,7 +30,6 @@ struct hashKey##hshortn { \
 }; \
 struct hash##hshortn { \
     struct hashKey##hshortn *head; \
-    DN_LOCK hlock; \
 }; \
 struct hash##hshortn *hash##hshortn##Create(); \
 void hash##hshortn##Destroy(struct hash##hshortn *hash); \
@@ -41,6 +39,7 @@ void hash##hshortn##Set(struct hash##hshortn *hash, const char *key, htype value
 
 DN_HASH_INTLIKE_H(int, I)
 DN_HASH_INTLIKE_H(pthread_t *, P)
+DN_HASH_INTLIKE_H(void *, V)
 
 struct hashKeyS {
     char *key;
@@ -50,18 +49,6 @@ struct hashKeyS {
 
 struct hashS {
     struct hashKeyS *head;
-    DN_LOCK hlock;
-};
-
-struct hashKeyL {
-    char *key;
-    DN_LOCK value;
-    struct hashKeyL *next;
-};
-
-struct hashL {
-    struct hashKeyL *head;
-    DN_LOCK hlock;
 };
 
 struct hashS *hashSCreate();
@@ -70,19 +57,5 @@ char *hashSGet(struct hashS *hash, const char *key);
 char *hashSRevGet(struct hashS *hash, const char *value);
 void hashSSet(struct hashS *hash, const char *key, const char *value);
 void hashSDelKey(struct hashS *hash, const char *key);
-
-struct hashL *hashLCreate();
-void hashLDestroy(struct hashL *hash);
-DN_LOCK *hashLGet(struct hashL *hash, const char *key);
-
-/*struct hashKey {
-    char key[24];
-    int value;
-};
-struct hashKey **hashCreate(int count);
-void hashDestroy(struct hashKey **hash);
-int hashGet(struct hashKey **hash, char *key);
-char *hashRevGet(struct hashKey **hash, int value);
-void hashSet(struct hashKey **hash, char *key, int value);*/
 
 #endif // DN_HASH_H

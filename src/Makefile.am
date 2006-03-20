@@ -1,7 +1,5 @@
 SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@ 
 
-CC=@PTHREAD_CC@
-
 bin_PROGRAMS=directnet
 
 if UI_CXX
@@ -14,17 +12,15 @@ connection.c \
 directnet.c \
 dnconfig.c \
 hash.c \
-keepalive.c \
-lock.c \
 server.c \
 whereami.c \
 fake.cc
 
-directnetcxx_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
-directnetcxx_CXXFLAGS=@PTHREAD_CFLAGS@ @UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
+directnetcxx_CFLAGS=@UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
+directnetcxx_CXXFLAGS=@UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
 directnetcxx_LDFLAGS=@UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
 directnetcxx_DEPENDENCIES=@UI_DIR@/libui.a  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
-directnetcxx_LDADD=@PTHREAD_CFLAGS@ @PTHREAD_LIBS@ @UI_DIR@/libui.a \
+directnetcxx_LDADD=@UI_DIR@/libui.a \
  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @UI_LIBS@ @ENC_LIBS@ @AUTH_LIBS@
 
 else
@@ -37,15 +33,13 @@ connection.c \
 directnet.c \
 dnconfig.c \
 hash.c \
-keepalive.c \
-lock.c \
 server.c \
 whereami.c
 
-directnetc_CFLAGS=@PTHREAD_CFLAGS@ @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
-directnetc_LDFLAGS=@PTHREAD_CFLAGS@ @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
+directnetc_CFLAGS=@UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
+directnetc_LDFLAGS=@UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
 directnetc_DEPENDENCIES=@UI_DIR@/libui.a @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
-directnetc_LDADD=@PTHREAD_LIBS@ @UI_DIR@/libui.a @ENC_DIR@/libenc.a \
+directnetc_LDADD=@UI_DIR@/libui.a @ENC_DIR@/libenc.a \
  @AUTH_DIR@/libauth.a @UI_LIBS@ @ENC_LIBS@ @AUTH_LIBS@
 
 endif
@@ -61,15 +55,13 @@ connection.c \
 directnet.c \
 dnconfig.c \
 hash.c \
-keepalive.c \
-lock.c \
 server.c \
 whereami.c
 
-directnethub_CFLAGS=@PTHREAD_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
-directnethub_LDFLAGS=@PTHREAD_CFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
+directnethub_CFLAGS=@ENC_CFLAGS@ @AUTH_CFLAGS@
+directnethub_LDFLAGS=@ENC_LDFLAGS@ @AUTH_LDFLAGS@
 directnethub_DEPENDENCIES=@HUB_DIR@/libhub.a @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
-directnethub_LDADD=@PTHREAD_LIBS@ @HUB_DIR@/libhub.a @ENC_DIR@/libenc.a \
+directnethub_LDADD=@HUB_DIR@/libhub.a @ENC_DIR@/libenc.a \
  @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@
 
 endif
@@ -87,17 +79,15 @@ connection.c \
 directnet.c \
 dnconfig.c \
 hash.c \
-keepalive.c \
-lock.c \
 server.c
 
-libdirectnet_gaim_la_CFLAGS=@PTHREAD_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@ \
+libdirectnet_gaim_la_CFLAGS=@ENC_CFLAGS@ @AUTH_CFLAGS@ \
  @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
-libdirectnet_gaim_la_LDFLAGS=@PTHREAD_CFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@ \
+libdirectnet_gaim_la_LDFLAGS=@ENC_LDFLAGS@ @AUTH_LDFLAGS@ \
  -module -avoid-version -Wl,--export-dynamic
 libdirectnet_gaim_la_DEPENDENCIES=@GAIM_PLUGIN_DIR@/libgaim_plugin.a \
  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
-libdirectnet_gaim_la_LIBADD=@PTHREAD_LIBS@ @GAIM_PLUGIN_DIR@/libgaim_plugin.a \
+libdirectnet_gaim_la_LIBADD=@GAIM_PLUGIN_DIR@/libgaim_plugin.a \
  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@ @GAIM_LIBS@
 
 endif

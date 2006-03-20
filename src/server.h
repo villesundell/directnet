@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -22,11 +23,9 @@
 #define DN_SERVER_H
 
 #include <pthread.h>
-
-/* The fd of the server's socket */
-extern int server_sock;
+#include "dn_event.h"
 
 /* Set up the server (a pthread) */
-pthread_t *establishServer();
+dn_event_t *establishServer();
 
 #endif // DN_SERVER_H

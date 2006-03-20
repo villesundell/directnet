@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -21,10 +22,17 @@
 #ifndef DN_CONNECTION_H
 #define DN_CONNECTION_H
 
+struct connection;
+typedef struct connection conn_t;
+
 /* Establish a connection (for use by the UI)
  * to: user, hostname or IP to connect to
- * returns: 1 on success, 0 otherwise */
-int establishConnection(const char *to);
+ */
+void establishConnection(const char *to);
+
+/* Begin peer communication on an opened file handle
+ */
+void init_comms(int fd);
 
 /* Send a message (for use by the UI)
  * to: user to send to
@@ -69,12 +77,12 @@ void buildCmd(char *into, const char *command, char vera, char verb, const char 
 /* Add a parameter to a command buffer
  * into: buffer to add to
  * newparam: the param to add */
-void addParam(char *into, char *newparam);
+void addParam(char *into, const char *newparam);
 
 /* Send a command buffer to an fd
  * fdnum: the fd to send to
  * buf: the buffer to send */
-void sendCmd(int fdnum, const char *buf);
+void sendCmd(struct connection *conn, const char *buf);
 
 /* Continue a routed message or tell the calling function to handle it
  * command: the command
@@ -86,7 +94,7 @@ int handleRoutedMsg(const char *command, char vera, char verb, char **params);
 /* Send an unrouted message
  * fromfd: the fd NOT to send it to, -1 to send everywhere
  * outbuf: the buffer to send */
-void emitUnroutedMsg(int fromfd, const char *outbuf);
+void emitUnroutedMsg(conn_t *from, const char *outbuf);
 
 /* The main communication method for a connection (a pthread)
  * fdnum_voidptr: a void * to an int with the fdnum */

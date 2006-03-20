@@ -36,12 +36,6 @@ AC_PROG_CXX
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-# Pthreads are absolutely necessary
-ACX_PTHREAD([], AC_MSG_ERROR([ERROR: Pthreads library not found!]))
-AC_SUBST(PTHREAD_CC)
-AC_SUBST(PTHREAD_CFLAGS)
-AC_SUBST(PTHREAD_LIBS)
-
 # On solaris, we need -lnsl and -lsocket
 AC_CHECK_LIB([c], [socket],
         AS_MESSAGE([This is not a Solaris or Win32 system.]),
@@ -142,6 +136,10 @@ then
         found_ui=yes
         ui=dumb
         AS_MESSAGE([Using dumb UI])
+        AC_CHECK_LIB([event], [event_loop], [
+                      LIBS="-levent $LIBS"
+                      ], [AC_MSG_FAILURE([libevent not found])])
+        AC_CHECK_HEADERS([event.h], [], [AC_MSG_FAILURE([event.h not found])])
 fi
 
 

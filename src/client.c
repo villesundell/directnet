@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -27,6 +28,8 @@
 #include <winsock.h>
 #endif
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -36,17 +39,21 @@
 #include "connection.h"
 #include "directnet.h"
 #include "dnconfig.h"
+#include "client.h"
+#include "dn_event.h"
+#include <errno.h>
 
-int establishClient(const char *destination)
+static void connect_act(int cond, dn_event_t *ev);
+
+void async_establishClient(const char *destination)
 {
-    int pthreadres, curfd;
+    int flags, ret;
     struct communInfo *ci_ptr;
     struct hostent *he;
     struct sockaddr_in addr;
     //struct in_addr inIP;
-    pthread_attr_t ptattr;
     char *hostname;
-    int i, port, firstc;
+    int i, port, fd;
 
     /* split 'destination' into 'hostname' and 'port' */
     hostname = strdup(destination);
@@ -61,33 +68,18 @@ int establishClient(const char *destination)
     
     he = gethostbyname(hostname);
     if (he == NULL) {
-        free(hostname);
-        return 0;
+        return;
     }
+    free(hostname);
 
-    dn_lock(&dn_fd_lock);
-    firstc = 0;
-    
-    for (curfd = 0; curfd < DN_MAX_CONNS && fds[curfd]; curfd++);
-    if (curfd == DN_MAX_CONNS) {
-	    /* no more room! */
-	    dn_unlock(&dn_fd_lock);
-	    return 0;
-    }
-    
-    if (curfd == 0 && !fds[1]) {
-        // this is the first connection
-        firstc = 1;
-    }
-    
-    fds[curfd] = socket(AF_INET, SOCK_STREAM, 0);
-    if (fds[curfd] == -1) {
-        fds[curfd] = 0;
+       
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd == -1) {
         perror("socket");
-        dn_unlock(&dn_fd_lock);
-        return 0;
+        return;
     }
-    if (curfd >= onfd) onfd = curfd + 1;
+    flags = fcntl(fd, F_GETFL);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -95,33 +87,43 @@ int establishClient(const char *destination)
     /*inet_aton(hostname, &inIP);
     addr.sin_addr = inIP;*/
     memset(&(addr.sin_zero), '\0', 8);
-    dn_unlock(&dn_fd_lock);
 
-    if (connect(fds[curfd], (struct sockaddr *)&addr, sizeof(struct sockaddr)) == -1) {
-        //perror("connect");
-        free(hostname);
-        dn_lock(&dn_fd_lock);
-        fds[curfd] = 0;
-        dn_unlock(&dn_fd_lock);
-        return 0;
+    ret = connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr));
+    if (errno != EINPROGRESS) {
+        perror("connect()");
+        close(fd);
+        return;
     }
-    
-    dn_lock(&pthread_lock);
-    ci_ptr = malloc(sizeof(struct communInfo));
-    ci_ptr->fdnum = curfd;
-    ci_ptr->pthreadnum = onpthread;
-    pthread_attr_init(&ptattr);
-    
-    pthreads[onpthread] = (pthread_t *) malloc(sizeof(pthread_t));
-    pthreadres = pthread_create(pthreads[onpthread], &ptattr, communicator, (void *) ci_ptr);
-    
-    onpthread++;
-    dn_unlock(&pthread_lock);
-    
+    dn_event_fd_watch(connect_act, NULL, DN_EV_READ | DN_EV_WRITE, fd);
+}
+ 
+static void connect_act(int cond, dn_event_t *ev) {
+    static int firstc = 1;
+    int fd = ev->event_info.fd.fd;
+    dn_event_deactivate(ev);
+    free(ev);
+ 
+    char dummy;
+    int ret;
+ 
+    ret = read(fd, &dummy, 0);
+    if (ret < 0) {
+        perror("async connect");
+        close(fd);
+        return;
+    }
+      
+    setupPeerConnection(fd);
+        
     // if this is the first connection, do autofind
-    if (firstc) autoFind();
-    
-    free(hostname);
-    
-    return 1;
+    if (firstc) {
+        firstc = 0;
+        autoFind();
+    }
+      
+    return;
+}
+ 
+void setupPeerConnection(int fd) {
+    init_comms(fd);
 }

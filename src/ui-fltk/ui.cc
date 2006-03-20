@@ -1,5 +1,6 @@
 /*
  * Copyright 2005, 2006  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -30,7 +31,6 @@ extern "C" {
 #include "dnconfig.h"
 #include "globals.h"
 #include "enc.h"
-#include "lock.h"
 #include "ui.h"
 }
 
@@ -55,9 +55,6 @@ BuddyWindow *bw;
 ChatWindow *cws[1024];
 AutoConnWindow *acw;
 
-bool wantLock;
-DN_LOCK wantLock_lock;
-
 // keep track of where the buddies end and the connection list begins in onlineLis
 int olConnsLoc;
 
@@ -68,28 +65,13 @@ ChatWindow *showcw = NULL;
 
 int flt1_ask(const char *msg, int t1)
 {
-    static char *umsg = NULL;
-    static int theret = 0;
-    
-    if (t1) {
-        /* I'm thread one, just try to display */
-        if (!umsg) return 0;
-        Fl::flush();
-        theret = fl_ask(umsg);
-        free(umsg);
-        umsg = NULL;
-        return 0;
-    } else {
-        /* I'm not thread one, wait for the answer */
-        while (umsg) sleep(0);
-        umsg = strdup(msg);
-        while (umsg) sleep(0);
-        return theret;
-    }
+    return fl_ask(msg);
 }
 
-extern "C" int uiInit(int argc, char **argv, char **envp)
+extern "C" int main(int argc, char **argv, char **envp)
 {
+    dn_init(argc, argv);
+    
     /* Always start by finding encryption */
     if (findEnc(envp) == -1) {
         printf("No encryption binaries were found on your PATH!\n");
@@ -131,10 +113,6 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     /* And creating the key */
     encCreateKey();
     
-    /* wantlock allows other threads to get the display lock */
-    wantLock = false;
-    dn_lockInit(&wantLock_lock);
-    
     /* blank our array of windows */
     memset(cws, 0, 1024 * sizeof(ChatWindow *));
 
@@ -143,7 +121,8 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
     nw->make_window();
     nw->nameWindow->show();
     
-    /*Fl::run();*/
+    Fl::run();
+#if 0 
     while (!uiQuit) {
         while (wantLock) sleep(0);
         
@@ -161,25 +140,9 @@ extern "C" int uiInit(int argc, char **argv, char **envp)
         Fl::wait(1);
         dn_unlock(&displayLock);
     }
+#endif
 
     return 0;
-}
-
-void wantDisplayLock()
-{
-    while (true) {
-        if (!wantLock) {
-            dn_lock(&wantLock_lock);
-            if (wantLock) {
-                dn_unlock(&wantLock_lock);
-                continue;
-            }
-            wantLock = true;
-            dn_unlock(&wantLock_lock);
-            break;
-        }
-        sleep(0);
-    }
 }
 
 ChatWindow *getWindow(const char *name)
@@ -188,13 +151,7 @@ ChatWindow *getWindow(const char *name)
     
     for (i = 0; cws[i] != NULL; i++) {
         if (!strcmp(cws[i]->chatWindow->label(), name)) {
-            /*cws[i]->chatWindow->show();*/
-            dn_unlock(&displayLock);
-            while (showcw) sleep(0);
-            wantDisplayLock();
-            dn_lock(&displayLock);
-            wantLock = false;
-            showcw = cws[i];
+            cws[i]->chatWindow->show();
             return cws[i];
         }
     }
@@ -209,13 +166,7 @@ ChatWindow *getWindow(const char *name)
         cws[i]->bAutoFind->label("Add to Autofind List");
     }
     
-    /*cws[i]->chatWindow->show();*/
-    dn_unlock(&displayLock);
-    while (showcw) sleep(0);
-    wantDisplayLock();
-    dn_lock(&displayLock);
-    wantLock = false;
-    showcw = cws[i];
+    cws[i]->chatWindow->show();
     
     return cws[i];
 }
@@ -236,7 +187,6 @@ void setName(Fl_Input *w, void *ignore)
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
-    dn_name_set = 1;
     nw->nameWindow->hide();
     
     /* make the buddy window */
@@ -248,7 +198,6 @@ void setName(Fl_Input *w, void *ignore)
     bw->onlineList->add("@c@mBuddies");
     
     /* add the autofind list */
-    dn_lock(&dn_af_lock);
     for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
         char *toadd = (char *) malloc(strlen(dn_af_list[i]) + 3);
         if (!toadd) { perror("malloc"); exit(1); }
@@ -256,12 +205,10 @@ void setName(Fl_Input *w, void *ignore)
         bw->onlineList->add(toadd);
         free(toadd);
     }
-    dn_unlock(&dn_af_lock);
     
     /* add the autoconnect list */
     bw->onlineList->add("@c@mAutomatic Connections");
     olConnsLoc = bw->onlineList->size();
-    dn_lock(&dn_ac_lock);
     for (i = 0; i < DN_MAX_ROUTES && dn_ac_list[i]; i++) {
         char *toadd = (char *) malloc(strlen(dn_ac_list[i]) + 3);
         if (!toadd) { perror("malloc"); exit(1); }
@@ -269,12 +216,13 @@ void setName(Fl_Input *w, void *ignore)
         bw->onlineList->add(toadd);
         free(toadd);
     }
-    dn_unlock(&dn_ac_lock);
     
     /* finally, the option to add new autoconnections */
     bw->onlineList->add("@c@iAdd new autoconnection");
     
     uiLoaded = 1;
+
+    dn_goOnline();
 }
 
 void mainWinClosed(Fl_Double_Window *w, void *ignore)
@@ -293,13 +241,14 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
 void estConn(Fl_Input *w, void *ignore)
 {
     char *connTo;
-    AutoConnYNWindow *acynw = new AutoConnYNWindow();
+    AutoConnYNWindow *acynw;
     
     connTo = strdup(w->value());
     w->value("");
     establishConnection(connTo);
     
     if (!checkAutoConnect(connTo)) {
+        acynw = new AutoConnYNWindow();
         acynw->hostname = connTo;
         acynw->make_window();
         acynw->autoConnYNWindow->show();
@@ -479,11 +428,7 @@ void flDispMsg(const char *window, const char *from, const char *msg, const char
     ChatWindow *cw;
     char *dispmsg;
     
-    while (!uiLoaded) sleep(0);
-    
-    wantDisplayLock();
-    dn_lock(&displayLock);
-    wantLock = false;
+    assert(uiLoaded);
     
     dispmsg = (char *) alloca((strlen(from) + (authmsg ? strlen(authmsg) : 0) +
                                strlen(msg) + 7) * sizeof(char));
@@ -496,8 +441,6 @@ void flDispMsg(const char *window, const char *from, const char *msg, const char
     cw = getWindow(window);
     
     putOutput(cw, dispmsg);
-    
-    dn_unlock(&displayLock);
 }
 
 void flAddRemAutoFind(Fl_Button *btn, void *)
@@ -619,7 +562,7 @@ extern "C" void uiAskAuthImport(const char *from, const char *msg, const char *s
 {
     int i;
     
-    while (!uiLoaded) sleep(0);
+    assert(uiLoaded);
     
     char *q = (char *) malloc((strlen(from) + strlen(sig) + 51) * sizeof(char));
     sprintf(q, "%s has asked you to import the key\n'%s'\nDo you accept?", from, sig);
@@ -637,7 +580,7 @@ extern "C" void uiAskAuthImport(const char *from, const char *msg, const char *s
         }
     }
     
-    if (flt1_ask(q, 0)) {
+    if (fl_ask(q, 0)) {
         authImport(msg);
     }
     free(q);
@@ -663,11 +606,7 @@ extern "C" void uiEstRoute(const char *from)
     ChatWindow *cw;
     int i, mustadd, addbefore;
     
-    while (!uiLoaded) sleep(0);
-    
-    wantDisplayLock();
-    dn_lock(&displayLock);
-    wantLock = false;
+    assert(uiLoaded);
     
     // Only add if necessary
     mustadd = 1;
@@ -701,7 +640,6 @@ extern "C" void uiEstRoute(const char *from)
         free(toadd);
     }
     
-    dn_unlock(&displayLock);
 }
 
 void removeFromList(const char *name)
@@ -734,30 +672,18 @@ extern "C" void uiLoseConn(const char *from)
 {
     ChatWindow *cw;
     
-    while (!uiLoaded) sleep(0);
-    
-    wantDisplayLock();
-    dn_lock(&displayLock);
-    wantLock = false;
+    assert(uiLoaded);
     
     removeFromList(from);
-    
-    dn_unlock(&displayLock);
 }
 
 extern "C" void uiLoseRoute(const char *from)
 {
     ChatWindow *cw;
     
-    while (!uiLoaded) sleep(0);
-    
-    wantDisplayLock();
-    dn_lock(&displayLock);
-    wantLock = false;
+    assert(uiLoaded);
     
     removeFromList(from);
-    
-    dn_unlock(&displayLock);
 }
 
 extern "C" void uiNoRoute(const char *to)

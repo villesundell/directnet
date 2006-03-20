@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -25,7 +26,6 @@
 
 #include "globals.h"
 #include "hash.h"
-#include "lock.h"
 
 #ifdef GAIM_PLUGIN
 int pluginMain(int argc, char **argv, char **envp);
@@ -35,26 +35,16 @@ extern pthread_t *serverPthread;
 extern pthread_t *keepalivePthread;
 extern int serv_port;
 
-extern int *fds, *pipe_fds, onfd, onpthread;
-extern pthread_t **pthreads;
-extern DN_LOCK pthread_lock;
-extern int onfd;
-extern DN_LOCK dn_fd_lock;
-
-extern DN_LOCK *pipe_locks;
-
-extern DN_LOCK recFndHashLock; // Lock on the following hash
 extern struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
 extern struct hashP *recFndPthreads; // And the pthreads themselves
 extern struct hashS *weakRoutes; // List of weak routes
 
 // our name
 extern char dn_name[DN_NAME_LEN+1];
-extern char dn_name_set; // this is really a bool
 
-// file descriptors by name
-extern struct hashI *dn_fds;
-
+// connections by name
+extern struct hashV *dn_conn;
+  
 // route by name
 extern struct hashS *dn_routes;
 
@@ -66,12 +56,6 @@ extern struct hashI *dn_trans_keys;
 
 // our position in the transkey list
 extern int currentTransKey;
-
-// lock on transkey stuff
-extern DN_LOCK dn_transKey_lock;
-
-// lock on display
-extern DN_LOCK displayLock;
 
 // is the ui loaded?
 extern char uiLoaded;
@@ -88,5 +72,8 @@ struct communInfo {
 };
 
 void newTransKey(char *into);
+
+void dn_init(int argc, char **argv);
+void dn_goOnline();
 
 #endif // DN_DIRECTNET_H

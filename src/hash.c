@@ -1,5 +1,6 @@
 /*
  * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -24,14 +25,12 @@
 #include "directnet.h"
 #include "globals.h"
 #include "hash.h"
-#include "lock.h"
 
-#define DN_HASH_INTLIKE_C(htype, hshortn) \
+#define DN_HASH_INTLIKE_C(htype, hshortn, defval) \
 struct hash##hshortn *hash##hshortn##Create() \
 { \
     struct hash##hshortn *hash = (struct hash##hshortn *) malloc(sizeof(struct hash##hshortn)); \
     hash->head = NULL; \
-    dn_lockInit(&(hash->hlock)); \
     return hash; \
 } \
 \
@@ -54,39 +53,31 @@ htype hash##hshortn##Get(struct hash##hshortn *hash, const char *key) \
 { \
     struct hashKey##hshortn *cur; \
     \
-    dn_lock(&(hash->hlock)); \
-    \
     cur = hash->head; \
     \
     while (cur) { \
         if (!strcmp(cur->key, key)) { \
-            dn_unlock(&(hash->hlock)); \
             return cur->value; \
         } \
         cur = cur->next; \
     } \
     \
-    dn_unlock(&(hash->hlock)); \
-    return (htype) -1; \
+    return (defval); \
 } \
 \
 char *hash##hshortn##RevGet(struct hash##hshortn *hash, htype value) \
 { \
     struct hashKey##hshortn *cur; \
     \
-    dn_lock(&(hash->hlock)); \
-    \
     cur = hash->head; \
     \
     while (cur) { \
         if (cur->value == value) { \
-            dn_unlock(&(hash->hlock)); \
             return cur->key; \
         } \
         cur = cur->next; \
     } \
     \
-    dn_unlock(&(hash->hlock)); \
     return NULL; \
 } \
 \
@@ -95,14 +86,11 @@ void hash##hshortn##Set(struct hash##hshortn *hash, const char *key, htype value
     struct hashKey##hshortn *cur; \
     struct hashKey##hshortn *toadd; \
     \
-    dn_lock(&(hash->hlock)); \
-    \
     cur = hash->head; \
     \
     while (cur) { \
         if (!strcmp(cur->key, key)) { \
             cur->value = value; \
-            dn_unlock(&(hash->hlock)); \
             return; \
         } \
         cur = cur->next; \
@@ -119,11 +107,11 @@ void hash##hshortn##Set(struct hash##hshortn *hash, const char *key, htype value
     } else { \
         hash->head = toadd; \
     } \
-    dn_unlock(&(hash->hlock)); \
 }
 
-DN_HASH_INTLIKE_C(int, I)
-DN_HASH_INTLIKE_C(pthread_t *, P)
+DN_HASH_INTLIKE_C(int, I, -1)
+DN_HASH_INTLIKE_C(pthread_t *, P, (pthread_t *)-1)
+DN_HASH_INTLIKE_C(void *, V, NULL)
 
 
 
@@ -134,7 +122,6 @@ struct hashS *hashSCreate()
 {
     struct hashS *hash = (struct hashS *) malloc(sizeof(struct hashS));
     hash->head = NULL;
-    dn_lockInit(&(hash->hlock));
     return hash;
 }
 
@@ -158,19 +145,15 @@ char *hashSGet(struct hashS *hash, const char *key)
 {
     struct hashKeyS *cur;
     
-    dn_lock(&(hash->hlock));
-    
     cur = hash->head;
     
     while (cur) {
         if (!strcmp(cur->key, key)) {
-            dn_unlock(&(hash->hlock));
             return cur->value;
         }
         cur = cur->next;
     }
     
-    dn_unlock(&(hash->hlock));
     return NULL;
 }
 
@@ -178,19 +161,15 @@ char *hashSRevGet(struct hashS *hash, const char *value)
 {
     struct hashKeyS *cur;
     
-    dn_lock(&(hash->hlock));
-    
     cur = hash->head;
     
     while (cur) {
         if (!strcmp(cur->value, value)) {
-            dn_unlock(&(hash->hlock));
             return cur->key;
         }
         cur = cur->next;
     }
     
-    dn_unlock(&(hash->hlock));
     return NULL;
 }
 
@@ -199,15 +178,12 @@ void hashSSet(struct hashS *hash, const char *key, const char *value)
     struct hashKeyS *cur;
     struct hashKeyS *toadd;
     
-    dn_lock(&(hash->hlock));
-    
     cur = hash->head;
     
     while (cur) {
         if (!strcmp(cur->key, key)) {
             if (cur->value) free(cur->value);
             cur->value = strdup(value);
-            dn_unlock(&(hash->hlock));
             return;
         }
         cur = cur->next;
@@ -225,14 +201,11 @@ void hashSSet(struct hashS *hash, const char *key, const char *value)
     } else {
         hash->head = toadd;
     }
-    dn_unlock(&(hash->hlock));
 }
 
 void hashSDelKey(struct hashS *hash, const char *key)
 {
     struct hashKeyS *cur;
-    
-    dn_lock(&(hash->hlock));
     
     cur = hash->head;
     
@@ -240,136 +213,8 @@ void hashSDelKey(struct hashS *hash, const char *key)
         if (!strcmp(cur->key, key)) {
             if (cur->value) free(cur->value);
             cur->value = NULL;
-            dn_unlock(&(hash->hlock));
             return;
         }
         cur = cur->next;
     }
-    dn_unlock(&(hash->hlock));
 }
-
-
-
-
-
-// Then locks
-struct hashL *hashLCreate()
-{
-    struct hashL *hash = (struct hashL *) malloc(sizeof(struct hashL));
-    hash->head = NULL;
-    dn_lockInit(&(hash->hlock));
-    return hash;
-}
-
-void hashLDestroy(struct hashL *hash)
-{
-    struct hashKeyL *cur = hash->head;
-    struct hashKeyL *next;
-    
-    while (cur) {
-        next = cur->next;
-        free(cur->key);
-        free(cur);
-        cur = next;
-    }
-    
-    free(hash);
-}
-
-DN_LOCK *hashLGet(struct hashL *hash, const char *key)
-{
-    struct hashKeyL *cur;
-    struct hashKeyL *toadd;
-    
-    dn_lock(&(hash->hlock));
-    
-    cur = hash->head;
-    
-    while (cur) {
-        if (!strcmp(cur->key, key)) {
-            dn_unlock(&(hash->hlock));
-            return &(cur->value);
-        }
-        cur = cur->next;
-    }
-    
-    // We have to create and initialize a lock for this
-    toadd = (struct hashKeyL *) malloc(sizeof(struct hashKeyL));
-    toadd->key = strdup(key);
-    dn_lockInit(&(toadd->value));
-    toadd->next = NULL;
-    
-    if (hash->head) {
-        cur = hash->head;
-        while (cur->next) cur = cur->next;
-        cur->next = toadd;
-    } else {
-        hash->head = toadd;
-    }
-    
-    dn_unlock(&(hash->hlock));
-    
-    return &(toadd->value);
-}
-
-/*
-// There are int versions and string versions, int first
-
-struct hashKey **hashCreate(int count)
-{
-return (struct hashKey **) malloc(count * sizeof(struct hashKey *));
-}
-
-void hashDestroy(struct hashKey **hash)
-{
-int i;
-    
-for (i = 0; hash[i] != NULL; i++) {
-free(hash[i]);
-}
-    
-free(hash);
-}
-
-int hashGet(struct hashKey **hash, char *key)
-{
-int i;
-    
-for (i = 0; hash[i] != NULL; i++) {
-if (!strncmp(hash[i]->key, key, 25)) {
-return hash[i]->value;
-}
-}
-    
-return -1;
-}
-
-char *hashRevGet(struct hashKey **hash, int value)
-{
-int i;
-    
-for (i = 0; hash[i] != NULL; i++) {
-if (hash[i]->value == value) {
-return hash[i]->key;
-}
-}
-    
-return NULL;
-}
-
-void hashSet(struct hashKey **hash, char *key, int value)
-{
-int i;
-    
-for (i = 0; hash[i] != NULL; i++) {
-if (!strncmp(hash[i]->key, key, 25)) {
-hash[i]->value = value;
-return;
-}
-}
-    
-hash[i] = (struct hashKey *) malloc(sizeof(struct hashKey));
-strncpy(hash[i]->key, key, 25);
-hash[i]->value = value;
-}
-*/
