@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
@@ -22,10 +22,13 @@
 #ifndef DN_CLIENT_H
 #define DN_CLIENT_H
 
+#include <string>
+using namespace std;
+
 /* Connect in the background to a hostname or IP
  * destination: the hostname or IP
  */
-void async_establishClient(const char *destination);
+void async_establishClient(const string &destination);
 
 /* Establish a client connection handler on an open fd. */
 void setupPeerConnection(int fd);
