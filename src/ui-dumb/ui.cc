@@ -232,7 +232,7 @@ got_input:
 
 int handleUInput(const char *originp)
 {
-    char *inp = alloca(strlen(originp)+1);
+    char *inp = (char *) alloca(strlen(originp)+1);
     strcpy(inp, originp);
     
     // Is it crossinput?
@@ -490,7 +490,7 @@ struct dn_event_private {
 };
 
 static void callback(int fd, short cond, void *payload) {
-    dn_event_t *ev = payload;
+    dn_event_t *ev = (dn_event_t *) payload;
     if (ev->event_type == DN_EV_FD) {
         int c = 0;
         if (cond & EV_READ)
@@ -511,7 +511,7 @@ static void callback(int fd, short cond, void *payload) {
 #undef dn_event_activate
 
 void dn_event_activate(dn_event_t *ev) {
-    struct dn_event_private *priv = malloc(sizeof *priv);
+    struct dn_event_private *priv = (struct dn_event_private *) malloc(sizeof *priv);
     priv->parent = ev;
     ev->priv = priv;
     switch (ev->event_type) {

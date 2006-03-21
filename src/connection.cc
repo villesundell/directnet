@@ -95,7 +95,7 @@ static void schedule_ping(conn_t *conn) {
 }
  
 static void ping_send_ev(dn_event_t *ev) {
-    conn_t *conn = ev->payload;
+    conn_t *conn = (conn_t *) ev->payload;
     assert(conn->ping_ev == ev);
     dn_event_deactivate(ev);
     free(ev);
@@ -122,13 +122,13 @@ static void ping_timeout(dn_event_t *ev) {
 void init_comms(int fd) {
     struct connection *cs;
     assert(fd >= 0);
-    cs = malloc(sizeof *cs);
+    cs = (struct connection *) malloc(sizeof *cs);
     if (!cs) abort();
     cs->fd = fd;
     cs->inbuf_sz = cs->outbuf_sz = BUFSZ;
     cs->inbuf_p = cs->outbuf_p = 0;
-    cs->inbuf = malloc(cs->inbuf_sz);
-    cs->outbuf = malloc(cs->outbuf_sz);
+    cs->inbuf = (unsigned char *) malloc(cs->inbuf_sz);
+    cs->outbuf = (unsigned char *) malloc(cs->outbuf_sz);
     cs->ev.payload = cs;
     cs->ev.event_type = DN_EV_FD;
     cs->ev.event_info.fd.fd = fd;
@@ -221,7 +221,7 @@ static void kill_connection(conn_t *conn) {
 }
  
 static void conn_notify(int cond, dn_event_t *ev) {
-    conn_t *conn = ev->payload;
+    conn_t *conn = (conn_t *) ev->payload;
     conn->state = CDN_EV_EVENT;
     conn_notify_core(cond, conn);
     if (conn->state == CDN_EV_DYING) {
@@ -304,7 +304,7 @@ void sendCmd(struct connection *conn, const char *buf)
         newsz += 16384;
     if (newsz != conn->outbuf_sz) {
         fprintf(stderr, "WARNING: Output buffer full for conn %p (%zu < %zu), expanding to %zu\n", (void *)conn, conn->outbuf_sz, conn->outbuf_p + len - p, newsz);
-        conn->outbuf = realloc(conn->outbuf, newsz);
+        conn->outbuf = (unsigned char *) realloc(conn->outbuf, newsz);
         if (!conn->outbuf) abort();
         conn->outbuf_sz = newsz;
     }
@@ -335,7 +335,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
     int i, onparam, ostrlen;
 
     // Get the command itself
-    inbuf = alloca(strlen(rdbuf)+1);
+    inbuf = (char *) alloca(strlen(rdbuf)+1);
     if (inbuf == NULL) { perror("strdup"); exit(1); }
     strcpy(inbuf, rdbuf);
     strncpy(command, inbuf, 3);
@@ -494,7 +494,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 first = (char *) strdup(outParams[0]);
                 first[rfe - outParams[0]] = '\0';
                 // then get the fd
-                firc = hashVGet(dn_conn, first);
+                firc = (conn_t *) hashVGet(dn_conn, first);
                 free(first);
                 if (!firc) goto try_connect;
                 firfd = firc->fd;
@@ -507,7 +507,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 } else {
                     goto try_connect;
                 }
-                outParams[2] = realloc(outParams[2], strlen(outParams[2]) + 7);
+                outParams[2] = (char *) realloc(outParams[2], strlen(outParams[2]) + 7);
                 sprintf(outParams[2] + strlen(outParams[2]), ":%d", serv_port);
                 
                 handleRoutedMsg("dce", 1, 1, outParams);
@@ -551,7 +551,7 @@ try_connect:
         addParam(outbuf, params[3]);
         
         // Do I have a connection to this person?
-        remc  = hashVGet(dn_conn, params[2]);
+        remc = (conn_t *) hashVGet(dn_conn, params[2]);
         if (remc) {
             sendCmd(remc, outbuf);
             return;
@@ -746,7 +746,7 @@ int handleRoutedMsg(const char *command, char vera, char verb, char **params)
     route[i] = '\0';
     newroute = route+i+1;
     
-    sendc = hashVGet(dn_conn, route);
+    sendc = (conn_t *) hashVGet(dn_conn, route);
         
     if (!sendc) {
         // We need to tell the other side that this route is dead!
@@ -1012,7 +1012,7 @@ static void reap_fnd_later(const char *name_p) {
 
 static void fnd_reap(dn_event_t *ev)
 {
-    char *name = ev->payload;
+    char *name = (char *) ev->payload;
     char isWeak = 0;
     char *curWRoute;
     
@@ -1062,7 +1062,7 @@ static void fnd_reap(dn_event_t *ev)
         first[rfe - params[0]] = '\0';
         
         // then get the fd
-        firc = hashVGet(dn_conn, first);
+        firc = (conn_t *) hashVGet(dn_conn, first);
         free(first);
         if (!firc) {
             return;
@@ -1077,7 +1077,7 @@ static void fnd_reap(dn_event_t *ev)
         } else {
             return;
         }
-        params[2] = realloc(params[2], strlen(params[2]) + 7);
+        params[2] = (char *) realloc(params[2], strlen(params[2]) + 7);
         sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
         
         handleRoutedMsg("dcr", 1, 1, params);
@@ -1205,7 +1205,7 @@ void joinChat(const char *chat)
     char *outParams[4];
     
     memset(outParams, 0, 4 * sizeof(char *));
-    outParams[1] = alloca(strlen(chat)+1);
+    outParams[1] = (char *) alloca(strlen(chat)+1);
     if (outParams[1] == NULL) { perror("alloca"); exit(1); }
     strcpy(outParams[1], chat);
     outParams[2] = dn_name;
@@ -1232,7 +1232,7 @@ void leaveChat(const char *chat)
     char *outParams[4];
     
     memset(outParams, 0, 4 * sizeof(char *));
-    outParams[1] = alloca(strlen(chat)+1);
+    outParams[1] = (char *) alloca(strlen(chat)+1);
     if (outParams[1] == NULL) { perror("alloca"); exit(1); }
     strcpy(outParams[1], chat);
     outParams[2] = dn_name;
@@ -1260,7 +1260,7 @@ void sendChat(const char *to, const char *msg)
     
     outParams[1] = key;
     outParams[2] = dn_name;
-    outParams[3] = alloca(strlen(to)+1);
+    outParams[3] = (char *) alloca(strlen(to)+1);
     if (outParams[3] == NULL) { perror("alloca"); exit(1); }
     strcpy(outParams[3], to);
     outParams[4] = dn_name;

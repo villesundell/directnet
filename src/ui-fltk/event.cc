@@ -19,9 +19,7 @@
  */
 
 
-extern "C" {
 #include "dn_event.h"
-}
 
 #include <cstdlib>
 #include <FL/Fl.H>

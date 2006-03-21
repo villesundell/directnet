@@ -109,7 +109,7 @@ dn_event_t *establishServer()
     ioctlsocket(server_sock, FIONBIO, &nblock);
 #endif
     
-    listen_ev = malloc(sizeof *listen_ev);
+    listen_ev = (dn_event_t *) malloc(sizeof *listen_ev);
     if (!listen_ev)
         abort();
     listen_ev->payload = NULL;

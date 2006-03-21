@@ -19,8 +19,6 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-extern "C" {
-#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -32,7 +30,6 @@ extern "C" {
 #include "globals.h"
 #include "enc.h"
 #include "ui.h"
-}
 
 #include <iostream>
 

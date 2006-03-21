@@ -39,7 +39,7 @@ char chatOnChannel(const char *channel)
 
 void chatAddUser(const char *channel, const char *name)
 {
-    char *prev, *new;
+    char *prev, *newu;
     
     
     prev = hashSGet(dn_chats, channel);
@@ -47,19 +47,19 @@ void chatAddUser(const char *channel, const char *name)
         prev = "";
     }
     
-    new = (char *) malloc((strlen(prev) + strlen(name) + 2) * sizeof(char));
+    newu = (char *) malloc((strlen(prev) + strlen(name) + 2) * sizeof(char));
     
-    sprintf(new, "%s%s\n", prev, name);
+    sprintf(newu, "%s%s\n", prev, name);
     
-    hashSSet(dn_chats, channel, new);
+    hashSSet(dn_chats, channel, newu);
     
-    free(new);
+    free(newu);
     
 }
 
 void chatRemUser(const char *channel, const char *name)
 {
-    char *prev, *each[DN_MAX_PARAMS], *new, *newp;
+    char *prev, *each[DN_MAX_PARAMS], *newu, *newp;
     int i, j;
     
     
@@ -72,9 +72,9 @@ void chatRemUser(const char *channel, const char *name)
         return;
     }
     
-    new = (char *) malloc((strlen(prev) + 1) * sizeof(char));
-    new[0] = '\0';
-    newp = new;
+    newu = (char *) malloc((strlen(prev) + 1) * sizeof(char));
+    newu[0] = '\0';
+    newp = newu;
     
     /* split it */
     each[0] = prev;
@@ -102,9 +102,9 @@ void chatRemUser(const char *channel, const char *name)
     *newp = '\0';
     
     /* and put it back */
-    hashSSet(dn_chats, channel, new);
+    hashSSet(dn_chats, channel, newu);
     
-    free(new);
+    free(newu);
     
 }
 
