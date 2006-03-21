@@ -138,7 +138,7 @@ void autoConnect()
     set<string>::iterator aci;
     
     for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
-        async_establishClient(aci->c_str());
+        async_establishClient(*aci);
     }
     
 }

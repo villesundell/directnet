@@ -488,7 +488,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             }
             
             // Then, attempt the connection
-            async_establishClient(msg.params[2].c_str());
+            async_establishClient(msg.params[2]);
 #endif
         }
 
@@ -993,7 +993,7 @@ void establishConnection(const string &to)
         handleRoutedMsg(omsg);
     } else {
         // It's a hostname or IP
-        async_establishClient(to.c_str());
+        async_establishClient(to);
     }
 }
 
