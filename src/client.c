@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
@@ -48,12 +48,14 @@ static void connect_act(int cond, dn_event_t *ev);
 void async_establishClient(const char *destination)
 {
     int flags, ret;
-    struct communInfo *ci_ptr;
     struct hostent *he;
     struct sockaddr_in addr;
     //struct in_addr inIP;
     char *hostname;
     int i, port, fd;
+#ifdef __WIN32
+    unsigned long nblock;
+#endif
 
     /* split 'destination' into 'hostname' and 'port' */
     hostname = strdup(destination);
@@ -78,8 +80,13 @@ void async_establishClient(const char *destination)
         perror("socket");
         return;
     }
+#ifndef __WIN32
     flags = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+#else
+    nblock = 1;
+    ioctlsocket(fd, FIONBIO, &nblock);
+#endif
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -87,9 +94,15 @@ void async_establishClient(const char *destination)
     /*inet_aton(hostname, &inIP);
     addr.sin_addr = inIP;*/
     memset(&(addr.sin_zero), '\0', 8);
-
+    
     ret = connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr));
-    if (errno != EINPROGRESS) {
+    if (
+#ifndef __WIN32
+        errno != EINPROGRESS
+#else
+        ret == 0 || WSAGetLastError() != WSAEWOULDBLOCK
+#endif
+        ) {
         perror("connect()");
         close(fd);
         return;
@@ -105,16 +118,18 @@ static void connect_act(int cond, dn_event_t *ev) {
  
     char dummy;
     int ret;
- 
-    ret = read(fd, &dummy, 0);
+    
+#if 0
+    ret = recv(fd, &dummy, 0, 0);
     if (ret < 0) {
         perror("async connect");
         close(fd);
         return;
     }
-      
+#endif
+    
     setupPeerConnection(fd);
-        
+    
     // if this is the first connection, do autofind
     if (firstc) {
         firstc = 0;

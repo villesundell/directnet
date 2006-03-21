@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "client.h"
 #include "connection.h"
 #include "directnet.h"
 #include "server.h"
@@ -65,10 +66,12 @@ static void initSockets()
 dn_event_t *establishServer()
 {
     int server_sock;
-    int pthreadres;
     int yes=1;
     int flags;
     dn_event_t *listen_ev;
+#ifdef __WIN32
+    unsigned long nblock;
+#endif
     
     struct sockaddr_in addr;
     initSockets();
@@ -98,9 +101,14 @@ dn_event_t *establishServer()
         perror("listen");
         exit(-1);
     }
-
+    
+#ifndef __WIN32
     flags = fcntl(server_sock, F_GETFL);
     fcntl(server_sock, F_SETFL, flags | O_NONBLOCK);
+#else
+    nblock = 1;
+    ioctlsocket(server_sock, FIONBIO, &nblock);
+#endif
     
     listen_ev = malloc(sizeof *listen_ev);
     if (!listen_ev)
@@ -113,32 +121,29 @@ dn_event_t *establishServer()
 
     dn_event_activate(listen_ev);
     
+    return listen_ev;
 }
 
 static void serverActivity(int cond, dn_event_t *ev) {
     if (cond & DN_EV_EXCEPT) {
-        fprintf(stderr, "Our server socket seems to have imploded. That sounds fun; I'll do it too.\n");
-        abort();
+        /*fprintf(stderr, "Our server socket seems to have imploded. That sounds fun; I'll do it too.\n");
+        abort();*/
+        return;
     }
     serverAccept(ev->event_info.fd.fd);
 }
 
 static void serverAccept(int server_sock) {
-    int sin_size, pthreadres, curfd;
+    int sin_size;
     int acceptfd;
-    struct communInfo *ci_ptr;
     struct sockaddr_in rem_addr;
-    pthread_attr_t ptattr;
     
     acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
-    fprintf(stderr, "accept=%d\n", acceptfd);
+    /*fprintf(stderr, "accept=%d\n", acceptfd);*/
     if (acceptfd < 0) {
         perror("accept failed");
         return;
     }
     
-    if (setupPeerConnection(acceptfd))
-        uiEstConn(inet_ntoa(rem_addr.sin_addr));
-    else
-        close(acceptfd);
+    setupPeerConnection(acceptfd);
 }

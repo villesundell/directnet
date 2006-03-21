@@ -38,7 +38,6 @@ char *hash##hshortn##RevGet(struct hash##hshortn *hash, htype value); \
 void hash##hshortn##Set(struct hash##hshortn *hash, const char *key, htype value);
 
 DN_HASH_INTLIKE_H(int, I)
-DN_HASH_INTLIKE_H(pthread_t *, P)
 DN_HASH_INTLIKE_H(void *, V)
 
 struct hashKeyS {

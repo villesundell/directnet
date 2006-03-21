@@ -603,7 +603,6 @@ extern "C" void uiEstConn(const char *from)
 
 extern "C" void uiEstRoute(const char *from)
 {
-    ChatWindow *cw;
     int i, mustadd, addbefore;
     
     assert(uiLoaded);
@@ -670,8 +669,6 @@ void removeFromList(const char *name)
 
 extern "C" void uiLoseConn(const char *from)
 {
-    ChatWindow *cw;
-    
     assert(uiLoaded);
     
     removeFromList(from);
@@ -679,8 +676,6 @@ extern "C" void uiLoseConn(const char *from)
 
 extern "C" void uiLoseRoute(const char *from)
 {
-    ChatWindow *cw;
-    
     assert(uiLoaded);
     
     removeFromList(from);

@@ -83,7 +83,6 @@ static conn_t ring_head = {
 };
  
 static void send_handshake(struct connection *cs);
-static void async_send_handshake(dn_event_t *ev);
 static void conn_notify(int cond, dn_event_t *ev);
 static void kill_connection(conn_t *conn);
 static void destroy_conn(conn_t *conn);
@@ -167,20 +166,20 @@ static void conn_notify_core(int cond, conn_t *conn) {
     }
  
     if (cond & DN_EV_READ) {
-        int ret, len;
+        int ret;
         if (conn->inbuf_p == conn->inbuf_sz) {
             // buffer is full, break the connection
             kill_connection(conn);
             return;
         }
-        ret = read(conn->fd, conn->inbuf + conn->inbuf_p, conn->inbuf_sz - conn->inbuf_p);
+        ret = recv(conn->fd, conn->inbuf + conn->inbuf_p, conn->inbuf_sz - conn->inbuf_p, 0);
         if (ret == 0) {
             // connection closed
             kill_connection(conn);
             return;
         }
         if (ret < 0) {
-            perror("read()");
+            perror("recv()");
             kill_connection(conn);
             return;
         }
@@ -199,9 +198,9 @@ static void conn_notify_core(int cond, conn_t *conn) {
  
     if (cond & DN_EV_WRITE) {
         int ret;
-        ret = write(conn->fd, conn->outbuf, conn->outbuf_p);
+        ret = send(conn->fd, conn->outbuf, conn->outbuf_p, 0);
         if (ret < 0) {
-            perror ("write()");
+            perror ("send()");
             kill_connection(conn);
             return;
         }
@@ -290,7 +289,7 @@ void sendCmd(struct connection *conn, const char *buf)
     p = 0;
     if (conn->outbuf_p == 0) {
         // try an immediate send, as an optimization
-        p = write(conn->fd, buf, len);
+        p = send(conn->fd, buf, len, 0);
         if (p < 0) {
             /* Whoops, something broke.
              * Let the event handler clean up.

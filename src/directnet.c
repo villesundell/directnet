@@ -19,7 +19,6 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,9 +69,7 @@ char *findHome(char **envp);
 
 void dn_init(int argc, char **argv) {
     int i;
-    char *binloc, *binnm, *cfgdir;
-    pthread_t ac_pthrd;
-    pthread_attr_t ac_pthrd_attr;
+    char *binloc, *binnm;
     
     // check our installed path
     binloc = whereAmI(argc ? argv[0] : "directnet", &bindir, &binnm);

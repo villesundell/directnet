@@ -110,7 +110,6 @@ void hash##hshortn##Set(struct hash##hshortn *hash, const char *key, htype value
 }
 
 DN_HASH_INTLIKE_C(int, I, -1)
-DN_HASH_INTLIKE_C(pthread_t *, P, (pthread_t *)-1)
 DN_HASH_INTLIKE_C(void *, V, NULL)
 
 
