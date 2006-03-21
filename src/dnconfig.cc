@@ -283,4 +283,3 @@ bool checkAutoFind(const string &nick)
     if (dn_ac_list->find(nick) != dn_ac_list->end()) return true;
     return false;
 }
-
