@@ -18,6 +18,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <set>
+#include <string>
+using namespace std;
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,10 +37,10 @@
 
 extern int errno;
 
-char *dn_ac_list_f;
-char *dn_ac_list[DN_MAX_CONNS+1];
-char *dn_af_list_f;
-char *dn_af_list[DN_MAX_ROUTES+1];
+string dn_ac_list_f;
+set<string> *dn_ac_list;
+string dn_af_list_f;
+set<string> *dn_af_list;
 
 /* initConfig
  * Input: none
@@ -46,41 +50,37 @@ char *dn_af_list[DN_MAX_ROUTES+1];
 void initConfig()
 {
     int i, osl;
-    char *cfgdir;
+    string cfgdir;
     FILE *acf, *aff;
     
     // find configuration directory
-    cfgdir = (char *) malloc(strlen(homedir) + 12);
-    if (!cfgdir) { perror("malloc"); exit(1); }
 /*#ifndef __WIN32
-    sprintf(cfgdir, "%s/.directnet", homedir);
+    cfgdir = homedir + string("/.directnet");
 #else
-    sprintf(cfgdir, "%s/DNConfig", homedir);
+    cfgdir = homedir + string("/DNConfig");
 #endif*/
-    sprintf(cfgdir, "%s/.DNCPP", homedir);
+    cfgdir = homedir + string("/.DNCPP");
     // attempt to create it
-    if (mkdir(cfgdir, 0777) == -1) {
+    if (mkdir(cfgdir.c_str(), 0777) == -1) {
         if (errno != EEXIST) {
             perror("mkdir");
             exit(1);
         }
     }
     
-    // find configuration files
-    dn_ac_list_f = (char *) malloc(strlen(cfgdir) + 4);
-    if (!dn_ac_list_f) { perror("malloc"); exit(1); }
-    sprintf(dn_ac_list_f, "%s/ac", cfgdir);
+    // start our sets
+    dn_ac_list = new set<string>;
+    dn_af_list = new set<string>;
     
-    dn_af_list_f = (char *) malloc(strlen(cfgdir) + 4);
-    if (!dn_af_list_f) { perror("malloc"); exit(1); }
-    sprintf(dn_af_list_f, "%s/af", cfgdir);
+    // find configuration files
+    dn_ac_list_f = cfgdir + "/ac";
+    dn_af_list_f = cfgdir + "/af";
     
     // read configuration files
-    acf = fopen(dn_ac_list_f, "r");
+    acf = fopen(dn_ac_list_f.c_str(), "r");
     if (acf) {
         char line[DN_NAME_LEN+1];
         line[DN_NAME_LEN] = '\0';
-        i = 0;
         
         while (!feof(acf) && !ferror(acf)) {
             if (fgets(line, DN_NAME_LEN, acf)) {
@@ -96,21 +96,16 @@ void initConfig()
                 if (!line[0]) continue;
                 
                 // add to our list
-                dn_ac_list[i] = strdup(line);
-                i++;
-                if (i >= DN_MAX_CONNS) i--;
+                dn_ac_list->insert(line);
             }
         }
-        i++;
-        dn_ac_list[i] = NULL;
         fclose(acf);
     }
     
-    aff = fopen(dn_af_list_f, "r");
+    aff = fopen(dn_af_list_f.c_str(), "r");
     if (aff) {
         char line[DN_HOSTNAME_LEN+1];
         line[DN_HOSTNAME_LEN] = '\0';
-        i = 0;
         
         while (!feof(aff) && !ferror(aff)) {
             if (fgets(line, DN_HOSTNAME_LEN, aff)) {
@@ -126,17 +121,11 @@ void initConfig()
                 if (!line[0]) continue;
                 
                 // add to our list
-                dn_af_list[i] = strdup(line);
-                i++;
-                if (i >= DN_MAX_ROUTES) i--;
+                dn_af_list->insert(line);
             }
         }
-        i++;
-        dn_af_list[i] = NULL;
         fclose(aff);
     }
-    
-    free(cfgdir);
 }
 
 /* autoConnect
@@ -146,10 +135,10 @@ void initConfig()
  */
 void autoConnect()
 {
-    int i;
+    set<string>::iterator aci;
     
-    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
-        async_establishClient(dn_ac_list[i]);
+    for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
+        async_establishClient(aci->c_str());
     }
     
 }
@@ -172,13 +161,11 @@ void *autoConnectThread(void *ignore)
  */
 void autoFind()
 {
-    int i;
+    set<string>::iterator afi;
     
-    
-    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
-        sendFnd(dn_af_list[i]);
+    for (afi = dn_af_list->begin(); afi != dn_af_list->end(); afi++) {
+        sendFnd(*afi);
     }
-    
 }
 
 /* addAutoConnect
@@ -186,29 +173,20 @@ void autoFind()
  * Output: none
  * Effect: the hostname is added to the list and the file
  */
-void addAutoConnect(const char *hostname)
+void addAutoConnect(const string &hostname)
 {
     FILE *outf;
-    int i;
     
-    
-    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++);
-    if (i == DN_MAX_CONNS) {
-        return;
-    }
-    
-    // now add it to the list
-    dn_ac_list[i] = strdup(hostname);
-    dn_ac_list[i+1] = NULL;
+    // add it to the list
+    dn_ac_list->insert(hostname);
     
     // and the file
-    outf = fopen(dn_ac_list_f, "a");
+    outf = fopen(dn_ac_list_f.c_str(), "a");
     if (!outf) {
         return;
     }
-    fprintf(outf, "%s\n", hostname);
+    fprintf(outf, "%s\n", hostname.c_str());
     fclose(outf);
-    
 }
 
 /* addAutoFind
@@ -216,29 +194,20 @@ void addAutoConnect(const char *hostname)
  * Output: none
  * Effect: the nick is added to the list and the file
  */
-void addAutoFind(const char *nick)
+void addAutoFind(const string &nick)
 {
     FILE *outf;
-    int i;
     
-    
-    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++);
-    if (i == DN_MAX_ROUTES) {
-        return;
-    }
-    
-    // now add it to the list
-    dn_af_list[i] = strdup(nick);
-    dn_af_list[i+1] = NULL;
+    // add it to the list
+    dn_af_list->insert(nick);
     
     // and the file
-    outf = fopen(dn_af_list_f, "a");
+    outf = fopen(dn_af_list_f.c_str(), "a");
     if (!outf) {
         return;
     }
-    fprintf(outf, "%s\n", nick);
+    fprintf(outf, "%s\n", nick.c_str());
     fclose(outf);
-    
 }
 
 /* remAutoConnect
@@ -246,40 +215,24 @@ void addAutoFind(const char *nick)
  * Output: none
  * Effect: it is removed from the list and file
  */
-void remAutoConnect(const char *hostname)
+void remAutoConnect(const string &hostname)
 {
     FILE *outf;
-    int i;
+    set<string>::iterator aci;
     
-    
-    for (i = 0;
-         i < DN_MAX_CONNS &&
-         dn_ac_list[i] &&
-         strcmp(dn_ac_list[i], hostname);
-         i++);
-    if (i == DN_MAX_CONNS) {
-        return;
-    }
-    
-    free(dn_ac_list[i]);
-    
-    // in the list, move them down
-    for (; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
-        dn_ac_list[i] = dn_ac_list[i+1];
-    }
+    dn_ac_list->erase(hostname);
     
     // then write out the file
-    outf = fopen(dn_ac_list_f, "w");
+    outf = fopen(dn_ac_list_f.c_str(), "w");
     if (!outf) {
         return;
     }
     
-    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
-        fprintf(outf, "%s\n", dn_ac_list[i]);
+    for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
+        fprintf(outf, "%s\n", aci->c_str());
     }
     
     fclose(outf);
-    
 }
 
 /* remAutoFind
@@ -287,40 +240,24 @@ void remAutoConnect(const char *hostname)
  * Output: none
  * Effect: it is removed from the list and file
  */
-void remAutoFind(const char *nick)
+void remAutoFind(const string &nick)
 {
     FILE *outf;
-    int i;
+    set<string>::iterator afi;
     
-    
-    for (i = 0;
-         i < DN_MAX_ROUTES &&
-         dn_af_list[i] &&
-         strcmp(dn_af_list[i], nick);
-         i++);
-    if (i == DN_MAX_ROUTES) {
-        return;
-    }
-    
-    free(dn_af_list[i]);
-    
-    // in the list, move them down
-    for (; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
-        dn_af_list[i] = dn_af_list[i+1];
-    }
+    dn_af_list->erase(nick);
     
     // then write out the file
-    outf = fopen(dn_af_list_f, "w");
+    outf = fopen(dn_af_list_f.c_str(), "w");
     if (!outf) {
         return;
     }
     
-    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
-        fprintf(outf, "%s\n", dn_af_list[i]);
+    for (afi = dn_af_list->begin(); afi != dn_af_list->end(); afi++) {
+        fprintf(outf, "%s\n", afi->c_str());
     }
     
     fclose(outf);
-    
 }
 
 /* checkAutoConnect
@@ -329,20 +266,10 @@ void remAutoFind(const char *nick)
  *         0 otherwise
  * Effect: none
  */
-char checkAutoConnect(const char *hostname)
+bool checkAutoConnect(const string &hostname)
 {
-    int i;
-    
-    
-    for (i = 0;
-         i < DN_MAX_CONNS &&
-         dn_ac_list[i] &&
-         strcmp(dn_ac_list[i], hostname);
-         i++);
-    
-    
-    if (i == DN_MAX_CONNS || !dn_ac_list[i]) return 0;
-    return 1;    
+    if (dn_ac_list->find(hostname) != dn_ac_list->end()) return true;
+    return false;
 }
 
 /* checkAutoFind
@@ -351,18 +278,9 @@ char checkAutoConnect(const char *hostname)
  *         0 otherwise
  * Effect: none
  */
-char checkAutoFind(const char *nick)
+bool checkAutoFind(const string &nick)
 {
-    int i;
-    
-    
-    for (i = 0;
-         i < DN_MAX_ROUTES &&
-         dn_af_list[i] &&
-         strcmp(dn_af_list[i], nick);
-         i++);
-    
-    
-    if (i == DN_MAX_ROUTES || !dn_af_list[i]) return 0;
-    return 1;    
+    if (dn_ac_list->find(nick) != dn_ac_list->end()) return true;
+    return false;
 }
+

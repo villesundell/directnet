@@ -18,6 +18,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
 #include <string>
 using namespace std;
 
@@ -342,6 +343,7 @@ int handleUInput(const char *originp)
 int handleAuto(char **params)
 {
     int i;
+    set<string>::iterator aci, afi;
     
     switch (params[1][0]) {
         case 'c':
@@ -351,9 +353,9 @@ int handleAuto(char **params)
                 case 'l':
                 case 'L':
                     /* autoconnection list */
-                    printf("Autoconnection list:\n");
-                    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
-                        printf("%s\n", dn_ac_list[i]);
+                    cout << "Autoconnection list:" << endl;
+                    for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
+                        cout << *aci << endl;
                     }
                     break;
                     
@@ -390,9 +392,9 @@ int handleAuto(char **params)
                 case 'l':
                 case 'L':
                     /* autofind list */
-                    printf("Autoconnection list:\n");
-                    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
-                        printf("%s\n", dn_af_list[i]);
+                    cout << "Autofind list:" << endl;
+                    for (afi = dn_af_list->begin(); aci != dn_af_list->end(); afi++) {
+                        cout << *afi << endl;
                     }
                     break;
                     

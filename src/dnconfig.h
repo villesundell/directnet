@@ -21,6 +21,10 @@
 #ifndef DN_DNCONFIG_H
 #define DN_DNCONFIG_H
 
+#include <set>
+#include <string>
+using namespace std;
+
 // configuration functions
 
 /* initConfig
@@ -56,28 +60,28 @@ void autoFind();
  * Output: none
  * Effect: the hostname is added to the list and the file
  */
-void addAutoConnect(const char *hostname);
+void addAutoConnect(const string &hostname);
 
 /* addAutoFind
  * Input: a nick to autofind in the future
  * Output: none
  * Effect: the nick is added to the list and the file
  */
-void addAutoFind(const char *nick);
+void addAutoFind(const string &nick);
 
 /* remAutoConnect
  * Input: a hostname to remove from the autoconnect list
  * Output: none
  * Effect: it is removed from the list and file
  */
-void remAutoConnect(const char *hostname);
+void remAutoConnect(const string &hostname);
 
 /* remAutoFind
  * Input: a nick to remove from the autofind list
  * Output: none
  * Effect: it is removed from the list and file
  */
-void remAutoFind(const char *nick);
+void remAutoFind(const string &nick);
 
 /* checkAutoConnect
  * Input: a hostname
@@ -85,7 +89,7 @@ void remAutoFind(const char *nick);
  *         0 otherwise
  * Effect: none
  */
-char checkAutoConnect(const char *hostname);
+bool checkAutoConnect(const string &hostname);
 
 /* checkAutoFind
  * Input: a nick
@@ -93,12 +97,12 @@ char checkAutoConnect(const char *hostname);
  *         0 otherwise
  * Effect: none
  */
-char checkAutoFind(const char *nick);
+bool checkAutoFind(const string &nick);
 
 // our configuration files
-extern char *dn_ac_list_f;
-extern char *dn_ac_list[DN_MAX_CONNS+1];
-extern char *dn_af_list_f;
-extern char *dn_af_list[DN_MAX_ROUTES+1];
+extern string dn_ac_list_f;
+extern set<string> *dn_ac_list;
+extern string dn_af_list_f;
+extern set<string> *dn_af_list;
 
 #endif
