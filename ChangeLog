@@ -1,3 +1,6 @@
+CVS from 1.0.1:
+        - Removed all threading (thanks to bd_!)
+
 1.0.1 from 1.0.0:
         - Added gaim-plugin debug support.
         - No longer include an internal copy of GMP.
