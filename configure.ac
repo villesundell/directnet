@@ -16,7 +16,6 @@ src/auth-gpg/Makefile
 src/auth-none/Makefile
 src/enc-cyfer/Makefile
 src/enc-fake/Makefile
-src/gaim-plugin/Makefile
 src/gaim2-plugin/Makefile
 src/hub/Makefile
 src/ui-dumb/Makefile
@@ -180,40 +179,6 @@ AC_SUBST(UI_LDFLAGS)
 AC_SUBST(UI_DIR)
 AC_SUBST(UI_CXX)
 AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
-
-
-# Check if we should enable the Gaim (1) plugin
-AC_ARG_ENABLE(gaim-plugin,
-AS_HELP_STRING([--enable-gaim-plugin],
-[enable the Gaim Plugin - must have Gaim 1.2.0 or higher development libraries]),
-[
-
-GAIM_PLUGIN=yes
-
-# Check for Gaim
-PKG_CHECK_MODULES(GAIM,
-[gaim >= 1.2.0 gaim < 2.0.0 gtk+-2.0],
-[
-        AC_DEFINE(HAVE_GAIM, 1, [Define if gaim-devel is available.])
-],
-[
-AC_MSG_ERROR([Gaim development libraries not found.])
-])
-
-AC_SUBST(GAIM_CFLAGS)
-AC_SUBST(GAIM_LIBS)
-
-], [GAIM_PLUGIN=no], [GAIM_PLUGIN=no])
-
-if test "x$GAIM_PLUGIN" = "xyes"
-then
-        GAIM_PLUGIN_DIR=gaim-plugin
-else
-        GAIM_PLUGIN_DIR=
-fi
-
-AC_SUBST(GAIM_PLUGIN_DIR)
-AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM_PLUGIN" = "xyes")
 
 
 # Check if we should enable the Gaim2 plugin
