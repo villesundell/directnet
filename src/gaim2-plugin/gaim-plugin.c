@@ -44,6 +44,7 @@ extern char **environ;
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
+#include "dnconfig.h"
 #include "gaim-plugin.h"
 #include "enc.h"
 #include "hash.h"
@@ -450,11 +451,12 @@ static void gp_login(GaimAccount *account)
 {
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Starting login....\n");
 
-    int charin, ostrlen;
+    int charin, ostrlen, i;
     char cmdbuf[32256];
     char *homedir, *dnhomefile;
     char *argv[] = {"plugin", NULL};
     GaimConnection *gc;
+    GaimBuddy *buddy;
     
     // The nick should be defined
     strcpy(dn_name, account->username);
@@ -513,13 +515,34 @@ static void gp_login(GaimAccount *account)
         free(nm);
     }
     
+    // convert auto*'s into buddies
+    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
+        char *sn = (char *) malloc(strlen(dn_ac_list[i]) + 5);
+        if (!sn) { perror("malloc"); exit(1); }
+        
+        sprintf(sn, "con:%s", dn_ac_list[i]);
+        
+        if (!gaim_find_buddy(account, sn)) {
+            buddy = gaim_buddy_new(account, sn, NULL);
+            gaim_blist_add_buddy(buddy, NULL, NULL, NULL);
+        }
+        
+        free(sn);
+    }
+    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
+        if (!gaim_find_buddy(account, dn_af_list[i])) {
+            buddy = gaim_buddy_new(account, dn_af_list[i], NULL);
+            gaim_blist_add_buddy(buddy, NULL, NULL, NULL);
+        }
+    }
+    
+    dn_goOnline();
+    
     gc = gaim_account_get_connection(account);
     gaim_connection_update_progress(gc, _("Connected"), 1, 2);
     gaim_connection_set_state(gc, GAIM_CONNECTED);
     
     my_gc = gc;
-    
-    dn_goOnline();
     
     // OK, the UI is ready
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "...Login OK!\n");
@@ -622,9 +645,12 @@ void *waitConn(void *to_vp)
 static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
 {
     char *route;
-
+    
     /* there are special "buddies" that are connections: con:host */
     if (!strncmp(buddy->name, "con:", 4)) {
+        if (!checkAutoConnect(buddy->name + 4)) {
+            addAutoConnect(buddy->name + 4);
+        }
         waitConn(buddy);
     } else {
         struct BuddyList *cur;
@@ -649,6 +675,11 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
 
         cur->next = NULL;
         cur->buddy = buddy;
+        
+        /* also, the autofind list */
+        if (!checkAutoFind(buddy->name)) {
+            addAutoFind(buddy->name);
+        }
         
         /* and try to find it */
         waitConn(buddy);
@@ -683,6 +714,14 @@ static void gp_removebuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *grou
             cur = cur->next;
         }
     }
+    
+    /* remove it from the auto* list */
+    if (!strncmp(buddy->name, "con:", 4)) {
+        remAutoConnect(buddy->name + 4);
+    } else {
+        remAutoFind(buddy->name);
+    }
+    
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Removed buddy.\n");
 }
 

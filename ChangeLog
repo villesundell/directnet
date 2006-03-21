@@ -1,5 +1,6 @@
 CVS from 1.0.1:
         - Removed all threading (thanks to bd_!)
+        - Gaim2 plugin working again!
 
 1.0.1 from 1.0.0:
         - Added gaim-plugin debug support.
