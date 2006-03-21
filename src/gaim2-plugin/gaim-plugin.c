@@ -33,7 +33,6 @@
 
 #include <glib/gmain.h>
 
-#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -161,16 +160,13 @@ static GaimPluginInfo info = {
 };
 
 char *chat_ids[256];
-pthread_mutex_t chat_lock;
 
 int regChat(const char *name)
 {
     int i;
     
-    pthread_mutex_lock(&chat_lock);
     for (i = 0; i < 255 && chat_ids[i]; i++);
     chat_ids[i] = strdup(name);
-    pthread_mutex_unlock(&chat_lock);
     
     return i;
 }
@@ -179,231 +175,93 @@ int chatByName(const char *name)
 {
     int i;
     
-    pthread_mutex_lock(&chat_lock);
     for (i = 0; i < 256; i++) {
         if (chat_ids[i] && !strcmp(name, chat_ids[i])) {
-            pthread_mutex_unlock(&chat_lock);
             return i;
         }
     }
-    pthread_mutex_unlock(&chat_lock);
     return -1;
 }
 
-pthread_mutex_t ipclock;
-GMainContext *ctx;
-#define IPC_MSG 1
-struct ipc_msg {
-    char *from;
-    char *msg;
-    char *authmsg;
-    int away;
-};
-#define IPC_STATE 2
-struct ipc_state {
-    char *who;
-    int state;
-};
-#define IPC_CHAT_MSG 3
-struct ipc_chat_msg {
-    int id;
-    char *who;
-    char *chan;
-    char *msg;
-};
-#define IPC_CHAT_JOIN 4
-struct ipc_chat_join {
-    int id;
-    char *chan;
-};
-#define IPC_AUTH_ASK 5
-struct ipc_auth_ask {
-    char *from;
-    char *msg;
-    char *q;
-};
-
-
-gboolean idle_got_im(struct ipc_msg *ma) 
+void got_im(const char *who, const char *msg, const char *authmsg, int away)
 {
-    char *dispnm = (char *) malloc((strlen(ma->from) + strlen(ma->authmsg) + 11) * sizeof(char));
-    sprintf(dispnm, "%s [%s]%s", ma->from, ma->authmsg, ma->away ? " [away]" : "");
+    char *dispnm = (char *) malloc((strlen(who) + strlen(authmsg) + 11) * sizeof(char));
+    sprintf(dispnm, "%s [%s]%s", who, authmsg, away ? " [away]" : "");
     
-    serv_got_alias(my_gc, ma->from, dispnm);
-    serv_got_im(my_gc, ma->from, ma->msg, 0, time(NULL));
+    serv_got_alias(my_gc, who, dispnm);
+    serv_got_im(my_gc, who, msg, 0, time(NULL));
   
-    free(ma->from);
-    free(ma->msg);
-    free(ma->authmsg);
-    free(ma);
     free(dispnm);
-
-    pthread_mutex_unlock(&ipclock);
-
-    return FALSE;
 }
 
-gboolean idle_set_state(struct ipc_state *sa)
+void set_state(const char *who, int state)
 {
-    gaim_prpl_got_user_status(my_account, sa->who,
-                              (sa->state == 1) ? "available" : "offline", NULL);
-    
-    free(sa->who);
-    free(sa);
-    
-    pthread_mutex_unlock(&ipclock);
-    
-    return FALSE;
+    gaim_prpl_got_user_status(my_account, who,
+                              (state == 1) ? "available" : "offline", NULL);
 }
 
-gboolean idle_chat_msg(struct ipc_chat_msg *cma)
+void chat_msg(int id, const char *who, const char *chan, const char *msg)
 {
-    serv_got_chat_in(my_gc, cma->id, cma->who, 0, cma->msg, time(NULL));
-
-    free(cma->who);
-    free(cma->msg);
-    free(cma);
-    
-    pthread_mutex_unlock(&ipclock);
-    
-    return FALSE;
+    serv_got_chat_in(my_gc, id, who, 0, msg, time(NULL));
 }           
 
-gboolean idle_chat_join(struct ipc_chat_join *cja)
+void chat_join(int id, const char *chan)
 {
-    serv_got_joined_chat(my_gc, cja->id, cja->chan);
+    serv_got_joined_chat(my_gc, id, chan);
+}
 
-    free(cja->chan);
-    free(cja);
-    
-    pthread_mutex_unlock(&ipclock);
-
+gboolean auth_ask_y_cb(char *msg)
+{
+    authImport(msg);
+    free(msg);
     return FALSE;
 }
 
-gboolean idle_auth_ask_y_cb(struct ipc_auth_ask *aaa)
+gboolean auth_ask_n_cb(char *msg)
 {
-    authImport(aaa->msg);
-    free(aaa->from);
-    free(aaa->msg);
-    free(aaa->q);
-    free(aaa);
+    free(msg);
     return FALSE;
 }
 
-gboolean idle_auth_ask_n_cb(struct ipc_auth_ask *aaa)
+void auth_ask(const char *from, const char *msg, const char *q)
 {
-    free(aaa->from);
-    free(aaa->msg);
-    free(aaa->q);
-    free(aaa);
-    return FALSE;
-}
-
-gboolean idle_auth_ask(struct ipc_auth_ask *aaa)
-{
-    gaim_request_yes_no(my_gc, "Authentication", aaa->q,
-                        NULL, 1, aaa,
-                        idle_auth_ask_y_cb, idle_auth_ask_n_cb);
-    
-    pthread_mutex_unlock(&ipclock);
-    
-    return FALSE;
-}
-
-void ipc_got_im(const char *who, const char *msg, const char *authmsg, int away)
-{
-    struct ipc_msg *a = (struct ipc_msg *) malloc(sizeof(struct ipc_msg));
-
-    a->from = strdup(who);
-    a->msg = strdup(msg);
-    a->authmsg = strdup(authmsg);
-    a->away = away;
-    
-    pthread_mutex_lock(&ipclock);
-    
-    g_idle_add((GSourceFunc) idle_got_im, a);
-}
-
-void ipc_set_state(const char *who, int state)
-{
-    struct ipc_state *a = (struct ipc_state *) malloc(sizeof(struct ipc_state));
-
-    a->who = strdup(who);
-    a->state = state;
-
-    pthread_mutex_lock(&ipclock);
-    
-    g_idle_add((GSourceFunc)idle_set_state, a);
-}
-
-void ipc_chat_msg(int id, const char *who, const char *chan, const char *msg)
-{
-    struct ipc_chat_msg *a = (struct ipc_chat_msg *) malloc(sizeof(struct ipc_chat_msg));
-
-    a->id = id;
-    a->who = strdup(who);
-    a->chan = strdup(chan);
-    a->msg = strdup(msg);
-    
-    pthread_mutex_lock(&ipclock);
-    
-    g_idle_add((GSourceFunc)idle_chat_msg, a);
-}
-
-void ipc_chat_join(int id, const char *chan)
-{
-    struct ipc_chat_join *a = (struct ipc_chat_join *) malloc(sizeof(struct ipc_chat_join));
-
-    a->id = id;
-    a->chan = strdup(chan);
-    
-    pthread_mutex_lock(&ipclock);
-    
-    g_idle_add((GSourceFunc)idle_chat_join, a);
-}
-
-void ipc_auth_ask(const char *from, const char *msg, const char *q)
-{
-    struct ipc_auth_ask *a = (struct ipc_auth_ask *) malloc(sizeof(struct ipc_auth_ask));
-    char *qa;
+    char *qa, *qb;
     int i, j, l;
-    
-    a->from = strdup(from);
-    a->msg = strdup(msg);
     
     qa = (char *) malloc((strlen(from) + strlen(q) + 53) * sizeof(char));
     sprintf(qa, "%s has asked you to import the key '%s'.  Do you accept?", from, q);
     
     /* No <s or >s allowed! */
     l = strlen(qa) + 1;
-    a->q = (char *) malloc(l * sizeof(char));
+    qb = (char *) malloc(l * sizeof(char));
     
     j = 0;
     for (i = 0; qa[i]; i++) {
         switch (qa[i]) {
             case '<':
-                a->q = (char *) realloc(a->q, l += 3);
-                strncpy(a->q + j, "&lt;", 4);
+                qb = (char *) realloc(qb, l += 3);
+                strncpy(qb + j, "&lt;", 4);
                 j += 4;
                 break;
             case '>':
-                a->q = (char *) realloc(a->q, l += 3);
-                strncpy(a->q + j, "&gt;", 4);
+                qb = (char *) realloc(qb, l += 3);
+                strncpy(qb + j, "&gt;", 4);
                 j += 4;
                 break;
             default:
-                (a->q)[j] = qa[i];
+                qb[j] = qa[i];
                 j++;
                 break;
         }
     }
-    (a->q)[j] = '\0';
+    qb[j] = '\0';
     free(qa);
     
-    pthread_mutex_lock(&ipclock);
+    gaim_request_yes_no(my_gc, "Authentication", qb,
+                        NULL, 1, strdup(msg),
+                        auth_ask_y_cb, auth_ask_n_cb);
     
-    g_idle_add((GSourceFunc)idle_auth_ask, a);
+    free(qb);
 }
 
 gboolean dnsndkey(GaimConversation *gc, gchar *cmd, gchar **args, gchar **error, void *data)
@@ -455,49 +313,18 @@ static void init_plugin(GaimPlugin *plugin)
 
 GAIM_INIT_PLUGIN(DirectNet, init_plugin, info);
 
-int uiInit(int argc, char ** argv, char **envp)
-{
-    // This is the most basic UI
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initializing.\n");
-    int charin, ostrlen;
-    char cmdbuf[32256];
-    char *homedir, *dnhomefile;
-    
-    // Always start by finding encryption
-    if (findEnc(envp) == -1) {
-        printf("Necessary encryption programs were not found on your PATH!\n");
-        return -1;
-    }
-    
-    /* Then authentication */
-    if (!authInit()) {
-        printf("Authentication failed to initialize!\n");
-        return -1;
-    }
-    
-    // Lock chat IDs
-    pthread_mutex_init(&chat_lock, NULL);
-    memset(chat_ids, 0, sizeof(int) * 256);
-    
-    // And create the key
-    encCreateKey();
-    
-    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initialized.\n");
-    return 0;
-}
-
 void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
     
-    ipc_got_im(from, msg, authmsg, away);
+    got_im(from, msg, authmsg, away);
 }
 
 void uiAskAuthImport(const char *from, const char *msg, const char *sig)
 {
     while (!uiLoaded) sleep(0);
     
-    ipc_auth_ask(from, msg, sig);
+    auth_ask(from, msg, sig);
 }
 
 void uiDispChatMsg(const char *chat, const char *from, const char *msg)
@@ -510,7 +337,7 @@ void uiDispChatMsg(const char *chat, const char *from, const char *msg)
     id = chatByName(fullname);
     
     if (id != -1) {
-        ipc_chat_msg(chatByName(fullname), from, fullname, msg);
+        chat_msg(chatByName(fullname), from, fullname, msg);
     }
     
     free(fullname);
@@ -532,9 +359,9 @@ void uiEstRoute(const char *from)
     /* if they're on the buddy list, update them */
     buddy = gaim_find_buddy(my_account, from);
     if (buddy && !gaim_presence_is_online(buddy->presence)) {
-        ipc_set_state(from, 1);
+        set_state(from, 1);
     } else if (!buddy) {
-        ipc_got_im(from, "[DirectNet]: Route established.", "sys", 0);
+        got_im(from, "[DirectNet]: Route established.", "sys", 0);
     }
 
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Route established.\n");
@@ -554,7 +381,7 @@ void uiLoseRoute(const char *from)
     /* if they're on the buddy list, update them */
     buddy = gaim_find_buddy(my_account, from);
     if (buddy && gaim_presence_is_online(buddy->presence)) {
-        ipc_set_state(from, 0);
+        set_state(from, 0);
     }
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Lost route.\n");
 }
@@ -623,17 +450,16 @@ static void gp_login(GaimAccount *account)
 {
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Starting login....\n");
 
+    int charin, ostrlen;
+    char cmdbuf[32256];
+    char *homedir, *dnhomefile;
     char *argv[] = {"plugin", NULL};
     GaimConnection *gc;
     
     // The nick should be defined
     strcpy(dn_name, account->username);
-    dn_name_set = 1; 
     
     my_account = account;
-    
-    // Prepare the IPC pipe
-    pthread_mutex_init(&ipclock, NULL);
     
     // find our location - if prefix.h worked, it's LIBDIR
 #ifndef LIBDIR
@@ -642,11 +468,27 @@ static void gp_login(GaimAccount *account)
 #endif
     bindir = strdup(LIBDIR);
     
-    /* call "main" */
-    pluginMain(1, argv, environ);
+    dn_init(1, argv);
 
-    // pthreads are magical
-    sleep(1);
+    gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Plugin initializing.\n");
+    
+    // Always start by finding encryption
+    if (findEnc(environ) == -1) {
+        printf("Necessary encryption programs were not found on your PATH!\n");
+        return;
+    }
+    
+    /* Then authentication */
+    if (!authInit()) {
+        printf("Authentication failed to initialize!\n");
+        return;
+    }
+    
+    // Lock chat IDs
+    memset(chat_ids, 0, sizeof(int) * 256);
+    
+    // And create the key
+    encCreateKey();
     
     /* set auth password */
     if (authNeedPW()) {
@@ -676,8 +518,8 @@ static void gp_login(GaimAccount *account)
     gaim_connection_set_state(gc, GAIM_CONNECTED);
     
     my_gc = gc;
-
-    /*serv_finish_login(gc);*/
+    
+    dn_goOnline();
     
     // OK, the UI is ready
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "...Login OK!\n");
@@ -686,46 +528,7 @@ static void gp_login(GaimAccount *account)
 
 static void gp_close(GaimConnection *gc)
 {
-    struct BuddyList *cur, *next;
-    int i, curfd;
-
-    if (gc == my_gc) {
-        /* OK, try to free and delete everything we can */
-        cur = bltop;
-        bltop = NULL;
-        while (cur) {
-            next = cur->next;
-            free(cur);
-            cur = next;
-        }
-        
-        my_protocol = NULL;
-        my_account = NULL;
-        my_gc = NULL;
-        
-        serverPthread ? pthread_kill(*serverPthread, SIGTERM) : 0;
-        
-        for (i = 0; i < onpthread; i++) {
-            pthreads[i] ? pthread_kill(*(pthreads[i]), SIGTERM) : 0;
-        }
-        
-        if (close(server_sock) < 0) {
-            perror("close");
-        }
-        
-        for (curfd = 0; curfd < DN_MAX_CONNS && curfd < onfd; curfd++)
-        {
-            if (fds[curfd]) {
-                close(fds[curfd]);
-            }
-        }
-    
-        gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Quiting...\n");
-        free(fds);
-        free(pipe_fds);
-        free(pipe_locks);
-        free(pthreads);
-    }
+    // FIXME!!!
 }
 
 static int gp_sendim(GaimConnection *gc, const char *who, const char *message, GaimMessageFlags flags)
@@ -791,7 +594,7 @@ void *waitConn(void *to_vp)
     if (!strncmp(to->name, "con:", 4)) {
         if (establishConnection(to->name + 4)) {
             if (!gaim_presence_is_online(to->presence)) {
-                ipc_set_state(to->name, 1);
+                set_state(to->name, 1);
             }
         }
     } else {
@@ -818,12 +621,11 @@ void *waitConn(void *to_vp)
 
 static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
 {
-    pthread_t newthread;
     char *route;
 
     /* there are special "buddies" that are connections: con:host */
     if (!strncmp(buddy->name, "con:", 4)) {
-        pthread_create(&newthread, NULL, waitConn, buddy);
+        waitConn(buddy);
     } else {
         struct BuddyList *cur;
 
@@ -849,7 +651,7 @@ static void gp_addbuddy(GaimConnection *gc, GaimBuddy *buddy, GaimGroup *group)
         cur->buddy = buddy;
         
         /* and try to find it */
-        pthread_create(&newthread, NULL, waitConn, buddy);
+        waitConn(buddy);
     }
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Buddy added.\n");
 }
@@ -890,12 +692,12 @@ static void gp_joinchat(GaimConnection *gc, GHashTable *data)
     char *name = g_hash_table_lookup(data, "room");
     if (name[0] == '#') {
         joinChat(name + 1);
-        ipc_chat_join(regChat(name), name);
+        chat_join(regChat(name), name);
     } else {
         char *fullname = (char *) malloc(strlen(name) + 2);
         joinChat(name);
         sprintf(fullname, "#%s", name);
-        ipc_chat_join(regChat(fullname), fullname);
+        chat_join(regChat(fullname), fullname);
         free(fullname);
     }
 
@@ -910,10 +712,8 @@ static void gp_leavechat(GaimConnection *gc, int id)
     leaveChat(gconv->name + 1);
     id = chatByName(gconv->name);
 
-    pthread_mutex_lock(&chat_lock);
     free(chat_ids[id]);
     chat_ids[id] = NULL;
-    pthread_mutex_unlock(&chat_lock);
 
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Left chat.\n");
 }
@@ -924,7 +724,7 @@ static int gp_saychat(GaimConnection *gc, int id, const char *msg, GaimMessageFl
     char *omsg = strdup(msg);
 
     sendChat(gconv->name + 1, omsg);
-    ipc_chat_msg(id, dn_name, gconv->name, omsg);
+    chat_msg(id, dn_name, gconv->name, omsg);
     
     free(omsg);
 

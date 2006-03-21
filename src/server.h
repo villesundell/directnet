@@ -22,10 +22,9 @@
 #ifndef DN_SERVER_H
 #define DN_SERVER_H
 
-#include <pthread.h>
 #include "dn_event.h"
 
-/* Set up the server (a pthread) */
+/* Set up the server */
 dn_event_t *establishServer();
 
 #endif // DN_SERVER_H

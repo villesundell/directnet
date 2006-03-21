@@ -79,7 +79,8 @@ connection.c \
 directnet.c \
 dnconfig.c \
 hash.c \
-server.c
+server.c \
+whereami.c
 
 libdirectnet_gaim_la_CFLAGS=@ENC_CFLAGS@ @AUTH_CFLAGS@ \
  @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS

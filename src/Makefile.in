@@ -62,7 +62,7 @@ am__installdirs = "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"
 gaimLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(gaim_LTLIBRARIES)
 am__libdirectnet_gaim_la_SOURCES_DIST = chat.c client.c connection.c \
-	directnet.c dnconfig.c hash.c server.c
+	directnet.c dnconfig.c hash.c server.c whereami.c
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS =  \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-chat.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-client.lo \
@@ -70,7 +70,8 @@ am__libdirectnet_gaim_la_SOURCES_DIST = chat.c client.c connection.c \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-directnet.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-dnconfig.lo \
 @GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-hash.lo \
-@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-server.lo
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-server.lo \
+@GAIM_PLUGIN_TRUE@	libdirectnet_gaim_la-whereami.lo
 libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_rpath = -rpath $(gaimdir)
 @MAKE_HUB_TRUE@am__EXEEXT_1 = directnethub$(EXEEXT)
@@ -335,7 +336,8 @@ SUBDIRS = @UI_DIR@ @HUB_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 @GAIM_PLUGIN_TRUE@directnet.c \
 @GAIM_PLUGIN_TRUE@dnconfig.c \
 @GAIM_PLUGIN_TRUE@hash.c \
-@GAIM_PLUGIN_TRUE@server.c
+@GAIM_PLUGIN_TRUE@server.c \
+@GAIM_PLUGIN_TRUE@whereami.c
 
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @ENC_CFLAGS@ @AUTH_CFLAGS@ \
 @GAIM_PLUGIN_TRUE@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
@@ -497,6 +499,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-dnconfig.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-server.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-whereami.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -567,6 +570,13 @@ libdirectnet_gaim_la-server.lo: server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='server.c' object='libdirectnet_gaim_la-server.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-server.lo `test -f 'server.c' || echo '$(srcdir)/'`server.c
+
+libdirectnet_gaim_la-whereami.lo: whereami.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-whereami.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-whereami.Tpo" -c -o libdirectnet_gaim_la-whereami.lo `test -f 'whereami.c' || echo '$(srcdir)/'`whereami.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-whereami.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-whereami.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-whereami.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='whereami.c' object='libdirectnet_gaim_la-whereami.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-whereami.lo `test -f 'whereami.c' || echo '$(srcdir)/'`whereami.c
 
 directnetc-chat.o: chat.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnetc_CFLAGS) $(CFLAGS) -MT directnetc-chat.o -MD -MP -MF "$(DEPDIR)/directnetc-chat.Tpo" -c -o directnetc-chat.o `test -f 'chat.c' || echo '$(srcdir)/'`chat.c; \

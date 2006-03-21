@@ -22,8 +22,6 @@
 #ifndef DN_DIRECTNET_H
 #define DN_DIRECTNET_H
 
-#include <pthread.h>
-
 #include "globals.h"
 #include "hash.h"
 
@@ -31,12 +29,8 @@
 int pluginMain(int argc, char **argv, char **envp);
 #endif
 
-extern pthread_t *serverPthread;
-extern pthread_t *keepalivePthread;
 extern int serv_port;
 
-extern struct hashL *recFndLocks; // Locks on each fnd pthread (which wait for later fnds)
-extern struct hashP *recFndPthreads; // And the pthreads themselves
 extern struct hashS *weakRoutes; // List of weak routes
 
 // our name
@@ -65,11 +59,6 @@ extern char dn_localip[24];
 
 // stuff for relocatability
 extern char *homedir, *bindir;
-
-struct communInfo {
-    int fdnum;
-    int pthreadnum;
-};
 
 void newTransKey(char *into);
 

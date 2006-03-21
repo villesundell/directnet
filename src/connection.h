@@ -96,7 +96,7 @@ int handleRoutedMsg(const char *command, char vera, char verb, char **params);
  * outbuf: the buffer to send */
 void emitUnroutedMsg(conn_t *from, const char *outbuf);
 
-/* The main communication method for a connection (a pthread)
+/* The main communication method for a connection 
  * fdnum_voidptr: a void * to an int with the fdnum */
 void *communicator(void *fdnum_voidptr);
 

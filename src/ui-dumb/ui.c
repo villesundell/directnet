@@ -549,5 +549,3 @@ void dn_event_deactivate(dn_event_t *ev) {
     free(ev->priv);
     ev->priv = NULL;
 }
-
-

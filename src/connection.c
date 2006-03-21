@@ -894,11 +894,8 @@ void recvFnd(char *route, const char *name, const char *key)
     routeElement[onRE] = NULL;
 
     // FIXME: needs event hash
-    // Get the pthread
-    // curPthread = hashPGet(recFndPthreads, name);
             
     // If we haven't started one, good
-//    if (curPthread == (pthread_t *) -1) {
     if (1) {
     // This is the first fnd received, but ignore it if we already have a route
         if (hashSGet(dn_routes, name)) {
@@ -940,7 +937,6 @@ void recvFnd(char *route, const char *name, const char *key)
         reap_fnd_later(name);
         
         // Put it back where it belongs
-        // hashPSet(recFndPthreads, name, curPthread);
     } else {
         char oldWRoute[DN_ROUTE_LEN];
         char *curWRoute;
