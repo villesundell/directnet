@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -18,37 +18,26 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_CHAT_H
-#define DN_CHAT_H
+#ifndef ROUTE_H
+#define ROUTE_H
 
-#include <map>
 #include <string>
 #include <vector>
 using namespace std;
 
-extern map<string, vector<string> *> *dn_chats;
-
-/* Am I on this channel?
- * channel: the channel to query
- * returns: 1 if on the channel, 0 otherwise */
-char chatOnChannel(const string &channel);
-
-/* Add a user to my perception of a chat room
- * channel: the channel
- * name: the user */
-void chatAddUser(const string &channel, const string &name);
-
-/* Remove a user from my perception of a chat room
- * channel: the channel
- * name: the user */
-void chatRemUser(const string &channel, const string &name);
-
-/* Join a chat
- * channel: the channel */
-void chatJoin(const string &channel);
-
-/* Leave a chat
- * channel: the channel */
-void chatLeave(const string &channel);
+class Route : public vector<string> {
+    public:
+    Route();
+    Route(const Route &copy);
+    Route(const string &textform);
+    
+    string toString();
+    void reverse();
+    
+    void push_front(string &a);
+    void pop_front();
+    
+    Route &operator+=(const string &node) { push_back(node); return *this; }
+};
 
 #endif

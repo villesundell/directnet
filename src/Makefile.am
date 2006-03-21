@@ -8,6 +8,8 @@ connection.cc \
 directnet.cc \
 dnconfig.cc \
 hash.cc \
+message.cc \
+route.cc \
 server.cc \
 whereami.cc
 
@@ -31,6 +33,8 @@ connection.cc \
 directnet.cc \
 dnconfig.cc \
 hash.cc \
+message.cc \
+route.cc \
 server.cc \
 whereami.cc
 

@@ -18,6 +18,9 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <string>
+using namespace std;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -146,8 +149,10 @@ int main(int argc, char ** argv, char **envp)
     // And creating the key
     encCreateKey();
     
-    if (hub)
-        setAway("This is a hub, there is no human reading your messages.");
+    if (hub) {
+        string away = "This is a hub, there is no human reading your messages.";
+        setAway(&away);
+    }
     
     // You start in a conversation with nobody
     currentPartner = (char *) malloc(DN_NAME_LEN * sizeof(char));
@@ -263,7 +268,8 @@ int handleUInput(const char *originp)
         }
         
         if (params[0][1] == 'a') {
-            setAway(params[1]);
+            string amsg = params[1];
+            setAway(&amsg);
             if (params[1]) {
                 printf("\nAway message set.\n");
             } else {

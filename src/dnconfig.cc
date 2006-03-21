@@ -52,11 +52,12 @@ void initConfig()
     // find configuration directory
     cfgdir = (char *) malloc(strlen(homedir) + 12);
     if (!cfgdir) { perror("malloc"); exit(1); }
-#ifndef __WIN32
+/*#ifndef __WIN32
     sprintf(cfgdir, "%s/.directnet", homedir);
 #else
     sprintf(cfgdir, "%s/DNConfig", homedir);
-#endif
+#endif*/
+    sprintf(cfgdir, "%s/.DNCPP", homedir);
     // attempt to create it
     if (mkdir(cfgdir, 0777) == -1) {
         if (errno != EEXIST) {

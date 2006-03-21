@@ -18,139 +18,65 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <map>
+#include <string>
+using namespace std;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "chat.h"
 #include "globals.h"
-#include "hash.h"
 
-struct hashS *dn_chats;
+map<string, vector<string> *> *dn_chats;
 
-char chatOnChannel(const char *channel)
+char chatOnChannel(const string &channel)
 {
-    
-    if (hashSGet(dn_chats, channel) != NULL) {
+    if (dn_chats->find(channel) != dn_chats->end()) {
         return 1;
     } else {
         return 0;
     }
 }
 
-void chatAddUser(const char *channel, const char *name)
+void chatAddUser(const string &channel, const string &name)
 {
-    char *prev, *newu;
-    
-    
-    prev = hashSGet(dn_chats, channel);
-    if (!prev) {
-        prev = "";
+    if (dn_chats->find(channel) == dn_chats->end()) {
+        (*dn_chats)[channel] = new vector<string>;
     }
     
-    newu = (char *) malloc((strlen(prev) + strlen(name) + 2) * sizeof(char));
-    
-    sprintf(newu, "%s%s\n", prev, name);
-    
-    hashSSet(dn_chats, channel, newu);
-    
-    free(newu);
-    
+    (*dn_chats)[channel]->push_back(name);
 }
 
-void chatRemUser(const char *channel, const char *name)
+void chatRemUser(const string &channel, const string &name)
 {
-    char *prev, *each[DN_MAX_PARAMS], *newu, *newp;
-    int i, j;
+    vector<string> *chan;
+    int i, s;
     
+    if (dn_chats->find(channel) == dn_chats->end()) return;
     
-    memset(each, 0, DN_MAX_PARAMS * sizeof(char *));
+    chan = (*dn_chats)[channel];
     
-    prev = hashSGet(dn_chats, channel);
-    if (prev) {
-        prev = strdup(prev);
-    } else {
-        return;
-    }
-    
-    newu = (char *) malloc((strlen(prev) + 1) * sizeof(char));
-    newu[0] = '\0';
-    newp = newu;
-    
-    /* split it */
-    each[0] = prev;
-    j = 1;
-    for (i = 0; prev[i] != '\0'; i++) {
-        if (prev[i] == '\n') {
-            prev[i] = '\0';
-            
-            if (prev[i+1] != '\0') {
-                each[j] = prev + i + 1;
-                j++;
-            }
+    // find and remove the user
+    s = chan->size();
+    for (i = 0; i < s; i++) {
+        if ((*chan)[i] == name) {
+            chan->erase(chan->begin() + i);
+            break;
         }
     }
-    
-    /* now recreate it */
-    for (i = 0; each[i]; i++) {
-        if (strncmp(each[i], name, strlen(name) + 1)) {
-            strcpy(newp, each[i]);
-            newp += strlen(each[i]);
-            *newp = '\n';
-            newp++;
-        }
-    }
-    *newp = '\0';
-    
-    /* and put it back */
-    hashSSet(dn_chats, channel, newu);
-    
-    free(newu);
-    
 }
 
-char **chatUsers(const char *channel)
+void chatJoin(const string &channel)
 {
-    char *prev, **each;
-    int i, j;
-    
-    
-    each = (char **) malloc(DN_MAX_PARAMS * sizeof(char *));
-    
-    memset(each, 0, DN_MAX_PARAMS * sizeof(char *));
-    
-    prev = hashSGet(dn_chats, channel);
-    if (prev) {
-        prev = strdup(prev);
-    } else {
-        prev = "";
-    }
-    
-    /* split it */
-    each[0] = prev;
-    j = 1;
-    for (i = 0; prev[i] != '\0'; i++) {
-        if (prev[i] == '\n') {
-            prev[i] = '\0';
-            
-            if (prev[i+1] != '\0') {
-                each[j] = prev + i + 1;
-                j++;
-            }
-        }
-    }
-    
-    
-    return each;
-}
-
-void chatJoin(const char *channel)
-{
-    if (!hashSGet(dn_chats, channel)) {
-        hashSSet(dn_chats, channel, "");
+    if (dn_chats->find(channel) == dn_chats->end())
+    {
+        (*dn_chats)[channel] = new vector<string>;
     }
 }
 
-void chatLeave(const char *channel)
+void chatLeave(const string &channel)
 {
-    hashSDelKey(dn_chats, channel);
+    dn_chats->erase(channel);
 }

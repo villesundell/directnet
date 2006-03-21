@@ -59,11 +59,12 @@ am__installdirs = "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"
 gaimLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(gaim_LTLIBRARIES)
 am__libdirectnet_gaim_la_SOURCES_DIST = chat.cc client.cc \
-	connection.cc directnet.cc dnconfig.cc hash.cc server.cc \
-	whereami.cc
+	connection.cc directnet.cc dnconfig.cc hash.cc message.cc \
+	route.cc server.cc whereami.cc
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS = chat.lo client.lo \
 @GAIM_PLUGIN_TRUE@	connection.lo directnet.lo dnconfig.lo \
-@GAIM_PLUGIN_TRUE@	hash.lo server.lo whereami.lo
+@GAIM_PLUGIN_TRUE@	hash.lo message.lo route.lo server.lo \
+@GAIM_PLUGIN_TRUE@	whereami.lo
 libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_rpath = -rpath $(gaimdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
@@ -71,7 +72,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_directnet_OBJECTS = directnet-chat.$(OBJEXT) \
 	directnet-client.$(OBJEXT) directnet-connection.$(OBJEXT) \
 	directnet-directnet.$(OBJEXT) directnet-dnconfig.$(OBJEXT) \
-	directnet-hash.$(OBJEXT) directnet-server.$(OBJEXT) \
+	directnet-hash.$(OBJEXT) directnet-message.$(OBJEXT) \
+	directnet-route.$(OBJEXT) directnet-server.$(OBJEXT) \
 	directnet-whereami.$(OBJEXT)
 directnet_OBJECTS = $(am_directnet_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -235,6 +237,8 @@ connection.cc \
 directnet.cc \
 dnconfig.cc \
 hash.cc \
+message.cc \
+route.cc \
 server.cc \
 whereami.cc
 
@@ -253,6 +257,8 @@ directnet_LDADD = @UI_DIR@/libui.a \
 @GAIM_PLUGIN_TRUE@directnet.cc \
 @GAIM_PLUGIN_TRUE@dnconfig.cc \
 @GAIM_PLUGIN_TRUE@hash.cc \
+@GAIM_PLUGIN_TRUE@message.cc \
+@GAIM_PLUGIN_TRUE@route.cc \
 @GAIM_PLUGIN_TRUE@server.cc \
 @GAIM_PLUGIN_TRUE@whereami.cc
 
@@ -377,11 +383,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-dnconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-hash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-message.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-route.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-whereami.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dnconfig.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/message.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/route.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whereami.Plo@am__quote@
 
@@ -489,6 +499,34 @@ directnet-hash.obj: hash.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='hash.cc' object='directnet-hash.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-hash.obj `if test -f 'hash.cc'; then $(CYGPATH_W) 'hash.cc'; else $(CYGPATH_W) '$(srcdir)/hash.cc'; fi`
+
+directnet-message.o: message.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-message.o -MD -MP -MF "$(DEPDIR)/directnet-message.Tpo" -c -o directnet-message.o `test -f 'message.cc' || echo '$(srcdir)/'`message.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-message.Tpo" "$(DEPDIR)/directnet-message.Po"; else rm -f "$(DEPDIR)/directnet-message.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='message.cc' object='directnet-message.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-message.o `test -f 'message.cc' || echo '$(srcdir)/'`message.cc
+
+directnet-message.obj: message.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-message.obj -MD -MP -MF "$(DEPDIR)/directnet-message.Tpo" -c -o directnet-message.obj `if test -f 'message.cc'; then $(CYGPATH_W) 'message.cc'; else $(CYGPATH_W) '$(srcdir)/message.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-message.Tpo" "$(DEPDIR)/directnet-message.Po"; else rm -f "$(DEPDIR)/directnet-message.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='message.cc' object='directnet-message.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-message.obj `if test -f 'message.cc'; then $(CYGPATH_W) 'message.cc'; else $(CYGPATH_W) '$(srcdir)/message.cc'; fi`
+
+directnet-route.o: route.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-route.o -MD -MP -MF "$(DEPDIR)/directnet-route.Tpo" -c -o directnet-route.o `test -f 'route.cc' || echo '$(srcdir)/'`route.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-route.Tpo" "$(DEPDIR)/directnet-route.Po"; else rm -f "$(DEPDIR)/directnet-route.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='route.cc' object='directnet-route.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-route.o `test -f 'route.cc' || echo '$(srcdir)/'`route.cc
+
+directnet-route.obj: route.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-route.obj -MD -MP -MF "$(DEPDIR)/directnet-route.Tpo" -c -o directnet-route.obj `if test -f 'route.cc'; then $(CYGPATH_W) 'route.cc'; else $(CYGPATH_W) '$(srcdir)/route.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-route.Tpo" "$(DEPDIR)/directnet-route.Po"; else rm -f "$(DEPDIR)/directnet-route.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='route.cc' object='directnet-route.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-route.obj `if test -f 'route.cc'; then $(CYGPATH_W) 'route.cc'; else $(CYGPATH_W) '$(srcdir)/route.cc'; fi`
 
 directnet-server.o: server.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-server.o -MD -MP -MF "$(DEPDIR)/directnet-server.Tpo" -c -o directnet-server.o `test -f 'server.cc' || echo '$(srcdir)/'`server.cc; \

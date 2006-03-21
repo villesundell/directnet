@@ -19,6 +19,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <string>
+#include <sstream>
+using namespace std;
+
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -44,18 +48,18 @@
 #include "directnet.h"
 #include "dn_event.h"
 #include "enc.h"
-#include "hash.h"
+#include "message.h"
 #include "ui.h"
 
 #define BUFSZ 65536
 
-char *awayMsg = NULL;
+string *awayMsg = NULL;
 
 void handleMsg(conn_t *conn, const char *inbuf);
-int handleNLUnroutedMsg(char **params);
-int handleNRUnroutedMsg(conn_t *from, const char *command, char vera, char verb, char **params);
-int sendMsgB(const char *to, const char *msg, char away, char sign);
-void recvFnd(char *route, const char *name, const char *key);
+bool handleNLUnroutedMsg(const Message &msg);
+bool handleNRUnroutedMsg(conn_t *from, const Message &msg);
+int sendMsgB(const string &to, const string &msg, bool away, bool sign);
+void recvFnd(Route *route, const string &name, const string &key);
 
 enum cev_state {
     CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
@@ -100,8 +104,9 @@ static void ping_send_ev(dn_event_t *ev) {
     dn_event_deactivate(ev);
     free(ev);
     conn->ping_ev = NULL;
- 
-    sendCmd(conn, "pin\x01\x01;");
+    
+    string cmd = "pin\x01\x01;";
+    sendCmd(conn, cmd);
     //    conn->ping_ev = dn_event_trigger_after(ping_timeout, conn, 30, 0);
     schedule_ping(conn);
 }
@@ -142,7 +147,7 @@ void init_comms(int fd) {
 }
  
 void send_handshake(conn_t *cs) {
-    char buf[DN_CMD_LEN];
+    string buf;
  
     cs->prev = &ring_head;
     cs->next = ring_head.next;
@@ -150,7 +155,7 @@ void send_handshake(conn_t *cs) {
     cs->prev->next = cs;
  
     dn_event_activate(&cs->ev);
-    buildCmd(buf, "key", 1, 1, dn_name);
+    buf = buildCmd("key", 1, 1, dn_name);
     addParam(buf, encExportKey());
     sendCmd(cs, buf);
  
@@ -235,7 +240,10 @@ void destroy_conn(conn_t *conn) {
     close(conn->fd);
     if (conn->name) {
         uiLoseConn(conn->name);
-        hashSDelKey(dn_routes, conn->name);
+        if (dn_routes->find(conn->name) != dn_routes->end()) {
+            delete (*dn_routes)[conn->name];
+            dn_routes->erase(conn->name);
+        }
     }
     dn_event_deactivate(&conn->ev);
     if (conn->ping_ev) {
@@ -254,30 +262,21 @@ void destroy_conn(conn_t *conn) {
 }
 
 // Start building a command into a buffer
-void buildCmd(char *into, const char *command, char vera, char verb, const char *param)
+string buildCmd(const string &command, char vera, char verb, const string &param)
 {
-    /*sprintf(into, "%s%c%c%s", command, vera, verb, param);*/
-    SF_strncpy(into, command, 4);
-    into[3] = vera;
-    into[4] = verb;
-    SF_strncpy(into + 5, param, DN_CMD_LEN - 5);
+    stringstream toret;
+    toret << command << vera << verb << param;
+    return toret.str();
 }
 
 // Add a parameter into a command buffer
-void addParam(char *into, const char *newparam)
+void addParam(string &into, const string &newparam)
 {
-    /*sprintf(into+strlen(into), ";%s", newparam);*/
-    into[DN_CMD_LEN - 2] = '\0';
-    int cpied = strlen(into);
-    
-    into[cpied] = ';';
-    cpied++;
-    
-    strncpy(into + cpied, newparam, DN_CMD_LEN - cpied);
+    into += string(";") + newparam;
 }
 
 // Send a command
-void sendCmd(struct connection *conn, const char *buf)
+void sendCmd(struct connection *conn, string &buf)
 {
     int len, p;
     size_t newsz = conn->outbuf_sz;
@@ -285,11 +284,14 @@ void sendCmd(struct connection *conn, const char *buf)
     if (conn->fd < 0 || conn->state == CDN_EV_DYING)
         return;
     
-    len = strlen(buf) + 1;
+    if (buf.size() >= DN_CMD_LEN) {
+        buf = buf.substr(0, DN_CMD_LEN - 1);
+    }
+    len = buf.length() + 1;
     p = 0;
     if (conn->outbuf_p == 0) {
         // try an immediate send, as an optimization
-        p = send(conn->fd, buf, len, 0);
+        p = send(conn->fd, buf.c_str(), len, 0);
         if (p < 0) {
             /* Whoops, something broke.
              * Let the event handler clean up.
@@ -309,7 +311,7 @@ void sendCmd(struct connection *conn, const char *buf)
         conn->outbuf_sz = newsz;
     }
 
-    memcpy(conn->outbuf + conn->outbuf_p, buf + p, len - p);
+    memcpy(conn->outbuf + conn->outbuf_p, buf.c_str() + p, len - p);
     conn->outbuf_p += len - p;
 
     dn_event_deactivate(&conn->ev);
@@ -319,240 +321,210 @@ void sendCmd(struct connection *conn, const char *buf)
 
 static void reap_fnd_later(const char *name);
 
-#define REQ_PARAMS(x) if (params[x-1] == NULL) return
-#define REJOIN_PARAMS(x) { \
-	int i; \
-	for (i = x; params[i] != NULL; i++) { \
-		*(params[i]-1) = ';'; \
-		params[i] = NULL; \
-	} \
-}
+#define REQ_PARAMS(x) if (msg.params.size() < x) return
+#define REJOIN_PARAMS(x) msg.recombineParams((x)-1)
 			
 void handleMsg(conn_t *conn, const char *rdbuf)
 {
-    char command[4], *params[DN_MAX_PARAMS];
-    char *inbuf;
     int i, onparam, ostrlen;
 
     // Get the command itself
-    inbuf = (char *) alloca(strlen(rdbuf)+1);
-    if (inbuf == NULL) { perror("strdup"); exit(1); }
-    strcpy(inbuf, rdbuf);
-    strncpy(command, inbuf, 3);
-    command[3] = '\0';
-    
-    memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
-    
-    params[0] = inbuf + 5;
-    
-    onparam = 1;
-    
-    // Divide up the buffer by ;, getting the parameters
-    ostrlen = strlen(inbuf);
-    for (i = 3; i < ostrlen; i++) {
-        if (inbuf[i] == ';') {
-            inbuf[i] = '\0';
-            params[onparam] = inbuf+i+1;
-            onparam++;
-        }
-    }
-    
-    /* DEBUG * /
-    printf("Command: %s\n", command);
-    for (i = 0; params[i]; i++) {
-        printf("Param %d: %s\n", i, params[i]);
-    }
-    putchar('\n');
-    // */
+    Message msg(rdbuf);
     
     /*****************************
      * Current protocol commands *
      *****************************/
     
-    if ((!strncmp(command, "cjo", 3) &&
-         inbuf[3] == 1 && inbuf[4] == 1) ||
-        (!strncmp(command, "con", 3) &&
-         inbuf[3] == 1 && inbuf[4] == 1)) {
+    if ((msg.cmd == "cjo" &&
+         msg.ver[0] == 1 && msg.ver[1] == 1) ||
+        (msg.cmd == "con" &&
+         msg.ver[0] == 1 && msg.ver[1] == 1)) {
         REQ_PARAMS(3);
         
         // "I'm on this chat"
-        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+        if (handleRoutedMsg(msg)) {
             // Are we even on this chat?
-            if (!chatOnChannel(params[1])) {
+            if (!chatOnChannel(msg.params[1])) {
                 return;
             }
             
             // OK, this person is on our list for this chat
-            chatAddUser(params[1], params[2]);
+            chatAddUser(msg.params[1], msg.params[2]);
             
             // Should we echo?
-            if (!strncmp(command, "cjo", 3)) {
-                char *outParams[DN_MAX_PARAMS];
+            if (msg.cmd == "cjo") {
+                Message nmsg("con", 1, 1);
                 
-                memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
-            
-                outParams[0] = hashSGet(dn_routes, params[2]);
-                if (outParams[0] == NULL) {
+                if (dn_routes->find(msg.params[2]) == dn_routes->end()) {
                     return;
                 }
-                outParams[1] = params[1];
-                outParams[2] = dn_name;
+                nmsg.params.push_back((*dn_routes)[msg.params[2]]->toString());
+                nmsg.params.push_back(msg.params[1]);
+                nmsg.params.push_back(dn_name);
                 
-                handleRoutedMsg("con", 1, 1, outParams);
+                handleRoutedMsg(nmsg);
             }
         }
         
-    } else if ((!strncmp(command, "cms", 3) &&
-         inbuf[3] == 1 && inbuf[4] == 1)) {
+    } else if ((msg.cmd == "cms" &&
+                msg.ver[0] == 1 && msg.ver[1] == 1)) {
         REQ_PARAMS(6);
         
         // a chat message
-        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
-            char **users;
-            char *outParams[DN_MAX_PARAMS];
+        if (handleRoutedMsg(msg)) {
             char *unenmsg;
-            int i;
             
             // Should we just ignore it?
-            if (hashIGet(dn_trans_keys, params[1]) == -1) {
-                hashISet(dn_trans_keys, params[1], 1);
+            if (dn_trans_keys->find(msg.params[1]) == dn_trans_keys->end()) {
+                (*dn_trans_keys)[msg.params[1]] = 1;
             } else {
                 return;
             }
-        
+            
             // Are we on this chat?
-            if (!chatOnChannel(params[3])) {
+            if (!chatOnChannel(msg.params[3])) {
                 return;
             }
             
             // Yay, chat for us!
             
             // Decrypt it
-            unenmsg = encFrom(params[2], dn_name, params[5]);
+            unenmsg = encFrom(msg.params[2].c_str(), dn_name, msg.params[5].c_str());
             if (unenmsg[0] == '\0') {
                 free(unenmsg);
                 return;
             }
-            uiDispChatMsg(params[3], params[4], unenmsg);
+            // STRINGIFY:
+            uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg);
             
             // Pass it on
-            users = chatUsers(params[3]);
+            if (dn_chats->find(msg.params[3]) == dn_chats->end()) {
+                // explode
+                free(unenmsg);
+                return;
+            }
+            vector<string> *chan = (*dn_chats)[msg.params[3]];
+            int s = chan->size();
             
-            memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
-            outParams[1] = params[1];
-            outParams[2] = dn_name;
-            outParams[3] = params[3];
-            outParams[4] = params[4];
+            Message nmsg("cms", 1, 1);
             
-            for (i = 0; users[i]; i++) {
-                outParams[0] = hashSGet(dn_routes, users[i]);
-                if (outParams[0] == NULL) {
+            nmsg.params.push_back("");
+            nmsg.params.push_back(msg.params[1]);
+            nmsg.params.push_back(dn_name);
+            nmsg.params.push_back(msg.params[3]);
+            nmsg.params.push_back(msg.params[4]);
+            nmsg.params.push_back("");
+            
+            for (i = 0; i < s; i++) {
+                if (dn_routes->find((*chan)[i]) == dn_routes->end()) {
                     continue;
                 }
+                nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
                 
-                outParams[5] = encTo(dn_name, users[i], unenmsg);
+                char *encd = encTo(dn_name, (*chan)[i].c_str(), unenmsg);
+                nmsg.params[5] = encd;
+                free(encd);
                 
-                handleRoutedMsg("cms", 1, 1, outParams);
-                
-                free(outParams[5]);
+                handleRoutedMsg(nmsg);
             }
             
             free(unenmsg);
         }
         
-    } else if ((!strncmp(command, "dcr", 3) &&
-        inbuf[3] == 1 && inbuf[4] == 1) ||
-        (!strncmp(command, "dce", 3) &&
-        inbuf[3] == 1 && inbuf[4] == 1)) {
+    } else if ((msg.cmd == "dcr" &&
+                msg.ver[0] == 1 && msg.ver[1] == 1) ||
+               (msg.cmd == "dce" &&
+                msg.ver[0] == 1 && msg.ver[1] == 1)) {
         REQ_PARAMS(3);
         
-        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+        if (handleRoutedMsg(msg)) {
             // This doesn't work on OSX
-#if 1 && !defined(__APPLE__)
-            if (!strncmp(command, "dcr", 3) &&
-                inbuf[3] == 1 && inbuf[4] == 1) {
+#if !defined(__APPLE__)
+            if (msg.cmd == "dcr" &&
+                msg.ver[0] == 1 && msg.ver[1] == 1) {
                 // dcr echos
-                char *outParams[DN_MAX_PARAMS];
-                char *rfe, *first;
+                Message nmsg("dce", 1, 1);
+                stringstream ss;
+                
+                Route *route;
+                string first;
                 conn_t *firc;
                 int firfd, locip_len;
                 struct sockaddr locip;
                 struct sockaddr_in *locip_i;
                 
-                memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
-            
                 // First, echo, then try to connect
-                outParams[0] = hashSGet(dn_routes, params[1]);
-                if (outParams[0] == NULL) {
-                    return;
-                }
-                outParams[1] = dn_name;
+                if (dn_routes->find(msg.params[1]) == dn_routes->end()) return;
+                route = (*dn_routes)[msg.params[1]];
+                nmsg.params.push_back(route->toString());
+                nmsg.params.push_back(dn_name);
                 
                 // grab before the first \n for the next name in the line
-                rfe = strchr(outParams[0], '\n');
-                if (rfe == NULL) goto try_connect;
-                first = (char *) strdup(outParams[0]);
-                first[rfe - outParams[0]] = '\0';
+                first = (*route)[0];
+                
                 // then get the fd
-                firc = (conn_t *) hashVGet(dn_conn, first);
-                free(first);
-                if (!firc) goto try_connect;
+                if (dn_conn->find(first) == dn_conn->end()) goto try_connect;
+                
+                firc = (conn_t *) (*dn_conn)[first];
+                
                 firfd = firc->fd;
+                
                 // then turn the fd into a sockaddr
                 locip_len = sizeof(struct sockaddr);
                 if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
                     locip_i = (struct sockaddr_in *) &locip;
-                    /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
-                    outParams[2] = strdup(inet_ntoa(locip_i->sin_addr));
+                    ss.str("");
+                    ss << inet_ntoa(locip_i->sin_addr);
                 } else {
                     goto try_connect;
                 }
-                outParams[2] = (char *) realloc(outParams[2], strlen(outParams[2]) + 7);
-                sprintf(outParams[2] + strlen(outParams[2]), ":%d", serv_port);
+                ss << string(":") << serv_port;
+                nmsg.params.push_back(ss.str());
                 
-                handleRoutedMsg("dce", 1, 1, outParams);
+                handleRoutedMsg(nmsg);
                 
-                free(outParams[2]);
+                try_connect:
+                1;
             }
-try_connect:
             
             // Then, attempt the connection
-            async_establishClient(params[2]);
+            async_establishClient(msg.params[2].c_str());
 #endif
         }
 
-    } else if (!strncmp(command, "fnd", 3) &&
-        inbuf[3] == 1 && inbuf[4] == 1) {
+    } else if (msg.cmd == "fnd" &&
+               msg.ver[0] == 1 && msg.ver[1] == 1) {
         conn_t *remc;
-        char newroute[DN_ROUTE_LEN], ostrlen, outbuf[DN_CMD_LEN];
+        string outbuf;
         
         REQ_PARAMS(4);
         
-        if (!handleNLUnroutedMsg(params)) {
+        if (!handleNLUnroutedMsg(msg)) {
             return;
         }
         
+        Route *nroute = new Route(msg.params[0]);
+        
         // Am I this person?
-        if (!strncmp(params[2], dn_name, DN_NAME_LEN)) {
-            recvFnd(params[0], params[1], params[3]);
+        if (msg.params[2] == dn_name) {
+            recvFnd(nroute, msg.params[1], msg.params[3]);
+            delete nroute;
             return;
         }
         
         // Add myself to the route
-        SF_strncpy(newroute, params[0], DN_ROUTE_LEN);
-        ostrlen = strlen(newroute);
-        SF_strncpy(newroute + ostrlen, dn_name, DN_ROUTE_LEN - ostrlen);
-        ostrlen = strlen(newroute);
-        SF_strncpy(newroute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-
-        buildCmd(outbuf, "fnd", 1, 1, newroute);
-        addParam(outbuf, params[1]);
-        addParam(outbuf, params[2]);
-        addParam(outbuf, params[3]);
+        *nroute += dn_name;
+        
+        outbuf = buildCmd("fnd", 1, 1, nroute->toString());
+        addParam(outbuf, msg.params[1]);
+        addParam(outbuf, msg.params[2]);
+        addParam(outbuf, msg.params[3]);
+        
+        delete nroute;
         
         // Do I have a connection to this person?
-        remc = (conn_t *) hashVGet(dn_conn, params[2]);
-        if (remc) {
+        if (dn_conn->find(msg.params[2]) != dn_conn->end()) {
+            remc = (conn_t *) (*dn_conn)[msg.params[2]];
             sendCmd(remc, outbuf);
             return;
         }
@@ -560,130 +532,107 @@ try_connect:
         // If all else fails, continue the chain
         emitUnroutedMsg(conn, outbuf);
     
-    } else if (!strncmp(command, "fnr", 3) &&
-               inbuf[3] == 1 && inbuf[4] == 1) {
-        char handleit;
+    } else if (msg.cmd == "fnr" &&
+               msg.ver[0] == 1 && msg.ver[1] == 1) {
+        bool handleit;
         
         REQ_PARAMS(4);
         
-        handleit = handleRoutedMsg(command, inbuf[3], inbuf[4], params);
+        handleit = handleRoutedMsg(msg);
         
         if (!handleit) {
             // This isn't our route, but do add intermediate routes
-            int i, ostrlen;
-            char endu[DN_NAME_LEN+1], myn[DN_NAME_LEN+1], newroute[DN_ROUTE_LEN];
-            char checknext, usenext;
-            
-            // Fix our pararms[0]
-            for (i = 0; params[0][i] != '\0'; i++);
-            params[0][i] = '\n';
+            Route *ra, *rb;
+            string endu;
             
             // Who's the end user?
-            for (i = strlen(params[0])-2; params[0][i] != '\n' && params[0][i] != '\0' && i >= 0; i--);
-            SF_strncpy(endu, params[0]+i+1, DN_NAME_LEN+1);
-            endu[strlen(endu)-1] = '\0';
-            
-            // And add an intermediate route
-            hashSSet(dn_iRoutes, endu, params[0]);
-            
-            // Then figure out the route from here back
-            /*i = strncpy(myn, dn_name, DN_NAME_LEN);
-            strncpy(myn + i, "\n", DN_NAME_LEN-i);*/
-            sprintf(myn, "%.254s\n", dn_name);
-            
-            // Loop through to find my name
-            checknext = 1;
-            usenext = 0;
-            for (i = 0; params[2][i] != '\0'; i++) {
-                if (checknext) {
-                    checknext = 0;
-                    // Hey, it's me, the next name is my route
-                    if (!strncmp(params[2]+i, myn, strlen(myn))) {
-                        usenext = 1;
-                    }
-                }
+            ra = new Route(msg.params[0]);
+            if (ra->size() > 0) {
+                endu = (*ra)[ra->size()-1];
                 
-                if (params[2][i] == '\n') {
-                    if (usenext) {
-                        SF_strncpy(newroute, params[2]+i+1, DN_ROUTE_LEN);
-                        break;
-                    }
-                    checknext = 1;
-                }
+                // And add an intermediate route
+                (*dn_iRoutes)[endu] = ra;
             }
             
-            ostrlen = strlen(newroute);
-            SF_strncpy(newroute + ostrlen, params[1], DN_ROUTE_LEN - ostrlen);
+            // Then figure out the route from here back
+            rb = new Route(msg.params[2]);
+            
+            // Loop through to find my name
+            while (rb->size() > 0 && (*rb)[0] != dn_name) rb->pop_front();
             
             // And add that route
-            hashSSet(dn_iRoutes, params[1], newroute);
+            if (rb->size() > 0)
+                (*dn_iRoutes)[msg.params[1]] = rb;
         } else {
-            char newroute[DN_ROUTE_LEN];
-            int ostrlen;
-            
             // Hoorah, add a user
             
             // 1) Route
-            SF_strncpy(newroute, params[2], DN_ROUTE_LEN);
-            
-            ostrlen = strlen(newroute);
-            SF_strncpy(newroute + ostrlen, params[1], DN_ROUTE_LEN - ostrlen);
-            ostrlen += strlen(params[1]);
-            SF_strncpy(newroute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-            
-            hashSSet(dn_routes, params[1], newroute);
-            hashSSet(dn_iRoutes, params[1], newroute);
+            Route *route = new Route(msg.params[2]);
+            if (dn_routes->find(msg.params[1]) != dn_routes->end())
+                delete (*dn_routes)[msg.params[1]];
+            (*dn_routes)[msg.params[1]] = route;
+            if (dn_iRoutes->find(msg.params[1]) != dn_iRoutes->end())
+                delete (*dn_iRoutes)[msg.params[1]];
+            (*dn_iRoutes)[msg.params[1]] = new Route(*route);
             
             // 2) Key
-            encImportKey(params[1], params[3]);
+            encImportKey(msg.params[1].c_str(), msg.params[3].c_str());
             
-            uiEstRoute(params[1]);
+            // STRINGIFY:
+            uiEstRoute(msg.params[1].c_str());
         }
     
-    } else if (!strncmp(command, "key", 3) &&
-               inbuf[3] == 1 && inbuf[4] == 1) {
-        char route[strlen(params[0])+2];
-        
+    } else if (msg.cmd == "key" &&
+               msg.ver[0] == 1 && msg.ver[1] == 1) {
         REQ_PARAMS(2);
         
+        Route *route;
+        
         // if I already have a route to this person, drop it
-        if (hashSGet(dn_routes, params[0])) {
-            hashSDelKey(dn_routes, params[0]);
+        if (dn_routes->find(msg.params[0]) != dn_routes->end()) {
+            delete (*dn_routes)[msg.params[0]];
+            dn_routes->erase(msg.params[0]);
         }
         
         // now accept the new FD
-        hashVSet(dn_conn, params[0], conn);
-        conn->name = strdup(params[0]);
+        conn->name = strdup(msg.params[0].c_str());
         if (!conn->name) abort();
+        (*dn_conn)[msg.params[0]] = conn;
         
-        sprintf(route, "%s\n", params[0]);
-        hashSSet(dn_routes, params[0], route);
-        hashSSet(dn_iRoutes, params[0], route);
+        route = new Route(msg.params[0] + "\n");
+        if (dn_routes->find(msg.params[0]) != dn_routes->end())
+            delete (*dn_routes)[msg.params[0]];
+        (*dn_routes)[msg.params[0]] = route;
+        if (dn_iRoutes->find(msg.params[0]) != dn_iRoutes->end())
+            delete (*dn_iRoutes)[msg.params[0]];
+        (*dn_iRoutes)[msg.params[0]] = new Route(*route);
         
-        encImportKey(params[0], params[1]);
+        encImportKey(msg.params[0].c_str(), msg.params[1].c_str());
         
-        uiEstRoute(params[0]);
+        // STRINGIFY:
+        uiEstRoute(msg.params[0].c_str());
 
-    } else if (!strncmp(command, "lst", 3) &&
-               inbuf[3] == 1 && inbuf[4] == 1) {
+    } else if (msg.cmd == "lst" &&
+               msg.ver[0] == 1 && msg.ver[1] == 1) {
         REQ_PARAMS(2);
-        
-        uiLoseRoute(params[1]);
+      
+        // STRINGIFY:
+        uiLoseRoute(msg.params[1].c_str());
     
-    } else if ((!strncmp(command, "msg", 3) &&
-                inbuf[3] == 1 && inbuf[4] == 1) ||
-               (!strncmp(command, "msa", 3) &&
-                inbuf[3] == 1 && inbuf[4] == 1)) {
+    } else if ((msg.cmd == "msg" &&
+                msg.ver[0] == 1 && msg.ver[1] == 1) ||
+               (msg.cmd == "msa" &&
+                msg.ver[0] == 1 && msg.ver[1] == 1)) {
         REQ_PARAMS(3);
 	REJOIN_PARAMS(3);
         
-        if (handleRoutedMsg(command, inbuf[3], inbuf[4], params)) {
+        if (handleRoutedMsg(msg)) {
             // This is our message
             char *unencmsg, *dispmsg, *sig, *sigm;
             int austat, iskey;
             
             // Decrypt it
-            unencmsg = encFrom(params[1], dn_name, params[2]);
+            unencmsg = encFrom(msg.params[1].c_str(), dn_name, msg.params[2].c_str());
             
             // And verify the signature
             dispmsg = authVerify(unencmsg, &sig, &austat);
@@ -705,7 +654,8 @@ try_connect:
                 sigm = strdup("s");
             } else if (austat == 2) {
                 /* this IS a signature, totally different response */
-                uiAskAuthImport(params[1], unencmsg, sig);
+                // STRINGIFY:
+                uiAskAuthImport(msg.params[1].c_str(), unencmsg, sig);
                 iskey = 1;
                 sigm = NULL;
             } else {
@@ -715,14 +665,15 @@ try_connect:
             if (sig) free(sig);
             
             if (!iskey) {
-                uiDispMsg(params[1], dispmsg, sigm, !strncmp(command, "msa", 3));
+                // STRINGIFY:
+                uiDispMsg(msg.params[1].c_str(), dispmsg, sigm, msg.cmd == "msa");
                 free(sigm);
             }
             free(dispmsg);
             
             // Are we away?
-            if (awayMsg && strncmp(command, "msa", 3)) {
-                sendMsgB(params[1], awayMsg, 1, 1);
+            if (awayMsg && msg.cmd != "msa") {
+                sendMsgB(msg.params[1], *awayMsg, true, true);
             }
             
             return;
@@ -730,125 +681,105 @@ try_connect:
     }
 }
 
-int handleRoutedMsg(const char *command, char vera, char verb, char **params)
+bool handleRoutedMsg(const Message &msg)
 {
-    int i;
+    int i, s;
     conn_t *sendc;
-    char *route, *newroute, newbuf[DN_CMD_LEN];
+    Route *route;
+    string next, buf, last;
     
-    if (strlen(params[0]) == 0) {
-        return 1; // This is our data
+    if (msg.params[0].length() == 0) {
+        return true; // This is our data
     }
     
-    route = strdup(params[0]);
+    route = new Route(msg.params[0]);
     
-    for (i = 0; route[i] != '\n' && route[i] != '\0'; i++);
-    route[i] = '\0';
-    newroute = route+i+1;
+    next = (*route)[0];
+    route->pop_front();
     
-    sendc = (conn_t *) hashVGet(dn_conn, route);
-        
-    if (!sendc) {
+    if (dn_conn->find(next) == dn_conn->end()) {
         // We need to tell the other side that this route is dead!
-        if (strncmp(command, "lst", 3)) {
-            char *newparams[DN_MAX_PARAMS], *endu, *iroute;
-            // Bouncing a lost could end up in an infinite loop, so don't
+        // Bouncing a lost could end up in an infinite loop, so don't
+        if (msg.cmd != "lst") {
+            string endu;
             
-            // Fix our route
-            for (i = 0; route[i] != '\0'; i++);
-            route[i] = '\n';
-            
-            // Who's the end user?
-            route[strlen(route)-1] = '\0';
-            
-            for (i = strlen(route)-1; i >= 0 && route[i] != '\n'; i--);
-            endu = route+i+1;
+            route->push_front(next);
+            endu = (*route)[route->size()-1];
             
             // If this is me, don't send the command, just display it
-            if (!strncmp(params[1], dn_name, DN_NAME_LEN)) {
-                uiLoseRoute(endu);
+            if (msg.params[1] == dn_name) {
+                // STRINGIFY
+                uiLoseRoute(endu.c_str());
             } else {
+                Message lstm("lst", 1, 1);
+                Route *iroute;
+                
                 // Do we have an intermediate route?
-                iroute = hashSGet(dn_iRoutes, params[1]);
-                if (iroute == NULL) return 0;
-            
+                if (dn_iRoutes->find(msg.params[1]) == dn_iRoutes->end()) return 0;
+                iroute = (*dn_iRoutes)[msg.params[1]];
+                
                 // Send the command
-                newparams[0] = iroute;
-                newparams[1] = endu;
-                newparams[2] = NULL;
-                handleRoutedMsg("lst", 1, 1, newparams);
+                lstm.params.push_back(iroute->toString());
+                lstm.params.push_back(endu);
+                handleRoutedMsg(lstm);
             }
         }
         
-        free(route);
+        delete route;
         return 0;
     }
     
-    buildCmd(newbuf, command, vera, verb, newroute);
-    for (i = 1; params[i] != NULL; i++) {
-        addParam(newbuf, params[i]);
+    sendc = (conn_t *) (*dn_conn)[next];
+    
+    buf = buildCmd(msg.cmd, msg.ver[0], msg.ver[1], route->toString());
+    s = msg.params.size();
+    for (i = 1; i < s; i++) {
+        addParam(buf, msg.params[i]);
     }
     
-    sendCmd(sendc, newbuf);
+    sendCmd(sendc, buf);
     
-    free(route);
+    delete route;
     return 0;
 }
 
-int handleNLUnroutedMsg(char **params)
+bool handleNLUnroutedMsg(const Message &msg)
 {
-    char origroute[DN_ROUTE_LEN];
-    char *divroute[DN_MAX_PARAMS];
-    int ondr, i, ostrlen;
+    Route *route = new Route(msg.params[0]);
+    int i, s;
     
-    memset(divroute, 0, DN_MAX_PARAMS * sizeof(char *));
-    
-    SF_strncpy(origroute, params[0], DN_ROUTE_LEN);
-    
-    divroute[0] = origroute;
-    ondr = 1;
-    
-    ostrlen = strlen(origroute);
-    for (i = 0; i < ostrlen; i++) {
-        if (origroute[i] == '\n') {
-            origroute[i] = '\0';
-            if (origroute[i+1] != '\0') {
-                divroute[ondr] = origroute+i+1;
-                ondr++;
-            }
+    s = route->size();
+    for (i = 0; i < s; i++) {
+        if ((*route)[i] == dn_name) {
+            delete route;
+            return false;
         }
     }
-    
-    for (i = ondr - 1; i >= 0; i--) {
-        if (!strncmp(dn_name, divroute[i], DN_NAME_LEN)) {
-            return 0;
-        }
-    }
-    
-    return 1;
+    return true;
 }
 
-int handleNRUnroutedMsg(conn_t *from, const char *command, char vera, char verb, char **params) {
+bool handleNRUnroutedMsg(conn_t *from, const Message &msg) {
     // This part of handleUnroutedMsg decides whether to just delete it
-    if (hashIGet(dn_trans_keys, params[0]) == -1) {
-        char outbuf[DN_CMD_LEN];
-        int i;
+    if (dn_trans_keys->find(msg.params[0]) == dn_trans_keys->end()) {
+        string outbuf;
+        int i, s;
         
-        hashISet(dn_trans_keys, params[0], 1);
+        (*dn_trans_keys)[msg.params[0]] = 1;
         
         // Continue the transmission
-        buildCmd(outbuf, command, vera, verb, params[0]);
-        for (i = 1; params[i]; i++) {
-            addParam(outbuf, params[i]);
+        outbuf = buildCmd(msg.cmd, msg.ver[0], msg.ver[1], msg.params[0]);
+        s = msg.params.size();
+        for (i = 1; i < s; i++) {
+            addParam(outbuf, msg.params[i]);
         }
         emitUnroutedMsg(from, outbuf);
         
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
-void emitUnroutedMsg(conn_t *from, const char *outbuf)
+void emitUnroutedMsg(conn_t *from, string &outbuf)
 {
     // This emits an unrouted message
     conn_t *p;
@@ -863,81 +794,49 @@ void emitUnroutedMsg(conn_t *from, const char *outbuf)
 }
 
 // recvFnd handles the situation that we've just been "found"
-void recvFnd(char *route, const char *name, const char *key)
+void recvFnd(Route *route, const string &name, const string &key)
 {
-    char *routeElement[DN_MAX_PARAMS], *outparams[5];
-    char reverseRoute[DN_ROUTE_LEN];
-    int onRE, i, ostrlen;
-    char newroute[DN_ROUTE_LEN];
-    
-    memset(routeElement, 0, DN_MAX_PARAMS * sizeof(char *));
-    memset(outparams, 0, 5 * sizeof(char *));
-    
-    // Start with the current route
-    SF_strncpy(newroute, route, DN_ROUTE_LEN);
-            
-    // Then tokenize it by \n
-    routeElement[0] = newroute;
-    onRE = 1;
-            
-    ostrlen = strlen(newroute);
-    for (i = 0; i < ostrlen; i++) {
-        if (newroute[i] == '\n') {
-            newroute[i] = '\0';
-            if (newroute[i+1] != '\0') {
-                routeElement[onRE] = newroute+i+1;
-                onRE++;
-                if (onRE >= DN_MAX_PARAMS - 1) onRE--;
-            }
-        }
-    }
-    routeElement[onRE] = NULL;
-
     // FIXME: needs event hash
-            
+    
     // If we haven't started one, good
     if (1) {
-    // This is the first fnd received, but ignore it if we already have a route
-        if (hashSGet(dn_routes, name)) {
+        // This is the first fnd received, but ignore it if we already have a route
+        if (dn_routes->find(name) != dn_routes->end()) {
             return;
         }
                 
         // If we haven't already gotten the fastest route, this must be it
-        onRE--;
-                
         // Build backwards route
-        reverseRoute[0] = '\0';
-        for (i = onRE; i >= 0; i--) {
-            ostrlen = strlen(reverseRoute);
-            SF_strncpy(reverseRoute + ostrlen, routeElement[i], DN_ROUTE_LEN - ostrlen);
-            ostrlen += strlen(routeElement[i]);
-            SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-        }
-        ostrlen = strlen(reverseRoute);
-        SF_strncpy(reverseRoute + ostrlen, name, DN_ROUTE_LEN - ostrlen);
-        ostrlen += strlen(name);
-        SF_strncpy(reverseRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-                
+        Route *reverseRoute = new Route(*route);
+        reverseRoute->reverse();
+        
         // Add his route,
-        hashSSet(dn_routes, name, reverseRoute);
-        hashSSet(dn_iRoutes, name, reverseRoute);
-            
+        if (dn_routes->find(name) != dn_routes->end())
+            delete (*dn_routes)[name];
+        (*dn_routes)[name] = new Route(*route);
+        if (dn_iRoutes->find(name) != dn_iRoutes->end())
+            delete (*dn_iRoutes)[name];
+        (*dn_iRoutes)[name] = new Route(*route);
+        
         // and public key,
-        encImportKey(name, key);
+        encImportKey(name.c_str(), key.c_str());
         
         // then send your route back to him
-        outparams[0] = reverseRoute;
-        outparams[1] = dn_name;
-        outparams[2] = route;
-        outparams[3] = encExportKey();
-        handleRoutedMsg("fnr", 1, 1, outparams);
+        Message omsg("fnr", 1, 1);
+        omsg.params.push_back(reverseRoute->toString());
+        omsg.params.push_back(dn_name);
+        omsg.params.push_back(route->toString());
+        omsg.params.push_back(encExportKey());
+        handleRoutedMsg(omsg);
         
-        uiEstRoute(name);
+        // STRINGIFY:
+        uiEstRoute(name.c_str());
         
-        reap_fnd_later(name);
+        reap_fnd_later(name.c_str());
         
         // Put it back where it belongs
     } else {
+#if 0
         char oldWRoute[DN_ROUTE_LEN];
         char *curWRoute;
         char *newRouteElements[DN_MAX_PARAMS];
@@ -995,8 +894,8 @@ void recvFnd(char *route, const char *name, const char *key)
         
         // And put it back in the hash
         hashSSet(weakRoutes, name, curWRoute);
+#endif
     }
-    
 }
 
 static void fnd_reap(dn_event_t *ev);
@@ -1015,166 +914,146 @@ static void fnd_reap(dn_event_t *ev)
     char *name = (char *) ev->payload;
     char isWeak = 0;
     char *curWRoute;
+    string sname = string(name);
     
     dn_event_deactivate(ev);
     free(ev);
     
-    
-    // Figure out if there's a weak route
-    curWRoute = hashSGet(weakRoutes, name);
-    if (curWRoute) {
-        // If the string has a location, check if it's weak
-        if (strlen(curWRoute) > 0) {
-            isWeak = 1;
-        }
-        hashSDelKey(weakRoutes, name);
-    } else {
-        // If this isn't set, that means _NO_ other fnd was received, VERY weak route!
-        isWeak = 1;
-    }
-    
-    if (!isWeak) {
-        //hashPSet(recFndPthreads, name, (pthread_t *) -1);
-        return;
-    }
-    
-    // If it's weak, send a dcr (direct connect request) (except on OSX where it doesn't work)
+    // Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
     {
-        char *params[DN_MAX_PARAMS], *first;
+        Message nmsg("dcr", 1, 1);
+        stringstream ss;
+        
+        Route *route;
+        string first;
+        conn_t *firc;
+        int firfd, locip_len;
         struct sockaddr locip;
         struct sockaddr_in *locip_i;
-        char *rfe;
-        int firfd, locip_len;
-        conn_t *firc;
         
-        memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
-        
-        params[0] = hashSGet(dn_routes, name);
-        params[1] = dn_name;
+        // First, echo, then try to connect
+        if (dn_routes->find(sname) == dn_routes->end()) return;
+        route = (*dn_routes)[sname];
+        nmsg.params.push_back(route->toString());
+        nmsg.params.push_back(dn_name);
         
         // grab before the first \n for the next name in the line
-        rfe = strchr(params[0], '\n');
-        if (rfe == NULL) {
-            return;
-        }
-        first = (char *) strdup(params[0]);
-        first[rfe - params[0]] = '\0';
+        first = (*route)[0];
         
         // then get the fd
-        firc = (conn_t *) hashVGet(dn_conn, first);
-        free(first);
-        if (!firc) {
-            return;
-        }
+        if (dn_conn->find(first) == dn_conn->end()) return;
+        
+        firc = (conn_t *) (*dn_conn)[first];
+        
         firfd = firc->fd;
+        
         // then turn the fd into a sockaddr
         locip_len = sizeof(struct sockaddr);
         if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
             locip_i = (struct sockaddr_in *) &locip;
-            /*params[2] = strdup(inet_ntoa(*((struct in_addr *) &(locip_i->sin_addr))));*/
-            params[2] = strdup(inet_ntoa(locip_i->sin_addr));
+            ss.str("");
+            ss << inet_ntoa(locip_i->sin_addr);
         } else {
             return;
         }
-        params[2] = (char *) realloc(params[2], strlen(params[2]) + 7);
-        sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
+        ss << string(":") << serv_port;
+        nmsg.params.push_back(ss.str());
         
-        handleRoutedMsg("dcr", 1, 1, params);
-        
-        free(params[2]);
-        
-//        hashPSet(recFndPthreads, name, (pthread_t *) -1);
-        return;
+        handleRoutedMsg(nmsg);
     }
 #endif
-    return;
 }
 
 /* Commands used by the UI */
-void establishConnection(const char *to)
+void establishConnection(const string &to)
 {
-    char *route;
+    string sto = string(to);
     
-    route = hashSGet(dn_routes, to);
-    if (route) {
-        char *params[DN_MAX_PARAMS], *ip, hostbuf[128];
+    if (dn_routes->find(sto) != dn_routes->end()) {
+        Route *route = (*dn_routes)[sto];
+        char hostbuf[128], *ip;
         struct hostent *he;
+        stringstream ss;
         
-        memset(params, 0, DN_MAX_PARAMS * sizeof(char *));
+        // it's a user, send a dcr
+        Message omsg("dcr", 1, 1);
+        omsg.params.push_back(route->toString());
+        omsg.params.push_back(dn_name);
         
-        // It's a user, send a DCR
-        params[1] = dn_name;
- 
-        gethostname(hostbuf, 128);
+        hostbuf[127] = '\0';
+        gethostname(hostbuf, 127);
         he = gethostbyname(hostbuf);
         ip = inet_ntoa(*((struct in_addr *)he->h_addr));
-        params[2] = (char *) malloc((strlen(ip) + 7) * sizeof(char));
-        strcpy(params[2], ip);
-        sprintf(params[2] + strlen(params[2]), ":%d", serv_port);
         
-        handleRoutedMsg("dcr", 1, 1, params);
+        ss.str("");
+        ss << ip << ":" << serv_port;
+        omsg.params.push_back(ss.str());
         
-        free(params[2]);
+        handleRoutedMsg(omsg);
     } else {
         // It's a hostname or IP
-        async_establishClient(to);
+        async_establishClient(to.c_str());
     }
 }
 
-int sendMsgB(const char *to, const char *msg, char away, char sign)
+#include <iostream>
+using namespace std;
+
+int sendMsgB(const string &to, const string &msg, bool away, bool sign)
 {
-    char *outparams[DN_MAX_PARAMS], *route;
+    Message omsg("msg", 1, 1);
+    Route *route;
     char *signedmsg, *encdmsg;
     
-    memset(outparams, 0, DN_MAX_PARAMS * sizeof(char *));
-        
-    route = hashSGet(dn_routes, to);
-    if (route == NULL) {
-        uiNoRoute(to);
+    if (dn_routes->find(to) == dn_routes->end()) {
+        // STRINGIFY:
+        uiNoRoute(to.c_str());
         return 0;
     }
-
-    outparams[0] = route;
-    outparams[1] = dn_name;
+    route = (*dn_routes)[to];
+    
+    omsg.params.push_back(route->toString());
+    omsg.params.push_back(dn_name);
     
     // Sign ...
     if (sign) {
-        signedmsg = authSign(msg);
+        signedmsg = authSign(msg.c_str());
         if (!signedmsg) return 0;
     } else {
-        signedmsg = strdup(msg);
+        signedmsg = strdup(msg.c_str());
+        if (!signedmsg) { perror("strdup"); exit(1); }
     }
     
     // and encrypt the message
-    encdmsg = encTo(dn_name, to, signedmsg);
+    encdmsg = encTo(dn_name, to.c_str(), signedmsg);
     free(signedmsg);
     
-    outparams[2] = encdmsg;
-    if (away) {
-        handleRoutedMsg("msa", 1, 1, outparams);
-    } else {
-        handleRoutedMsg("msg", 1, 1, outparams);
-    }
-        
+    omsg.params.push_back(encdmsg);
     free(encdmsg);
+    
+    if (away) {
+        omsg.cmd = "msa";
+    }
+    
+    handleRoutedMsg(omsg);
     
     return 1;
 }
 
-int sendMsg(const char *to, const char *msg)
+int sendMsg(const string &to, const string &msg)
 {
-    return sendMsgB(to, msg, 0, 1);
+    return sendMsgB(to, msg, false, true);
 }
 
-int sendAuthKey(const char *to)
+int sendAuthKey(const string &to)
 {
     char *msg;
     int ret;
     
     msg = authExport();
     if (msg) {
-        ret = sendMsgB(to, msg, 0, 0);
+        ret = sendMsgB(to, msg, false, false);
         free(msg);
         return ret;
     } else {
@@ -1182,117 +1061,95 @@ int sendAuthKey(const char *to)
     }
 }
 
-void sendFnd(const char *toc) {
-    char outbuf[DN_CMD_LEN];
+void sendFnd(const string &toc) {
+    string outbuf;
     
     // Find a user by name
-    buildCmd(outbuf, "fnd", 1, 1, "");
+    outbuf = buildCmd("fnd", 1, 1, "");
     addParam(outbuf, dn_name);
     addParam(outbuf, toc);
     addParam(outbuf, encExportKey());
-        
+    
     emitUnroutedMsg(NULL, outbuf);
 }
 
-void joinChat(const char *chat)
+void joinChat(const string &chat)
 {
-    struct hashKeyS *cur;
-    
-    // Add to the hash
+    // Join the chat
     chatJoin(chat);
     
     // Send a cjo to everybody we have a route to
-    char *outParams[4];
+    Message msg("cjo", 1, 1);
+    msg.params.push_back("");
+    msg.params.push_back(chat);
+    msg.params.push_back(dn_name);
     
-    memset(outParams, 0, 4 * sizeof(char *));
-    outParams[1] = (char *) alloca(strlen(chat)+1);
-    if (outParams[1] == NULL) { perror("alloca"); exit(1); }
-    strcpy(outParams[1], chat);
-    outParams[2] = dn_name;
+    map<string, Route *>::iterator ri;
     
-    cur = dn_routes->head;
-    while (cur) {
-        outParams[0] = strdup(cur->value);
-        
-        handleRoutedMsg("cjo", 1, 1, outParams);
-        
-        free(outParams[0]);
-        cur = cur->next;
+    for (ri = dn_routes->begin(); ri != dn_routes->end(); ri++) {
+        msg.params[0] = ri->second->toString();
+        handleRoutedMsg(msg);
     }
 }
 
-void leaveChat(const char *chat)
+void leaveChat(const string &chat)
 {
-    struct hashKeyS *cur;
-    
-    // Remove from the hash
+    // Leave the chat
     chatLeave(chat);
     
     // Send a clv to everybody we have a route to
-    char *outParams[4];
+    Message msg("clv", 1, 1);
+    msg.params.push_back("");
+    msg.params.push_back(chat);
+    msg.params.push_back(dn_name);
     
-    memset(outParams, 0, 4 * sizeof(char *));
-    outParams[1] = (char *) alloca(strlen(chat)+1);
-    if (outParams[1] == NULL) { perror("alloca"); exit(1); }
-    strcpy(outParams[1], chat);
-    outParams[2] = dn_name;
+    map<string, Route *>::iterator ri;
     
-    cur = dn_routes->head;
-    while (cur) {
-        outParams[0] = strdup(cur->value);
-        
-        handleRoutedMsg("clv", 1, 1, outParams);
-        
-        free(outParams[0]);
-        cur = cur->next;
+    for (ri = dn_routes->begin(); ri != dn_routes->end(); ri++) {
+        msg.params[0] = ri->second->toString();
+        handleRoutedMsg(msg);
     }
 }
 
-void sendChat(const char *to, const char *msg)
+void sendChat(const string &to, const string &msg)
 {
-    char **users;
-    char *outParams[DN_MAX_PARAMS], key[DN_TRANSKEY_LEN];
-    int i;
+    char key[DN_TRANSKEY_LEN];
+    vector<string> *chan;
+    int i, s;
     
-    memset(outParams, 0, DN_MAX_PARAMS * sizeof(char *));
+    Message omsg("cms", 1, 1);
+    omsg.params.push_back("");
     
     newTransKey(key);
+    omsg.params.push_back(key);
     
-    outParams[1] = key;
-    outParams[2] = dn_name;
-    outParams[3] = (char *) alloca(strlen(to)+1);
-    if (outParams[3] == NULL) { perror("alloca"); exit(1); }
-    strcpy(outParams[3], to);
-    outParams[4] = dn_name;
+    omsg.params.push_back(dn_name);
+    omsg.params.push_back(to);
+    omsg.params.push_back(dn_name);
+    omsg.params.push_back("");
     
-    users = chatUsers(to);
-            
-    for (i = 0; users[i]; i++) {
-        outParams[0] = hashSGet(dn_routes, users[i]);
-        if (outParams[0] == NULL) {
-            continue;
-        }
-        
-        outParams[5] = encTo(dn_name, users[i], msg);
-        
-        handleRoutedMsg("cms", 1, 1, outParams);
-        
-        free(outParams[5]);
+    
+    if (dn_chats->find(to) == dn_chats->end()) {
+        return;
+    }
+    chan = (*dn_chats)[to];
+    s = chan->size();
+    
+    for (i = 0; i < s; i++) {
+        if (dn_routes->find((*chan)[i]) == dn_routes->end()) continue;
+        omsg.params[0] = (*chan)[i];
+        omsg.params[5] = encTo(dn_name, (*chan)[i].c_str(), msg.c_str());
+        handleRoutedMsg(omsg);
     }
 }
 
-void setAway(const char *msg)
+void setAway(const string *msg)
 {
-    char *oldam;
-    oldam = awayMsg;
-    
     if (msg) {
-        awayMsg = strdup(msg);
+        if (!awayMsg) awayMsg = new string();
+        *awayMsg = *msg;
     } else {
+        if (awayMsg) delete awayMsg;
         awayMsg = NULL;
-    }
-    
-    if (oldam) {
-        free(oldam);
     }
 }

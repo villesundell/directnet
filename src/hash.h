@@ -19,6 +19,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#if 0
 #ifndef DN_HASH_H
 #define DN_HASH_H
 
@@ -58,3 +59,4 @@ void hashSSet(struct hashS *hash, const char *key, const char *value);
 void hashSDelKey(struct hashS *hash, const char *key);
 
 #endif // DN_HASH_H
+#endif

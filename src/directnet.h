@@ -22,8 +22,12 @@
 #ifndef DN_DIRECTNET_H
 #define DN_DIRECTNET_H
 
+#include <map>
+#include <string>
+using namespace std;
+
 #include "globals.h"
-#include "hash.h"
+#include "route.h"
 
 #ifdef GAIM_PLUGIN
 int pluginMain(int argc, char **argv, char **envp);
@@ -31,22 +35,22 @@ int pluginMain(int argc, char **argv, char **envp);
 
 extern int serv_port;
 
-extern struct hashS *weakRoutes; // List of weak routes
+extern map<string, Route *> *weakRoutes; // List of weak routes
 
 // our name
 extern char dn_name[DN_NAME_LEN+1];
 
 // connections by name
-extern struct hashV *dn_conn;
+extern map<string, void *> *dn_conn;
   
 // route by name
-extern struct hashS *dn_routes;
+extern map<string, Route *> *dn_routes;
 
 // intermediate routes by name
-extern struct hashS *dn_iRoutes;
+extern map<string, Route *> *dn_iRoutes;
 
 // has a key been used yet?
-extern struct hashI *dn_trans_keys;
+extern map<string, int> *dn_trans_keys;
 
 // our position in the transkey list
 extern int currentTransKey;
