@@ -400,8 +400,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 free(unenmsg);
                 return;
             }
-            // STRINGIFY:
-            uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg);
+            uiDispChatMsg(msg.params[3], msg.params[4], unenmsg);
             
             // Pass it on
             if (dn_chats->find(msg.params[3]) == dn_chats->end()) {
@@ -584,8 +583,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             // 2) Key
             encImportKey(msg.params[1].c_str(), msg.params[3].c_str());
             
-            // STRINGIFY:
-            uiEstRoute(msg.params[1].c_str());
+            uiEstRoute(msg.params[1]);
         }
     
     } else if (msg.cmd == "key" &&
@@ -615,15 +613,13 @@ void handleMsg(conn_t *conn, const char *rdbuf)
         
         encImportKey(msg.params[0].c_str(), msg.params[1].c_str());
         
-        // STRINGIFY:
-        uiEstRoute(msg.params[0].c_str());
+        uiEstRoute(msg.params[0]);
 
     } else if (msg.cmd == "lst" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
         REQ_PARAMS(2);
       
-        // STRINGIFY:
-        uiLoseRoute(msg.params[1].c_str());
+        uiLoseRoute(msg.params[1]);
     
     } else if ((msg.cmd == "msg" &&
                 msg.ver[0] == 1 && msg.ver[1] == 1) ||
@@ -660,8 +656,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 sigm = strdup("s");
             } else if (austat == 2) {
                 /* this IS a signature, totally different response */
-                // STRINGIFY:
-                uiAskAuthImport(msg.params[1].c_str(), unencmsg, sig);
+                uiAskAuthImport(msg.params[1], unencmsg, sig);
                 iskey = 1;
                 sigm = NULL;
             } else {
@@ -671,8 +666,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             if (sig) free(sig);
             
             if (!iskey) {
-                // STRINGIFY:
-                uiDispMsg(msg.params[1].c_str(), dispmsg, sigm, msg.cmd == "msa");
+                uiDispMsg(msg.params[1], dispmsg, sigm, msg.cmd == "msa");
                 free(sigm);
             }
             free(dispmsg);
@@ -714,8 +708,7 @@ bool handleRoutedMsg(const Message &msg)
             
             // If this is me, don't send the command, just display it
             if (msg.params[1] == dn_name) {
-                // STRINGIFY
-                uiLoseRoute(endu.c_str());
+                uiLoseRoute(endu);
             } else {
                 Message lstm("lst", 1, 1);
                 Route *iroute;
@@ -835,8 +828,7 @@ void recvFnd(Route *route, const string &name, const string &key)
         omsg.params.push_back(encExportKey());
         handleRoutedMsg(omsg);
         
-        // STRINGIFY:
-        uiEstRoute(name.c_str());
+        uiEstRoute(name);
         
         reap_fnd_later(name.c_str());
         
@@ -1010,8 +1002,7 @@ int sendMsgB(const string &to, const string &msg, bool away, bool sign)
     char *signedmsg, *encdmsg;
     
     if (dn_routes->find(to) == dn_routes->end()) {
-        // STRINGIFY:
-        uiNoRoute(to.c_str());
+        uiNoRoute(to);
         return 0;
     }
     route = (*dn_routes)[to];

@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 #include <stdio.h>
@@ -41,26 +42,27 @@ using namespace std;
 #include <sys/time.h>
 #include <event.h>
 
-char *currentPartner;
-char *crossinput;
-int cinp, cinpd;
+string currentPartner;
+void (*crossinput)(const string &inp);
+string *csig, *cmsg;
+bool cinp = false;
 
-int hub = 0;
+bool hub = false;
 const char *hubname;
 
-int handleUInput(const char *inp);
-int handleAuto(char **params);
+int handleUInput(const string &inp);
+void handleAuto(vector<string> &params);
 
 void resetInputPrompt();
 
-int main(int argc, char ** argv, char **envp)
+int main(int argc, char **argv, char **envp)
 {
     // This is the most basic UI
     int charin, ostrlen, i;
     char cmdbuf[32256];
-
+    
     event_init();
-
+    
     // strip out --hub so dn_init won't explode
     // XXX: need better cmdline handling
     // boost?
@@ -76,10 +78,6 @@ int main(int argc, char ** argv, char **envp)
     }
     
     dn_init(argc, argv);
-    
-    cinp = 0;
-    cinpd = 0;
-    crossinput = NULL;
     
     // Always start by finding encryption
     if (findEnc(envp) == -1) {
@@ -145,7 +143,6 @@ int main(int argc, char ** argv, char **envp)
         authSetPW("", "");
         strcpy(dn_name, hubname);
     }
-        
     
     // And creating the key
     encCreateKey();
@@ -156,18 +153,17 @@ int main(int argc, char ** argv, char **envp)
     }
     
     // You start in a conversation with nobody
-    currentPartner = (char *) malloc(DN_NAME_LEN * sizeof(char));
-    currentPartner[0] = '\0';
+    currentPartner = "";
     
     dn_goOnline();
     
     if (!hub) {
-        printf("%s> ", currentPartner);
-        fflush(stdout);
-
+        cout << "> ";
+        cout.flush();
+        
         resetInputPrompt();
     }
-
+    
     event_loop(0);
     return 0;
 }
@@ -200,7 +196,10 @@ int ib_pos = 0;
 static void inputEvent(int cond, dn_event *ev);
 
 void resetInputPrompt() {
-    static dn_event *input_ev = new dn_event(NULL, DN_EV_FD, NULL, 0);
+    static dn_event *input_ev = NULL;
+    if (!input_ev) {
+        input_ev = new dn_event(NULL, DN_EV_FD, NULL, 0);
+    }
     input_ev->event_info.fd.fd = 0;
     input_ev->event_info.fd.trigger = inputEvent;
     input_ev->event_info.fd.watch_cond = DN_EV_READ;
@@ -232,85 +231,74 @@ got_input:
         ib_pos -= i + 1;
     }
     if (!ib_pos) {
-        printf("%s> ", currentPartner);
-        fflush(stdout);
+        cout << currentPartner << "> ";
+        cout.flush();
     }
 }
 
-int handleUInput(const char *originp)
+int handleUInput(const string &inp)
 {
-    char *inp = (char *) alloca(strlen(originp)+1);
-    strcpy(inp, originp);
-    
     // Is it crossinput?
     if (cinp) {
-        cinp = 0;
-        crossinput = strdup(inp);
-        cinpd = 1;
+        crossinput(inp);
         return 0;
     }
     
     // Is it a command?
     if (inp[0] == '/') {
-        char *params[50];
-        int i, onparam;
+        vector<string> params;
+        int x, y;
         
         // Tokenize the parameters by ' '
-        memset(params, 0, 50 * sizeof(char *));
-        
-        params[0] = inp;
-        onparam = 1;
-    
-        for (i = 0; inp[i] != '\0'; i++) {
-            if (inp[i] == ' ') {
-                inp[i] = '\0';
-                params[onparam] = inp+i+1;
-                onparam++;
+        for (x = 0; x < inp.length(); x = y + 1) {
+            y = inp.find_first_of(' ', y);
+            if (y == string::npos) {
+                y = inp.length();
             }
+            params.push_back(inp.substr(x, y - x));
         }
         
         if (params[0][1] == 'a') {
-            string amsg = params[1];
-            setAway(&amsg);
-            if (params[1]) {
-                printf("\nAway message set.\n");
+            if (params.size() > 1) {
+                setAway(&params[1]);
+                cout << "Away message set." << endl;
             } else {
-                printf("\nAway message unset.\n");
+                setAway(NULL);
+                cout << "Away message unset." << endl;
             }
             return 0;
         } else if (params[0][1] == 'c') {
-            if (params[1] == NULL) {
+            if (params.size() <= 1) {
                 return 0;
             }
-        
+            
             // Connect to a given hostname or user
             establishConnection(params[1]);
             return 0;
         } else if (params[0][1] == 'f') {
-            if (params[1] == NULL) {
+            if (params.size() <= 1) {
                 return 0;
             }
             
             sendFnd(params[1]);
         } else if (params[0][1] == 'k') {
-            if (currentPartner[0] == '\0') {
-                printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n");
-                fflush(stdout);
+            if (currentPartner == "") {
+                cout << "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat." << endl;
                 return 0;
             }
             if (currentPartner[0] == '#') return 0;
             
             sendAuthKey(currentPartner);
         } else if (params[0][1] == 't') {
-            if (params[1] == NULL) {
+            if (params.size() <= 1) {
                 return 0;
             }
-        
-            strncpy(currentPartner, params[1], DN_NAME_LEN);
+            
+            currentPartner = params[1];
             
             if (currentPartner[0] == '#') {
                 // Join the chat
-                joinChat(currentPartner+1);
+                joinChat(currentPartner.substr(1));
             }
         } else if (params[0][1] == 'u') {
             // auto*
@@ -320,21 +308,20 @@ int handleUInput(const char *originp)
         }
         
     } else {
-        if (!inp[0]) return 0;
+        if (inp.length() == 0) return 0;
         
         // Not a command, a message
-        if (currentPartner[0] == '\0') {
-            printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n");
-            fflush(stdout);
+        if (currentPartner == "") {
+            cout << "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat." << endl;
             return 0;
         }
         
         // Is it a chat?
         if (currentPartner[0] == '#') {
-            sendChat(currentPartner+1, inp);
+            sendChat(currentPartner.substr(1), inp);
         } else {
             if (sendMsg(currentPartner, inp)) {
-                printf("to %s: %s\n", currentPartner, inp);
+                cout << "to " << currentPartner << ": " << inp << endl;
             }
         }
     }
@@ -343,10 +330,16 @@ int handleUInput(const char *originp)
 }
 
 /* just received a /u, so handle auto-something */
-int handleAuto(char **params)
+void handleAuto(vector<string> &params)
 {
     int i;
     set<string>::iterator aci, afi;
+    
+#define AUTO_USE cout << "Use: /u {c|n} {a|r} <hostname|nick>" << endl
+    if (params.size() <= 2) {
+        AUTO_USE;
+        return;
+    }
     
     switch (params[1][0]) {
         case 'c':
@@ -365,8 +358,8 @@ int handleAuto(char **params)
                 case 'a':
                 case 'A':
                     /* autoconnection add */
-                    if (!params[3]) {
-                        printf("Use: /u c a <hostname>\n");
+                    if (params.size() <= 3) {
+                        AUTO_USE;
                         break;
                     }
                     addAutoConnect(params[3]);
@@ -375,15 +368,15 @@ int handleAuto(char **params)
                 case 'r':
                 case 'R':
                     /* autoconnection remove */
-                    if (!params[3]) {
-                        printf("Use: /u c r <hostname>\n");
+                    if (params.size() <= 3) {
+                        AUTO_USE;
                         break;
                     }
                     remAutoConnect(params[3]);
                     break;
                     
                 default:
-                    printf("Use: /u c {a|r} <hostname>\n");
+                    AUTO_USE;
                     break;
             }
             break;
@@ -404,8 +397,8 @@ int handleAuto(char **params)
                 case 'a':
                 case 'A':
                     /* autofind add */
-                    if (!params[3]) {
-                        printf("Use: /u f a <nick>\n");
+                    if (params.size() <= 3) {
+                        AUTO_USE;
                         break;
                     }
                     addAutoFind(params[3]);
@@ -414,85 +407,94 @@ int handleAuto(char **params)
                 case 'r':
                 case 'R':
                     /* autofind remove */
-                    if (!params[3]) {
-                        printf("Use: /u f r <nick>\n");
+                    if (params.size() <= 3) {
+                        AUTO_USE;
                         break;
                     }
                     remAutoFind(params[3]);
                     break;
                     
                 default:
-                    printf("Use: /u f {l|a|r} <nick>\n");
+                    AUTO_USE;
                     break;
             }
             break;
             
         default:
-            printf("Use: /u {c|f} {l|a|r} {<hostname>|<nick>}\n"
-                   "     c for autoconnections, f for autofinds\n"
-                   "     l to list auto*\n"
-                   "     a to add a hostname or nick\n"
-                   "     r to remove a hostname or nick\n");
+            cout << "Use: /u {c|f} {l|a|r} {<hostname>|<nick>}" << endl
+            << "     c for autoconnections, f for autofinds" << endl
+            << "     l to list auto*" << endl
+            << "     a to add a hostname or nick" << endl
+            << "     r to remove a hostname or nick" << endl;
     }
 }
 
-void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
+void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
 {
-    printf("\n%s [%s]%s: %s\n%s> ", from, authmsg, away ? " [away]" : "", msg, currentPartner);
-    fflush(stdout);
+    cout << endl << from << " [" << authmsg << "]" << (away ? " [away" : "") <<
+    ": " << msg << endl << currentPartner << "> ";
+    cout.flush();
 }
 
-void uiAskAuthImport(const char *from, const char *msg, const char *sig)
+void uiAskAuthImport2(const string &acpt);
+
+void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 {
-    printf("\n%s has asked you to import the key '%s'.  Do you accept?\n? ", from, sig);
-    fflush(stdout);
+    cout << endl << from << " has asked you to import the key '" << sig <<
+    "'.  Do you accept?" << endl << "? ";
+    cout.flush();
     
-    cinpd = 0;
-    cinp = 1;
-    while (!cinpd) sleep(0);
-    
-    if (crossinput[0] == 'y' || crossinput[0] == 'Y') {
-        printf("\nImporting %s ...\n%s> ", sig, currentPartner);
-        fflush(stdout);
-        authImport(msg);
+    crossinput = uiAskAuthImport2;
+    csig = new string(sig);
+    cmsg = new string(msg);
+    cinp = true;
+}
+
+void uiAskAuthImport2(const string &acpt)
+{
+    if (acpt[0] == 'y' || acpt[0] == 'Y') {
+        cout << endl << "Importing " << *csig << " ..." << endl;
+        authImport(cmsg->c_str());
     }
-    free(crossinput);
+    delete csig;
+    delete cmsg;
+    cinp = false;
 }
 
-void uiDispChatMsg(const char *chat, const char *from, const char *msg)
+void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
-    printf("\n#%s: %s: %s\n%s> ", chat, from, msg, currentPartner);
-    fflush(stdout);
+    cout << endl << "#" << chat << ": " << from << ": " << msg << endl << currentPartner << "> ";
+    cout.flush();
 }
 
-void uiEstConn(const char *from)
+void uiEstConn(const string &from)
 {
-    printf("\n%s: Connection established.\n%s> ", from, currentPartner);
-    fflush(stdout);
+    cout << endl << from << ": Connection established." << endl << currentPartner << "> ";
+    cout.flush();
 }
 
-void uiEstRoute(const char *from)
+void uiEstRoute(const string &from)
 {
-    printf("\n%s: Route established.\n%s> ", from, currentPartner);
-    fflush(stdout);
+    cout << endl << from << ": Route established." << endl << currentPartner << "> ";
+    cout.flush();
 }
 
-void uiLoseConn(const char *from)
+void uiLoseConn(const string &from)
 {
-    printf("\n%s: Connection lost.\n%s> ", from, currentPartner);
-    fflush(stdout);
+    cout << endl << from << ": Connection lost." << endl << currentPartner << "> ";
+    cout.flush();
 }
 
-void uiLoseRoute(const char *from)
+void uiLoseRoute(const string &from)
 {
-    printf("\n%s: Route lost.\n%s> ", from, currentPartner);
-    fflush(stdout);
+    cout << endl << from << ": Route lost." << endl << currentPartner << "> ";
+    cout.flush();
 }
 
-void uiNoRoute(const char *to)
+void uiNoRoute(const string &to)
 {
-    printf("\n%s: No route to user.\n%s> ", to, currentPartner);
-    fflush(stdout);
+    cout << endl << to << ": No route to user." << endl << currentPartner << "> ";
+    cout.flush();
 }
 
 class dn_event_private {

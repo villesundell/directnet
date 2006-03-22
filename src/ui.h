@@ -21,51 +21,47 @@
 #ifndef DN_UI_H
 #define DN_UI_H
 
-/* Run the UI
- * argc: argc from main
- * argv: argv from main
- * envp: envp from main
- * returns: 0 on successful run, -1 otherwise */
-int uiInit(int argc, char **argv, char **envp);
+#include <string>
+using namespace std;
 
 /* Display a message
  * from: the sender of the message
  * msg: the message
  * authmsg: the authentication message 
  * away: 1 if the user is away*/
-void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away);
+void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away);
 
 /* Ask the user if (s)he wants to import a key.
  * from: the sender of the key
  * msg: the key in message format
  * sig: the name in the key */
-void uiAskAuthImport(const char *from, const char *msg, const char *sig);
+void uiAskAuthImport(const string &from, const string &msg, const string &sig);
 
 /* Display a chat message
  * chat: the chat that the message is on
  * from: the person who sent the message
  * msg: the message */
-void uiDispChatMsg(const char *chat, const char *from, const char *msg);
+void uiDispChatMsg(const string &chat, const string &from, const string &msg);
 
 /* Display that a connection has been established
  * from: the IP or hostname of the connector */
-void uiEstConn(const char *from);
+void uiEstConn(const string &from);
 
 /* Display that a route has been established
  * from: the user to whom a route has been established */
-void uiEstRoute(const char *from);
+void uiEstRoute(const string &from);
 
 /* Display that a connection has been lost
  * from: the user (or IP or hostname if no username is available) that has
  *       disconnected */
-void uiLoseConn(const char *from);
+void uiLoseConn(const string &from);
 
 /* Display that a route has been lost
  * from: the user to whom there is no longer a route */
-void uiLoseRoute(const char *from);
+void uiLoseRoute(const string &from);
 
 /* Display that a transmission has failed becausethere is no route
  * to: the user that the transmission was sent to */
-void uiNoRoute(const char *to);
+void uiNoRoute(const string &to);
 
 #endif // DN_UI_H
