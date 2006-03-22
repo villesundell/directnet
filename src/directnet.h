@@ -29,10 +29,6 @@ using namespace std;
 #include "globals.h"
 #include "route.h"
 
-#ifdef GAIM_PLUGIN
-int pluginMain(int argc, char **argv, char **envp);
-#endif
-
 extern int serv_port;
 
 extern map<string, Route *> *weakRoutes; // List of weak routes

@@ -42,10 +42,9 @@
  * This is designed to be easy for UIs to implement.
  */
 
-struct dn_event;
-struct dn_event_private;
+class dn_event_private;
 
-typedef struct dn_event dn_event_t;
+class dn_event;
 
 /* Timer event
  *
@@ -54,10 +53,11 @@ typedef struct dn_event dn_event_t;
  */
 
 #define DN_EV_TIMER 0x100
-typedef struct {
-    void (*trigger)(dn_event_t *ev);
+class event_info_timer {
+    public:
+    void (*trigger)(dn_event *ev);
     unsigned long t_sec, t_usec;
-} event_info_timer;
+};
 
 /* fd event notification
  *
@@ -71,15 +71,22 @@ typedef struct {
 #define DN_EV_EXCEPT 4
 
 #define DN_EV_FD 0x101
-typedef struct {
-    void (*trigger)(int cond, dn_event_t *ev);
+class event_info_fd {
+    public:
+    void (*trigger)(int cond, dn_event *ev);
     int fd;
     char watch_cond;
-} event_info_fd;
+};
 
-
-struct dn_event {
-    /* Public fields */
+class dn_event {
+    public:
+    dn_event(void *spayload, int stype, const char *stfile, int stline) {
+        payload = spayload;
+        event_type = stype;
+        trace_file = stfile;
+        trace_line = stline;
+    }
+    
     void *payload;
     /* Fields below this point must not be modified when the event is
      * active
@@ -89,18 +96,17 @@ struct dn_event {
         event_info_timer timer;
         event_info_fd fd;
     } event_info;
-    /* Private fields */
+    dn_event_private *priv;
     const char *trace_file;
     int trace_line;
-    struct dn_event_private *priv;
 };
 
-void dn_event_activate(dn_event_t *event);
-void dn_event_deactivate(dn_event_t *event);
+void dn_event_activate(dn_event *event);
+void dn_event_deactivate(dn_event *event);
 
 /* Convenience... */
-static inline dn_event_t *dn_event_trigger_after_(void (*callback)(dn_event_t *), void *payload, unsigned long secs, unsigned long usecs, const char *f, int l) {
-    dn_event_t *ev;
+static inline dn_event *dn_event_trigger_after_(void (*callback)(dn_event *), void *payload, unsigned long secs, unsigned long usecs, const char *f, int l) {
+    dn_event *ev;
     
 #ifndef __WIN32
     struct timeval tv;
@@ -110,10 +116,7 @@ static inline dn_event_t *dn_event_trigger_after_(void (*callback)(dn_event_t *)
     ftime(&tp);
 #endif
     
-    ev = (dn_event_t *)malloc(sizeof *ev);
-    if (!ev) abort();
-    ev->payload = payload;
-    ev->event_type = DN_EV_TIMER;
+    ev = new dn_event(payload, DN_EV_TIMER, f, l);
     ev->event_info.timer.trigger = callback;
     
 #ifndef __WIN32
@@ -126,33 +129,26 @@ static inline dn_event_t *dn_event_trigger_after_(void (*callback)(dn_event_t *)
     
     ev->event_info.timer.t_sec += ev->event_info.timer.t_usec / 1000000;
     ev->event_info.timer.t_usec %= 1000000;
-    ev->trace_file = f;
-    ev->trace_line = l;
     dn_event_activate(ev);
     return ev;
 }
 #define dn_event_trigger_after(c, p, s, u) dn_event_trigger_after_(c, p, s, u, __FILE__, __LINE__)
 
-static inline dn_event_t *event_fd_watch_(void (*callback)(int cond, dn_event_t *ev), void *payload, int cond, int fd, const char *f, int l) {
-    dn_event_t *ev = (dn_event_t *)malloc(sizeof *ev);
-    if (!ev) abort();
-    ev->payload = payload;
-    ev->event_type = DN_EV_FD;
+static inline dn_event *event_fd_watch_(void (*callback)(int cond, dn_event *ev), void *payload, int cond, int fd, const char *f, int l) {
+    dn_event *ev = new dn_event(payload, DN_EV_FD, f, l);
     ev->event_info.fd.fd = fd;
     ev->event_info.fd.watch_cond = cond;
     ev->event_info.fd.trigger = callback;
-    ev->trace_file = f;
-    ev->trace_line = l;
     dn_event_activate(ev);
     return ev;
 }
 #define dn_event_fd_watch(c, p, cond, fd) event_fd_watch_(c, p, cond, fd, __FILE__, __LINE__)
 
-inline static void ev_ac(dn_event_t *event) { dn_event_activate(event); }
-#define dn_event_activate(e) do {   \
+inline static void ev_ac(dn_event *event) { dn_event_activate(event); }
+#define dn_event_activate(e) {   \
     (e)->trace_file = __FILE__;  \
     (e)->trace_line = __LINE__;  \
     ev_ac(e);                    \
-} while (0)
+}
 
 #endif

@@ -45,7 +45,7 @@ using namespace std;
 #include "dn_event.h"
 #include <errno.h>
 
-static void connect_act(int cond, dn_event_t *ev);
+static void connect_act(int cond, dn_event *ev);
 
 void async_establishClient(const string &destination)
 {
@@ -110,11 +110,11 @@ void async_establishClient(const string &destination)
     dn_event_fd_watch(connect_act, NULL, DN_EV_READ | DN_EV_WRITE, fd);
 }
  
-static void connect_act(int cond, dn_event_t *ev) {
+static void connect_act(int cond, dn_event *ev) {
     static bool firstc = true;
     int fd = ev->event_info.fd.fd;
     dn_event_deactivate(ev);
-    free(ev);
+    delete ev;
  
     char dummy;
     int ret;

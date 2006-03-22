@@ -194,22 +194,20 @@ int main(int argc, char ** argv, char **envp)
 }
 #endif
 
-dn_event_t input_ev;
-
 char inputBuffer[65536];
 int ib_pos = 0;
 
-static void inputEvent(int cond, dn_event_t *ev);
+static void inputEvent(int cond, dn_event *ev);
 
 void resetInputPrompt() {
-    input_ev.event_type = DN_EV_FD;
-    input_ev.event_info.fd.fd = 0;
-    input_ev.event_info.fd.trigger = inputEvent;
-    input_ev.event_info.fd.watch_cond = DN_EV_READ;
-    dn_event_activate(&input_ev);
+    static dn_event *input_ev = new dn_event(NULL, DN_EV_FD, NULL, 0);
+    input_ev->event_info.fd.fd = 0;
+    input_ev->event_info.fd.trigger = inputEvent;
+    input_ev->event_info.fd.watch_cond = DN_EV_READ;
+    dn_event_activate(input_ev);
 }
 
-void inputEvent(int cond, dn_event_t *ev) {
+void inputEvent(int cond, dn_event *ev) {
     int i;
     int ret = read(0, inputBuffer + ib_pos, sizeof inputBuffer - ib_pos);
     if (ret <= 0) {
@@ -492,13 +490,14 @@ void uiNoRoute(const char *to)
     fflush(stdout);
 }
 
-struct dn_event_private {
+class dn_event_private {
+    public:
     struct event cevt;
-    dn_event_t *parent;
+    dn_event *parent;
 };
 
 static void callback(int fd, short cond, void *payload) {
-    dn_event_t *ev = (dn_event_t *) payload;
+    dn_event *ev = (dn_event *) payload;
     if (ev->event_type == DN_EV_FD) {
         int c = 0;
         if (cond & EV_READ)
@@ -510,7 +509,7 @@ static void callback(int fd, short cond, void *payload) {
         /* libevent clears the event for us in this case, clean up
          * the private data
          */
-        free(ev->priv);
+        delete ev->priv;
         ev->priv = NULL;
         ev->event_info.timer.trigger(ev);
     } else assert(0 == "bad event type");
@@ -518,8 +517,8 @@ static void callback(int fd, short cond, void *payload) {
     
 #undef dn_event_activate
 
-void dn_event_activate(dn_event_t *ev) {
-    struct dn_event_private *priv = (struct dn_event_private *) malloc(sizeof *priv);
+void dn_event_activate(dn_event *ev) {
+    dn_event_private *priv = new dn_event_private();
     priv->parent = ev;
     ev->priv = priv;
     switch (ev->event_type) {
@@ -551,9 +550,9 @@ void dn_event_activate(dn_event_t *ev) {
     }
 }
 
-void dn_event_deactivate(dn_event_t *ev) {
+void dn_event_deactivate(dn_event *ev) {
     if (ev->priv == NULL) return;
     event_del(&ev->priv->cevt);
-    free(ev->priv);
+    delete ev->priv;
     ev->priv = NULL;
 }

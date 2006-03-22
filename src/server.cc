@@ -45,7 +45,7 @@
 #include "dn_event.h"
 
 //void *serverAcceptLoop(void *ignore);
-static void serverActivity(int cond, dn_event_t *ev);
+static void serverActivity(int cond, dn_event *ev);
 static void serverAccept(int fd);
 
 static void initSockets()
@@ -62,12 +62,12 @@ static void initSockets()
 #endif
 }
 
-dn_event_t *establishServer()
+dn_event *establishServer()
 {
     int server_sock;
     int yes=1;
     int flags;
-    dn_event_t *listen_ev;
+    dn_event *listen_ev;
 #ifdef __WIN32
     unsigned long nblock;
 #endif
@@ -109,11 +109,7 @@ dn_event_t *establishServer()
     ioctlsocket(server_sock, FIONBIO, &nblock);
 #endif
     
-    listen_ev = (dn_event_t *) malloc(sizeof *listen_ev);
-    if (!listen_ev)
-        abort();
-    listen_ev->payload = NULL;
-    listen_ev->event_type = DN_EV_FD;
+    listen_ev = new dn_event(NULL, DN_EV_FD, NULL, 0);
     listen_ev->event_info.fd.fd = server_sock;
     listen_ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT;
     listen_ev->event_info.fd.trigger = serverActivity;
@@ -123,7 +119,7 @@ dn_event_t *establishServer()
     return listen_ev;
 }
 
-static void serverActivity(int cond, dn_event_t *ev) {
+static void serverActivity(int cond, dn_event *ev) {
     if (cond & DN_EV_EXCEPT) {
         /*fprintf(stderr, "Our server socket seems to have imploded. That sounds fun; I'll do it too.\n");
         abort();*/

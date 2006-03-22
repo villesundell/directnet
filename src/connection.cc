@@ -76,7 +76,7 @@ struct connection {
       
     char *name;
  
-    dn_event_t ev, *ping_ev;
+    dn_event *ev, *ping_ev;
 };
  
 static conn_t ring_head = {
@@ -87,10 +87,10 @@ static conn_t ring_head = {
 };
  
 static void send_handshake(struct connection *cs);
-static void conn_notify(int cond, dn_event_t *ev);
+static void conn_notify(int cond, dn_event *ev);
 static void kill_connection(conn_t *conn);
 static void destroy_conn(conn_t *conn);
-static void ping_send_ev(dn_event_t *ev);
+static void ping_send_ev(dn_event *ev);
 //static void ping_timeout(dn_event_t *ev);
  
 static void schedule_ping(conn_t *conn) {
@@ -98,11 +98,11 @@ static void schedule_ping(conn_t *conn) {
     conn->ping_ev = dn_event_trigger_after(ping_send_ev, conn, DN_KEEPALIVE_TIMER, 1);
 }
  
-static void ping_send_ev(dn_event_t *ev) {
+static void ping_send_ev(dn_event *ev) {
     conn_t *conn = (conn_t *) ev->payload;
     assert(conn->ping_ev == ev);
     dn_event_deactivate(ev);
-    free(ev);
+    delete ev;
     conn->ping_ev = NULL;
     
     string cmd = "pin\x01\x01;";
@@ -134,11 +134,10 @@ void init_comms(int fd) {
     cs->inbuf_p = cs->outbuf_p = 0;
     cs->inbuf = (unsigned char *) malloc(cs->inbuf_sz);
     cs->outbuf = (unsigned char *) malloc(cs->outbuf_sz);
-    cs->ev.payload = cs;
-    cs->ev.event_type = DN_EV_FD;
-    cs->ev.event_info.fd.fd = fd;
-    cs->ev.event_info.fd.watch_cond = DN_EV_READ | DN_EV_WRITE | DN_EV_EXCEPT;
-    cs->ev.event_info.fd.trigger = conn_notify;
+    cs->ev = new dn_event(cs, DN_EV_FD, NULL, 0);
+    cs->ev->event_info.fd.fd = fd;
+    cs->ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_WRITE | DN_EV_EXCEPT;
+    cs->ev->event_info.fd.trigger = conn_notify;
     cs->state = CDN_EV_IDLE;
     cs->name = NULL;
     cs->ping_ev = NULL;
@@ -154,7 +153,7 @@ void send_handshake(conn_t *cs) {
     cs->next->prev = cs;
     cs->prev->next = cs;
  
-    dn_event_activate(&cs->ev);
+    dn_event_activate(cs->ev);
     buf = buildCmd("key", 1, 1, dn_name);
     addParam(buf, encExportKey());
     sendCmd(cs, buf);
@@ -213,9 +212,9 @@ static void conn_notify_core(int cond, conn_t *conn) {
         conn->outbuf_p -= ret;
     }
       
-    dn_event_deactivate(&conn->ev);
-    conn->ev.event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT | (conn->outbuf_p ? DN_EV_WRITE : 0);
-    dn_event_activate(&conn->ev);
+    dn_event_deactivate(conn->ev);
+    conn->ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT | (conn->outbuf_p ? DN_EV_WRITE : 0);
+    dn_event_activate(conn->ev);
 }
  
 static void kill_connection(conn_t *conn) {
@@ -225,7 +224,7 @@ static void kill_connection(conn_t *conn) {
         destroy_conn(conn);
 }
  
-static void conn_notify(int cond, dn_event_t *ev) {
+static void conn_notify(int cond, dn_event *ev) {
     conn_t *conn = (conn_t *) ev->payload;
     conn->state = CDN_EV_EVENT;
     conn_notify_core(cond, conn);
@@ -245,10 +244,11 @@ void destroy_conn(conn_t *conn) {
             dn_routes->erase(conn->name);
         }
     }
-    dn_event_deactivate(&conn->ev);
+    dn_event_deactivate(conn->ev);
     if (conn->ping_ev) {
         dn_event_deactivate(conn->ping_ev);
-        free(conn->ping_ev);
+        delete conn->ev;
+        delete conn->ping_ev;
     }
          
     free(conn->name);
@@ -314,9 +314,9 @@ void sendCmd(struct connection *conn, string &buf)
     memcpy(conn->outbuf + conn->outbuf_p, buf.c_str() + p, len - p);
     conn->outbuf_p += len - p;
 
-    dn_event_deactivate(&conn->ev);
-    conn->ev.event_info.fd.watch_cond |= DN_EV_WRITE;
-    dn_event_activate(&conn->ev);
+    dn_event_deactivate(conn->ev);
+    conn->ev->event_info.fd.watch_cond |= DN_EV_WRITE;
+    dn_event_activate(conn->ev);
 }
 
 static void reap_fnd_later(const char *name);
@@ -898,7 +898,7 @@ void recvFnd(Route *route, const string &name, const string &key)
     }
 }
 
-static void fnd_reap(dn_event_t *ev);
+static void fnd_reap(dn_event *ev);
 
 static void reap_fnd_later(const char *name_p) {
     char *name;
@@ -909,7 +909,7 @@ static void reap_fnd_later(const char *name_p) {
 }
     
 
-static void fnd_reap(dn_event_t *ev)
+static void fnd_reap(dn_event *ev)
 {
     char *name = (char *) ev->payload;
     char isWeak = 0;
@@ -917,7 +917,7 @@ static void fnd_reap(dn_event_t *ev)
     string sname = string(name);
     
     dn_event_deactivate(ev);
-    free(ev);
+    delete ev;
     
     // Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
