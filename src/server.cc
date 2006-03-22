@@ -133,7 +133,8 @@ static void serverAccept(int server_sock) {
     int acceptfd;
     struct sockaddr_in rem_addr;
     
-    acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
+    //acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
+    acceptfd = accept(server_sock, NULL, NULL);
     /*fprintf(stderr, "accept=%d\n", acceptfd);*/
     if (acceptfd < 0) {
         perror("accept failed");

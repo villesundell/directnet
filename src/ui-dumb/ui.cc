@@ -431,70 +431,88 @@ void handleAuto(vector<string> &params)
 
 void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
 {
-    cout << endl << from << " [" << authmsg << "]" << (away ? " [away" : "") <<
-    ": " << msg << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << from << " [" << authmsg << "]" << (away ? " [away" : "") <<
+        ": " << msg << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 void uiAskAuthImport2(const string &acpt);
 
 void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 {
-    cout << endl << from << " has asked you to import the key '" << sig <<
-    "'.  Do you accept?" << endl << "? ";
-    cout.flush();
-    
-    crossinput = uiAskAuthImport2;
-    csig = new string(sig);
-    cmsg = new string(msg);
-    cinp = true;
+    if (!hub) {
+        cout << endl << from << " has asked you to import the key '" << sig <<
+        "'.  Do you accept?" << endl << "? ";
+        cout.flush();
+        
+        crossinput = uiAskAuthImport2;
+        csig = new string(sig);
+        cmsg = new string(msg);
+        cinp = true;
+    }
 }
 
 void uiAskAuthImport2(const string &acpt)
 {
-    if (acpt[0] == 'y' || acpt[0] == 'Y') {
-        cout << endl << "Importing " << *csig << " ..." << endl;
-        authImport(cmsg->c_str());
+    if (!hub) {
+        if (acpt[0] == 'y' || acpt[0] == 'Y') {
+            cout << endl << "Importing " << *csig << " ..." << endl;
+            authImport(cmsg->c_str());
+        }
+        delete csig;
+        delete cmsg;
+        cinp = false;
     }
-    delete csig;
-    delete cmsg;
-    cinp = false;
 }
 
 void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
-    cout << endl << "#" << chat << ": " << from << ": " << msg << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << "#" << chat << ": " << from << ": " << msg << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 void uiEstConn(const string &from)
 {
-    cout << endl << from << ": Connection established." << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << from << ": Connection established." << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 void uiEstRoute(const string &from)
 {
-    cout << endl << from << ": Route established." << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << from << ": Route established." << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 void uiLoseConn(const string &from)
 {
-    cout << endl << from << ": Connection lost." << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << from << ": Connection lost." << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 void uiLoseRoute(const string &from)
 {
-    cout << endl << from << ": Route lost." << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << from << ": Route lost." << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 void uiNoRoute(const string &to)
 {
-    cout << endl << to << ": No route to user." << endl << currentPartner << "> ";
-    cout.flush();
+    if (!hub) {
+        cout << endl << to << ": No route to user." << endl << currentPartner << "> ";
+        cout.flush();
+    }
 }
 
 class dn_event_private {
