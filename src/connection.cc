@@ -795,105 +795,38 @@ void emitUnroutedMsg(conn_t *from, string &outbuf)
 // recvFnd handles the situation that we've just been "found"
 void recvFnd(Route *route, const string &name, const string &key)
 {
-    // FIXME: needs event hash
-    
-    // If we haven't started one, good
-    if (1) {
-        // This is the first fnd received, but ignore it if we already have a route
-        if (dn_routes->find(name) != dn_routes->end()) {
-            return;
-        }
-                
-        // If we haven't already gotten the fastest route, this must be it
-        // Build backwards route
-        Route *reverseRoute = new Route(*route);
-        reverseRoute->reverse();
-        
-        // Add his route,
-        if (dn_routes->find(name) != dn_routes->end())
-            delete (*dn_routes)[name];
-        (*dn_routes)[name] = new Route(*route);
-        if (dn_iRoutes->find(name) != dn_iRoutes->end())
-            delete (*dn_iRoutes)[name];
-        (*dn_iRoutes)[name] = new Route(*route);
-        
-        // and public key,
-        encImportKey(name.c_str(), key.c_str());
-        
-        // then send your route back to him
-        Message omsg("fnr", 1, 1);
-        omsg.params.push_back(reverseRoute->toString());
-        omsg.params.push_back(dn_name);
-        omsg.params.push_back(route->toString());
-        omsg.params.push_back(encExportKey());
-        handleRoutedMsg(omsg);
-        
-        uiEstRoute(name);
-        
-        reap_fnd_later(name.c_str());
-        
-        // Put it back where it belongs
-    } else {
-#if 0
-        char oldWRoute[DN_ROUTE_LEN];
-        char *curWRoute;
-        char *newRouteElements[DN_MAX_PARAMS];
-        int onRE, x, y, ostrlen;
-        
-        memset(newRouteElements, 0, DN_MAX_PARAMS * sizeof(char *));
-        
-        curWRoute = hashSGet(weakRoutes, name);
-        // If there is no current weakroute, just copy in the current route
-        if (!curWRoute) {
-            char *curroute;
-            
-            curroute = hashSGet(dn_routes, name);
-            if (curroute == NULL) {
-                return;
-            }
-            
-            hashSSet(weakRoutes, name, curroute);
-            curWRoute = hashSGet(weakRoutes, name);
-        }
-        
-        SF_strncpy(oldWRoute, curWRoute, DN_ROUTE_LEN);
-        
-        newRouteElements[0] = oldWRoute;
-        onRE = 1;
-        
-        ostrlen = strlen(oldWRoute);
-        for (x = 0; x < ostrlen; x++) {
-            if (oldWRoute[x] == '\n') {
-                oldWRoute[x] = '\0';
-                        
-                if (oldWRoute[x+1] != '\0') {
-                    newRouteElements[onRE] = oldWRoute+x+1;
-                    onRE++;
-                    if (onRE >= DN_MAX_PARAMS - 1) onRE--;
-                }
-            }
-        }
-        newRouteElements[onRE] = NULL;
-        
-        // Now compare the two into a new one
-        curWRoute[0] = '\0';
-        
-        for (x = 0; newRouteElements[x] != NULL; x++) {
-            for (y = 0; routeElement[y] != NULL; y++) {
-                if (!strncmp(newRouteElements[x], routeElement[y], DN_NAME_LEN)) {
-                    // It's a match, copy it in.
-                    ostrlen = strlen(curWRoute);
-                    SF_strncpy(curWRoute + ostrlen, routeElement[y], DN_ROUTE_LEN - ostrlen);
-                    ostrlen += strlen(routeElement[y]);
-                    SF_strncpy(curWRoute + ostrlen, "\n", DN_ROUTE_LEN - ostrlen);
-                }
-            }
-        }
-        
-        // And put it back in the hash
-        hashSSet(weakRoutes, name, curWRoute);
-#endif
+    // Ignore it if we already have a route
+    if (dn_routes->find(name) != dn_routes->end()) {
+        return;
     }
+    
+    // If we haven't already gotten the fastest route, this must be it
+    // Build backwards route
+    Route *reverseRoute = new Route(*route);
+    reverseRoute->reverse();
+    
+    // Add his route,
+    if (dn_routes->find(name) != dn_routes->end())
+        delete (*dn_routes)[name];
+    (*dn_routes)[name] = new Route(*route);
+    if (dn_iRoutes->find(name) != dn_iRoutes->end())
+        delete (*dn_iRoutes)[name];
+    (*dn_iRoutes)[name] = new Route(*route);
+    
+    // and public key,
+    encImportKey(name.c_str(), key.c_str());
+    
+    // then send your route back to him
+    Message omsg("fnr", 1, 1);
+    omsg.params.push_back(reverseRoute->toString());
+    omsg.params.push_back(dn_name);
+    omsg.params.push_back(route->toString());
+    omsg.params.push_back(encExportKey());
+    handleRoutedMsg(omsg);
+        
+    uiEstRoute(name);
+        
+    reap_fnd_later(name.c_str());
 }
 
 static void fnd_reap(dn_event *ev);
@@ -910,8 +843,6 @@ static void reap_fnd_later(const char *name_p) {
 static void fnd_reap(dn_event *ev)
 {
     char *name = (char *) ev->payload;
-    char isWeak = 0;
-    char *curWRoute;
     string sname = string(name);
     
     dn_event_deactivate(ev);

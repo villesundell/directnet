@@ -49,8 +49,6 @@ extern char **environ; // XXX: should use getenv
 
 int serv_port = 3336;
 
-map<string, Route *> *weakRoutes; // List of weak routes
-
 char dn_name[DN_NAME_LEN+1];
 
 map<string, void *> *dn_conn;
@@ -107,12 +105,6 @@ void dn_init(int argc, char **argv) {
         }
         
     }
-    
-    /* Upon receiving a fnd, the node then continues to accept alternate fnds.  Every time it
-       receives one, it goes through the current route and new route and only keeps the ones that
-       appear in both.  That way, it ends up with a list of nodes that have no backup.  If there
-       are any such nodes, it needs to attempt a direct connection to strengthen the network. */
-    weakRoutes = new map<string, Route *>;
     
     // This stores connections by name
     dn_conn = new map<string, void *>;

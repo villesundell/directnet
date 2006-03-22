@@ -31,8 +31,6 @@ using namespace std;
 
 extern int serv_port;
 
-extern map<string, Route *> *weakRoutes; // List of weak routes
-
 // our name
 extern char dn_name[DN_NAME_LEN+1];
 
