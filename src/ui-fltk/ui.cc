@@ -32,6 +32,9 @@
 #include "ui.h"
 
 #include <iostream>
+#include <map>
+#include <string>
+using namespace std;
 
 #include "FL/fl_ask.H"
 
@@ -49,7 +52,7 @@
 
 NameWindow *nw;
 BuddyWindow *bw;
-ChatWindow *cws[1024];
+map<string, ChatWindow *> cws;
 AutoConnWindow *acw;
 
 // keep track of where the buddies end and the connection list begins in onlineLis
@@ -65,7 +68,7 @@ int flt1_ask(const char *msg, int t1)
     return fl_ask(msg);
 }
 
-extern "C" int main(int argc, char **argv, char **envp)
+int main(int argc, char **argv, char **envp)
 {
     dn_init(argc, argv);
     
@@ -110,9 +113,6 @@ extern "C" int main(int argc, char **argv, char **envp)
     /* And creating the key */
     encCreateKey();
     
-    /* blank our array of windows */
-    memset(cws, 0, 1024 * sizeof(ChatWindow *));
-
     /* make the name window */
     nw = new NameWindow();
     nw->make_window();
@@ -142,38 +142,36 @@ extern "C" int main(int argc, char **argv, char **envp)
     return 0;
 }
 
-ChatWindow *getWindow(const char *name)
+ChatWindow *getWindow(const string &name)
 {
     int i;
     
-    for (i = 0; cws[i] != NULL; i++) {
-        if (!strcmp(cws[i]->chatWindow->label(), name)) {
-            cws[i]->chatWindow->show();
-            return cws[i];
-        }
+    if (cws.find(name) != cws.end()) {
+        cws[name]->chatWindow->show();
+        return cws[name];
     }
     
-    cws[i] = new ChatWindow();
-    cws[i]->make_window();
-    cws[i]->chatWindow->label(strdup(name));
+    cws[name] = new ChatWindow();
+    cws[name]->make_window();
+    cws[name]->chatWindow->label(strdup(name.c_str()));
     
     if (checkAutoFind(name)) {
-        cws[i]->bAutoFind->label("Remove from Autofind List");
+        cws[name]->bAutoFind->label("Remove from Autofind List");
     } else {
-        cws[i]->bAutoFind->label("Add to Autofind List");
+        cws[name]->bAutoFind->label("Add to Autofind List");
     }
     
-    cws[i]->chatWindow->show();
+    cws[name]->chatWindow->show();
     
-    return cws[i];
+    return cws[name];
 }
 
-void putOutput(ChatWindow *w, const char *txt)
+void putOutput(ChatWindow *w, const string &txt)
 {
     Fl_Text_Buffer *tb = w->textOut->buffer();
     
     w->textOut->insert_position(tb->length());
-    w->textOut->insert(txt);
+    w->textOut->insert(txt.c_str());
     w->textOut->show_insert_position();
     Fl::flush();
 }
@@ -181,6 +179,7 @@ void putOutput(ChatWindow *w, const char *txt)
 void setName(Fl_Input *w, void *ignore)
 {
     int i;
+    set<string>::iterator afi, aci;
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
@@ -195,23 +194,16 @@ void setName(Fl_Input *w, void *ignore)
     bw->onlineList->add("@c@mBuddies");
     
     /* add the autofind list */
-    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
-        char *toadd = (char *) malloc(strlen(dn_af_list[i]) + 3);
-        if (!toadd) { perror("malloc"); exit(1); }
-        sprintf(toadd, "@i%s", dn_af_list[i]);
-        bw->onlineList->add(toadd);
-        free(toadd);
+    for (afi = dn_af_list->begin(); afi != dn_af_list->end(); afi++) {
+        string toadd = string("@i") + *afi;
+        bw->onlineList->add(toadd.c_str());
     }
     
     /* add the autoconnect list */
     bw->onlineList->add("@c@mAutomatic Connections");
     olConnsLoc = bw->onlineList->size();
-    for (i = 0; i < DN_MAX_ROUTES && dn_ac_list[i]; i++) {
-        char *toadd = (char *) malloc(strlen(dn_ac_list[i]) + 3);
-        if (!toadd) { perror("malloc"); exit(1); }
-        sprintf(toadd, "%s", dn_ac_list[i]);
-        bw->onlineList->add(toadd);
-        free(toadd);
+    for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
+        bw->onlineList->add(aci->c_str());
     }
     
     /* finally, the option to add new autoconnections */
@@ -224,10 +216,10 @@ void setName(Fl_Input *w, void *ignore)
 
 void mainWinClosed(Fl_Double_Window *w, void *ignore)
 {
-    int i;
+    map<string, ChatWindow *>::iterator cwi;
     
-    for (i = 0; cws[i] != NULL; i++) {
-        cws[i]->chatWindow->hide();
+    for (cwi = cws.begin(); cwi != cws.end(); cwi++) {
+        cwi->second->chatWindow->hide();
     }
     
     w->hide();
@@ -351,33 +343,29 @@ void talkTo(Fl_Button *b, void *ignore)
 void sendInput(Fl_Input *w, void *ignore)
 {
     /* sad way to figure out what window we're in ... */
-    int i;
+    map<string, ChatWindow *>::iterator cwi;
     
-    for (i = 0; cws[i] != NULL; i++) {
-        if (cws[i]->textIn == w) {
+    for (cwi = cws.begin(); cwi != cws.end(); cwi++) {
+        if (cwi->second->textIn == w) {
             /* this is our window */
-            char *dispmsg, *to, *msg;
+            string dispmsg, to, msg;
             
-            to = strdup(cws[i]->chatWindow->label());
+            to = cwi->second->chatWindow->label();
             
-            msg = strdup(cws[i]->textIn->value());
-            cws[i]->textIn->value("");
-    
-            dispmsg = (char *) alloca((strlen(dn_name) + strlen(msg) + 4) * sizeof(char));
-            sprintf(dispmsg, "%s: %s\n", dn_name, msg);
-
+            msg = cwi->second->textIn->value();
+            cwi->second->textIn->value("");
+            
+            dispmsg = dn_name + string(": ") + msg + string("\n");
+            
             if (to[0] == '#') {
                 // Chat room
-                sendChat(to + 1, msg);
-                putOutput(cws[i], dispmsg);
+                sendChat(to.substr(1), msg);
+                putOutput(cwi->second, dispmsg);
             } else {
                 if (sendMsg(to, msg)) {
-                    putOutput(cws[i], dispmsg);
+                    putOutput(cwi->second, dispmsg);
                 }
             }
-            
-            free(to);
-            free(msg);
             
             return;
         }
@@ -387,12 +375,12 @@ void sendInput(Fl_Input *w, void *ignore)
 void flSendAuthKey(Fl_Button *w, void *ignore)
 {
     /* sad way to figure out what window we're in ... */
-    int i;
+    map<string, ChatWindow *>::iterator cwi;
     
-    for (i = 0; cws[i] != NULL; i++) {
-        if (cws[i]->bSndKey == w) {
+    for (cwi = cws.begin(); cwi != cws.end(); cwi++) {
+        if (cwi->second->bSndKey == w) {
             /* this is our window */
-            sendAuthKey(cws[i]->chatWindow->label());
+            sendAuthKey(cwi->second->chatWindow->label());
             return;
         }
     }
@@ -406,11 +394,10 @@ void fSetAway(Fl_Button *w, void *ignore)
 
 void fAwayMsg(Fl_Input *w, void *ignore)
 {
-    char *am = strdup(w->value());
-    setAway(am);
+    string am = w->value();
+    setAway(&am);
     bw->bSetAway->color(FL_RED);
     awayMWin->hide();
-    free(am);
 }
 
 void fBack(Fl_Button *w, void *ignore)
@@ -420,19 +407,17 @@ void fBack(Fl_Button *w, void *ignore)
     setAway(NULL);
 }
 
-void flDispMsg(const char *window, const char *from, const char *msg, const char *authmsg)
+void flDispMsg(const string &window, const string &from, const string &msg, const string &authmsg)
 {
     ChatWindow *cw;
-    char *dispmsg;
+    string dispmsg;
     
     assert(uiLoaded);
     
-    dispmsg = (char *) alloca((strlen(from) + (authmsg ? strlen(authmsg) : 0) +
-                               strlen(msg) + 7) * sizeof(char));
-    if (authmsg) {
-        sprintf(dispmsg, "%s [%s]: %s\n", from, authmsg, msg);
+    if (authmsg != "") {
+        dispmsg = from + " [" + authmsg + "]: " + msg + "\n";
     } else {
-        sprintf(dispmsg, "%s: %s\n", from, msg);
+        dispmsg = from + ": " + msg + "\n";
     }
     
     cw = getWindow(window);
@@ -444,11 +429,12 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
 {
     /* sad way to figure out what window we're in ... */
     int i;
+    map<string, ChatWindow *>::iterator cwi;
     
-    for (i = 0; cws[i] != NULL; i++) {
-        if (cws[i]->bAutoFind == btn) {
+    for (cwi = cws.begin(); cwi != cws.end(); cwi++) {
+        if (cwi->second->bAutoFind == btn) {
             /* this is our window */
-            const char *who = cws[i]->chatWindow->label();
+            const char *who = cwi->second->chatWindow->label();
             
             if (checkAutoFind(who)) {
                 // this is a removal
@@ -503,12 +489,9 @@ void flAddRemAutoFind(Fl_Button *btn, void *)
                 
                 // if the user wasn't in the list, add
                 if (!found) {
-                    char *utext = (char *) malloc(strlen(who) + 3);
-                    if (!utext) return;
-                    sprintf(utext, "@i%s", who);
-                    bw->onlineList->insert(olConnsLoc, utext);
+                    string utext = string("@i") + who;
+                    bw->onlineList->insert(olConnsLoc, utext.c_str());
                     olConnsLoc++;
-                    free(utext);
                 }
             }
             
@@ -549,56 +532,44 @@ void flACYNNo(Fl_Button *w, AutoConnYNWindow *acynw)
     delete acynw;
 }
 
-extern "C" void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
+void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
 {
     // for the moment, away messages are undistinguished
     flDispMsg(from, from, msg, authmsg);
 }
 
-extern "C" void uiAskAuthImport(const char *from, const char *msg, const char *sig)
+void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 {
     int i;
     
     assert(uiLoaded);
     
-    char *q = (char *) malloc((strlen(from) + strlen(sig) + 51) * sizeof(char));
-    sprintf(q, "%s has asked you to import the key\n'%s'\nDo you accept?", from, sig);
+    string q = from + " has asked you to import the key\n'" + sig + "'\nDo you accept?";
     
     // fix the @ sign, which breaks fl_ask
-    for (i = 0; q[i]; i++) {
-        if (q[i] == '@') {
-            // slide it over
-            q = (char *) realloc(q, strlen(q) + 2);
-            if (!q) { perror("realloc"); exit(-1); }
-            
-            memmove(q + i + 2, q + i + 1, strlen(q) - i);
-            q[i + 1] = '@';
-            i++;
-        }
+    for (i = q.find_first_of('@', 0);
+         i != string::npos;
+         i = q.find_first_of('@', i + 2)) {
+        // duplicate it
+        q = q.substr(0, i) + "@@" + q.substr(i + 1);
     }
     
-    if (fl_ask(q, 0)) {
-        authImport(msg);
+    if (fl_ask(q.c_str(), 0)) {
+        authImport(msg.c_str());
     }
-    free(q);
 }
 
-extern "C" void uiDispChatMsg(const char *chat, const char *from, const char *msg)
+void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
-    char chatWHash[strlen(chat) + 2];
-    
-    chatWHash[0] = '#';
-    strcpy(chatWHash + 1, chat);
-    
-    flDispMsg(chatWHash, from, msg, NULL);
+    flDispMsg(string("#") + chat, from, msg, NULL);
 }
 
-extern "C" void uiEstConn(const char *from)
+void uiEstConn(const string &from)
 {
     /* what to use here...? */
 }
 
-extern "C" void uiEstRoute(const char *from)
+void uiEstRoute(const string &from)
 {
     int i, mustadd, addbefore;
     
@@ -614,7 +585,7 @@ extern "C" void uiEstRoute(const char *from)
             addbefore > i)
             addbefore = i;
         
-        if (!strcmp(bw->onlineList->text(i) + 2, from)) {
+        if (from == (bw->onlineList->text(i) + 2)) {
             // if this is @i (italic, offline), still must be added
             if (bw->onlineList->text(i)[1] != 'i') {
                 mustadd = 0;
@@ -626,25 +597,26 @@ extern "C" void uiEstRoute(const char *from)
         }
     }
     if (mustadd) {
-        char *toadd = (char *) malloc(strlen(from) + 3);
-        if (!toadd) { perror("malloc"); exit(1); }
-        sprintf(toadd, "@%c%s",
-                checkAutoFind(from) ? 'b' : '.',
-                from);
-        bw->onlineList->insert(addbefore, toadd);
+        string toadd = "@";
+        if (checkAutoFind(from)) {
+            toadd += "b";
+        } else {
+            toadd += ".";
+        }
+        toadd += from;
+        bw->onlineList->insert(addbefore, toadd.c_str());
         olConnsLoc++;
-        free(toadd);
     }
     
 }
 
-void removeFromList(const char *name)
+void removeFromList(const string &name)
 {
     int i;
     char demote = 0;
     
     for (i = 2; i < olConnsLoc && bw->onlineList->text(i) != NULL; i++) {
-        if (!strcmp(bw->onlineList->text(i) + 2, name)) {
+        if (name == (bw->onlineList->text(i) + 2)) {
             /* only demote it if it's bolded */
             if (bw->onlineList->text(i)[1] == 'b')
                 demote = 1;
@@ -655,30 +627,27 @@ void removeFromList(const char *name)
     }
     
     if (demote) {
-        char *toadd = (char *) malloc(strlen(name) + 3);
-        if (!toadd) return;
-        sprintf(toadd, "@i%s", name);
-        bw->onlineList->insert(olConnsLoc, toadd);
+        string toadd = "@i" + name;
+        bw->onlineList->insert(olConnsLoc, toadd.c_str());
         olConnsLoc++;
-        free(toadd);
     }
 }
 
-extern "C" void uiLoseConn(const char *from)
+void uiLoseConn(const string &from)
 {
     assert(uiLoaded);
     
     removeFromList(from);
 }
 
-extern "C" void uiLoseRoute(const char *from)
+void uiLoseRoute(const string &from)
 {
     assert(uiLoaded);
     
     removeFromList(from);
 }
 
-extern "C" void uiNoRoute(const char *to)
+void uiNoRoute(const string &to)
 {
     ChatWindow *cw;
     

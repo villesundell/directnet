@@ -30,22 +30,24 @@
 #include <cassert>
 #include <iostream>
 #include <cerrno>
+using namespace std;
 
 #undef dn_event_activate
 
-typedef struct dn_event_private {
-    dn_event_t *ev;
-    std::multiset<dn_event_private *>::iterator it;
+class dn_event_private {
+    public:
+    dn_event *ev;
+    multiset<dn_event_private *>::iterator it;
     const char *trace_file;
     int trace_line;
-} private_t;
+};
 
-static std::map<int, std::multiset<private_t *> > fd_map;
+static map<int, multiset<dn_event_private *> > fd_map;
 
-static std::set<dn_event_t *> active;
+static set<dn_event *> active;
 
 static void timer_callback(void *p) {
-    private_t *priv = (private_t *)p;
+    dn_event_private *priv = (dn_event_private *)p;
     if (priv->ev) {
         if(!(priv->ev->priv == priv && priv->ev->event_type == DN_EV_TIMER)) {
             printf("assert fail, priv=%p priv->ev=%p priv->ev->priv=%p ev_type=%d (should be %d)\n", (void *)priv, (void *)priv->ev, (void *)priv->ev->priv, priv->ev->event_type, DN_EV_TIMER);
@@ -60,7 +62,7 @@ static void timer_callback(void *p) {
 
 static void fd_callback(int fd, void *unused) {
     (void)unused;
-    std::multiset<dn_event_private *> &l = fd_map[fd];
+    multiset<dn_event_private *> &l = fd_map[fd];
 
     if (l.size() == 0) {
         Fl::remove_fd(fd);
@@ -84,7 +86,7 @@ static void fd_callback(int fd, void *unused) {
 
     int ret = select(fd + 1, &read, &write, &except, &timeout);
     if (ret == -1) {
-        std::cerr << "Warning: select fail on fd " << fd << " err " << strerror(errno) << std::endl;
+        cerr << "Warning: select fail on fd " << fd << " err " << strerror(errno) << endl;
         return;
     }
 
@@ -95,10 +97,10 @@ static void fd_callback(int fd, void *unused) {
     if (FD_ISSET(fd, &except))
         cond |= DN_EV_EXCEPT;
     
-    std::multiset<dn_event_private *>::iterator it = l.begin();
+    multiset<dn_event_private *>::iterator it = l.begin();
     while (it != l.end()) {
         // We must do this in case the current event removes itself
-        std::multiset<dn_event_private *>::iterator next = it;
+        multiset<dn_event_private *>::iterator next = it;
         next++; // + 1 doesn't work, blah
         
         if ((*it)->ev == NULL) {
@@ -107,7 +109,7 @@ static void fd_callback(int fd, void *unused) {
             l.erase(it);
             delete p;
         } else {
-            dn_event_t *ev = (*it)->ev;
+            dn_event *ev = (*it)->ev;
             assert(ev->event_type == DN_EV_FD && ev->event_info.fd.fd == fd);
             interest |= ev->event_info.fd.watch_cond;
             if (ev->event_info.fd.watch_cond & cond)
@@ -129,7 +131,7 @@ static void fd_callback(int fd, void *unused) {
         Fl::add_fd(fd, new_watch, fd_callback, NULL);
 }
 
-void dn_event_activate(dn_event_t *event) {
+void dn_event_activate(dn_event *event) {
 #ifdef EVENT_DEBUG
     assert (active.find(event) == active.end());
     active.insert(event);
@@ -138,7 +140,7 @@ void dn_event_activate(dn_event_t *event) {
     switch (event->event_type) {
         case DN_EV_FD:
             {
-                std::multiset<dn_event_private *> &l = fd_map[event->event_info.fd.fd];
+                multiset<dn_event_private *> &l = fd_map[event->event_info.fd.fd];
                 dn_event_private *p = new dn_event_private;
                 p->ev = event;
                 event->priv = p;
@@ -193,7 +195,7 @@ void dn_event_activate(dn_event_t *event) {
     }
 }
 
-void dn_event_deactivate(dn_event_t *event) {
+void dn_event_deactivate(dn_event *event) {
 #ifdef EVENT_DEBUG
     assert (active.find(event) != active.end());
     active.erase(event);
@@ -208,7 +210,7 @@ void dn_event_deactivate(dn_event_t *event) {
             return;
         case DN_EV_FD:
             {
-                std::multiset<dn_event_private *> &l = fd_map[event->event_info.fd.fd];
+                multiset<dn_event_private *> &l = fd_map[event->event_info.fd.fd];
                 l.erase(event->priv->it);
                 assert(l.find(event->priv) == l.end());
                 if (l.size() == 0) {
