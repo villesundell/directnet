@@ -7,7 +7,6 @@ client.cc \
 connection.cc \
 directnet.cc \
 dnconfig.cc \
-hash.cc \
 message.cc \
 route.cc \
 server.cc \
@@ -32,7 +31,6 @@ client.cc \
 connection.cc \
 directnet.cc \
 dnconfig.cc \
-hash.cc \
 message.cc \
 route.cc \
 server.cc \
