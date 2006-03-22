@@ -21,6 +21,7 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 using namespace std;
 
 #ifndef WIN32
@@ -69,23 +70,28 @@ struct connection {
     conn_t *prev, *next;
     int fd;
     enum cev_state state;
-      
+    
     unsigned char *inbuf, *outbuf;
     size_t inbuf_sz, outbuf_sz;
     size_t inbuf_p, outbuf_p;
-      
+    
     char *name;
- 
+    
     dn_event *ev, *ping_ev;
 };
  
 static conn_t ring_head = {
     &ring_head, &ring_head,
     -1,
-    CDN_EV_DYING
-    /* ignore missing initializer warnings here */
+    CDN_EV_DYING,
+    
+    NULL, NULL,
+    0, 0,
+    0, 0,
+    NULL,
+    NULL, NULL
 };
- 
+
 static void send_handshake(struct connection *cs);
 static void conn_notify(int cond, dn_event *ev);
 static void kill_connection(conn_t *conn);
@@ -152,7 +158,7 @@ void send_handshake(conn_t *cs) {
     cs->next = ring_head.next;
     cs->next->prev = cs;
     cs->prev->next = cs;
- 
+    
     dn_event_activate(cs->ev);
     buf = buildCmd("key", 1, 1, dn_name);
     addParam(buf, encExportKey());
@@ -245,19 +251,19 @@ void destroy_conn(conn_t *conn) {
         }
     }
     dn_event_deactivate(conn->ev);
+    delete conn->ev;
     if (conn->ping_ev) {
         dn_event_deactivate(conn->ping_ev);
-        delete conn->ev;
         delete conn->ping_ev;
     }
-         
+    
     free(conn->name);
     free(conn->inbuf);
     free(conn->outbuf);
- 
+    
     conn->next->prev = conn->prev;
     conn->prev->next = conn->next;
-      
+    
     free(conn);
 }
 
@@ -280,7 +286,7 @@ void sendCmd(struct connection *conn, string &buf)
 {
     int len, p;
     size_t newsz = conn->outbuf_sz;
-
+    
     if (conn->fd < 0 || conn->state == CDN_EV_DYING)
         return;
     
@@ -782,14 +788,14 @@ bool handleNRUnroutedMsg(conn_t *from, const Message &msg) {
 void emitUnroutedMsg(conn_t *from, string &outbuf)
 {
     // This emits an unrouted message
-    conn_t *p;
+    conn_t *cur;
     if (!from)
         from = &ring_head;
-    p = from->next;
-
-    while (p != from) {
-        sendCmd(p, outbuf);
-        p = p->next;
+    cur = from->next;
+    
+    while (cur != from) {
+        sendCmd(cur, outbuf);
+        cur = cur->next;
     }
 }
 
@@ -996,9 +1002,6 @@ void establishConnection(const string &to)
         async_establishClient(to);
     }
 }
-
-#include <iostream>
-using namespace std;
 
 int sendMsgB(const string &to, const string &msg, bool away, bool sign)
 {

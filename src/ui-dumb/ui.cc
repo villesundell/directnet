@@ -224,7 +224,10 @@ void inputEvent(int cond, dn_event *ev) {
         }
         return;
 got_input:
-        handleUInput(inputBuffer);
+        if (handleUInput(inputBuffer)) {
+            // returns 1 = quit
+            exit(0);
+        }
         memmove(inputBuffer, inputBuffer + i + 1, ib_pos - i - 1);
         ib_pos -= i + 1;
     }
@@ -317,6 +320,8 @@ int handleUInput(const char *originp)
         }
         
     } else {
+        if (!inp[0]) return 0;
+        
         // Not a command, a message
         if (currentPartner[0] == '\0') {
             printf("You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat.\n");
