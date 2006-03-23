@@ -361,6 +361,8 @@ void sendCmd(struct connection *conn, string &buf)
     dn_event_activate(conn->ev);
 }
 
+static void reap_fnd_later(const char *name);
+
 #define REQ_PARAMS(x) if (msg.params.size() < x) return
 #define REJOIN_PARAMS(x) msg.recombineParams((x)-1)
 			
@@ -862,10 +864,30 @@ void recvFnd(Route *route, const string &name, const string &key)
     omsg.params.push_back(route->toString());
     omsg.params.push_back(encExportKey());
     handleRoutedMsg(omsg);
-        
-    uiEstRoute(name);
     
+    uiEstRoute(name);
+        
+    reap_fnd_later(name.c_str());
+}
+
+static void fnd_reap(dn_event *ev);
+
+static void reap_fnd_later(const char *name_p) {
+    char *name;
+    if (!name_p) abort();
+    name = strdup(name_p);
+    if (!name) abort();
+    dn_event_trigger_after(fnd_reap, name, 15, 0);
+}
+    
+
+static void fnd_reap(dn_event *ev)
+{
+    char *name = (char *) ev->payload;
     string sname = string(name);
+    
+    dn_event_deactivate(ev);
+    delete ev;
     
     // Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
