@@ -182,7 +182,11 @@ static void conn_notify_core(int cond, conn_t *conn) {
             kill_connection(conn);
             return;
         }
+#ifndef __WIN32
         ret = recv(conn->fd, conn->inbuf + conn->inbuf_p, conn->inbuf_sz - conn->inbuf_p, 0);
+#else
+        ret = recv(conn->fd, (char *) (conn->inbuf + conn->inbuf_p), conn->inbuf_sz - conn->inbuf_p, 0);
+#endif
         if (ret == 0) {
             // connection closed
             kill_connection(conn);
@@ -208,7 +212,11 @@ static void conn_notify_core(int cond, conn_t *conn) {
  
     if (cond & DN_EV_WRITE) {
         int ret;
+#ifndef __WIN32
         ret = send(conn->fd, conn->outbuf, conn->outbuf_p, 0);
+#else
+        ret = send(conn->fd, (char *) conn->outbuf, conn->outbuf_p, 0);
+#endif
         if (ret < 0) {
             perror ("send()");
             kill_connection(conn);
@@ -454,7 +462,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 Route *route;
                 string first;
                 conn_t *firc;
-                int firfd, locip_len;
+                int firfd, locip_len, gsnr;
                 struct sockaddr locip;
                 struct sockaddr_in *locip_i;
                 
@@ -476,7 +484,12 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 
                 // then turn the fd into a sockaddr
                 locip_len = sizeof(struct sockaddr);
-                if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
+#ifndef __WIN32
+                gsnr = getsockname(firfd, &locip, (unsigned int *) &locip_len);
+#else
+                gsnr = getsockname(firfd, &locip, (int *) &locip_len);
+#endif
+                if (gsnr == 0) {
                     locip_i = (struct sockaddr_in *) &locip;
                     ss.str("");
                     ss << inet_ntoa(locip_i->sin_addr);
@@ -879,7 +892,12 @@ static void fnd_reap(dn_event *ev)
         
         // then turn the fd into a sockaddr
         locip_len = sizeof(struct sockaddr);
-        if (getsockname(firfd, &locip, (unsigned int *) &locip_len) == 0) {
+#ifndef __WIN32
+        int gsnr = getsockname(firfd, &locip, (unsigned int *) &locip_len);
+#else
+        int gsnr = getsockname(firfd, &locip, (int *) &locip_len);
+#endif
+        if (gsnr == 0) {
             locip_i = (struct sockaddr_in *) &locip;
             ss.str("");
             ss << inet_ntoa(locip_i->sin_addr);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005 Gregor Richards
+ * Copyright 2004, 2005, 2006 Gregor Richards
  * Many parts borrowed from cyfer/examples/pk.c
  * These parts are copyright 2004 Senko Rasic
  *
@@ -24,15 +24,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef bool
-#define bool int
-#endif
+#include "directnet.h"
+
+#define bool BOOL
 
 extern "C" {
 #include "cyfer/pk.h"
 }
-
-#include "directnet.h"
 
 char encbinloc[256];
 

@@ -29,6 +29,10 @@ using namespace std;
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifdef __WIN32
+#include <io.h>
+#endif
+
 #include "client.h"
 #include "connection.h"
 #include "directnet.h"
@@ -61,7 +65,12 @@ void initConfig()
 #endif*/
     cfgdir = homedir + string("/.DNCPP");
     // attempt to create it
-    if (mkdir(cfgdir.c_str(), 0777) == -1) {
+#ifndef __WIN32
+    int mdr = mkdir(cfgdir.c_str(), 0777);
+#else
+    int mdr = mkdir(cfgdir.c_str());
+#endif
+    if (mdr == -1) {
         if (errno != EEXIST) {
             perror("mkdir");
             exit(1);

@@ -81,7 +81,7 @@ dn_event *establishServer()
         exit(-1);
     }
     
-    if (setsockopt(server_sock,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
+    if (setsockopt(server_sock,SOL_SOCKET,SO_REUSEADDR,(char *) &yes,sizeof(int)) == -1) {
         perror("setsockopt");
         exit(-1);
     }
