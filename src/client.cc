@@ -19,6 +19,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <map>
 #include <string>
 using namespace std;
 
@@ -44,6 +45,12 @@ using namespace std;
 #include "client.h"
 #include "dn_event.h"
 #include <errno.h>
+
+struct outgc {
+    string outgh;
+    int outgp;
+};
+static map<int, struct outgc> outgcs;
 
 static void connect_act(int cond, dn_event *ev);
 
@@ -107,15 +114,19 @@ void async_establishClient(const string &destination)
         close(fd);
         return;
     }
+    
+    outgcs[fd].outgh = hostname;
+    outgcs[fd].outgp = port;
+    
     dn_event_fd_watch(connect_act, NULL, DN_EV_READ | DN_EV_WRITE, fd);
 }
- 
+
 static void connect_act(int cond, dn_event *ev) {
     static bool firstc = true;
     int fd = ev->event_info.fd.fd;
     dn_event_deactivate(ev);
     delete ev;
- 
+    
     char dummy;
     int ret;
     
@@ -128,17 +139,14 @@ static void connect_act(int cond, dn_event *ev) {
     }
 #endif
     
-    setupPeerConnection(fd);
+    init_comms(fd, &(outgcs[fd].outgh), outgcs[fd].outgp);
+    outgcs.erase(fd);
     
     // if this is the first connection, do autofind
     if (firstc) {
         firstc = false;
         autoFind();
     }
-      
+    
     return;
-}
-
-void setupPeerConnection(int fd) {
-    init_comms(fd);
 }

@@ -22,6 +22,9 @@
 #ifndef DN_CONNECTION_H
 #define DN_CONNECTION_H
 
+#include <string>
+using namespace std;
+
 #include "message.h"
 
 struct connection;
@@ -33,8 +36,9 @@ typedef struct connection conn_t;
 void establishConnection(const string &to);
 
 /* Begin peer communication on an opened file handle
+ * If the connection is outgoing, include outgh and outgp
  */
-void init_comms(int fd);
+void init_comms(int fd, const string *outgh, int outgp);
 
 /* Send a message (for use by the UI)
  * to: user to send to

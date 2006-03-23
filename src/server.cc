@@ -141,5 +141,5 @@ static void serverAccept(int server_sock) {
         return;
     }
     
-    setupPeerConnection(acceptfd);
+    init_comms(acceptfd, NULL, 0);
 }

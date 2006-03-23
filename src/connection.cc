@@ -76,6 +76,9 @@ struct connection {
     size_t inbuf_p, outbuf_p;
     
     char *name;
+    bool outgoing;
+    string *outgh;
+    int outgp;
     
     dn_event *ev, *ping_ev;
 };
@@ -130,7 +133,7 @@ static void ping_timeout(dn_event_t *ev) {
 }
 #endif
  
-void init_comms(int fd) {
+void init_comms(int fd, const string *outgh, int outgp) {
     struct connection *cs;
     assert(fd >= 0);
     cs = (struct connection *) malloc(sizeof *cs);
@@ -146,6 +149,17 @@ void init_comms(int fd) {
     cs->ev->event_info.fd.trigger = conn_notify;
     cs->state = CDN_EV_IDLE;
     cs->name = NULL;
+    
+    if (!outgh) {
+        cs->outgoing = false;
+        cs->outgh = NULL;
+        cs->outgp = 0;
+    } else {
+        cs->outgoing = true;
+        cs->outgh = new string(*outgh);
+        cs->outgp = outgp;
+    }
+    
     cs->ping_ev = NULL;
       
     send_handshake(cs);
@@ -265,7 +279,14 @@ void destroy_conn(conn_t *conn) {
         delete conn->ping_ev;
     }
     
-    free(conn->name);
+    if (conn->name) {
+        free(conn->name);
+    }
+    
+    if (conn->outgh) {
+        delete conn->outgh;
+    }
+    
     free(conn->inbuf);
     free(conn->outbuf);
     
