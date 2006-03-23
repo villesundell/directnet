@@ -289,6 +289,6 @@ bool checkAutoConnect(const string &hostname)
  */
 bool checkAutoFind(const string &nick)
 {
-    if (dn_ac_list->find(nick) != dn_ac_list->end()) return true;
+    if (dn_af_list->find(nick) != dn_af_list->end()) return true;
     return false;
 }
