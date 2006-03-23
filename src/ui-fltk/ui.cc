@@ -142,14 +142,17 @@ int main(int argc, char **argv, char **envp)
     return 0;
 }
 
-ChatWindow *getWindow(const string &name)
+ChatWindow *getWindow(const string &name, bool show = true)
 {
     int i;
     
     if (cws.find(name) != cws.end()) {
+        if (!show && !cws[name]->chatWindow->shown()) return NULL;
         cws[name]->chatWindow->show();
         return cws[name];
     }
+    
+    if (!show) return NULL;
     
     cws[name] = new ChatWindow();
     cws[name]->make_window();
@@ -572,6 +575,7 @@ void uiEstConn(const string &from)
 void uiEstRoute(const string &from)
 {
     int i, mustadd, addbefore;
+    ChatWindow *cw;
     
     assert(uiLoaded);
     
@@ -608,6 +612,10 @@ void uiEstRoute(const string &from)
         olConnsLoc++;
     }
     
+    cw = getWindow(from, false);
+    if (cw) {
+        putOutput(cw, "Route established.\n");
+    }
 }
 
 void removeFromList(const string &name)
@@ -635,16 +643,30 @@ void removeFromList(const string &name)
 
 void uiLoseConn(const string &from)
 {
+    ChatWindow *cw;
+    
     assert(uiLoaded);
     
     removeFromList(from);
+    
+    cw = getWindow(from, false);
+    if (cw) {
+        putOutput(cw, "Connection lost.\n");
+    }
 }
 
 void uiLoseRoute(const string &from)
 {
+    ChatWindow *cw;
+    
     assert(uiLoaded);
     
     removeFromList(from);
+    
+    cw = getWindow(from, false);
+    if (cw) {
+        putOutput(cw, "Route lost.\n");
+    }
 }
 
 void uiNoRoute(const string &to)
