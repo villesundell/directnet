@@ -237,7 +237,11 @@ static void conn_notify_core(int cond, conn_t *conn) {
             return;
         }
         memmove(conn->outbuf, conn->outbuf + ret, conn->outbuf_p - ret);
-        conn->outbuf_p -= ret;
+        if (ret >= conn->outbuf_p) {
+            conn->outbuf_p = 0;
+        } else {
+            conn->outbuf_p -= ret;
+        }
     }
       
     dn_event_deactivate(conn->ev);
@@ -333,7 +337,7 @@ void sendCmd(struct connection *conn, string &buf)
              */
             p = 0;
         }
-        if (p == len) /* all sent! */
+        if (p >= len) /* all sent! */
             return;
     }
 
