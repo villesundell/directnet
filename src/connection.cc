@@ -322,7 +322,7 @@ void sendCmd(struct connection *conn, string &buf)
     if (conn->fd < 0 || conn->state == CDN_EV_DYING)
         return;
     
-    if (buf.size() >= DN_CMD_LEN) {
+    if (buf.length() >= DN_CMD_LEN) {
         buf = buf.substr(0, DN_CMD_LEN - 1);
     }
     len = buf.length() + 1;
@@ -339,7 +339,7 @@ void sendCmd(struct connection *conn, string &buf)
         if (p == len) /* all sent! */
             return;
     }
-
+    
     while (conn->outbuf_p + len - p > newsz)
         newsz += 16384;
     if (newsz != conn->outbuf_sz) {
@@ -348,10 +348,10 @@ void sendCmd(struct connection *conn, string &buf)
         if (!conn->outbuf) abort();
         conn->outbuf_sz = newsz;
     }
-
+    
     memcpy(conn->outbuf + conn->outbuf_p, buf.c_str() + p, len - p);
     conn->outbuf_p += len - p;
-
+    
     dn_event_deactivate(conn->ev);
     conn->ev->event_info.fd.watch_cond |= DN_EV_WRITE;
     dn_event_activate(conn->ev);
@@ -610,6 +610,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             
             // 1) Route
             Route *route = new Route(msg.params[2]);
+            route->push_back(msg.params[1]);
             if (dn_routes->find(msg.params[1]) != dn_routes->end())
                 delete (*dn_routes)[msg.params[1]];
             (*dn_routes)[msg.params[1]] = route;
@@ -841,14 +842,15 @@ void recvFnd(Route *route, const string &name, const string &key)
     // Build backwards route
     Route *reverseRoute = new Route(*route);
     reverseRoute->reverse();
+    reverseRoute->push_back(name);
     
     // Add his route,
     if (dn_routes->find(name) != dn_routes->end())
         delete (*dn_routes)[name];
-    (*dn_routes)[name] = new Route(*route);
+    (*dn_routes)[name] = reverseRoute;
     if (dn_iRoutes->find(name) != dn_iRoutes->end())
         delete (*dn_iRoutes)[name];
-    (*dn_iRoutes)[name] = new Route(*route);
+    (*dn_iRoutes)[name] = new Route(*reverseRoute);
     
     // and public key,
     encImportKey(name.c_str(), key.c_str());
@@ -862,7 +864,7 @@ void recvFnd(Route *route, const string &name, const string &key)
     handleRoutedMsg(omsg);
     
     uiEstRoute(name);
-        
+    
     reap_fnd_later(name.c_str());
 }
 
@@ -980,6 +982,7 @@ int sendMsgB(const string &to, const string &msg, bool away, bool sign)
     }
     route = (*dn_routes)[to];
     
+    cout << "MSG " << to << ": '" << route->toString() << "'" << endl;
     omsg.params.push_back(route->toString());
     omsg.params.push_back(dn_name);
     
