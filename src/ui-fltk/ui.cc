@@ -564,7 +564,7 @@ void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 
 void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
-    flDispMsg(string("#") + chat, from, msg, NULL);
+    flDispMsg(string("#") + chat, from, msg, "");
 }
 
 void uiEstConn(const string &from)

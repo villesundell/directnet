@@ -1089,7 +1089,7 @@ void sendChat(const string &to, const string &msg)
     
     for (i = 0; i < s; i++) {
         if (dn_routes->find((*chan)[i]) == dn_routes->end()) continue;
-        omsg.params[0] = (*chan)[i];
+        omsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
         omsg.params[5] = encTo(dn_name, (*chan)[i].c_str(), msg.c_str());
         handleRoutedMsg(omsg);
     }
