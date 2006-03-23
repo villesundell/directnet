@@ -19,8 +19,13 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <set>
+#include <string>
+using namespace std;
+
 #ifdef WIN32
 
+extern "C" {
 #include <glib-object.h>
 #include <glib/gtypes.h>
 
@@ -28,6 +33,7 @@
 #define GTranslateFunc int
 #include <glib/goption.h>
 #undef GTranslateFunc
+}
 
 #endif
 
@@ -41,13 +47,14 @@
 #include <unistd.h>
 extern char **environ;
 
+#include "auth.h"
 #include "client.h"
-#include "connection.h"
+// Make sure we get DN connection.h, not Gaim connection.h
+#include "../connection.h"
 #include "directnet.h"
 #include "dnconfig.h"
 #include "gaim-plugin.h"
 #include "enc.h"
-#include "hash.h"
 // Make sure we get DN server.h, not Gaim server.h
 #include "../server.h"
 #include "ui.h"
@@ -301,9 +308,9 @@ static void init_plugin(GaimPlugin *plugin)
     option = gaim_account_option_string_new("Auth User", "authuser", "");
     prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
     
-    /* register the key command */
+    /* register the key command * /
     gaim_cmd_register("k", "", 0, GAIM_CMD_FLAG_IM, "DirectNet", (GaimCmdFunc) dnsndkey,
-                      "k:  Send your DirectNet authentication key.", NULL);
+                      "k:  Send your DirectNet authentication key.", NULL);*/
     
     /* register the function to add buttons to conversation windows */
     /*gaim_signal_connect(conv_handle, "conversation-created", plugin,
@@ -312,82 +319,80 @@ static void init_plugin(GaimPlugin *plugin)
     my_protocol = plugin;
 }
 
-GAIM_INIT_PLUGIN(DirectNet, init_plugin, info);
+extern "C" {
+    GAIM_INIT_PLUGIN(DirectNet, init_plugin, info);
+}
 
-void uiDispMsg(const char *from, const char *msg, const char *authmsg, int away)
+void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
 {
     while (!uiLoaded) sleep(0);
     
-    got_im(from, msg, authmsg, away);
+    got_im(from.c_str(), msg.c_str(), authmsg.c_str(), away);
 }
 
-void uiAskAuthImport(const char *from, const char *msg, const char *sig)
+void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 {
     while (!uiLoaded) sleep(0);
     
-    auth_ask(from, msg, sig);
+    auth_ask(from.c_str(), msg.c_str(), sig.c_str());
 }
 
-void uiDispChatMsg(const char *chat, const char *from, const char *msg)
+void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
     int id;
-    char *fullname = (char *) malloc(strlen(chat) + 2);
+    string fullname = "#" + chat;
     
-    sprintf(fullname, "#%s", chat);
-    
-    id = chatByName(fullname);
+    id = chatByName(fullname.c_str());
     
     if (id != -1) {
-        chat_msg(chatByName(fullname), from, fullname, msg);
+        chat_msg(id, from.c_str(), fullname.c_str(), msg.c_str());
     }
     
-    free(fullname);
-
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Chat message received.\n");
 }
 
-void uiEstConn(const char *from)
+void uiEstConn(const string &from)
 {
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Connection established.\n");
 }
 
-void uiEstRoute(const char *from)
+void uiEstRoute(const string &from)
 {
-    while (!uiLoaded) sleep(0);
+    //while (!uiLoaded) sleep(0);
     
     GaimBuddy *buddy;
-
+    
     /* if they're on the buddy list, update them */
-    buddy = gaim_find_buddy(my_account, from);
+    buddy = gaim_find_buddy(my_account, from.c_str());
     if (buddy && !gaim_presence_is_online(buddy->presence)) {
-        set_state(from, 1);
+        set_state(from.c_str(), 1);
     } else if (!buddy) {
-        got_im(from, "[DirectNet]: Route established.", "sys", 0);
+        got_im(from.c_str(), "[DirectNet]: Route established.", "sys", 0);
     }
 
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Route established.\n");
 }
 
-void uiLoseConn(const char *from)
+void uiLoseConn(const string &from)
 {
     uiLoseRoute(from);
 }
 
-void uiLoseRoute(const char *from)
+void uiLoseRoute(const string &from)
 {
     while (!uiLoaded) sleep(0);
     
     GaimBuddy *buddy;
 
     /* if they're on the buddy list, update them */
-    buddy = gaim_find_buddy(my_account, from);
+    buddy = gaim_find_buddy(my_account, from.c_str());
     if (buddy && gaim_presence_is_online(buddy->presence)) {
-        set_state(from, 0);
+        set_state(from.c_str(), 0);
     }
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Lost route.\n");
 }
 
-void uiNoRoute(const char *to)
+void uiNoRoute(const string &to)
 {
 }
 
@@ -516,22 +521,18 @@ static void gp_login(GaimAccount *account)
     }
     
     // convert auto*'s into buddies
-    for (i = 0; i < DN_MAX_CONNS && dn_ac_list[i]; i++) {
-        char *sn = (char *) malloc(strlen(dn_ac_list[i]) + 5);
-        if (!sn) { perror("malloc"); exit(1); }
+    set<string>::iterator aci, afi;
+    for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
+        string sn = "con:" + *aci;
         
-        sprintf(sn, "con:%s", dn_ac_list[i]);
-        
-        if (!gaim_find_buddy(account, sn)) {
-            buddy = gaim_buddy_new(account, sn, NULL);
+        if (!gaim_find_buddy(account, sn.c_str())) {
+            buddy = gaim_buddy_new(account, sn.c_str(), NULL);
             gaim_blist_add_buddy(buddy, NULL, NULL, NULL);
         }
-        
-        free(sn);
     }
-    for (i = 0; i < DN_MAX_ROUTES && dn_af_list[i]; i++) {
-        if (!gaim_find_buddy(account, dn_af_list[i])) {
-            buddy = gaim_buddy_new(account, dn_af_list[i], NULL);
+    for (afi = dn_af_list->begin(); afi != dn_af_list->end(); afi++) {
+        if (!gaim_find_buddy(account, afi->c_str())) {
+            buddy = gaim_buddy_new(account, afi->c_str(), NULL);
             gaim_blist_add_buddy(buddy, NULL, NULL, NULL);
         }
     }
@@ -591,12 +592,15 @@ static void gp_setstatus(GaimAccount *account, GaimStatus *status)
         setAway(NULL);
     } else if (primitive == GAIM_STATUS_AWAY) {
         const char *txt = gaim_status_get_attr_string(status, "message");
+        string amsg;
         if (txt == NULL || txt[0] == '\0') {
             /* well, they're still away! */
-            txt = "Away";
+            amsg = "Away";
+        } else {
+            amsg = txt;
         }
         
-        setAway(txt);
+        setAway(&amsg);
     }
     
     gaim_debug(GAIM_DEBUG_INFO, "DirectNet", "Setting status.\n");
@@ -615,15 +619,10 @@ void *waitConn(void *to_vp)
     if (!strcmp(to->name, dn_name)) return NULL;
     
     if (!strncmp(to->name, "con:", 4)) {
-        if (establishConnection(to->name + 4)) {
-            if (!gaim_presence_is_online(to->presence)) {
-                set_state(to->name, 1);
-            }
-        }
+        establishConnection(to->name + 4);
     } else {
         /* if we have a route, mark them as online, otherwise, send a find */
-        route = hashSGet(dn_routes, to->name);
-        if (route) {
+        if (dn_routes->find(to->name) != dn_routes->end()) {
             uiEstRoute(to->name);
         } else {
             sendFnd(to->name);

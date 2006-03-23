@@ -267,7 +267,7 @@ directnet_LDADD = @UI_DIR@/libui.a \
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_DEPENDENCIES = @GAIM_PLUGIN_DIR@/libgaim_plugin.a \
 @GAIM_PLUGIN_TRUE@ @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
 
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @GAIM_PLUGIN_DIR@/libgaim_plugin.a \
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_LIBADD = @GAIM_PLUGIN_DIR@/*.o \
 @GAIM_PLUGIN_TRUE@ @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@ @GAIM_LIBS@
 
 all: all-recursive

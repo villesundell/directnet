@@ -42,7 +42,7 @@ libdirectnet_gaim_la_LDFLAGS=@ENC_LDFLAGS@ @AUTH_LDFLAGS@ \
  -module -avoid-version -Wl,--export-dynamic
 libdirectnet_gaim_la_DEPENDENCIES=@GAIM_PLUGIN_DIR@/libgaim_plugin.a \
  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
-libdirectnet_gaim_la_LIBADD=@GAIM_PLUGIN_DIR@/libgaim_plugin.a \
+libdirectnet_gaim_la_LIBADD=@GAIM_PLUGIN_DIR@/*.o \
  @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@ @GAIM_LIBS@
 
 endif
