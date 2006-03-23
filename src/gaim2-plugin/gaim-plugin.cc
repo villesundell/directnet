@@ -272,6 +272,7 @@ void auth_ask(const char *from, const char *msg, const char *q)
     free(qb);
 }
 
+extern "C"
 gboolean dnsndkey(GaimConversation *gc, gchar *cmd, gchar **args, gchar **error, void *data)
 {
     sendAuthKey(gc->name);
@@ -300,6 +301,8 @@ void dnsndkey_vptr(GtkButton *butotn, void *name)
     gtk_size_group_add_widget(gtkconv->sg, button);
 }*/
 
+extern "C" void regGaimCmd();
+
 static void init_plugin(GaimPlugin *plugin)
 {
     GaimAccountOption *option;
@@ -308,9 +311,8 @@ static void init_plugin(GaimPlugin *plugin)
     option = gaim_account_option_string_new("Auth User", "authuser", "");
     prpl_info.protocol_options = g_list_append(prpl_info.protocol_options, option);
     
-    /* register the key command * /
-    gaim_cmd_register("k", "", 0, GAIM_CMD_FLAG_IM, "DirectNet", (GaimCmdFunc) dnsndkey,
-                      "k:  Send your DirectNet authentication key.", NULL);*/
+    /* register the key command */
+    regGaimCmd();
     
     /* register the function to add buttons to conversation windows */
     /*gaim_signal_connect(conv_handle, "conversation-created", plugin,

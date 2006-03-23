@@ -8,7 +8,6 @@ extern "C" {
 #include <debug.h>
 #include <version.h>
 #include <conversation.h>
-//#include <cmds.h>
 #include <request.h>
 #include <prefix.h>
 }

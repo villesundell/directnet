@@ -53,11 +53,20 @@ ARFLAGS = cru
 libgaim_plugin_a_AR = $(AR) $(ARFLAGS)
 libgaim_plugin_a_LIBADD =
 am_libgaim_plugin_a_OBJECTS = libgaim_plugin_a-event.$(OBJEXT) \
-	libgaim_plugin_a-gaim-plugin.$(OBJEXT)
+	libgaim_plugin_a-gaim-plugin.$(OBJEXT) \
+	libgaim_plugin_a-cmd.$(OBJEXT)
 libgaim_plugin_a_OBJECTS = $(am_libgaim_plugin_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
 am__depfiles_maybe = depfiles
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
@@ -207,14 +216,15 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_LIBRARIES = libgaim_plugin.a
-libgaim_plugin_a_SOURCES = event.cc gaim-plugin.cc
+libgaim_plugin_a_SOURCES = event.cc gaim-plugin.cc cmd.c
+libgaim_plugin_a_CFLAGS = @GAIM_CFLAGS@ -I.. -DGAIM_PLUGIN -DGAIM_PLUGINS
 libgaim_plugin_a_CXXFLAGS = @GAIM_CFLAGS@ -I.. -DGAIM_PLUGIN -DGAIM_PLUGINS -fpermissive
 pixdir = $(prefix)/share/pixmaps/gaim/status/default
 pix_DATA = DirectNet.png
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .cc .lo .o .obj
+.SUFFIXES: .c .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -258,8 +268,44 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgaim_plugin_a-cmd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgaim_plugin_a-event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgaim_plugin_a-gaim-plugin.Po@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libgaim_plugin_a-cmd.o: cmd.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgaim_plugin_a_CFLAGS) $(CFLAGS) -MT libgaim_plugin_a-cmd.o -MD -MP -MF "$(DEPDIR)/libgaim_plugin_a-cmd.Tpo" -c -o libgaim_plugin_a-cmd.o `test -f 'cmd.c' || echo '$(srcdir)/'`cmd.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgaim_plugin_a-cmd.Tpo" "$(DEPDIR)/libgaim_plugin_a-cmd.Po"; else rm -f "$(DEPDIR)/libgaim_plugin_a-cmd.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cmd.c' object='libgaim_plugin_a-cmd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgaim_plugin_a_CFLAGS) $(CFLAGS) -c -o libgaim_plugin_a-cmd.o `test -f 'cmd.c' || echo '$(srcdir)/'`cmd.c
+
+libgaim_plugin_a-cmd.obj: cmd.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgaim_plugin_a_CFLAGS) $(CFLAGS) -MT libgaim_plugin_a-cmd.obj -MD -MP -MF "$(DEPDIR)/libgaim_plugin_a-cmd.Tpo" -c -o libgaim_plugin_a-cmd.obj `if test -f 'cmd.c'; then $(CYGPATH_W) 'cmd.c'; else $(CYGPATH_W) '$(srcdir)/cmd.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgaim_plugin_a-cmd.Tpo" "$(DEPDIR)/libgaim_plugin_a-cmd.Po"; else rm -f "$(DEPDIR)/libgaim_plugin_a-cmd.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cmd.c' object='libgaim_plugin_a-cmd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgaim_plugin_a_CFLAGS) $(CFLAGS) -c -o libgaim_plugin_a-cmd.obj `if test -f 'cmd.c'; then $(CYGPATH_W) 'cmd.c'; else $(CYGPATH_W) '$(srcdir)/cmd.c'; fi`
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
