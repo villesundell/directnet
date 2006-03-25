@@ -964,7 +964,6 @@ int sendMsgB(const string &to, const string &msg, bool away, bool sign)
     }
     route = (*dn_routes)[to];
     
-    cout << "MSG " << to << ": '" << route->toString() << "'" << endl;
     omsg.params.push_back(route->toString());
     omsg.params.push_back(dn_name);
     
