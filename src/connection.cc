@@ -805,6 +805,7 @@ void emitUnroutedMsg(conn_t *from, string &outbuf)
     while (it != active_connections.end()) {
         if (*it != from)
             sendCmd(*it, outbuf);
+        it++;
     }
 }
 
