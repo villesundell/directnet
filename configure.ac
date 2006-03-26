@@ -47,7 +47,14 @@ AC_CHECK_LIB([c], [gethostbyname],
 # If we have libwsock32, we probably want it
 AC_CHECK_LIB([wsock32], [main])
 
-AC_CHECK_FUNC(gettimeofday,[AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Defined if gettimeofday() is available])])
+AC_CHECK_FUNC(gettimeofday,[
+ AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Defined if gettimeofday() is available])
+ HAVE_GETTIMEOFDAY=true
+], [
+ HAVE_GETTIMEOFDAY=false
+])
+AM_CONDITIONAL(NO_GETTIMEOFDAY, test "x$HAVE_GETTIMEOFDAY" = "xfalse")
+
 
 # Figure out what UI to use
 AC_ARG_ENABLE(ui,

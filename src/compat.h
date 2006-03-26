@@ -3,17 +3,25 @@
 
 // Compatibility functions, for win32 and friends
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "config.h"
 #include <time.h>
 
 #ifdef WIN32
 #include <winsock.h> // for struct timeval, of all things
 
-struct timezone { } // STUB
+struct timezone { }; // STUB
 #endif
 
 #ifndef HAVE_GETTIMEOFDAY
 int gettimeofday(struct timeval *tv, struct timezone *tz);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

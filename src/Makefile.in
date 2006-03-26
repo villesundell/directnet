@@ -38,6 +38,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = directnet$(EXEEXT)
+@NO_GETTIMEOFDAY_TRUE@am__append_1 = compat/gettimeofday.c
+@GAIM_PLUGIN_TRUE@@NO_GETTIMEOFDAY_TRUE@am__append_2 = compat/gettimeofday.c
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -60,23 +62,39 @@ gaimLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(gaim_LTLIBRARIES)
 am__libdirectnet_gaim_la_SOURCES_DIST = chat.cc client.cc \
 	connection.cc directnet.cc dnconfig.cc message.cc route.cc \
-	server.cc whereami.cc
+	server.cc whereami.cc compat/gettimeofday.c
+@GAIM_PLUGIN_TRUE@@NO_GETTIMEOFDAY_TRUE@am__objects_1 = libdirectnet_gaim_la-gettimeofday.lo
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS = chat.lo client.lo \
 @GAIM_PLUGIN_TRUE@	connection.lo directnet.lo dnconfig.lo \
-@GAIM_PLUGIN_TRUE@	message.lo route.lo server.lo whereami.lo
+@GAIM_PLUGIN_TRUE@	message.lo route.lo server.lo whereami.lo \
+@GAIM_PLUGIN_TRUE@	$(am__objects_1)
 libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_rpath = -rpath $(gaimdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
+am__directnet_SOURCES_DIST = chat.cc client.cc connection.cc \
+	directnet.cc dnconfig.cc message.cc route.cc server.cc \
+	whereami.cc compat/gettimeofday.c
+@NO_GETTIMEOFDAY_TRUE@am__objects_2 =  \
+@NO_GETTIMEOFDAY_TRUE@	directnet-gettimeofday.$(OBJEXT)
 am_directnet_OBJECTS = directnet-chat.$(OBJEXT) \
 	directnet-client.$(OBJEXT) directnet-connection.$(OBJEXT) \
 	directnet-directnet.$(OBJEXT) directnet-dnconfig.$(OBJEXT) \
 	directnet-message.$(OBJEXT) directnet-route.$(OBJEXT) \
-	directnet-server.$(OBJEXT) directnet-whereami.$(OBJEXT)
+	directnet-server.$(OBJEXT) directnet-whereami.$(OBJEXT) \
+	$(am__objects_2)
 directnet_OBJECTS = $(am_directnet_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
 am__depfiles_maybe = depfiles
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
@@ -87,7 +105,7 @@ CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libdirectnet_gaim_la_SOURCES) $(directnet_SOURCES)
 DIST_SOURCES = $(am__libdirectnet_gaim_la_SOURCES_DIST) \
-	$(directnet_SOURCES)
+	$(am__directnet_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -158,6 +176,8 @@ LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+NO_GETTIMEOFDAY_FALSE = @NO_GETTIMEOFDAY_FALSE@
+NO_GETTIMEOFDAY_TRUE = @NO_GETTIMEOFDAY_TRUE@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -187,7 +207,6 @@ ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -226,16 +245,9 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = @UI_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@ 
-directnet_SOURCES = chat.cc \
-client.cc \
-connection.cc \
-directnet.cc \
-dnconfig.cc \
-message.cc \
-route.cc \
-server.cc \
-whereami.cc
-
+directnet_SOURCES = chat.cc client.cc connection.cc directnet.cc \
+	dnconfig.cc message.cc route.cc server.cc whereami.cc \
+	$(am__append_1)
 directnet_CFLAGS = @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
 directnet_CXXFLAGS = @UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
 directnet_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
@@ -245,16 +257,10 @@ directnet_LDADD = @UI_DIR@/libui.a \
 
 @GAIM_PLUGIN_TRUE@gaimdir = $(libdir)/gaim
 @GAIM_PLUGIN_TRUE@gaim_LTLIBRARIES = libdirectnet_gaim.la
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_SOURCES = chat.cc \
-@GAIM_PLUGIN_TRUE@client.cc \
-@GAIM_PLUGIN_TRUE@connection.cc \
-@GAIM_PLUGIN_TRUE@directnet.cc \
-@GAIM_PLUGIN_TRUE@dnconfig.cc \
-@GAIM_PLUGIN_TRUE@message.cc \
-@GAIM_PLUGIN_TRUE@route.cc \
-@GAIM_PLUGIN_TRUE@server.cc \
-@GAIM_PLUGIN_TRUE@whereami.cc
-
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_SOURCES = chat.cc client.cc \
+@GAIM_PLUGIN_TRUE@	connection.cc directnet.cc dnconfig.cc \
+@GAIM_PLUGIN_TRUE@	message.cc route.cc server.cc whereami.cc \
+@GAIM_PLUGIN_TRUE@	$(am__append_2)
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @ENC_CFLAGS@ @AUTH_CFLAGS@ \
 @GAIM_PLUGIN_TRUE@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
 
@@ -270,7 +276,7 @@ directnet_LDADD = @UI_DIR@/libui.a \
 all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .cc .lo .o .obj
+.SUFFIXES: .c .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -375,16 +381,60 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-connection.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-directnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-dnconfig.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-gettimeofday.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-message.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-route.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-whereami.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dnconfig.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdirectnet_gaim_la-gettimeofday.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/message.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/route.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/whereami.Plo@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libdirectnet_gaim_la-gettimeofday.lo: compat/gettimeofday.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -MT libdirectnet_gaim_la-gettimeofday.lo -MD -MP -MF "$(DEPDIR)/libdirectnet_gaim_la-gettimeofday.Tpo" -c -o libdirectnet_gaim_la-gettimeofday.lo `test -f 'compat/gettimeofday.c' || echo '$(srcdir)/'`compat/gettimeofday.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libdirectnet_gaim_la-gettimeofday.Tpo" "$(DEPDIR)/libdirectnet_gaim_la-gettimeofday.Plo"; else rm -f "$(DEPDIR)/libdirectnet_gaim_la-gettimeofday.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compat/gettimeofday.c' object='libdirectnet_gaim_la-gettimeofday.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdirectnet_gaim_la_CFLAGS) $(CFLAGS) -c -o libdirectnet_gaim_la-gettimeofday.lo `test -f 'compat/gettimeofday.c' || echo '$(srcdir)/'`compat/gettimeofday.c
+
+directnet-gettimeofday.o: compat/gettimeofday.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-gettimeofday.o -MD -MP -MF "$(DEPDIR)/directnet-gettimeofday.Tpo" -c -o directnet-gettimeofday.o `test -f 'compat/gettimeofday.c' || echo '$(srcdir)/'`compat/gettimeofday.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-gettimeofday.Tpo" "$(DEPDIR)/directnet-gettimeofday.Po"; else rm -f "$(DEPDIR)/directnet-gettimeofday.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compat/gettimeofday.c' object='directnet-gettimeofday.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-gettimeofday.o `test -f 'compat/gettimeofday.c' || echo '$(srcdir)/'`compat/gettimeofday.c
+
+directnet-gettimeofday.obj: compat/gettimeofday.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -MT directnet-gettimeofday.obj -MD -MP -MF "$(DEPDIR)/directnet-gettimeofday.Tpo" -c -o directnet-gettimeofday.obj `if test -f 'compat/gettimeofday.c'; then $(CYGPATH_W) 'compat/gettimeofday.c'; else $(CYGPATH_W) '$(srcdir)/compat/gettimeofday.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/directnet-gettimeofday.Tpo" "$(DEPDIR)/directnet-gettimeofday.Po"; else rm -f "$(DEPDIR)/directnet-gettimeofday.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='compat/gettimeofday.c' object='directnet-gettimeofday.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CFLAGS) $(CFLAGS) -c -o directnet-gettimeofday.obj `if test -f 'compat/gettimeofday.c'; then $(CYGPATH_W) 'compat/gettimeofday.c'; else $(CYGPATH_W) '$(srcdir)/compat/gettimeofday.c'; fi`
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
