@@ -52,6 +52,8 @@ using namespace std;
 #include "message.h"
 #include "ui.h"
 
+#include <set>
+
 #define BUFSZ 65536
 
 string *awayMsg = NULL;
@@ -85,9 +87,11 @@ class connection {
         
         dn_event_fd fd_ev;
         dn_event_timer ping_ev;
+
+	std::set<conn_t *>::iterator active_it;
 };
  
-static conn_t *ring_head = NULL;
+static std::set<conn_t *> active_connections;
 
 static void send_handshake(struct connection *cs);
 static void conn_notify(dn_event_fd *ev, int cond);
@@ -157,16 +161,8 @@ void init_comms(int fd, const string *outgh, int outgp) {
  
 void send_handshake(conn_t *cs) {
     string buf;
- 
-    if (ring_head) {
-        cs->prev = ring_head;
-        cs->next = ring_head->next;
-        cs->next->prev = cs;
-        cs->prev->next = cs;
-    } else {
-        ring_head = cs;
-        cs->next = cs->prev = cs;
-    }
+
+    cs->active_it = active_connections.insert(cs).first;
     
     cs->fd_ev.activate();
     buf = buildCmd("key", 1, 1, dn_name);
@@ -286,15 +282,7 @@ connection::~connection() {
     free(inbuf);
     free(outbuf);
     
-    if (next == prev) {
-        assert(this == ring_head);
-        ring_head = NULL;
-    } else {
-        next->prev = prev;
-        prev->next = next;
-        if (ring_head == this)
-            ring_head = next;
-    }
+    active_connections.erase(active_it);
 }
 
 // Start building a command into a buffer
@@ -812,22 +800,12 @@ bool handleNRUnroutedMsg(conn_t *from, const Message &msg) {
 
 void emitUnroutedMsg(conn_t *from, string &outbuf)
 {
-    // This emits an unrouted message
-    conn_t *cur, *last;
-    if (from) {
-        last = from;
-    } else {
-        from = ring_head;
-        if (!from)
-            return; // No connections
-        last = from->next;
-    }
-    cur = from->next;
+    std::set<conn_t *>::iterator it = active_connections.begin();
     
-    do {
-        sendCmd(cur, outbuf);
-        cur = cur->next;
-    } while (cur != last);
+    while (it != active_connections.end()) {
+        if (*it != from)
+            sendCmd(*it, outbuf);
+    }
 }
 
 // recvFnd handles the situation that we've just been "found"
