@@ -66,60 +66,49 @@ enum cev_state {
     CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
 };
 
-struct connection {
-    conn_t *prev, *next;
-    int fd;
-    enum cev_state state;
-    
-    unsigned char *inbuf, *outbuf;
-    size_t inbuf_sz, outbuf_sz;
-    size_t inbuf_p, outbuf_p;
-    
-    char *name;
-    bool outgoing;
-    string *outgh;
-    int outgp;
-    
-    dn_event *ev, *ping_ev;
+class connection {
+    public:
+        ~connection();
+        
+        conn_t *prev, *next;
+        int fd;
+        enum cev_state state;
+        
+        unsigned char *inbuf, *outbuf;
+        size_t inbuf_sz, outbuf_sz;
+        size_t inbuf_p, outbuf_p;
+        
+        char *name;
+        bool outgoing;
+        string *outgh;
+        int outgp;
+        
+        dn_event_fd fd_ev;
+        dn_event_timer ping_ev;
 };
  
-static conn_t ring_head = {
-    &ring_head, &ring_head,
-    -1,
-    CDN_EV_DYING,
-    
-    NULL, NULL,
-    0, 0,
-    0, 0,
-    NULL,
-    false,
-    NULL,
-    0,
-    NULL, NULL
-};
+static conn_t *ring_head = NULL;
 
 static void send_handshake(struct connection *cs);
-static void conn_notify(int cond, dn_event *ev);
+static void conn_notify(dn_event_fd *ev, int cond);
 static void kill_connection(conn_t *conn);
-static void destroy_conn(conn_t *conn);
-static void ping_send_ev(dn_event *ev);
+static void ping_send_ev(dn_event_timer *ev);
 //static void ping_timeout(dn_event_t *ev);
  
 static void schedule_ping(conn_t *conn) {
-    assert(!conn->ping_ev);
-    conn->ping_ev = dn_event_trigger_after(ping_send_ev, conn, DN_KEEPALIVE_TIMER, 1);
+    if (conn->ping_ev.isActive())
+        conn->ping_ev.deactivate();
+    conn->ping_ev.trigger = ping_send_ev;
+    conn->ping_ev.payload = (void *)conn;
+    conn->ping_ev.setTimeDelta(DN_KEEPALIVE_TIMER, 1);
+    conn->ping_ev.activate();
 }
  
-static void ping_send_ev(dn_event *ev) {
+static void ping_send_ev(dn_event_timer *ev) {
     conn_t *conn = (conn_t *) ev->payload;
-    assert(conn->ping_ev == ev);
-    dn_event_deactivate(ev);
-    delete ev;
-    conn->ping_ev = NULL;
     
     string cmd = "pin\x01\x01;";
     sendCmd(conn, cmd);
-    //    conn->ping_ev = dn_event_trigger_after(ping_timeout, conn, 30, 0);
     schedule_ping(conn);
 }
  
@@ -139,17 +128,17 @@ static void ping_timeout(dn_event_t *ev) {
 void init_comms(int fd, const string *outgh, int outgp) {
     struct connection *cs;
     assert(fd >= 0);
-    cs = (struct connection *) malloc(sizeof *cs);
+    cs = new connection;
     if (!cs) abort();
     cs->fd = fd;
     cs->inbuf_sz = cs->outbuf_sz = BUFSZ;
     cs->inbuf_p = cs->outbuf_p = 0;
     cs->inbuf = (unsigned char *) malloc(cs->inbuf_sz);
     cs->outbuf = (unsigned char *) malloc(cs->outbuf_sz);
-    cs->ev = new dn_event(cs, DN_EV_FD, NULL, 0);
-    cs->ev->event_info.fd.fd = fd;
-    cs->ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_WRITE | DN_EV_EXCEPT;
-    cs->ev->event_info.fd.trigger = conn_notify;
+    cs->fd_ev.setFD(fd);
+    cs->fd_ev.setCond(DN_EV_READ | DN_EV_WRITE | DN_EV_EXCEPT);
+    cs->fd_ev.trigger = conn_notify;
+    cs->fd_ev.payload = (void *)cs;
     cs->state = CDN_EV_IDLE;
     cs->name = NULL;
     
@@ -163,20 +152,23 @@ void init_comms(int fd, const string *outgh, int outgp) {
         cs->outgp = outgp;
     }
     
-    cs->ping_ev = NULL;
-      
     send_handshake(cs);
 }
  
 void send_handshake(conn_t *cs) {
     string buf;
  
-    cs->prev = &ring_head;
-    cs->next = ring_head.next;
-    cs->next->prev = cs;
-    cs->prev->next = cs;
+    if (ring_head) {
+        cs->prev = ring_head;
+        cs->next = ring_head->next;
+        cs->next->prev = cs;
+        cs->prev->next = cs;
+    } else {
+        ring_head = cs;
+        cs->next = cs->prev = cs;
+    }
     
-    dn_event_activate(cs->ev);
+    cs->fd_ev.activate();
     buf = buildCmd("key", 1, 1, dn_name);
     addParam(buf, encExportKey());
     sendCmd(cs, buf);
@@ -184,7 +176,7 @@ void send_handshake(conn_t *cs) {
     schedule_ping(cs);
 }
  
-static void conn_notify_core(int cond, conn_t *conn) {
+static void conn_notify_core(conn_t *conn, int cond) {
       
     if (cond & DN_EV_EXCEPT) {
         // disconnect
@@ -247,60 +239,62 @@ static void conn_notify_core(int cond, conn_t *conn) {
         }
     }
       
-    dn_event_deactivate(conn->ev);
-    conn->ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT | (conn->outbuf_p ? DN_EV_WRITE : 0);
-    dn_event_activate(conn->ev);
+    conn->fd_ev.setCond(DN_EV_READ | DN_EV_EXCEPT | (conn->outbuf_p ? DN_EV_WRITE : 0));
 }
  
 static void kill_connection(conn_t *conn) {
     if (conn->state == CDN_EV_EVENT)
         conn->state = CDN_EV_DYING;
     else if (conn->state == CDN_EV_IDLE)
-        destroy_conn(conn);
+        delete conn;
 }
  
-static void conn_notify(int cond, dn_event *ev) {
+static void conn_notify(dn_event_fd *ev, int cond) {
     conn_t *conn = (conn_t *) ev->payload;
     conn->state = CDN_EV_EVENT;
-    conn_notify_core(cond, conn);
+    conn_notify_core(conn, cond);
     if (conn->state == CDN_EV_DYING) {
-        destroy_conn(conn);
+        delete conn;
     } else {
         conn->state = CDN_EV_IDLE;
     }
 }
  
 void destroy_conn(conn_t *conn) {
-    close(conn->fd);
-    if (conn->name) {
-        uiLoseConn(conn->name);
-        if (dn_routes->find(conn->name) != dn_routes->end()) {
-            delete (*dn_routes)[conn->name];
-            dn_routes->erase(conn->name);
+    delete conn;
+}
+
+connection::~connection() {
+    if (fd_ev.isActive())
+        fd_ev.deactivate();
+    close(fd);
+    if (name) {
+        uiLoseConn(name);
+        if (dn_routes->find(name) != dn_routes->end()) {
+            delete (*dn_routes)[name];
+            dn_routes->erase(name);
         }
     }
-    dn_event_deactivate(conn->ev);
-    delete conn->ev;
-    if (conn->ping_ev) {
-        dn_event_deactivate(conn->ping_ev);
-        delete conn->ping_ev;
+    if (name) {
+        free(name);
     }
     
-    if (conn->name) {
-        free(conn->name);
+    if (outgh) {
+        delete outgh;
     }
     
-    if (conn->outgh) {
-        delete conn->outgh;
+    free(inbuf);
+    free(outbuf);
+    
+    if (next == prev) {
+        assert(this == ring_head);
+        ring_head = NULL;
+    } else {
+        next->prev = prev;
+        prev->next = next;
+        if (ring_head == this)
+            ring_head = next;
     }
-    
-    free(conn->inbuf);
-    free(conn->outbuf);
-    
-    conn->next->prev = conn->prev;
-    conn->prev->next = conn->next;
-    
-    free(conn);
 }
 
 // Start building a command into a buffer
@@ -356,9 +350,7 @@ void sendCmd(struct connection *conn, string &buf)
     memcpy(conn->outbuf + conn->outbuf_p, buf.c_str() + p, len - p);
     conn->outbuf_p += len - p;
     
-    dn_event_deactivate(conn->ev);
-    conn->ev->event_info.fd.watch_cond |= DN_EV_WRITE;
-    dn_event_activate(conn->ev);
+    conn->fd_ev.setCond(conn->fd_ev.getCond() | DN_EV_WRITE);
 }
 
 #define REQ_PARAMS(x) if (msg.params.size() < x) return
@@ -821,15 +813,21 @@ bool handleNRUnroutedMsg(conn_t *from, const Message &msg) {
 void emitUnroutedMsg(conn_t *from, string &outbuf)
 {
     // This emits an unrouted message
-    conn_t *cur;
-    if (!from)
-        from = &ring_head;
+    conn_t *cur, *last;
+    if (from) {
+        last = from;
+    } else {
+        from = ring_head;
+        if (!from)
+            return; // No connections
+        last = from->next;
+    }
     cur = from->next;
     
-    while (cur != from) {
+    do {
         sendCmd(cur, outbuf);
         cur = cur->next;
-    }
+    } while (cur != last);
 }
 
 // recvFnd handles the situation that we've just been "found"

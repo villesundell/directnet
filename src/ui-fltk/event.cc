@@ -32,195 +32,157 @@
 #include <cerrno>
 using namespace std;
 
-#undef dn_event_activate
-
-class dn_event_private {
-    public:
+struct dn_event_private {
     dn_event *ev;
     multiset<dn_event_private *>::iterator it;
-    const char *trace_file;
-    int trace_line;
 };
 
 static map<int, multiset<dn_event_private *> > fd_map;
 
 static set<dn_event *> active;
 
-static void timer_callback(void *p) {
-    dn_event_private *priv = (dn_event_private *)p;
-    if (priv->ev) {
-        if(!(priv->ev->priv == priv && priv->ev->event_type == DN_EV_TIMER)) {
-            printf("assert fail, priv=%p priv->ev=%p priv->ev->priv=%p ev_type=%d (should be %d)\n", (void *)priv, (void *)priv->ev, (void *)priv->ev->priv, priv->ev->event_type, DN_EV_TIMER);
-            printf("from: %s:%d\n", priv->trace_file, priv->trace_line);
-            assert(false);
-        }
-        priv->ev->priv = NULL;
-        priv->ev->event_info.timer.trigger(priv->ev);
-    }
-    delete priv;
-}
-
-static void fd_callback(int fd, void *unused) {
-    (void)unused;
-    multiset<dn_event_private *> &l = fd_map[fd];
-
-    if (l.size() == 0) {
-        Fl::remove_fd(fd);
-        fd_map.erase(fd);
-        return;
-    }
-
-    int cond = 0;
-    int interest = 0;
-    fd_set read, write, except;
-    FD_ZERO(&read);
-    FD_SET(fd, &read);
-    FD_ZERO(&write);
-    FD_SET(fd, &write);
-    FD_ZERO(&except);
-    FD_SET(fd, &except);
-
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-
-    int ret = select(fd + 1, &read, &write, &except, &timeout);
-    if (ret == -1) {
-        cerr << "Warning: select fail on fd " << fd << " err " << strerror(errno) << endl;
-        return;
-    }
-
-    if (FD_ISSET(fd, &read))
-        cond |= DN_EV_READ;
-    if (FD_ISSET(fd, &write))
-        cond |= DN_EV_WRITE;
-    if (FD_ISSET(fd, &except))
-        cond |= DN_EV_EXCEPT;
-    
-    multiset<dn_event_private *>::iterator it = l.begin();
-    while (it != l.end()) {
-        // We must do this in case the current event removes itself
-        multiset<dn_event_private *>::iterator next = it;
-        next++; // + 1 doesn't work, blah
-        
-        if ((*it)->ev == NULL) {
-            // wtf?
-            dn_event_private *p = *it;
-            l.erase(it);
-            delete p;
-        } else {
-            dn_event *ev = (*it)->ev;
-            assert(ev->event_type == DN_EV_FD && ev->event_info.fd.fd == fd);
-            interest |= ev->event_info.fd.watch_cond;
-            if (ev->event_info.fd.watch_cond & cond)
-                ev->event_info.fd.trigger(cond, ev);
-        }
-        it = next;
-    }
-    Fl::remove_fd(fd);
-    
-    int new_watch = 0;
-    if (interest & DN_EV_READ)
-        new_watch |= FL_READ;
-    if (interest & DN_EV_WRITE)
-        new_watch |= FL_WRITE;
-    if (interest & DN_EV_EXCEPT)
-        new_watch |= FL_EXCEPT;
-    
-    if (l.size() && new_watch)
-        Fl::add_fd(fd, new_watch, fd_callback, NULL);
-}
-
-void dn_event_activate(dn_event *event) {
-#ifdef EVENT_DEBUG
-    assert (active.find(event) == active.end());
-    active.insert(event);
-    fprintf(stderr, "Adding event %p from %s:%d, t=%d\n", (void *)event, event->trace_file, event->trace_line, event->event_type);
-#endif
-    switch (event->event_type) {
-        case DN_EV_FD:
-            {
-                multiset<dn_event_private *> &l = fd_map[event->event_info.fd.fd];
-                dn_event_private *p = new dn_event_private;
-                p->ev = event;
-                event->priv = p;
-                p->it = l.insert(l.begin(), p);
-                Fl::add_fd(
-                        event->event_info.fd.fd,
-                        FL_READ | FL_WRITE | FL_EXCEPT,
-                        fd_callback,
-                        NULL);
-                p->trace_file = event->trace_file;
-                p->trace_line = event->trace_line;
-                break;
+class dn_event_access {
+    public:
+        static void timer_callback(void *p) {
+            dn_event_private *priv = (dn_event_private *)p;
+            if (priv->ev) {
+                dn_event_timer *t = dynamic_cast<dn_event_timer *>(priv->ev);
+                assert(t);
+                assert(t->priv == priv);
+                t->priv = NULL;
+                t->trigger(t);
             }
-        case DN_EV_TIMER:
-            {
-                event->priv = new dn_event_private;
-                
-#ifndef __WIN32
-                struct timeval now;
-                gettimeofday(&now, NULL);
-#else
-                struct timeb now;
-                ftime(&now);
-#endif
-                
-                double time_until = 0;
-                
-#ifndef __WIN32
-                time_until = ((double)event->event_info.timer.t_sec - (double)now.tv_sec) +
-                    ((double)event->event_info.timer.t_usec - (double)now.tv_usec) / (double)1000000;
-#else
-                time_until = ((double)event->event_info.timer.t_sec - (double)now.time) +
-                    ((double)event->event_info.timer.t_usec - ((double)now.millitm * 1000.0)) / (double)1000000;
-#endif
-                
-                if (time_until <= 0) {
-                    event->event_info.timer.trigger(event);
-                    if (event->priv) {
-                        delete event->priv;
-                        event->priv = NULL;
-                    }
-                    return;
-                }
-                
-                event->priv->ev = event;
-                
-                Fl::add_timeout(time_until, timer_callback, event->priv);
-                break;
-            }
-        default:
-            assert(false);
-    }
-}
+            delete priv;
+        }
+        static void fd_callback(int fd, void *unused) {
+            (void)unused;
+            multiset<dn_event_private *> &l = fd_map[fd];
 
-void dn_event_deactivate(dn_event *event) {
-#ifdef EVENT_DEBUG
-    assert (active.find(event) != active.end());
-    active.erase(event);
-    fprintf(stderr, "Removing event %p from %s:%d, t=%d\n", (void *)event, event->trace_file, event->trace_line, event->event_type);
-#endif
-    if (!event->priv)
-        return;
-    switch (event->event_type) {
-        case DN_EV_TIMER:
-            event->priv->ev = NULL;
-            event->priv = NULL;
-            return;
-        case DN_EV_FD:
-            {
-                multiset<dn_event_private *> &l = fd_map[event->event_info.fd.fd];
-                l.erase(event->priv->it);
-                assert(l.find(event->priv) == l.end());
-                if (l.size() == 0) {
-                    Fl::remove_fd(event->event_info.fd.fd);
-                }
-                delete event->priv;
-                event->priv = NULL;
+            if (l.size() == 0) {
+                Fl::remove_fd(fd);
+                fd_map.erase(fd);
                 return;
             }
-        default:
-            assert(false);
+
+            int cond = 0;
+            int interest = 0;
+            fd_set read, write, except;
+            FD_ZERO(&read);
+            FD_SET(fd, &read);
+            FD_ZERO(&write);
+            FD_SET(fd, &write);
+            FD_ZERO(&except);
+            FD_SET(fd, &except);
+
+            struct timeval timeout;
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 0;
+
+            int ret = select(fd + 1, &read, &write, &except, &timeout);
+            if (ret == -1) {
+                cerr << "Warning: select fail on fd " << fd << " err " << strerror(errno) << endl;
+                return;
+            }
+
+            if (FD_ISSET(fd, &read))
+                cond |= DN_EV_READ;
+            if (FD_ISSET(fd, &write))
+                cond |= DN_EV_WRITE;
+            if (FD_ISSET(fd, &except))
+                cond |= DN_EV_EXCEPT;
+            
+            multiset<dn_event_private *>::iterator it = l.begin();
+            while (it != l.end()) {
+                // We must do this in case the current event removes itself
+                multiset<dn_event_private *>::iterator next = it;
+                next++; // + 1 doesn't work, blah
+                
+                if ((*it)->ev == NULL) {
+                    // wtf?
+                    dn_event_private *p = *it;
+                    l.erase(it);
+                    delete p;
+                } else {
+                    dn_event_fd *ev = dynamic_cast<dn_event_fd *>((*it)->ev);
+                    assert(ev);
+                    assert(ev->getFD() == fd);
+        //            assert(ev->priv == (*it));
+                    interest |= ev->cond;
+                    if (ev->getCond() & cond)
+                        ev->trigger(ev, cond);
+                }
+                it = next;
+            }
+            Fl::remove_fd(fd);
+            
+            int new_watch = 0;
+            if (interest & DN_EV_READ)
+                new_watch |= FL_READ;
+            if (interest & DN_EV_WRITE)
+                new_watch |= FL_WRITE;
+            if (interest & DN_EV_EXCEPT)
+                new_watch |= FL_EXCEPT;
+            
+            if (l.size() && new_watch)
+                Fl::add_fd(fd, new_watch, fd_callback, NULL);
+        }
+};
+
+void dn_event_fd::activate() {
+    assert(!is_active);
+    
+    multiset<dn_event_private *> &l = fd_map[fd];
+    dn_event_private *p = new dn_event_private;
+//    std::cerr << "dn_ev_fd act this=" << (void *)this << " p=" << (void *)p << std::endl;
+    p->ev = this;
+    priv = p;
+    p->it = l.insert(l.begin(), p);
+    Fl::add_fd(
+            fd,
+            FL_READ | FL_WRITE | FL_EXCEPT,
+            dn_event_access::fd_callback,
+            NULL);
+    is_active = true;
+}
+
+void dn_event_timer::activate() {
+    assert(!is_active);
+    priv = new dn_event_private;
+//    std::cerr << "dn_ev_timer act this=" << (void *)this << " p=" << (void *)priv << std::endl;
+    struct timeval now;
+    gettimeofday(&now, NULL);
+                
+    double time_until = 0;
+                
+    time_until = (double)tv.tv_sec - (double)now.tv_sec;
+    time_until += ((double)tv.tv_usec - (double)now.tv_usec) / (double)1000000;
+                
+    priv->ev = this;
+                
+    Fl::add_timeout(time_until, dn_event_access::timer_callback, (void *)priv);
+    is_active = true;
+}
+
+void dn_event_timer::deactivate() {
+    if (!is_active)
+        return;
+//    std::cerr << "timer deact " << (void *)this << std::endl;
+    if (priv)
+        priv->ev = NULL;
+    priv = NULL;
+    is_active = false;
+}
+
+void dn_event_fd::deactivate() {
+    if (!is_active) return;
+    multiset<dn_event_private *> &l = fd_map[fd];
+//    std::cerr << "fd deact " << (void *)this << std::endl;
+    l.erase(priv->it);
+    assert(l.find(priv) == l.end());
+    if (l.size() == 0) {
+        Fl::remove_fd(fd);
     }
+    delete priv;
+    priv = NULL;
+    is_active = false;
 }

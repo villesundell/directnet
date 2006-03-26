@@ -50,7 +50,7 @@ bool cinp = false;
 bool hub = false;
 const char *hubname;
 
-int handleUInput(const string &inp);
+void handleUInput(const string &inp);
 void handleAuto(vector<string> &params);
 
 void resetInputPrompt();
@@ -168,45 +168,17 @@ int main(int argc, char **argv, char **envp)
     return 0;
 }
 
-#if 0
-    while (1) {
-        fflush(stdout);
-        fgets(cmdbuf, 32256, stdin);
-        
-        ostrlen = strlen(cmdbuf);
-        if (cmdbuf[ostrlen-1] == '\n') {
-            cmdbuf[ostrlen-1] = '\0';
-        }
-        
-        if (strlen(cmdbuf) != 0) {
-            if (handleUInput(cmdbuf)) {
-                free(currentPartner);
-                return 0;
-            }
-        }
-    }
-    
-    return 0;
-}
-#endif
-
 char inputBuffer[65536];
 int ib_pos = 0;
 
-static void inputEvent(int cond, dn_event *ev);
+static void inputEvent(dn_event_fd *ev, int cond);
+dn_event_fd input_ev(0, DN_EV_READ, inputEvent, NULL);
 
 void resetInputPrompt() {
-    static dn_event *input_ev = NULL;
-    if (!input_ev) {
-        input_ev = new dn_event(NULL, DN_EV_FD, NULL, 0);
-    }
-    input_ev->event_info.fd.fd = 0;
-    input_ev->event_info.fd.trigger = inputEvent;
-    input_ev->event_info.fd.watch_cond = DN_EV_READ;
-    dn_event_activate(input_ev);
+    input_ev.activate();
 }
 
-void inputEvent(int cond, dn_event *ev) {
+void inputEvent(dn_event_fd *ev, int cond) {
     int i;
     int ret = read(0, inputBuffer + ib_pos, sizeof inputBuffer - ib_pos);
     if (ret <= 0) {
@@ -223,10 +195,7 @@ void inputEvent(int cond, dn_event *ev) {
         }
         return;
 got_input:
-        if (handleUInput(inputBuffer)) {
-            // returns 1 = quit
-            exit(0);
-        }
+        handleUInput(inputBuffer);
         memmove(inputBuffer, inputBuffer + i + 1, ib_pos - i - 1);
         ib_pos -= i + 1;
     }
@@ -236,12 +205,12 @@ got_input:
     }
 }
 
-int handleUInput(const string &inp)
+void handleUInput(const string &inp)
 {
     // Is it crossinput?
     if (cinp) {
         crossinput(inp);
-        return 0;
+        return;
     }
     
     // Is it a command?
@@ -251,13 +220,13 @@ int handleUInput(const string &inp)
         
         // Tokenize the parameters by ' '
         for (x = 0; x < inp.length(); x = y + 1) {
-            y = inp.find_first_of(' ', y);
+            y = inp.find_first_of(' ', x);
             if (y == string::npos) {
                 y = inp.length();
             }
             params.push_back(inp.substr(x, y - x));
         }
-        
+
         if (params[0][1] == 'a') {
             if (params.size() > 1) {
                 setAway(&params[1]);
@@ -266,32 +235,32 @@ int handleUInput(const string &inp)
                 setAway(NULL);
                 cout << "Away message unset." << endl;
             }
-            return 0;
+            return;
         } else if (params[0][1] == 'c') {
             if (params.size() <= 1) {
-                return 0;
+                return;
             }
             
             // Connect to a given hostname or user
             establishConnection(params[1]);
-            return 0;
+            return;
         } else if (params[0][1] == 'f') {
             if (params.size() <= 1) {
-                return 0;
+                return;
             }
             
             sendFnd(params[1]);
         } else if (params[0][1] == 'k') {
             if (currentPartner == "") {
                 cout << "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat." << endl;
-                return 0;
+                return;
             }
-            if (currentPartner[0] == '#') return 0;
+            if (currentPartner[0] == '#') return;
             
             sendAuthKey(currentPartner);
         } else if (params[0][1] == 't') {
             if (params.size() <= 1) {
-                return 0;
+                return;
             }
             
             currentPartner = params[1];
@@ -304,16 +273,16 @@ int handleUInput(const string &inp)
             // auto*
             handleAuto(params);
         } else if (params[0][1] == 'q') {
-            return 1;
+            exit(0);
         }
         
     } else {
-        if (inp.length() == 0) return 0;
+        if (inp.length() == 0) return;
         
         // Not a command, a message
         if (currentPartner == "") {
             cout << "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat." << endl;
-            return 0;
+            return;
         }
         
         // Is it a chat?
@@ -326,7 +295,7 @@ int handleUInput(const string &inp)
         }
     }
     
-    return 0;
+    return;
 }
 
 /* just received a /u, so handle auto-something */
@@ -521,63 +490,82 @@ class dn_event_private {
     dn_event *parent;
 };
 
-static void callback(int fd, short cond, void *payload) {
-    dn_event *ev = (dn_event *) payload;
-    if (ev->event_type == DN_EV_FD) {
-        int c = 0;
-        if (cond & EV_READ)
-            c |= DN_EV_READ;
-        if (cond & EV_WRITE)
-            c |= DN_EV_WRITE;
-        ev->event_info.fd.trigger(c, ev);
-    } else if (ev->event_type = DN_EV_TIMER) {
-        /* libevent clears the event for us in this case, clean up
-         * the private data
-         */
-        delete ev->priv;
-        ev->priv = NULL;
-        ev->event_info.timer.trigger(ev);
-    } else assert(0 == "bad event type");
-}
+class dn_event_access {
+    public:
+
+        static void callback(int fd, short cond, void *payload) {
+            dn_event *ev = (dn_event *) payload;
+            dn_event_fd *fde = dynamic_cast<dn_event_fd *>(ev);
+            dn_event_timer *timer = dynamic_cast<dn_event_timer *>(ev);
+
+            if (fde) {
+                int c = 0;
+                if (cond & EV_READ)
+                    c |= DN_EV_READ;
+                if (cond & EV_WRITE)
+                    c |= DN_EV_WRITE;
+                fde->trigger(fde, c);
+            } else if (timer) {
+                /* libevent clears the event for us in this case, clean up
+                 * the private data
+                 */
+                delete timer->priv;
+                timer->priv = NULL;
+                timer->trigger(timer);
+            } else assert(0 == "bad event type");
+        }
+};
+
+void dn_event_fd::activate() {
+
+    assert(!is_active);
     
-#undef dn_event_activate
+    priv = new dn_event_private();
+    priv->parent = this;
 
-void dn_event_activate(dn_event *ev) {
-    dn_event_private *priv = new dn_event_private();
-    priv->parent = ev;
-    ev->priv = priv;
-    switch (ev->event_type) {
-        case DN_EV_FD:
-            {
-                int cond = EV_PERSIST;
-                if (ev->event_info.fd.watch_cond & DN_EV_READ)
-                    cond |= EV_READ;
-                if (ev->event_info.fd.watch_cond & DN_EV_WRITE)
-                    cond |= EV_WRITE;
-                event_set(&priv->cevt, ev->event_info.fd.fd, cond, callback, ev);
-                event_add(&priv->cevt, NULL);
-                return;
-            }
-        case DN_EV_TIMER:
-            {
-                struct timeval tv;
-                gettimeofday(&tv, NULL);
-                tv.tv_sec = ev->event_info.timer.t_sec - tv.tv_sec;
-                tv.tv_usec = ev->event_info.timer.t_usec - tv.tv_usec;
-                tv.tv_sec += tv.tv_usec / 1000000;
-                tv.tv_usec %= 1000000;
-                evtimer_set(&priv->cevt, callback, ev);
-                event_add(&priv->cevt, &tv);
-                return;
-            }
-        default:
-            assert(0 == "bad event type");
-    }
+    int cond = EV_PERSIST;
+    if (this->cond & DN_EV_READ)
+        cond |= EV_READ;
+    if (this->cond & DN_EV_WRITE)
+        cond |= EV_WRITE;
+    event_set(&priv->cevt, this->fd, cond, dn_event_access::callback, static_cast<dn_event *>(this));
+    event_add(&priv->cevt, NULL);
+
+    is_active = true;
 }
 
-void dn_event_deactivate(dn_event *ev) {
-    if (ev->priv == NULL) return;
-    event_del(&ev->priv->cevt);
-    delete ev->priv;
-    ev->priv = NULL;
+void dn_event_timer::activate() {
+    assert(!is_active);
+
+    priv = new dn_event_private();
+    priv->parent = this;
+        
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    tv.tv_sec = this->tv.tv_sec - tv.tv_sec;
+    tv.tv_usec = this->tv.tv_usec - tv.tv_usec;
+    tv.tv_sec += tv.tv_usec / 1000000;
+    tv.tv_usec %= 1000000;
+    evtimer_set(&priv->cevt, dn_event_access::callback, static_cast<dn_event *>(this));
+    event_add(&priv->cevt, &tv);
+    
+    is_active = true;
+}
+
+void dn_event_fd::deactivate() {
+    assert(is_active);
+    if (priv == NULL) return;
+    event_del(&priv->cevt);
+    delete priv;
+    priv = NULL;
+    is_active = false;
+}
+
+void dn_event_timer::deactivate() {
+    assert(is_active);
+    if (priv == NULL) return;
+    event_del(&priv->cevt);
+    delete priv;
+    priv = NULL;
+    is_active = false;
 }

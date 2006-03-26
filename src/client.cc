@@ -50,9 +50,8 @@ struct outgc {
     string outgh;
     int outgp;
 };
-static map<int, struct outgc> outgcs;
 
-static void connect_act(int cond, dn_event *ev);
+static void connect_act(dn_event_fd *ev, int cond);
 
 void async_establishClient(const string &destination)
 {
@@ -115,16 +114,18 @@ void async_establishClient(const string &destination)
         return;
     }
     
-    outgcs[fd].outgh = hostname;
-    outgcs[fd].outgp = port;
+    outgc *ogc = new outgc;
+    ogc->outgh = hostname;
+    ogc->outgp = port;
     
-    dn_event_fd_watch(connect_act, NULL, DN_EV_READ | DN_EV_WRITE, fd);
+    dn_event_fd *ev = new dn_event_fd(fd, DN_EV_READ | DN_EV_WRITE, connect_act, (void*)ogc);
+    ev->activate();
 }
 
-static void connect_act(int cond, dn_event *ev) {
+static void connect_act(dn_event_fd *ev, int cond) {
     static bool firstc = true;
-    int fd = ev->event_info.fd.fd;
-    dn_event_deactivate(ev);
+    int fd = ev->getFD();
+    outgc *ogc = (outgc *)ev->payload;
     delete ev;
     
     char dummy;
@@ -139,8 +140,8 @@ static void connect_act(int cond, dn_event *ev) {
     }
 #endif
     
-    init_comms(fd, &(outgcs[fd].outgh), outgcs[fd].outgp);
-    outgcs.erase(fd);
+    init_comms(fd, &ogc->outgh, ogc->outgp);
+    delete ogc;
     
     // if this is the first connection, do autofind
     if (firstc) {
