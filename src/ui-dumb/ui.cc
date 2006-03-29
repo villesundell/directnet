@@ -554,18 +554,18 @@ void dn_event_timer::activate() {
 
 void dn_event_fd::deactivate() {
     assert(is_active);
+    is_active = false;
     if (priv == NULL) return;
     event_del(&priv->cevt);
     delete priv;
     priv = NULL;
-    is_active = false;
 }
 
 void dn_event_timer::deactivate() {
     assert(is_active);
+    is_active = false;
     if (priv == NULL) return;
     event_del(&priv->cevt);
     delete priv;
     priv = NULL;
-    is_active = false;
 }

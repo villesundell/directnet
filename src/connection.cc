@@ -802,11 +802,18 @@ void emitUnroutedMsg(conn_t *from, string &outbuf)
 {
     std::set<conn_t *>::iterator it = active_connections.begin();
     
+    std::cerr << "unrouted from " << (from->name || "(UNNAMED)") << " to ";
     while (it != active_connections.end()) {
+        if ((*it)->name)
+            std::cerr << (*it)->name << ", ";
+        else
+            std::cerr << (void *)*it << ", ";
+
         if (*it != from)
             sendCmd(*it, outbuf);
         it++;
     }
+    std::cerr << "done." << std::endl;
 }
 
 // recvFnd handles the situation that we've just been "found"
