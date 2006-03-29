@@ -272,6 +272,7 @@ connection::~connection() {
         }
     }
     if (name) {
+        dn_conn->erase(name);
         free(name);
     }
     
