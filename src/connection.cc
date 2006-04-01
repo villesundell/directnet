@@ -270,8 +270,6 @@ connection::~connection() {
             delete (*dn_routes)[name];
             dn_routes->erase(name);
         }
-    }
-    if (name) {
         dn_conn->erase(name);
         free(name);
     }
