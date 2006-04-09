@@ -58,12 +58,12 @@ void initConfig()
     FILE *acf, *aff;
     
     // find configuration directory
-/*#ifndef __WIN32
+#ifndef __WIN32
     cfgdir = homedir + string("/.directnet");
 #else
     cfgdir = homedir + string("/DNConfig");
-#endif*/
-    cfgdir = homedir + string("/.DNCPP");
+#endif
+    
     // attempt to create it
 #ifndef __WIN32
     int mdr = mkdir(cfgdir.c_str(), 0777);
