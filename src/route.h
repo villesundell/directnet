@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -18,19 +18,26 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_GLOBALS_H
-#define DN_GLOBALS_H
+#ifndef ROUTE_H
+#define ROUTE_H
 
-#define DN_NAME_LEN 24
-#define DN_TRANSKEY_LEN 34
-#define DN_MAX_CONNS 1024
-#define DN_MAX_ROUTES 2048
-#define DN_CMD_LEN 10240
-#define DN_ROUTE_LEN 512
-#define DN_MAX_PARAMS 50
-#define DN_HOSTNAME_LEN 256
-#define DN_KEEPALIVE_TIMER (60*5)
+#include <string>
+#include <vector>
+using namespace std;
 
-#define SF_strncpy(x,y,z) if (z > 0) { strncpy(x,y,z); *(x+z-1) = '\0'; }
+class Route : public vector<string> {
+    public:
+    Route();
+    Route(const Route &copy);
+    Route(const string &textform);
+    
+    string toString();
+    void reverse();
+    
+    void push_front(string &a);
+    void pop_front();
+    
+    Route &operator+=(const string &node) { push_back(node); return *this; }
+};
 
 #endif

@@ -36,16 +36,35 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <cassert>
+
+#include "compat.h"
+
 /*
  * A simple event primitive interface.
  *
  * This is designed to be easy for UIs to implement.
  */
 
-struct dn_event;
-struct dn_event_private;
+class dn_event;
 
-typedef struct dn_event dn_event_t;
+class dn_event_access; // for UI access to private members
+
+class dn_event {
+    protected:
+        friend class dn_event_access;
+        bool is_active;
+        class dn_event_private *priv;
+        dn_event() {
+            is_active = false;
+        }
+    public:
+        virtual void activate() = 0;
+        virtual void deactivate() = 0;
+        virtual ~dn_event() {};
+        bool isActive() const { return is_active; }
+        void *payload;
+};
 
 /* Timer event
  *
@@ -53,11 +72,61 @@ typedef struct dn_event dn_event_t;
  * it only triggers once, it must be removed before free-ing.
  */
 
-#define DN_EV_TIMER 0x100
-typedef struct {
-    void (*trigger)(dn_event_t *ev);
-    unsigned long t_sec, t_usec;
-} event_info_timer;
+class dn_event_timer : public dn_event {
+    protected:
+        friend class dn_event_access;
+        struct timeval tv;
+    public:
+        void (*trigger)(dn_event_timer *ev);
+        struct timeval getTime() const {
+            return tv;
+        }
+        void setTime(const struct timeval &ntv) {
+            bool was_active = is_active;
+            if (is_active)
+                deactivate();
+            tv = ntv;
+            if (was_active)
+                activate();
+        }
+        void setTimeDelta(int secs, int usecs) {
+            struct timeval ntv;
+            gettimeofday(&ntv, NULL);
+            ntv.tv_sec += secs;
+            ntv.tv_usec += usecs;
+
+            ntv.tv_sec += ntv.tv_usec / 1000000;
+            ntv.tv_usec %= 1000000;
+
+            setTime(ntv);
+        }
+        virtual void activate();
+        virtual void deactivate();
+        dn_event_timer() : dn_event() { }
+        
+        dn_event_timer(
+                const struct timeval &abstm,
+                void (*trigger_)(dn_event_timer *ev),
+                void *payload_ = NULL
+                )
+            : dn_event(), tv(abstm), trigger(trigger_)
+        { payload = payload_; }
+        
+        dn_event_timer(
+                int sdelta, int usdelta,
+                void (*trigger_)(dn_event_timer *ev),
+                void *payload_ = NULL
+                )
+        : dn_event(), trigger(trigger_) {
+            setTimeDelta(sdelta, usdelta);
+            payload = payload_;
+        }
+
+        ~dn_event_timer() {
+            if (is_active)
+                deactivate();
+        }
+};
 
 /* fd event notification
  *
@@ -70,89 +139,53 @@ typedef struct {
 #define DN_EV_WRITE  2
 #define DN_EV_EXCEPT 4
 
-#define DN_EV_FD 0x101
-typedef struct {
-    void (*trigger)(int cond, dn_event_t *ev);
-    int fd;
-    char watch_cond;
-} event_info_fd;
+class dn_event_fd : public dn_event {
+    protected:
+        friend class dn_event_access;
+        int fd;
+        int cond;
+    public:
+        void (*trigger)(dn_event_fd *ev, int cond);
+        
+        dn_event_fd() : dn_event() {}
+        dn_event_fd(
+                int fd_,
+                int cond_,
+                void (*trigger_)(dn_event_fd *, int),
+                void *payload_ = NULL
+                )
+            : dn_event(), fd(fd_), cond(cond_), trigger(trigger_)
+            { payload = payload_; }
+        
 
+        virtual void activate();
+        virtual void deactivate();
 
-struct dn_event {
-    /* Public fields */
-    void *payload;
-    /* Fields below this point must not be modified when the event is
-     * active
-     */
-    int event_type;
-    union {
-        event_info_timer timer;
-        event_info_fd fd;
-    } event_info;
-    /* Private fields */
-    const char *trace_file;
-    int trace_line;
-    struct dn_event_private *priv;
+        int getFD() const { return fd; }
+        int getCond() const { return cond; }
+        void setCond(int nc) {
+            bool was_active = is_active;
+            if (is_active)
+                deactivate();
+            cond = nc;
+            if (was_active)
+                activate();
+        }
+
+        void setFD(int nfd) {
+            bool was_active = is_active;
+            if (is_active)
+                deactivate();
+            fd = nfd;
+            if (was_active)
+                activate();
+        }
+
+        ~dn_event_fd() {
+            if (is_active)
+                deactivate();
+        }
+           
 };
-
-void dn_event_activate(dn_event_t *event);
-void dn_event_deactivate(dn_event_t *event);
-
-/* Convenience... */
-static inline dn_event_t *dn_event_trigger_after_(void (*callback)(dn_event_t *), void *payload, unsigned long secs, unsigned long usecs, const char *f, int l) {
-    dn_event_t *ev;
-    
-#ifndef __WIN32
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-#else
-    struct timeb tp;
-    ftime(&tp);
-#endif
-    
-    ev = (dn_event_t *)malloc(sizeof *ev);
-    if (!ev) abort();
-    ev->payload = payload;
-    ev->event_type = DN_EV_TIMER;
-    ev->event_info.timer.trigger = callback;
-    
-#ifndef __WIN32
-    ev->event_info.timer.t_sec = tv.tv_sec + secs;
-    ev->event_info.timer.t_usec = tv.tv_usec + usecs;
-#else
-    ev->event_info.timer.t_sec = tp.time + secs;
-    ev->event_info.timer.t_usec = ((int) tp.millitm * 1000) + usecs;
-#endif
-    
-    ev->event_info.timer.t_sec += ev->event_info.timer.t_usec / 1000000;
-    ev->event_info.timer.t_usec %= 1000000;
-    ev->trace_file = f;
-    ev->trace_line = l;
-    dn_event_activate(ev);
-    return ev;
-}
-#define dn_event_trigger_after(c, p, s, u) dn_event_trigger_after_(c, p, s, u, __FILE__, __LINE__)
-
-static inline dn_event_t *event_fd_watch_(void (*callback)(int cond, dn_event_t *ev), void *payload, int cond, int fd, const char *f, int l) {
-    dn_event_t *ev = (dn_event_t *)malloc(sizeof *ev);
-    if (!ev) abort();
-    ev->payload = payload;
-    ev->event_type = DN_EV_FD;
-    ev->event_info.fd.fd = fd;
-    ev->event_info.fd.watch_cond = cond;
-    ev->event_info.fd.trigger = callback;
-    ev->trace_file = f;
-    ev->trace_line = l;
-    dn_event_activate(ev);
-    return ev;
-}
-#define dn_event_fd_watch(c, p, cond, fd) event_fd_watch_(c, p, cond, fd, __FILE__, __LINE__)
-
-inline static void ev_ac(dn_event_t *event) { dn_event_activate(event); }
-#define dn_event_activate(e) do {   \
-    (e)->trace_file = __FILE__;  \
-    (e)->trace_line = __LINE__;  \
-    ev_ac(e);                    \
-} while (0)
 
 #endif

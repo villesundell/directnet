@@ -19,6 +19,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <map>
+#include <string>
+using namespace std;
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,9 +38,9 @@
 #include "config.h"
 #include "directnet.h"
 #include "dnconfig.h"
-#include "globals.h"
 #include "enc.h"
-#include "hash.h"
+#include "globals.h"
+#include "route.h"
 #include "server.h"
 #include "ui.h"
 #include "whereami.h"
@@ -45,18 +49,14 @@ extern char **environ; // XXX: should use getenv
 
 int serv_port = 3336;
 
-struct hashS *weakRoutes; // List of weak routes
-
 char dn_name[DN_NAME_LEN+1];
 
-struct hashI *dn_fds;
+map<string, void *> *dn_conn;
 
-struct hashV *dn_conn;
+map<string, Route *> *dn_routes;
+map<string, Route *> *dn_iRoutes;
 
-struct hashS *dn_routes;
-struct hashS *dn_iRoutes;
-
-struct hashI *dn_trans_keys;
+map<string, int> *dn_trans_keys;
 int currentTransKey;
 
 char uiLoaded;
@@ -106,26 +106,20 @@ void dn_init(int argc, char **argv) {
         
     }
     
-    /* Upon receiving a fnd, the node then continues to accept alternate fnds.  Every time it
-       receives one, it goes through the current route and new route and only keeps the ones that
-       appear in both.  That way, it ends up with a list of nodes that have no backup.  If there
-       are any such nodes, it needs to attempt a direct connection to strengthen the network. */
-    weakRoutes = hashSCreate();
-    
     // This stores connections by name
-    dn_conn = hashVCreate();
+    dn_conn = new map<string, void *>;
       
     // This stores routes by name
-    dn_routes = hashSCreate();
+    dn_routes = new map<string, Route *>;
     // This stores intermediate routes, for response on broken routes
-    dn_iRoutes = hashSCreate();
+    dn_iRoutes = new map<string, Route *>;
     
     // This hash stores the state of all nonrepeating unrouted messages
-    dn_trans_keys = hashICreate();
+    dn_trans_keys = new map<string, int>;
     currentTransKey = 0;
     
     // This hash stores whether we're in certain chats
-    dn_chats = hashSCreate();
+    dn_chats = new map<string, vector<string> *>;
     
     // We don't yet know our local IP
     dn_localip[0] = '\0';
@@ -174,6 +168,6 @@ char *findHome(char **envp)
 void newTransKey(char *into)
 {
     sprintf(into, "%s%d", dn_name, currentTransKey);
-    hashISet(dn_trans_keys, into, 1);
+    (*dn_trans_keys)[string(into)] = 1;
     currentTransKey++;
 }

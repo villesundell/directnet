@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006  Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -18,19 +18,31 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_GLOBALS_H
-#define DN_GLOBALS_H
+#ifndef COMPAT_H
+#define COMPAT_H 1
 
-#define DN_NAME_LEN 24
-#define DN_TRANSKEY_LEN 34
-#define DN_MAX_CONNS 1024
-#define DN_MAX_ROUTES 2048
-#define DN_CMD_LEN 10240
-#define DN_ROUTE_LEN 512
-#define DN_MAX_PARAMS 50
-#define DN_HOSTNAME_LEN 256
-#define DN_KEEPALIVE_TIMER (60*5)
+// Compatibility functions, for win32 and friends
 
-#define SF_strncpy(x,y,z) if (z > 0) { strncpy(x,y,z); *(x+z-1) = '\0'; }
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "config.h"
+#include <time.h>
+
+#ifdef WIN32
+#include <winsock.h> // for struct timeval, of all things
+
+struct timezone { }; // STUB
+#endif
+
+#ifndef HAVE_GETTIMEOFDAY
+int gettimeofday(struct timeval *tv, struct timezone *tz);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
+

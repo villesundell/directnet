@@ -17,7 +17,6 @@ src/auth-none/Makefile
 src/enc-cyfer/Makefile
 src/enc-fake/Makefile
 src/gaim2-plugin/Makefile
-src/hub/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
 src/ui-slang/Makefile
@@ -47,6 +46,14 @@ AC_CHECK_LIB([c], [gethostbyname],
 
 # If we have libwsock32, we probably want it
 AC_CHECK_LIB([wsock32], [main])
+
+AC_CHECK_FUNC(gettimeofday,[
+ AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Defined if gettimeofday() is available])
+ HAVE_GETTIMEOFDAY=true
+], [
+ HAVE_GETTIMEOFDAY=false
+])
+AM_CONDITIONAL(NO_GETTIMEOFDAY, test "x$HAVE_GETTIMEOFDAY" = "xfalse")
 
 
 # Figure out what UI to use
@@ -213,23 +220,6 @@ fi
 
 AC_SUBST(GAIM_PLUGIN_DIR)
 AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM2_PLUGIN" = "xyes")
-
-
-# Check if we should enable the hub
-AC_ARG_ENABLE(hub,
-AS_HELP_STRING([--enable-hub=name], [enable hub mode - name is the name of the hub "user"]),
-[HUB_NAME=$enableval], [HUB_NAME=no], [HUB_NAME=no])
-
-if test "x$HUB_NAME" != "xno"
-then
-        HUB_DIR=hub
-else
-        HUB_DIR=
-fi
-
-AC_SUBST(HUB_NAME)
-AC_SUBST(HUB_DIR)
-AM_CONDITIONAL(MAKE_HUB, test "x$HUB_NAME" != "xno")
 
 
 # Check for encryption to use

@@ -28,36 +28,35 @@
 
 #undef dn_event_activate
 
-struct dn_event_private {
+class dn_event_private {
+    public:
     int handlec;
     int handle[2];
 };
 
-gboolean evReadCallback(dn_event_t *ev) {
+gboolean evReadCallback(dn_event *ev) {
     ev->event_info.fd.trigger(DN_EV_READ, ev);
     return FALSE;
 }
 
-gboolean evWriteCallback(dn_event_t *ev) {
+gboolean evWriteCallback(dn_event *ev) {
     ev->event_info.fd.trigger(DN_EV_WRITE, ev);
     return FALSE;
 }
 
-gboolean evTimeCallback(dn_event_t *ev) {
+gboolean evTimeCallback(dn_event *ev) {
     ev->event_info.timer.trigger(ev);
     return FALSE;
 }
 
-void dn_event_activate(dn_event_t *ev) {
-    struct dn_event_private *dep = (struct dn_event_private *) malloc(sizeof(struct dn_event_private));
-    if (!dep) { perror("malloc"); exit(1); }
+void dn_event_activate(dn_event *ev) {
+    dn_event_private *dep = new dn_event_private();
     ev->priv = dep;
     dep->handlec = 0;
     
     switch (ev->event_type) {
         case DN_EV_FD:
             {
-                GaimInputCondition gic = 0;
                 if (ev->event_info.fd.watch_cond & DN_EV_READ) {
                     dep->handle[dep->handlec] =
                         gaim_input_add(ev->event_info.fd.fd, GAIM_INPUT_READ,
@@ -91,7 +90,7 @@ void dn_event_activate(dn_event_t *ev) {
     }
 }
 
-void dn_event_deactivate(dn_event_t *ev) {
+void dn_event_deactivate(dn_event *ev) {
     if (ev->priv == NULL) return;
     
     if (ev->event_type == DN_EV_FD) {
@@ -103,6 +102,6 @@ void dn_event_deactivate(dn_event_t *ev) {
         gaim_timeout_remove(ev->priv->handle[0]);
     }
     
-    free(ev->priv);
+    delete ev->priv;
     ev->priv = NULL;
 }

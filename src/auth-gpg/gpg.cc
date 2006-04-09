@@ -1,5 +1,5 @@
 /*
- * Copyright 2005  Gregor Richards
+ * Copyright 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -345,9 +345,9 @@ char *authVerify(const char *msg, char **who, int *status)
 int authImport(const char *msg)
 {
     /* all we can do is try, so do so */
-    char *try = gpgWrap(msg, "--import", 0);
-    if (try) {
-        free(try);
+    char *attempt = gpgWrap(msg, "--import", 0);
+    if (attempt) {
+        free(attempt);
         return 1;
     } else {
         return 0;

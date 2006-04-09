@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005 Gregor Richards
+ * Copyright 2004, 2005, 2006 Gregor Richards
  * Many parts borrowed from cyfer/examples/pk.c
  * These parts are copyright 2004 Senko Rasic
  *
@@ -21,15 +21,16 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#ifndef bool
-#define bool int
-#endif
-
-#include "cyfer/pk.h"
-
 #include "directnet.h"
+
+#define bool BOOL
+
+extern "C" {
+#include "cyfer/pk.h"
+}
 
 char encbinloc[256];
 
@@ -167,8 +168,8 @@ char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
     }
 
     /* Create data buffers */
-    inbuf = malloc(in_len);
-    outbuf = malloc(out_len);
+    inbuf = (char *) malloc(in_len);
+    outbuf = (char *) malloc(out_len);
     out = NULL;
     loc = 0;
     oloc = 0;
@@ -251,8 +252,8 @@ char *encCreateKey()
     CYFER_Pk_Generate_Key(ctx, 1024);
     CYFER_Pk_KeySize(ctx, (unsigned int *) &privlen, (unsigned int *) &publen);
 
-    priv = malloc(privlen);
-    pub = malloc(publen);
+    priv = (char *) malloc(privlen);
+    pub = (char *) malloc(publen);
 
     CYFER_Pk_Export_Key(ctx, (unsigned char *) priv, (unsigned char *) pub);
     CYFER_Pk_Finish(ctx);

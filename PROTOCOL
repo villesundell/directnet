@@ -1,22 +1,44 @@
-This is a short documentation of protocol commands.
+A DirectNet node is an independently operating server and client, which must
+have two variables: a nickname and an encryption key (public and private),
+using RSA. The server listens to TCP port 3336 by default, though any port is
+acceptable.
 
-All protocol commands are a three-character command followed by a two-char
-version number followed by ;-delimited parameters followed by a null
-terminator. Any message sent over the line in this format should be interpreted
-correctly. There's no "handshaking" per-se to establish a new connection,
-though the "key" command must be the first to be sent.
+When a DirectNet node connects to another node, a handshaking command, 'key',
+is sent. This informs the other node of the nickname and encryption key of this
+node. After that, all commands can be sent and received by both parties.
+Neither functions as a server or a client, they are equal nodes.
 
-There are four types: direct, routed, nonlooping unrouted and nonrepeating
-unrouted. Direct commands are sent directly over a connection and are not
-continued. Routed commands have a set route as the first parameter, and all of
-the nodes along that route strip off their name then continue the transfer
-until the data is sent to the last node on the list (at which point it will
-have an empty route). Unrouted commands are the rare few that simply emit
-throughout the network. Nonlooping unrouted messages contain a parameter for
-the route that they have taken to get to the current node, and any other
-parameters. Nonrepeating unrouted messages contain a parameter for the
-transmission key (so that they are not retransmitted), and any other necessary
-parameters.
+Protocol messages are sent in the form of a three-character command, followed
+by a two-character version number, followed by any number of ';'-delimited
+parameters, followed by a null terminator. Any message sent in this format
+should be read properly, though it may or may not be a valid protocol command.  
+
+There are four types of commands: direct, routed, nonlooping unrouted and
+nonrepeating unrouted.
+
+Direct commands are sent directly over a connection and are not continued.
+
+Routed commands have a set route as the first parameter, and all of the nodes
+along that route strip off their name then continue the transfer until the data
+is sent to the last node on the list (at which point it will have an empty
+route). The last node will receive and interpret the command.
+
+Unrouted commands are the rare few that simply emit throughout the network.
+Nonlooping unrouted messages contain a parameter for the route that they have
+taken to get to the current node, and any other parameters. The node reads this
+parameter and verifies that it is not on it before continuing. Nonrepeating
+unrouted messages contain a parameter for the transmission key, which is simply
+a unique generated key. The receiving node checks this key to make sure it
+hasn't received it before.
+
+The protocol commands are documented in alphabetical order in this format:
+command(first version char)(second version char) (brief summary)
+        purpose: The purpose of the command
+        parameters:
+                A list of the parameters that are sent with this command
+
+
+PROTOCOL COMMANDS:
 
 cjo(1)(1) (chat join)
         purpose: Join a chat

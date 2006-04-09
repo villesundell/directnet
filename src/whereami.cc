@@ -36,7 +36,7 @@ void dirAndFil(const char *full, char **dir, char **fil)
         (*fil)++;
         *fil = strdup(*fil);
     } else {
-        *fil = malloc(1);
+        *fil = (char *) malloc(1);
         if (!(*fil)) {
             perror("malloc");
             exit(1);

@@ -1,15 +1,16 @@
 #ifndef DN_GAIM_PLUGIN_H
 #define DN_GAIM_PLUGIN_H
 
+extern "C" {
 #include <accountopt.h>
 #include <internal.h>
 #include <prpl.h>
 #include <debug.h>
 #include <version.h>
 #include <conversation.h>
-#include <cmds.h>
 #include <request.h>
 #include <prefix.h>
+}
 
 #include <gtkconv.h>
 

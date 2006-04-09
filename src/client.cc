@@ -19,6 +19,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <map>
+#include <string>
+using namespace std;
+
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -42,38 +46,41 @@
 #include "dn_event.h"
 #include <errno.h>
 
-static void connect_act(int cond, dn_event_t *ev);
+struct outgc {
+    string outgh;
+    int outgp;
+};
 
-void async_establishClient(const char *destination)
+static void connect_act(dn_event_fd *ev, int cond);
+
+void async_establishClient(const string &destination)
 {
     int flags, ret;
     struct hostent *he;
     struct sockaddr_in addr;
     //struct in_addr inIP;
-    char *hostname;
+    string hostname;
     int i, port, fd;
 #ifdef __WIN32
     unsigned long nblock;
 #endif
-
+    
     /* split 'destination' into 'hostname' and 'port' */
-    hostname = strdup(destination);
-    for (i = 0; hostname[i] != ':' && hostname[i] != '\0'; i++);
-    if (hostname[i] == ':') {
+    hostname = destination;
+    i = hostname.find_first_of(':');
+    if (i != string::npos) {
         /* it has a port */
-        hostname[i] = '\0';
-        port = atoi(hostname + i + 1);
+        port = atoi(hostname.substr(i + 1).c_str());
+        hostname = hostname.substr(0, i);
     } else {
         port = 3336;
     }
     
-    he = gethostbyname(hostname);
+    he = gethostbyname(hostname.c_str());
     if (he == NULL) {
         return;
     }
-    free(hostname);
-
-       
+    
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
         perror("socket");
@@ -86,7 +93,7 @@ void async_establishClient(const char *destination)
     nblock = 1;
     ioctlsocket(fd, FIONBIO, &nblock);
 #endif
-
+    
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr = *((struct in_addr *)he->h_addr);
@@ -106,15 +113,21 @@ void async_establishClient(const char *destination)
         close(fd);
         return;
     }
-    dn_event_fd_watch(connect_act, NULL, DN_EV_READ | DN_EV_WRITE, fd);
+    
+    outgc *ogc = new outgc;
+    ogc->outgh = hostname;
+    ogc->outgp = port;
+    
+    dn_event_fd *ev = new dn_event_fd(fd, DN_EV_READ | DN_EV_WRITE, connect_act, (void*)ogc);
+    ev->activate();
 }
- 
-static void connect_act(int cond, dn_event_t *ev) {
-    static int firstc = 1;
-    int fd = ev->event_info.fd.fd;
-    dn_event_deactivate(ev);
-    free(ev);
- 
+
+static void connect_act(dn_event_fd *ev, int cond) {
+    static bool firstc = true;
+    int fd = ev->getFD();
+    outgc *ogc = (outgc *)ev->payload;
+    delete ev;
+    
     char dummy;
     int ret;
     
@@ -127,17 +140,14 @@ static void connect_act(int cond, dn_event_t *ev) {
     }
 #endif
     
-    setupPeerConnection(fd);
+    init_comms(fd, &ogc->outgh, ogc->outgp);
+    delete ogc;
     
     // if this is the first connection, do autofind
     if (firstc) {
-        firstc = 0;
+        firstc = false;
         autoFind();
     }
-      
+    
     return;
-}
- 
-void setupPeerConnection(int fd) {
-    init_comms(fd);
 }

@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX UI_CXX_TRUE UI_CXX_FALSE PKG_CONFIG GAIM_CFLAGS GAIM_LIBS GAIM_PLUGIN_DIR GAIM_PLUGIN_TRUE GAIM_PLUGIN_FALSE HUB_NAME HUB_DIR MAKE_HUB_TRUE MAKE_HUB_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR AUTH_CFLAGS AUTH_CPPFLAGS AUTH_CXXFLAGS AUTH_LIBS AUTH_LDFLAGS AUTH_DIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_GETTIMEOFDAY_TRUE NO_GETTIMEOFDAY_FALSE FLTK_CONFIG FLTK_CFLAGS FLTK_LIBS UI_CFLAGS UI_CPPFLAGS UI_CXXFLAGS UI_LIBS UI_LDFLAGS UI_DIR UI_CXX UI_CXX_TRUE UI_CXX_FALSE PKG_CONFIG GAIM_CFLAGS GAIM_LIBS GAIM_PLUGIN_DIR GAIM_PLUGIN_TRUE GAIM_PLUGIN_FALSE ENC_CFLAGS ENC_CPPFLAGS ENC_CXXFLAGS ENC_LIBS ENC_LDFLAGS ENC_DIR AUTH_CFLAGS AUTH_CPPFLAGS AUTH_CXXFLAGS AUTH_LIBS AUTH_LDFLAGS AUTH_DIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1047,7 +1047,6 @@ Optional Features:
                           is C++, you MUST use this.
   --enable-gaim2-plugin   enable the Gaim2 Plugin - must have Gaim 2.0.0beta1
                           or higher development libraries
-  --enable-hub=name       enable hub mode - name is the name of the hub "user"
   --enable-enc=cyfer|fake set the encryption (cyfer or fake)
   --enable-auth=gpg|none set the encryption (gpg or none)
 
@@ -1966,7 +1965,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
           ac_config_headers="$ac_config_headers config.h"
 
 
-                                                                                                              ac_config_files="$ac_config_files Makefile src/Makefile src/auth-gpg/Makefile src/auth-none/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/gaim2-plugin/Makefile src/hub/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-slang/Makefile"
+                                                                                                    ac_config_files="$ac_config_files Makefile src/Makefile src/auth-gpg/Makefile src/auth-none/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/gaim2-plugin/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-slang/Makefile"
 
 
 if test ! -e ${srcdir}/src/enc-cyfer/cyfer
@@ -4385,7 +4384,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4388 "configure"' > conftest.$ac_ext
+  echo '#line 4387 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5266,7 +5265,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5269:" \
+echo "$as_me:5268:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6323,11 +6322,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6326: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6325: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6330: \$? = $ac_status" >&5
+   echo "$as_me:6329: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6566,11 +6565,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6569: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6568: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6573: \$? = $ac_status" >&5
+   echo "$as_me:6572: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6626,11 +6625,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6629: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6628: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:6633: \$? = $ac_status" >&5
+   echo "$as_me:6632: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8811,7 +8810,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8814 "configure"
+#line 8813 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8909,7 +8908,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8912 "configure"
+#line 8911 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11102,11 +11101,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11105: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11104: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11109: \$? = $ac_status" >&5
+   echo "$as_me:11108: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11162,11 +11161,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11165: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11164: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11169: \$? = $ac_status" >&5
+   echo "$as_me:11168: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12523,7 +12522,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12526 "configure"
+#line 12525 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12621,7 +12620,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12624 "configure"
+#line 12623 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13458,11 +13457,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13461: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13460: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13465: \$? = $ac_status" >&5
+   echo "$as_me:13464: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13518,11 +13517,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13521: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13520: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13525: \$? = $ac_status" >&5
+   echo "$as_me:13524: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15553,11 +15552,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15556: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15555: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15560: \$? = $ac_status" >&5
+   echo "$as_me:15559: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15796,11 +15795,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15799: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15798: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15803: \$? = $ac_status" >&5
+   echo "$as_me:15802: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15856,11 +15855,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15859: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15858: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15863: \$? = $ac_status" >&5
+   echo "$as_me:15862: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18041,7 +18040,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18044 "configure"
+#line 18043 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18139,7 +18138,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18142 "configure"
+#line 18141 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19517,6 +19516,122 @@ _ACEOF
 fi
 
 
+echo "$as_me:$LINENO: checking for gettimeofday" >&5
+echo $ECHO_N "checking for gettimeofday... $ECHO_C" >&6
+if test "${ac_cv_func_gettimeofday+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+/* Define gettimeofday to an innocuous variant, in case <limits.h> declares gettimeofday.
+   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
+#define gettimeofday innocuous_gettimeofday
+
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char gettimeofday (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+
+#undef gettimeofday
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char gettimeofday ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_gettimeofday) || defined (__stub___gettimeofday)
+choke me
+#else
+char (*f) () = gettimeofday;
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+int
+main ()
+{
+return f != gettimeofday;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_func_gettimeofday=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_func_gettimeofday=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $ac_cv_func_gettimeofday" >&5
+echo "${ECHO_T}$ac_cv_func_gettimeofday" >&6
+if test $ac_cv_func_gettimeofday = yes; then
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_GETTIMEOFDAY 1
+_ACEOF
+
+ HAVE_GETTIMEOFDAY=true
+
+else
+
+ HAVE_GETTIMEOFDAY=false
+
+fi
+
+
+
+if test "x$HAVE_GETTIMEOFDAY" = "xfalse"; then
+  NO_GETTIMEOFDAY_TRUE=
+  NO_GETTIMEOFDAY_FALSE='#'
+else
+  NO_GETTIMEOFDAY_TRUE='#'
+  NO_GETTIMEOFDAY_FALSE=
+fi
+
+
 
 # Figure out what UI to use
 # Check whether --enable-ui or --disable-ui was given.
@@ -20364,36 +20479,6 @@ if test "x$GAIM2_PLUGIN" = "xyes"; then
 else
   GAIM_PLUGIN_TRUE='#'
   GAIM_PLUGIN_FALSE=
-fi
-
-
-
-# Check if we should enable the hub
-# Check whether --enable-hub or --disable-hub was given.
-if test "${enable_hub+set}" = set; then
-  enableval="$enable_hub"
-  HUB_NAME=$enableval
-else
-  HUB_NAME=no
-fi;
-
-if test "x$HUB_NAME" != "xno"
-then
-        HUB_DIR=hub
-else
-        HUB_DIR=
-fi
-
-
-
-
-
-if test "x$HUB_NAME" != "xno"; then
-  MAKE_HUB_TRUE=
-  MAKE_HUB_FALSE='#'
-else
-  MAKE_HUB_TRUE='#'
-  MAKE_HUB_FALSE=
 fi
 
 
@@ -21994,6 +22079,13 @@ echo "$as_me: error: conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${NO_GETTIMEOFDAY_TRUE}" && test -z "${NO_GETTIMEOFDAY_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"NO_GETTIMEOFDAY\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"NO_GETTIMEOFDAY\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${UI_CXX_TRUE}" && test -z "${UI_CXX_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"UI_CXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -22005,13 +22097,6 @@ if test -z "${GAIM_PLUGIN_TRUE}" && test -z "${GAIM_PLUGIN_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"GAIM_PLUGIN\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"GAIM_PLUGIN\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${MAKE_HUB_TRUE}" && test -z "${MAKE_HUB_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"MAKE_HUB\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"MAKE_HUB\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -22466,7 +22551,6 @@ do
   "src/enc-cyfer/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-cyfer/Makefile" ;;
   "src/enc-fake/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/enc-fake/Makefile" ;;
   "src/gaim2-plugin/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gaim2-plugin/Makefile" ;;
-  "src/hub/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/hub/Makefile" ;;
   "src/ui-dumb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
   "src/ui-fltk/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-fltk/Makefile" ;;
   "src/ui-slang/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ui-slang/Makefile" ;;
@@ -22622,6 +22706,8 @@ s,@F77@,$F77,;t t
 s,@FFLAGS@,$FFLAGS,;t t
 s,@ac_ct_F77@,$ac_ct_F77,;t t
 s,@LIBTOOL@,$LIBTOOL,;t t
+s,@NO_GETTIMEOFDAY_TRUE@,$NO_GETTIMEOFDAY_TRUE,;t t
+s,@NO_GETTIMEOFDAY_FALSE@,$NO_GETTIMEOFDAY_FALSE,;t t
 s,@FLTK_CONFIG@,$FLTK_CONFIG,;t t
 s,@FLTK_CFLAGS@,$FLTK_CFLAGS,;t t
 s,@FLTK_LIBS@,$FLTK_LIBS,;t t
@@ -22640,10 +22726,6 @@ s,@GAIM_LIBS@,$GAIM_LIBS,;t t
 s,@GAIM_PLUGIN_DIR@,$GAIM_PLUGIN_DIR,;t t
 s,@GAIM_PLUGIN_TRUE@,$GAIM_PLUGIN_TRUE,;t t
 s,@GAIM_PLUGIN_FALSE@,$GAIM_PLUGIN_FALSE,;t t
-s,@HUB_NAME@,$HUB_NAME,;t t
-s,@HUB_DIR@,$HUB_DIR,;t t
-s,@MAKE_HUB_TRUE@,$MAKE_HUB_TRUE,;t t
-s,@MAKE_HUB_FALSE@,$MAKE_HUB_FALSE,;t t
 s,@ENC_CFLAGS@,$ENC_CFLAGS,;t t
 s,@ENC_CPPFLAGS@,$ENC_CPPFLAGS,;t t
 s,@ENC_CXXFLAGS@,$ENC_CXXFLAGS,;t t

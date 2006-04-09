@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -18,19 +18,40 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DN_GLOBALS_H
-#define DN_GLOBALS_H
+#include "message.h"
 
-#define DN_NAME_LEN 24
-#define DN_TRANSKEY_LEN 34
-#define DN_MAX_CONNS 1024
-#define DN_MAX_ROUTES 2048
-#define DN_CMD_LEN 10240
-#define DN_ROUTE_LEN 512
-#define DN_MAX_PARAMS 50
-#define DN_HOSTNAME_LEN 256
-#define DN_KEEPALIVE_TIMER (60*5)
+Message::Message(const char *scmd, char vera, char verb)
+{
+    cmd = scmd;
+    ver[0] = vera;
+    ver[1] = verb;
+}
 
-#define SF_strncpy(x,y,z) if (z > 0) { strncpy(x,y,z); *(x+z-1) = '\0'; }
+Message::Message(const string &buf)
+{
+    int l = buf.length(), i, s;
+    
+    if (l < 5) return;
+    
+    cmd = buf.substr(0, 3);
+    ver[0] = buf[3];
+    ver[1] = buf[4];
+    
+    for (i = 5; i < l;) {
+        s = buf.find_first_of(';', i);
+        if (s == string::npos) s = l;
+        
+        params.push_back(buf.substr(i, s - i));
+        i = s + 1;
+    }
+}
 
-#endif
+void Message::recombineParams(int n)
+{
+    int i;
+    
+    for (i = params.size() - 2; i >= n; i--) {
+        params[i] += string(";") + params[i + 1];
+        params.pop_back();
+    }
+}

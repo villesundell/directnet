@@ -1,3 +1,9 @@
+C++_Branch from CVS:
+        - Rearchitected in C++
+        - With connection info, include hostname and port if the co nnection is
+          outgoing. This will aid shortcircuiting in the future, and generic
+          services in the distant future.
+
 CVS from 1.0.1:
         - Removed all threading (thanks to bd_!)
         - Gaim2 plugin working again!

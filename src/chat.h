@@ -21,33 +21,34 @@
 #ifndef DN_CHAT_H
 #define DN_CHAT_H
 
-extern struct hashS *dn_chats;
+#include <map>
+#include <string>
+#include <vector>
+using namespace std;
+
+extern map<string, vector<string> *> *dn_chats;
 
 /* Am I on this channel?
  * channel: the channel to query
  * returns: 1 if on the channel, 0 otherwise */
-char chatOnChannel(const char *channel);
+char chatOnChannel(const string &channel);
 
 /* Add a user to my perception of a chat room
  * channel: the channel
  * name: the user */
-void chatAddUser(const char *channel, const char *name);
+void chatAddUser(const string &channel, const string &name);
 
 /* Remove a user from my perception of a chat room
  * channel: the channel
  * name: the user */
-void chatRemUser(const char *channel, const char *name);
-
-/* Get a list of all users on a channel
- * channel: the channel */
-char **chatUsers(const char *channel);
+void chatRemUser(const string &channel, const string &name);
 
 /* Join a chat
  * channel: the channel */
-void chatJoin(const char *channel);
+void chatJoin(const string &channel);
 
 /* Leave a chat
  * channel: the channel */
-void chatLeave(const char *channel);
+void chatLeave(const string &channel);
 
 #endif

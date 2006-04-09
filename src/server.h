@@ -25,6 +25,6 @@
 #include "dn_event.h"
 
 /* Set up the server */
-dn_event_t *establishServer();
+dn_event_fd *establishServer();
 
 #endif // DN_SERVER_H

@@ -45,7 +45,7 @@
 #include "dn_event.h"
 
 //void *serverAcceptLoop(void *ignore);
-static void serverActivity(int cond, dn_event_t *ev);
+static void serverActivity(dn_event_fd *ev, int cond);
 static void serverAccept(int fd);
 
 static void initSockets()
@@ -62,12 +62,12 @@ static void initSockets()
 #endif
 }
 
-dn_event_t *establishServer()
+dn_event_fd *establishServer()
 {
     int server_sock;
     int yes=1;
     int flags;
-    dn_event_t *listen_ev;
+    dn_event_fd *listen_ev;
 #ifdef __WIN32
     unsigned long nblock;
 #endif
@@ -81,7 +81,7 @@ dn_event_t *establishServer()
         exit(-1);
     }
     
-    if (setsockopt(server_sock,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
+    if (setsockopt(server_sock,SOL_SOCKET,SO_REUSEADDR,(char *) &yes,sizeof(int)) == -1) {
         perror("setsockopt");
         exit(-1);
     }
@@ -109,27 +109,19 @@ dn_event_t *establishServer()
     ioctlsocket(server_sock, FIONBIO, &nblock);
 #endif
     
-    listen_ev = malloc(sizeof *listen_ev);
-    if (!listen_ev)
-        abort();
-    listen_ev->payload = NULL;
-    listen_ev->event_type = DN_EV_FD;
-    listen_ev->event_info.fd.fd = server_sock;
-    listen_ev->event_info.fd.watch_cond = DN_EV_READ | DN_EV_EXCEPT;
-    listen_ev->event_info.fd.trigger = serverActivity;
-
-    dn_event_activate(listen_ev);
+    listen_ev = new dn_event_fd(server_sock, DN_EV_READ|DN_EV_EXCEPT, serverActivity);
+    listen_ev->activate();
     
     return listen_ev;
 }
 
-static void serverActivity(int cond, dn_event_t *ev) {
+static void serverActivity(dn_event_fd *ev, int cond) {
     if (cond & DN_EV_EXCEPT) {
         /*fprintf(stderr, "Our server socket seems to have imploded. That sounds fun; I'll do it too.\n");
         abort();*/
         return;
     }
-    serverAccept(ev->event_info.fd.fd);
+    serverAccept(ev->getFD());
 }
 
 static void serverAccept(int server_sock) {
@@ -137,12 +129,13 @@ static void serverAccept(int server_sock) {
     int acceptfd;
     struct sockaddr_in rem_addr;
     
-    acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
+    //acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
+    acceptfd = accept(server_sock, NULL, NULL);
     /*fprintf(stderr, "accept=%d\n", acceptfd);*/
     if (acceptfd < 0) {
         perror("accept failed");
         return;
     }
     
-    setupPeerConnection(acceptfd);
+    init_comms(acceptfd, NULL, 0);
 }

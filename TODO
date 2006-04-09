@@ -1,36 +1,24 @@
-This todo is no longer maintained.
+Todo for 1.0.2:
+
+        - Convert code to C++
 
 
+Todo for 1.1.0:
 
-Todo by ALPHA 0.5:
-Another non-dumb UI (curses)
-Encryption
-- Identifiable uniqueness
-Buddy list (auto-find list)
+        - Shortcircuiting of routes. That is, if a route is A-B-C-D-E-F-G, and
+        B has a connection to F, rather than B sending the message to C, it
+        will send it to F. Furthermore, a command will be used to try to
+        generate short circuits.
 
-Todo ... sometime:
-Transfer files
-Generic service commands (video chat, audio chat, etc through external programs)
-Work on broadcast issues (fnd = flog the network, yeeeeuck)
+        - Routing by encryption keys instead of nicknames.
+
+        - Distributed hash table method of looking up users. The current method
+        is in O(n^n), which is awful. A DHT with no redundancy would be in
+        O(log(n)), a DHT with redundancy in O(log(n)^r) where r is the level of
+        redundancy.  The planned hash table is very much like Chord, but with some changes
 
 
---------------------------------------------------
----------------------- DONE: ---------------------
---------------------------------------------------
-Todo by ALPHA 0.2:
-Beter UI
-dcr (see PROTOCOL)
-fnd weak detection
+Todo later:
 
-Todo by ALPHA 0.3:
-autoconf
-Separate UI and connection code properly
-dcr in UI
-Lost connection detection
-
-Todo by ALPHA 0.4:
-One non-dumb UI (FLTK)
-Chat rooms (sorta) (figured out how I'm going to do this, should be easy now)
-Away (simple autoresponse)
- - Show in the UI when an away is fired
-Mac OS X support (borked, loads from console, not from finder?)
+        - Generic services support. That is, if directly connected to a user,
+        allow easy access to things like gnomemeeting through directnet.
