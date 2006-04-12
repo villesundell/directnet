@@ -60,29 +60,29 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(gaimdir)" "$(DESTDIR)$(bindir)"
 gaimLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(gaim_LTLIBRARIES)
-am__libdirectnet_gaim_la_SOURCES_DIST = chat.cc client.cc \
+am__libdirectnet_gaim_la_SOURCES_DIST = binseq.cc chat.cc client.cc \
 	connection.cc directnet.cc dnconfig.cc message.cc route.cc \
 	server.cc whereami.cc compat/gettimeofday.c
 @GAIM_PLUGIN_TRUE@@NO_GETTIMEOFDAY_TRUE@am__objects_1 = libdirectnet_gaim_la-gettimeofday.lo
-@GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS = chat.lo client.lo \
-@GAIM_PLUGIN_TRUE@	connection.lo directnet.lo dnconfig.lo \
-@GAIM_PLUGIN_TRUE@	message.lo route.lo server.lo whereami.lo \
-@GAIM_PLUGIN_TRUE@	$(am__objects_1)
+@GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_OBJECTS = binseq.lo chat.lo \
+@GAIM_PLUGIN_TRUE@	client.lo connection.lo directnet.lo \
+@GAIM_PLUGIN_TRUE@	dnconfig.lo message.lo route.lo server.lo \
+@GAIM_PLUGIN_TRUE@	whereami.lo $(am__objects_1)
 libdirectnet_gaim_la_OBJECTS = $(am_libdirectnet_gaim_la_OBJECTS)
 @GAIM_PLUGIN_TRUE@am_libdirectnet_gaim_la_rpath = -rpath $(gaimdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am__directnet_SOURCES_DIST = chat.cc client.cc connection.cc \
+am__directnet_SOURCES_DIST = binseq.cc chat.cc client.cc connection.cc \
 	directnet.cc dnconfig.cc message.cc route.cc server.cc \
 	whereami.cc compat/gettimeofday.c
 @NO_GETTIMEOFDAY_TRUE@am__objects_2 =  \
 @NO_GETTIMEOFDAY_TRUE@	directnet-gettimeofday.$(OBJEXT)
-am_directnet_OBJECTS = directnet-chat.$(OBJEXT) \
-	directnet-client.$(OBJEXT) directnet-connection.$(OBJEXT) \
-	directnet-directnet.$(OBJEXT) directnet-dnconfig.$(OBJEXT) \
-	directnet-message.$(OBJEXT) directnet-route.$(OBJEXT) \
-	directnet-server.$(OBJEXT) directnet-whereami.$(OBJEXT) \
-	$(am__objects_2)
+am_directnet_OBJECTS = directnet-binseq.$(OBJEXT) \
+	directnet-chat.$(OBJEXT) directnet-client.$(OBJEXT) \
+	directnet-connection.$(OBJEXT) directnet-directnet.$(OBJEXT) \
+	directnet-dnconfig.$(OBJEXT) directnet-message.$(OBJEXT) \
+	directnet-route.$(OBJEXT) directnet-server.$(OBJEXT) \
+	directnet-whereami.$(OBJEXT) $(am__objects_2)
 directnet_OBJECTS = $(am_directnet_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -245,9 +245,9 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = @UI_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@ 
-directnet_SOURCES = chat.cc client.cc connection.cc directnet.cc \
-	dnconfig.cc message.cc route.cc server.cc whereami.cc \
-	$(am__append_1)
+directnet_SOURCES = binseq.cc chat.cc client.cc connection.cc \
+	directnet.cc dnconfig.cc message.cc route.cc server.cc \
+	whereami.cc $(am__append_1)
 directnet_CFLAGS = @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
 directnet_CXXFLAGS = @UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
 directnet_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
@@ -257,10 +257,10 @@ directnet_LDADD = @UI_DIR@/libui.a \
 
 @GAIM_PLUGIN_TRUE@gaimdir = $(libdir)/gaim
 @GAIM_PLUGIN_TRUE@gaim_LTLIBRARIES = libdirectnet_gaim.la
-@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_SOURCES = chat.cc client.cc \
-@GAIM_PLUGIN_TRUE@	connection.cc directnet.cc dnconfig.cc \
-@GAIM_PLUGIN_TRUE@	message.cc route.cc server.cc whereami.cc \
-@GAIM_PLUGIN_TRUE@	$(am__append_2)
+@GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_SOURCES = binseq.cc chat.cc \
+@GAIM_PLUGIN_TRUE@	client.cc connection.cc directnet.cc \
+@GAIM_PLUGIN_TRUE@	dnconfig.cc message.cc route.cc server.cc \
+@GAIM_PLUGIN_TRUE@	whereami.cc $(am__append_2)
 @GAIM_PLUGIN_TRUE@libdirectnet_gaim_la_CFLAGS = @ENC_CFLAGS@ @AUTH_CFLAGS@ \
 @GAIM_PLUGIN_TRUE@ @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
 
@@ -373,9 +373,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/binseq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connection.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-binseq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-chat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/directnet-connection.Po@am__quote@
@@ -456,6 +458,20 @@ directnet-gettimeofday.obj: compat/gettimeofday.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+directnet-binseq.o: binseq.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-binseq.o -MD -MP -MF "$(DEPDIR)/directnet-binseq.Tpo" -c -o directnet-binseq.o `test -f 'binseq.cc' || echo '$(srcdir)/'`binseq.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-binseq.Tpo" "$(DEPDIR)/directnet-binseq.Po"; else rm -f "$(DEPDIR)/directnet-binseq.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='binseq.cc' object='directnet-binseq.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-binseq.o `test -f 'binseq.cc' || echo '$(srcdir)/'`binseq.cc
+
+directnet-binseq.obj: binseq.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-binseq.obj -MD -MP -MF "$(DEPDIR)/directnet-binseq.Tpo" -c -o directnet-binseq.obj `if test -f 'binseq.cc'; then $(CYGPATH_W) 'binseq.cc'; else $(CYGPATH_W) '$(srcdir)/binseq.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/directnet-binseq.Tpo" "$(DEPDIR)/directnet-binseq.Po"; else rm -f "$(DEPDIR)/directnet-binseq.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='binseq.cc' object='directnet-binseq.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -c -o directnet-binseq.obj `if test -f 'binseq.cc'; then $(CYGPATH_W) 'binseq.cc'; else $(CYGPATH_W) '$(srcdir)/binseq.cc'; fi`
 
 directnet-chat.o: chat.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(directnet_CXXFLAGS) $(CXXFLAGS) -MT directnet-chat.o -MD -MP -MF "$(DEPDIR)/directnet-chat.Tpo" -c -o directnet-chat.o `test -f 'chat.cc' || echo '$(srcdir)/'`chat.cc; \

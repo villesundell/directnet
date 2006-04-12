@@ -2,7 +2,8 @@ SUBDIRS = @UI_DIR@ @ENC_DIR@ @AUTH_DIR@ @GAIM_PLUGIN_DIR@
 
 bin_PROGRAMS=directnet
 
-directnet_SOURCES=chat.cc \
+directnet_SOURCES=binseq.cc \
+chat.cc \
 client.cc \
 connection.cc \
 directnet.cc \
@@ -30,7 +31,8 @@ gaimdir=$(libdir)/gaim
 
 gaim_LTLIBRARIES=libdirectnet_gaim.la
 
-libdirectnet_gaim_la_SOURCES=chat.cc \
+libdirectnet_gaim_la_SOURCES=binseq.cc \
+chat.cc \
 client.cc \
 connection.cc \
 directnet.cc \
