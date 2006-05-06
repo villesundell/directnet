@@ -152,7 +152,7 @@ fi
 if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
 	slang_ui=ok
-	AC_CHECK_HEADER([slang/slang.h], [],
+	AC_CHECK_HEADER([slang.h], [],
           [slang_ui=notok])
         AC_CHECK_LIB([slang], [SLtt_cls], [],
           [slang_ui=notok])
