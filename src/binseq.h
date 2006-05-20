@@ -27,33 +27,67 @@ using namespace std;
 
 #include <string.h>
 
-class BinSeq : vector<unsigned char> {
+class BinSeq : public vector<char> {
     public:
     BinSeq();
     BinSeq(const BinSeq &copy);
     BinSeq(const string &copy);
-    BinSeq(const unsigned char *copy, int len);
+    BinSeq(const char *copy);
+    BinSeq(const char *copy, int len);
     
     // string-like functionality:
-    inline unsigned char *c_str() { return &front(); }
-    int find(const unsigned char* str, int index, int length);
-    inline int find(unsigned char ch, int index)
+    inline const char *c_str() const { return &front(); }
+    inline char *c_str() { return &front(); }
+    int find(const char* str, int index, int length) const;
+    inline int find(char ch, int index) const
     {
         return find(&ch, index, 1);
     }
-    inline int find(const unsigned char* str, int index)
+    inline int find(const char* str, int index) const
     {
         return find(str, index, strlen(str));
     }
-    inline int find(const string& str, int index)
+    inline int find(const string& str, int index) const
     {
         return find(str.c_str(), index);
     }
-    inline int find(const BinSeq& str, int index)
+    inline int find(BinSeq& str, int index) const
     {
         return find(str.c_str(), index, str.size());
     }
+    void push_back(const char *str, int length);
+    void push_back(const char *str);
+    inline void push_back(const BinSeq &str) { push_back(str.c_str(), str.size()); }
+    inline void push_back(const string &str) { push_back(str.c_str()); }
+    inline void push_back(const char chr) {
+        ((vector<char> *) this)->pop_back();
+        ((vector<char> *) this)->push_back(chr);
+        ((vector<char> *) this)->push_back(0);
+    }
+    inline void pop_back() {
+        ((vector<char> *) this)->pop_back();
+        ((vector<char> *) this)->push_back(0);
+    }
+    BinSeq substr(int s) const;
+    BinSeq substr(int s, int l) const;
+    
     static const int npos = -1;
+    
+    // operators
+    inline bool operator==(const BinSeq &comp) const { return (*((vector <char> *) this)) == comp; }
+    inline bool operator!=(const BinSeq &comp) const { return (*((vector <char> *) this)) != comp; }
+    inline BinSeq &operator+=(const BinSeq &add) { push_back(add.c_str(), add.size()); }
+    inline BinSeq &operator+=(const string &add) { push_back(add.c_str()); return *this; }
+    inline BinSeq &operator+=(char *add) { push_back(add); return *this; }
+    inline BinSeq &operator+=(char add) { push_back(add); return *this; }
+    inline char operator[](int i) const { return (*((vector <char> *) this))[i]; }
+    inline operator string() const {
+        string a(c_str(), size());
+        return a;
+    }
+    
+    // accessors
+    inline int size() const { return ((vector <char> *) this)->size() - 1; }
 };
 
 #endif

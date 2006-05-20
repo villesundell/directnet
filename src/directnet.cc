@@ -47,7 +47,7 @@ using namespace std;
 
 extern char **environ; // XXX: should use getenv
 
-int serv_port = 3336;
+int serv_port = 3447;
 
 char dn_name[DN_NAME_LEN+1];
 
@@ -99,7 +99,7 @@ void dn_init(int argc, char **argv) {
             } else {
                 fprintf(stderr, "Use:\n%s [-v] [-p port]\n", argv[0]);
                 fprintf(stderr, "  -v: Display the version number and quit.\n");
-                fprintf(stderr, "  -p: Set the port to listen for connections on (default 3336).\n\n");
+                fprintf(stderr, "  -p: Set the port to listen for connections on (default 3447).\n\n");
                 exit(1);
             }
         }

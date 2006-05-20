@@ -72,22 +72,10 @@ void sendChat(const string &to, const string &msg);
  * msg: the away message or NULL for back */
 void setAway(const string *msg);
 
-/* Build the top of a command buffer
- * command: command to use
- * vera: version major part
- * verb: version minor part
- * param: first parameter */
-string buildCmd(const string &command, char vera, char verb, const string &param);
-
-/* Add a parameter to a command buffer
- * into: buffer to add to
- * newparam: the param to add */
-void addParam(string &into, const string &newparam);
-
 /* Send a command buffer to an fd
  * fdnum: the fd to send to
  * buf: the buffer to send */
-void sendCmd(struct connection *conn, string &buf);
+void sendCmd(struct connection *conn, Message &msg);
 
 /* Continue a routed message or tell the calling function to handle it
  * command: the command
@@ -99,7 +87,7 @@ bool handleRoutedMsg(const Message &msg);
 /* Send an unrouted message
  * fromfd: the fd NOT to send it to, -1 to send everywhere
  * outbuf: the buffer to send */
-void emitUnroutedMsg(conn_t *from, string &outbuf);
+void emitUnroutedMsg(conn_t *from, Message &omsg);
 
 /* The main communication method for a connection 
  * fdnum_voidptr: a void * to an int with the fdnum */

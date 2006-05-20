@@ -19,9 +19,8 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <string>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 #ifndef WIN32
@@ -43,6 +42,7 @@ using namespace std;
 #include <assert.h>
 
 #include "auth.h"
+#include "binseq.h"
 #include "chat.h"
 #include "client.h"
 #include "connection.h"
@@ -58,11 +58,11 @@ using namespace std;
 
 string *awayMsg = NULL;
 
-void handleMsg(conn_t *conn, const char *inbuf);
+void handleMsg(conn_t *conn, const BinSeq &inbuf);
 bool handleNLUnroutedMsg(const Message &msg);
 bool handleNRUnroutedMsg(conn_t *from, const Message &msg);
-int sendMsgB(const string &to, const string &msg, bool away, bool sign);
-void recvFnd(Route *route, const string &name, const string &key);
+int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign);
+void recvFnd(Route *route, const BinSeq &name, const BinSeq &key);
 
 enum cev_state {
     CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
@@ -111,8 +111,8 @@ static void schedule_ping(conn_t *conn) {
 static void ping_send_ev(dn_event_timer *ev) {
     conn_t *conn = (conn_t *) ev->payload;
     
-    string cmd = "pin\x01\x01;";
-    sendCmd(conn, cmd);
+    Message omsg(0, "pin", 1, 1);
+    sendCmd(conn, omsg);
     schedule_ping(conn);
 }
  
@@ -160,15 +160,15 @@ void init_comms(int fd, const string *outgh, int outgp) {
 }
  
 void send_handshake(conn_t *cs) {
-    string buf;
-
     cs->active_it = active_connections.insert(cs).first;
     
     cs->fd_ev.activate();
-    buf = buildCmd("key", 1, 1, dn_name);
-    addParam(buf, encExportKey());
-    sendCmd(cs, buf);
- 
+    
+    Message msg(0, "key", 1, 1);
+    msg.params.push_back(dn_name);
+    msg.params.push_back(encExportKey());
+    sendCmd(cs, msg);
+    
     schedule_ping(cs);
 }
  
@@ -204,14 +204,36 @@ static void conn_notify_core(conn_t *conn, int cond) {
         }
         conn->inbuf_p += ret;
         while (conn->inbuf_p) {
-            int i;
-            for (i = 0; i < conn->inbuf_p; i++)
-                if (!conn->inbuf[i]) break;
-            if (conn->inbuf_p == i) break;
-            // \0 in msg, process it
-            handleMsg(conn, (char *) conn->inbuf);
-            memmove(conn->inbuf, conn->inbuf + i + 1, conn->inbuf_p - i - 1);
-            conn->inbuf_p -= i + 1;
+            int i, len, sublen;
+            len = 0;
+            
+            // get out a single message
+            for (i = 6; i < conn->inbuf_p - 1; i += 2) {
+                sublen = charrayToInt(((const char *) conn->inbuf) + i);
+                if (sublen == 65535) {
+                    // end of elements
+                    len += 8; // 6 for the header + 2 for this element
+                    if (conn->inbuf_p < len) {
+                        // not enough
+                        i = conn->inbuf_p;
+                        break;
+                    } else {
+                        // stop here
+                        break;
+                    }
+                } else {
+                    len += sublen + 2;
+                }
+            }
+            
+            if (i >= conn->inbuf_p - 1) break;
+            
+            // process the message
+            BinSeq buf((const char *) conn->inbuf, len);
+            handleMsg(conn, buf);
+            
+            memmove(conn->inbuf, conn->inbuf + len, conn->inbuf_p - len);
+            conn->inbuf_p -= len;
         }
     }
  
@@ -284,33 +306,22 @@ connection::~connection() {
     active_connections.erase(active_it);
 }
 
-// Start building a command into a buffer
-string buildCmd(const string &command, char vera, char verb, const string &param)
-{
-    stringstream toret;
-    toret << command << vera << verb << param;
-    return toret.str();
-}
-
-// Add a parameter into a command buffer
-void addParam(string &into, const string &newparam)
-{
-    into += string(";") + newparam;
-}
-
 // Send a command
-void sendCmd(struct connection *conn, string &buf)
+void sendCmd(struct connection *conn, Message &msg)
 {
     int len, p;
+    BinSeq buf = msg.toBinSeq();
     size_t newsz = conn->outbuf_sz;
     
     if (conn->fd < 0 || conn->state == CDN_EV_DYING)
         return;
     
-    if (buf.length() >= DN_CMD_LEN) {
-        buf = buf.substr(0, DN_CMD_LEN - 1);
+    if (buf.size() >= DN_CMD_LEN) {
+        // FIXME: This should inform the user
+        return;
     }
-    len = buf.length() + 1;
+    len = buf.size();
+    
     p = 0;
     if (conn->outbuf_p == 0) {
         // try an immediate send, as an optimization
@@ -343,7 +354,7 @@ void sendCmd(struct connection *conn, string &buf)
 #define REQ_PARAMS(x) if (msg.params.size() < x) return
 #define REJOIN_PARAMS(x) msg.recombineParams((x)-1)
 			
-void handleMsg(conn_t *conn, const char *rdbuf)
+void handleMsg(conn_t *conn, const BinSeq &rdbuf)
 {
     int i, onparam, ostrlen;
 
@@ -363,21 +374,21 @@ void handleMsg(conn_t *conn, const char *rdbuf)
         // "I'm on this chat"
         if (handleRoutedMsg(msg)) {
             // Are we even on this chat?
-            if (!chatOnChannel(msg.params[1])) {
+            if (!chatOnChannel(msg.params[1].c_str())) {
                 return;
             }
             
             // OK, this person is on our list for this chat
-            chatAddUser(msg.params[1], msg.params[2]);
+            chatAddUser(msg.params[1].c_str(), msg.params[2].c_str());
             
             // Should we echo?
             if (msg.cmd == "cjo") {
-                Message nmsg("con", 1, 1);
+                Message nmsg(1, "con", 1, 1);
                 
-                if (dn_routes->find(msg.params[2]) == dn_routes->end()) {
+                if (dn_routes->find(msg.params[2].c_str()) == dn_routes->end()) {
                     return;
                 }
-                nmsg.params.push_back((*dn_routes)[msg.params[2]]->toString());
+                nmsg.params.push_back((*dn_routes)[msg.params[2].c_str()]->toString());
                 nmsg.params.push_back(msg.params[1]);
                 nmsg.params.push_back(dn_name);
                 
@@ -394,14 +405,14 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             char *unenmsg;
             
             // Should we just ignore it?
-            if (dn_trans_keys->find(msg.params[1]) == dn_trans_keys->end()) {
-                (*dn_trans_keys)[msg.params[1]] = 1;
+            if (dn_trans_keys->find(msg.params[1].c_str()) == dn_trans_keys->end()) {
+                (*dn_trans_keys)[msg.params[1].c_str()] = 1;
             } else {
                 return;
             }
             
             // Are we on this chat?
-            if (!chatOnChannel(msg.params[3])) {
+            if (!chatOnChannel(msg.params[3].c_str())) {
                 return;
             }
             
@@ -413,18 +424,18 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 free(unenmsg);
                 return;
             }
-            uiDispChatMsg(msg.params[3], msg.params[4], unenmsg);
+            uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg);
             
             // Pass it on
-            if (dn_chats->find(msg.params[3]) == dn_chats->end()) {
+            if (dn_chats->find(msg.params[3].c_str()) == dn_chats->end()) {
                 // explode
                 free(unenmsg);
                 return;
             }
-            vector<string> *chan = (*dn_chats)[msg.params[3]];
+            vector<string> *chan = (*dn_chats)[msg.params[3].c_str()];
             int s = chan->size();
             
-            Message nmsg("cms", 1, 1);
+            Message nmsg(1, "cms", 1, 1);
             
             nmsg.params.push_back("");
             nmsg.params.push_back(msg.params[1]);
@@ -461,7 +472,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             if (msg.cmd == "dcr" &&
                 msg.ver[0] == 1 && msg.ver[1] == 1) {
                 // dcr echos
-                Message nmsg("dce", 1, 1);
+                Message nmsg(1, "dce", 1, 1);
                 stringstream ss;
                 
                 Route *route;
@@ -472,8 +483,8 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 struct sockaddr_in *locip_i;
                 
                 // First, echo, then try to connect
-                if (dn_routes->find(msg.params[1]) == dn_routes->end()) return;
-                route = (*dn_routes)[msg.params[1]];
+                if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) return;
+                route = (*dn_routes)[msg.params[1].c_str()];
                 nmsg.params.push_back(route->toString());
                 nmsg.params.push_back(dn_name);
                 
@@ -511,14 +522,13 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             }
             
             // Then, attempt the connection
-            async_establishClient(msg.params[2]);
+            async_establishClient(msg.params[2].c_str());
 #endif
         }
 
     } else if (msg.cmd == "fnd" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
         conn_t *remc;
-        string outbuf;
         
         REQ_PARAMS(4);
         
@@ -526,7 +536,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             return;
         }
         
-        Route *nroute = new Route(msg.params[0]);
+        Route *nroute = new Route(msg.params[0].c_str());
         
         // Am I this person?
         if (msg.params[2] == dn_name) {
@@ -538,22 +548,23 @@ void handleMsg(conn_t *conn, const char *rdbuf)
         // Add myself to the route
         *nroute += dn_name;
         
-        outbuf = buildCmd("fnd", 1, 1, nroute->toString());
-        addParam(outbuf, msg.params[1]);
-        addParam(outbuf, msg.params[2]);
-        addParam(outbuf, msg.params[3]);
+        Message omsg(0, "fnd", 1, 1);
+        omsg.params.push_back(nroute->toString());
+        omsg.params.push_back(msg.params[1]);
+        omsg.params.push_back(msg.params[2]);
+        omsg.params.push_back(msg.params[3]);
         
         delete nroute;
         
         // Do I have a connection to this person?
-        if (dn_conn->find(msg.params[2]) != dn_conn->end()) {
-            remc = (conn_t *) (*dn_conn)[msg.params[2]];
-            sendCmd(remc, outbuf);
+        if (dn_conn->find(msg.params[2].c_str()) != dn_conn->end()) {
+            remc = (conn_t *) (*dn_conn)[msg.params[2].c_str()];
+            sendCmd(remc, omsg);
             return;
         }
         
         // If all else fails, continue the chain
-        emitUnroutedMsg(conn, outbuf);
+        emitUnroutedMsg(conn, omsg);
     
     } else if (msg.cmd == "fnr" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
@@ -569,7 +580,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             string endu;
             
             // Who's the end user?
-            ra = new Route(msg.params[0]);
+            ra = new Route(msg.params[0].c_str());
             if (ra->size() > 0) {
                 endu = (*ra)[ra->size()-1];
                 
@@ -578,31 +589,31 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             }
             
             // Then figure out the route from here back
-            rb = new Route(msg.params[2]);
+            rb = new Route(msg.params[2].c_str());
             
             // Loop through to find my name
             while (rb->size() > 0 && (*rb)[0] != dn_name) rb->pop_front();
             
             // And add that route
             if (rb->size() > 0)
-                (*dn_iRoutes)[msg.params[1]] = rb;
+                (*dn_iRoutes)[msg.params[1].c_str()] = rb;
         } else {
             // Hoorah, add a user
             
             // 1) Route
-            Route *route = new Route(msg.params[2]);
-            route->push_back(msg.params[1]);
-            if (dn_routes->find(msg.params[1]) != dn_routes->end())
-                delete (*dn_routes)[msg.params[1]];
-            (*dn_routes)[msg.params[1]] = route;
-            if (dn_iRoutes->find(msg.params[1]) != dn_iRoutes->end())
-                delete (*dn_iRoutes)[msg.params[1]];
-            (*dn_iRoutes)[msg.params[1]] = new Route(*route);
+            Route *route = new Route(msg.params[2].c_str());
+            route->push_back(msg.params[1].c_str());
+            if (dn_routes->find(msg.params[1].c_str()) != dn_routes->end())
+                delete (*dn_routes)[msg.params[1].c_str()];
+            (*dn_routes)[msg.params[1].c_str()] = route;
+            if (dn_iRoutes->find(msg.params[1].c_str()) != dn_iRoutes->end())
+                delete (*dn_iRoutes)[msg.params[1].c_str()];
+            (*dn_iRoutes)[msg.params[1].c_str()] = new Route(*route);
             
             // 2) Key
             encImportKey(msg.params[1].c_str(), msg.params[3].c_str());
             
-            uiEstRoute(msg.params[1]);
+            uiEstRoute(msg.params[1].c_str());
         }
     
     } else if (msg.cmd == "key" &&
@@ -622,7 +633,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
         if (!conn->name) abort();
         (*dn_conn)[msg.params[0]] = conn;
         
-        route = new Route(msg.params[0] + "\n");
+        route = new Route(string(msg.params[0]) + "\n");
         if (dn_routes->find(msg.params[0]) != dn_routes->end())
             delete (*dn_routes)[msg.params[0]];
         (*dn_routes)[msg.params[0]] = route;
@@ -632,20 +643,20 @@ void handleMsg(conn_t *conn, const char *rdbuf)
         
         encImportKey(msg.params[0].c_str(), msg.params[1].c_str());
         
-        uiEstRoute(msg.params[0]);
+        uiEstRoute(msg.params[0].c_str());
 
     } else if (msg.cmd == "lst" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
         REQ_PARAMS(2);
       
-        uiLoseRoute(msg.params[1]);
+        uiLoseRoute(msg.params[1].c_str());
     
     } else if ((msg.cmd == "msg" &&
                 msg.ver[0] == 1 && msg.ver[1] == 1) ||
                (msg.cmd == "msa" &&
                 msg.ver[0] == 1 && msg.ver[1] == 1)) {
         REQ_PARAMS(3);
-	REJOIN_PARAMS(3);
+	//REJOIN_PARAMS(3);
         
         if (handleRoutedMsg(msg)) {
             // This is our message
@@ -675,7 +686,7 @@ void handleMsg(conn_t *conn, const char *rdbuf)
                 sigm = strdup("s");
             } else if (austat == 2) {
                 /* this IS a signature, totally different response */
-                uiAskAuthImport(msg.params[1], unencmsg, sig);
+                uiAskAuthImport(msg.params[1].c_str(), unencmsg, sig);
                 iskey = 1;
                 sigm = NULL;
             } else {
@@ -685,14 +696,14 @@ void handleMsg(conn_t *conn, const char *rdbuf)
             if (sig) free(sig);
             
             if (!iskey) {
-                uiDispMsg(msg.params[1], dispmsg, sigm, msg.cmd == "msa");
+                uiDispMsg(msg.params[1].c_str(), dispmsg, sigm, msg.cmd == "msa");
                 free(sigm);
             }
             free(dispmsg);
             
             // Are we away?
             if (awayMsg && msg.cmd != "msa") {
-                sendMsgB(msg.params[1], *awayMsg, true, true);
+                sendMsgB(msg.params[1].c_str(), *awayMsg, true, true);
             }
             
             return;
@@ -707,11 +718,11 @@ bool handleRoutedMsg(const Message &msg)
     Route *route;
     string next, buf, last;
     
-    if (msg.params[0].length() == 0) {
+    if (msg.params[0].size() == 0) {
         return true; // This is our data
     }
     
-    route = new Route(msg.params[0]);
+    route = new Route(msg.params[0].c_str());
     
     next = (*route)[0];
     route->pop_front();
@@ -729,12 +740,12 @@ bool handleRoutedMsg(const Message &msg)
             if (msg.params[1] == dn_name) {
                 uiLoseRoute(endu);
             } else {
-                Message lstm("lst", 1, 1);
+                Message lstm(1, "lst", 1, 1);
                 Route *iroute;
                 
                 // Do we have an intermediate route?
-                if (dn_iRoutes->find(msg.params[1]) == dn_iRoutes->end()) return 0;
-                iroute = (*dn_iRoutes)[msg.params[1]];
+                if (dn_iRoutes->find(msg.params[1].c_str()) == dn_iRoutes->end()) return 0;
+                iroute = (*dn_iRoutes)[msg.params[1].c_str()];
                 
                 // Send the command
                 lstm.params.push_back(iroute->toString());
@@ -749,13 +760,14 @@ bool handleRoutedMsg(const Message &msg)
     
     sendc = (conn_t *) (*dn_conn)[next];
     
-    buf = buildCmd(msg.cmd, msg.ver[0], msg.ver[1], route->toString());
+    Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
+    omsg.params.push_back(route->toString());
     s = msg.params.size();
     for (i = 1; i < s; i++) {
-        addParam(buf, msg.params[i]);
+        omsg.params.push_back(msg.params[i]);
     }
     
-    sendCmd(sendc, buf);
+    sendCmd(sendc, omsg);
     
     delete route;
     return 0;
@@ -763,7 +775,7 @@ bool handleRoutedMsg(const Message &msg)
 
 bool handleNLUnroutedMsg(const Message &msg)
 {
-    Route *route = new Route(msg.params[0]);
+    Route *route = new Route(msg.params[0].c_str());
     int i, s;
     
     s = route->size();
@@ -778,26 +790,25 @@ bool handleNLUnroutedMsg(const Message &msg)
 
 bool handleNRUnroutedMsg(conn_t *from, const Message &msg) {
     // This part of handleUnroutedMsg decides whether to just delete it
-    if (dn_trans_keys->find(msg.params[0]) == dn_trans_keys->end()) {
-        string outbuf;
+    if (dn_trans_keys->find(msg.params[0].c_str()) == dn_trans_keys->end()) {
         int i, s;
         
-        (*dn_trans_keys)[msg.params[0]] = 1;
+        (*dn_trans_keys)[msg.params[0].c_str()] = 1;
         
         // Continue the transmission
-        outbuf = buildCmd(msg.cmd, msg.ver[0], msg.ver[1], msg.params[0]);
+        Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
         s = msg.params.size();
-        for (i = 1; i < s; i++) {
-            addParam(outbuf, msg.params[i]);
+        for (i = 0; i < s; i++) {
+            omsg.params.push_back(msg.params[i]);
         }
-        emitUnroutedMsg(from, outbuf);
+        emitUnroutedMsg(from, omsg);
         
         return true;
     }
     return false;
 }
 
-void emitUnroutedMsg(conn_t *from, string &outbuf)
+void emitUnroutedMsg(conn_t *from, Message &outbuf)
 {
     std::set<conn_t *>::iterator it = active_connections.begin();
     
@@ -809,7 +820,7 @@ void emitUnroutedMsg(conn_t *from, string &outbuf)
 }
 
 // recvFnd handles the situation that we've just been "found"
-void recvFnd(Route *route, const string &name, const string &key)
+void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
 {
     // Ignore it if we already have a route
     if (dn_routes->find(name) != dn_routes->end()) {
@@ -834,7 +845,7 @@ void recvFnd(Route *route, const string &name, const string &key)
     encImportKey(name.c_str(), key.c_str());
     
     // then send your route back to him
-    Message omsg("fnr", 1, 1);
+    Message omsg(1, "fnr", 1, 1);
     omsg.params.push_back(reverseRoute->toString());
     omsg.params.push_back(dn_name);
     omsg.params.push_back(route->toString());
@@ -848,7 +859,7 @@ void recvFnd(Route *route, const string &name, const string &key)
     // Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
     {
-        Message nmsg("dcr", 1, 1);
+        Message nmsg(1, "dcr", 1, 1);
         stringstream ss;
         
         Route *route;
@@ -908,7 +919,7 @@ void establishConnection(const string &to)
         stringstream ss;
         
         // it's a user, send a dcr
-        Message omsg("dcr", 1, 1);
+        Message omsg(1, "dcr", 1, 1);
         omsg.params.push_back(route->toString());
         omsg.params.push_back(dn_name);
         
@@ -928,9 +939,9 @@ void establishConnection(const string &to)
     }
 }
 
-int sendMsgB(const string &to, const string &msg, bool away, bool sign)
+int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
 {
-    Message omsg("msg", 1, 1);
+    Message omsg(1, "msg", 1, 1);
     Route *route;
     char *signedmsg, *encdmsg;
     
@@ -989,15 +1000,14 @@ int sendAuthKey(const string &to)
 }
 
 void sendFnd(const string &toc) {
-    string outbuf;
-    
     // Find a user by name
-    outbuf = buildCmd("fnd", 1, 1, "");
-    addParam(outbuf, dn_name);
-    addParam(outbuf, toc);
-    addParam(outbuf, encExportKey());
+    Message omsg(0, "fnd", 1, 1);
+    omsg.params.push_back("");
+    omsg.params.push_back(dn_name);
+    omsg.params.push_back(toc);
+    omsg.params.push_back(encExportKey());
     
-    emitUnroutedMsg(NULL, outbuf);
+    emitUnroutedMsg(NULL, omsg);
 }
 
 void joinChat(const string &chat)
@@ -1006,7 +1016,7 @@ void joinChat(const string &chat)
     chatJoin(chat);
     
     // Send a cjo to everybody we have a route to
-    Message msg("cjo", 1, 1);
+    Message msg(1, "cjo", 1, 1);
     msg.params.push_back("");
     msg.params.push_back(chat);
     msg.params.push_back(dn_name);
@@ -1025,7 +1035,7 @@ void leaveChat(const string &chat)
     chatLeave(chat);
     
     // Send a clv to everybody we have a route to
-    Message msg("clv", 1, 1);
+    Message msg(1, "clv", 1, 1);
     msg.params.push_back("");
     msg.params.push_back(chat);
     msg.params.push_back(dn_name);
@@ -1044,7 +1054,7 @@ void sendChat(const string &to, const string &msg)
     vector<string> *chan;
     int i, s;
     
-    Message omsg("cms", 1, 1);
+    Message omsg(1, "cms", 1, 1);
     omsg.params.push_back("");
     
     newTransKey(key);

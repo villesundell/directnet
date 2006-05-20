@@ -20,38 +20,73 @@
 
 #include "message.h"
 
-Message::Message(const char *scmd, char vera, char verb)
+Message::Message(char stype, const char *scmd, char vera, char verb)
 {
+    type = stype;
     cmd = scmd;
     ver[0] = vera;
     ver[1] = verb;
 }
 
-Message::Message(const string &buf)
+Message::Message(const BinSeq &buf)
 {
-    int l = buf.length(), i, s;
+    int l = buf.size(), i, j, pl;
+    BinSeq *push;
+    vector<int> lens;
     
-    if (l < 5) return;
+    if (l < 8) return;
     
-    cmd = buf.substr(0, 3);
-    ver[0] = buf[3];
-    ver[1] = buf[4];
+    type = buf[0];
+    cmd = buf.substr(1, 3);
+    ver[0] = buf[4];
+    ver[1] = buf[5];
     
-    for (i = 5; i < l;) {
-        s = buf.find_first_of(';', i);
-        if (s == string::npos) s = l;
-        
-        params.push_back(buf.substr(i, s - i));
-        i = s + 1;
+    for (i = 6; i < l - 1; i += 2) {
+        pl = charrayToInt(&(buf.front()) + i);
+        if (pl == 65535) break;
+        lens.push_back(pl);
+    }
+    
+    for (i += 2, j = 0; i < l && j < lens.size(); j++) {
+        params.push_back(buf.substr(i, lens[j]));
+        i += lens[j];
     }
 }
 
-void Message::recombineParams(int n)
+BinSeq Message::toBinSeq()
 {
+    BinSeq toret;
     int i;
+    char c[2];
     
-    for (i = params.size() - 2; i >= n; i--) {
-        params[i] += string(";") + params[i + 1];
-        params.pop_back();
+    toret += type;
+    toret += cmd;
+    toret.push_back(ver, 2);
+    
+    for (i = 0; i < params.size(); i++) {
+        intToCharray(params[i].size(), c);
+        toret.push_back(c, 2);
     }
+    toret.push_back("\xFF\xFF", 2);
+    
+    for (i = 0; i < params.size(); i++) {
+        toret.push_back(params[i]);
+    }
+    
+    return toret;
+}
+
+int charrayToInt(const char *c)
+{
+    int i = 0;
+    i = (unsigned char) c[0];
+    i <<= 8;
+    i += ((unsigned char) c[1]);
+    return i;
+}
+
+void intToCharray(int i, char *c)
+{
+    c[0] = i >> 8;
+    c[1] = i & 0xFF;
 }

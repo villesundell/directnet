@@ -21,20 +21,25 @@
 #ifndef DN_MESSAGE_H
 #define DN_MESSAGE_H
 
-#include <string>
 #include <vector>
 using namespace std;
 
+#include "binseq.h"
+
 class Message {
     public:
-    Message(const char *scmd, char vera, char verb);
-    Message(const string &buf);
+    Message(char stype, const char *scmd, char vera, char verb);
+    Message(const BinSeq &buf);
     
-    void recombineParams(int n);
+    BinSeq toBinSeq();
     
-    string cmd;
+    char type;
+    BinSeq cmd;
     char ver[2];
-    vector<string> params;
+    vector<BinSeq> params;
 };
+
+int charrayToInt(const char *c);
+void intToCharray(int i, char *c);
 
 #endif

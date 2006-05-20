@@ -18,33 +18,84 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
+using namespace std;
+
 #include "binseq.h"
 
-BinSeq::BinSeq() : vector<unsigned char>() {}
-
-BinSeq::BinSeq(const BinSeq &copy) : vector<unsigned char>(copy) {}
-
-BinSeq::BinSeq(const string &copy) : vector<unsigned char>()
+BinSeq::BinSeq()
 {
+    ((vector<char> *) this)->push_back(0);
+}
+
+BinSeq::BinSeq(const BinSeq &copy) : vector<char>(copy)
+{
+    ((vector<char> *) this)->push_back(0);
+}
+
+BinSeq::BinSeq(const string &copy)
+{
+    ((vector<char> *) this)->push_back(0);
     for (int i = 0; i < copy.length(); i++) {
         push_back(copy[i]);
     }
 }
 
-BinSeq::BinSeq(const unsigned char *copy, int len) : vector<unsigned char>()
+BinSeq::BinSeq(const char *copy)
 {
-    for (int i = 0; i < len; i++) {
-        push_back(copy[i]);
-    }
+    ((vector<char> *) this)->push_back(0);
+    push_back(copy);
 }
 
-int BinSeq::find(const unsigned char* str, int index, int length)
+BinSeq::BinSeq(const char *copy, int len)
 {
-    unsigned char *buf = c_str();
+    ((vector<char> *) this)->push_back(0);
+    push_back(copy, len);
+}
+
+BinSeq BinSeq::substr(int s) const
+{
+    BinSeq tr;
+    
+    for (int i = s; i < size(); i++) {
+        tr.push_back((*this)[i]);
+    }
+    
+    return tr;
+}
+
+BinSeq BinSeq::substr(int s, int l) const
+{
+    BinSeq tr;
+    
+    for (int i = s; i < s + l && i < size(); i++) {
+        tr.push_back((*this)[i]);
+    }
+    
+    return tr;
+}
+
+int BinSeq::find(const char* str, int index, int length) const
+{
+    const char *buf = c_str();
     
     for (int i = 0; i < size() - length; i++) {
-        if (!strcmp(buf + i, str, length)) return i;
+        if (!strncmp((char *) buf + i, (char *) str, length)) return i;
     }
     
     return npos;
+}
+
+void BinSeq::push_back(const char *str, int length)
+{
+    for (int i = 0; i < length; i++) {
+        push_back(str[i]);
+    }
+}
+
+void BinSeq::push_back(const char *str)
+{
+    for (int i = 0; str[i]; i++) {
+        push_back(str[i]);
+    }
 }
