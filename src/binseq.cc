@@ -28,10 +28,7 @@ BinSeq::BinSeq()
     ((vector<char> *) this)->push_back(0);
 }
 
-BinSeq::BinSeq(const BinSeq &copy) : vector<char>(copy)
-{
-    ((vector<char> *) this)->push_back(0);
-}
+BinSeq::BinSeq(const BinSeq &copy) : vector<char>(copy) {}
 
 BinSeq::BinSeq(const string &copy)
 {
