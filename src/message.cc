@@ -18,6 +18,10 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
+#include <string>
+using namespace std;
+
 #include "message.h"
 
 Message::Message(char stype, const char *scmd, char vera, char verb)
@@ -74,6 +78,26 @@ BinSeq Message::toBinSeq()
     }
     
     return toret;
+}
+
+void Message::debug(string start)
+{
+    cout << start << endl;
+    cout << "TYPE : " << (int) type << endl <<
+    "CMD  : " << cmd.c_str() << endl <<
+    "VER  : " << (int) ver[0] << "." << (int) ver[1] << endl;
+    
+    for (int i = 0; i < params.size(); i++) {
+        cout << "PARAM:" << endl <<
+        "      LEN: " << params[i].size() << endl <<
+        "      VAL: ";
+        for (int j = 0; j < params[i].size(); j++) {
+            cout << params[i][j];
+        }
+        cout << endl;
+    }
+    
+    cout << endl;
 }
 
 int charrayToInt(const char *c)

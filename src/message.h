@@ -32,6 +32,7 @@ class Message {
     Message(const BinSeq &buf);
     
     BinSeq toBinSeq();
+    void debug(string start);
     
     char type;
     BinSeq cmd;

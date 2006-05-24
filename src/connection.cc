@@ -309,6 +309,9 @@ connection::~connection() {
 void sendCmd(struct connection *conn, Message &msg)
 {
     int len, p;
+    
+    //msg.debug("OUTGOING");
+    
     BinSeq buf = msg.toBinSeq();
     size_t newsz = conn->outbuf_sz;
     
@@ -359,6 +362,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
 
     // Get the command itself
     Message msg(rdbuf);
+    
+    //msg.debug("INCOMING");
     
     /*****************************
      * Current protocol commands *
@@ -418,7 +423,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             // Yay, chat for us!
             
             // Decrypt it
-            unenmsg = encFrom(msg.params[2].c_str(), dn_name, msg.params[5].c_str());
+            unenmsg = encFrom(msg.params[2], dn_name, msg.params[5]);
             if (unenmsg[0] == '\0') {
                 return;
             }
@@ -447,7 +452,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 }
                 nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
                 
-                BinSeq encd = encTo(dn_name, (*chan)[i].c_str(), unenmsg.c_str());
+                BinSeq encd = encTo(dn_name, (*chan)[i], unenmsg);
                 nmsg.params[5] = encd;
                 
                 handleRoutedMsg(nmsg);
@@ -607,7 +612,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             (*dn_iRoutes)[msg.params[1].c_str()] = new Route(*route);
             
             // 2) Key
-            encImportKey(msg.params[1].c_str(), msg.params[3].c_str());
+            encImportKey(msg.params[1], msg.params[3]);
             
             uiEstRoute(msg.params[1].c_str());
         }
@@ -637,7 +642,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             delete (*dn_iRoutes)[msg.params[0]];
         (*dn_iRoutes)[msg.params[0]] = new Route(*route);
         
-        encImportKey(msg.params[0].c_str(), msg.params[1].c_str());
+        encImportKey(msg.params[0], msg.params[1]);
         
         uiEstRoute(msg.params[0].c_str());
 
@@ -661,7 +666,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             int austat, iskey;
             
             // Decrypt it
-            unencmsg = encFrom(msg.params[1].c_str(), dn_name, msg.params[2].c_str());
+            unencmsg = encFrom(msg.params[1], dn_name, msg.params[2]);
             
             // And verify the signature
             dispmsg = authVerify(unencmsg.c_str(), &sig, &austat);
@@ -834,7 +839,7 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     (*dn_iRoutes)[name] = new Route(*reverseRoute);
     
     // and public key,
-    encImportKey(name.c_str(), key.c_str());
+    encImportKey(name, key);
     
     // then send your route back to him
     Message omsg(1, "fnr", 1, 1);
@@ -957,7 +962,7 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
     }
     
     // and encrypt the message
-    encdmsg = encTo(dn_name, to.c_str(), signedmsg);
+    encdmsg = encTo(dn_name, to, signedmsg);
     free(signedmsg);
     
     omsg.params.push_back(encdmsg);
@@ -1067,7 +1072,7 @@ void sendChat(const string &to, const string &msg)
     for (i = 0; i < s; i++) {
         if (dn_routes->find((*chan)[i]) == dn_routes->end()) continue;
         omsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
-        omsg.params[5] = encTo(dn_name, (*chan)[i].c_str(), msg.c_str());
+        omsg.params[5] = encTo(dn_name, (*chan)[i], msg);
         handleRoutedMsg(omsg);
     }
 }
