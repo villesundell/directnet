@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "directnet.h"
+#include "enc.h"
 
 #define bool BOOL
 
@@ -36,6 +37,7 @@ char encbinloc[256];
 
 struct cyf_key {
     char *name;
+    int keylen;
     char *key;
     struct cyf_key *next;
 };
@@ -43,6 +45,7 @@ struct cyf_key {
 struct cyf_key *cyf_key_head = NULL;
 
 char *mypukey, *myprkey;
+int mypukeylen, myprkeylen;
 
 /* Helper function for creating public-key context. */
 static CYFER_PK_CTX *init_ctx(char *pk)
@@ -64,69 +67,6 @@ static CYFER_PK_CTX *init_ctx(char *pk)
     return ctx;
 }
 
-/* our keys need to be in hex */
-char *mkhex(int len, const unsigned char *inp)
-{
-    int i;
-    unsigned char hi, lo;
-    
-    char *out;
-    out = (char *) malloc(((len * 2) + 1) * sizeof(char));
-    
-    for (i = 0; i < len; i++) {
-        lo = inp[i] & 15;
-        hi = (inp[i] & 240) >> 4;
-        
-        if (hi < 10) {
-            out[i << 1] = '0' + hi;
-        } else {
-            out[i << 1] = 'A' + hi - 10;
-        }
-        
-        if (lo < 10) {
-            out[(i << 1) + 1] = '0' + lo;
-        } else {
-            out[(i << 1) + 1] = 'A' + lo - 10;
-        }
-    }
-    out[i << 1] = '\0';
-    
-    return out;
-}
-
-char *dehex(int *len, const unsigned char *inp)
-{
-    int i, osl, ol;
-    
-    unsigned char *out;
-    
-    osl = strlen((char *) inp);
-    *len = osl / 2;
-    out = (unsigned char *) malloc((*len + 1) * sizeof(unsigned char));
-    out[*len] = '\0';
-    
-    for (i = 0; i < osl; i += 2) {
-        ol = i >> 1;
-        out[ol] = 0;
-        
-        if (inp[i] >= '0' && inp[i] <= '9') {
-            out[ol] += (inp[i] - '0') << 4;
-        } else {
-            out[ol] += (inp[i] - 'A' + 10) << 4;
-        }
-        
-        if (inp[i+1] >= '0' && inp[i+1] <= '9') {
-            out[ol] += inp[i+1] - '0';
-        } else {
-            out[ol] += inp[i+1] - 'A' + 10;
-        }
-    }
-    ol = i >> 1;
-    out[ol] = '\0';
-    
-    return (char *) out;
-}
-
 /* Perform encryption or decryption. */
 char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
 {
@@ -145,14 +85,16 @@ char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
         cur = cyf_key_head;
         while (cur) {
             if (!strcmp(cur->name, name)) {
-                key = dehex(&klen, (unsigned char *) cur->key);
+                klen = cur->keylen;
+                key = cur->key;
                 break;
             }
             cur = cur->next;
         }
         if (!cur) return strdup("");
     } else {
-        key = dehex(&klen, (unsigned char *) myprkey);
+        klen = myprkeylen;
+        key = myprkey;
     }
     
     if (encrypt) {
@@ -196,7 +138,7 @@ char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
     }
 
     CYFER_Pk_Finish(ctx);
-    free(key); free(inbuf); free(outbuf);
+    free(inbuf); free(outbuf);
     
     *len = oloc;
     return out ? out : strdup("");
@@ -206,96 +148,119 @@ int findEnc(char **envp)
 {
     return 0;
 }
-    
-char *encTo(const char *from, const char *to, const char *msg)
+
+BinSeq encTo(BinSeq from, BinSeq to, BinSeq msg)
 {
     int len;
     char *enc, *enc2;
+    BinSeq ret;
     
-    len = 0;
-    enc = encdec("RSA", to, msg, 1, &len); // encrypt
+    len = msg.size();
+    enc = encdec("RSA", to.c_str(), msg.c_str(), 1, &len); // encrypt
     enc2 = encdec("RSA", NULL, enc, 1, &len); // sign
     free(enc);
     
-    enc = mkhex(len, (unsigned char *) enc2); // hex
+    ret.push_back(enc2, len);
     free(enc2);
     
-    return enc;
+    return ret;
 }
 
-char *encFrom(const char *from, const char *to, const char *msg)
+BinSeq encFrom(BinSeq from, BinSeq to, BinSeq msg)
 {
     int len;
     char *enc, *enc2;
+    BinSeq ret;
     
-    enc = dehex(&len, (unsigned char *) msg); // dehex
-    
-    enc2 = encdec("RSA", from, enc, 0, &len); // de-sign
+    len = msg.size();
+    enc = encdec("RSA", from.c_str(), msg.c_str(), 0, &len); // de-sign
+    enc2 = encdec("RSA", NULL, enc, 0, &len); // decrypt
     free(enc);
     
-    enc = encdec("RSA", NULL, enc2, 0, &len); // decrypt
+    ret.push_back(enc2, len);
     free(enc2);
     
-    return enc;
+    return ret;
 }
 
-char *encCreateKey()
+BinSeq encCreateKey()
 {
     CYFER_PK_CTX *ctx;
-    int privlen, publen;
-    char *priv, *pub;
-
+    
     /* Create context */
     ctx = init_ctx("RSA");
     
     /* Generate and export keys into temporary buffers */
     CYFER_Pk_Generate_Key(ctx, 1024);
-    CYFER_Pk_KeySize(ctx, (unsigned int *) &privlen, (unsigned int *) &publen);
-
-    priv = (char *) malloc(privlen);
-    pub = (char *) malloc(publen);
-
-    CYFER_Pk_Export_Key(ctx, (unsigned char *) priv, (unsigned char *) pub);
+    CYFER_Pk_KeySize(ctx, (unsigned int *) &myprkeylen, (unsigned int *) &mypukeylen);
+    
+    myprkey = (char *) malloc(myprkeylen);
+    if (!myprkey) { perror("malloc"); exit(1); }
+    mypukey = (char *) malloc(mypukeylen);
+    if (!mypukey) { perror("malloc"); exit(1); }
+    
+    CYFER_Pk_Export_Key(ctx, (unsigned char *) myprkey, (unsigned char *) mypukey);
     CYFER_Pk_Finish(ctx);
     
-    myprkey = mkhex(privlen, (unsigned char *) priv);
-    mypukey = mkhex(publen, (unsigned char *) pub);
-    
-    free(priv); free(pub);
-    
-    return mypukey;
+    return BinSeq(mypukey, mypukeylen);
 }
 
-char *encExportKey() {
-    return mypukey;
+BinSeq encExportKey() {
+    return BinSeq(mypukey, mypukeylen);
 }
 
-char *encImportKey(const char *name, const char *key)
+BinSeq encImportKey(BinSeq name, BinSeq key)
 {
     if (cyf_key_head) {
         struct cyf_key *cur = cyf_key_head;
         
         while (cur->next) {
-            if (!strcmp(cur->name, name)) {
-                cur->key = strdup(key);
-                return "";
+            if (!strcmp(cur->name, name.c_str())) {
+                free(cur->key);
+                
+                cur->keylen = key.size();
+                
+                cur->key = (char *) malloc(key.size());
+                if (cur->key == NULL) { perror("malloc"); exit(1); }
+                memcpy(cur->key, key.c_str(), key.size());
+                
+                return BinSeq();
             }
             cur = cur->next;
         }
-        if (!strcmp(cur->name, name)) {
-            cur->key = strdup(key);
-            return "";
+        if (!strcmp(cur->name, name.c_str())) {
+            free(cur->key);
+            
+            cur->keylen = key.size();
+            
+            cur->key = (char *) malloc(key.size());
+            if (cur->key == NULL) { perror("malloc"); exit(1); }
+            memcpy(cur->key, key.c_str(), key.size());
+            
+            return BinSeq();
         }
         
         cur->next = (struct cyf_key *) malloc(sizeof(struct cyf_key));
-        cur->next->name = strdup(name);
-        cur->next->key = strdup(key);
+        cur->next->name = strdup(name.c_str());
+        
+        cur->next->keylen = key.size();
+        
+        cur->next->key = (char *) malloc(key.size());
+        if (cur->next->key == NULL) { perror("malloc"); exit(1); }
+        memcpy(cur->next->key, key.c_str(), key.size());
+        
         cur->next->next = NULL;
     } else {
         cyf_key_head = (struct cyf_key *) malloc(sizeof(struct cyf_key));
-        cyf_key_head->name = strdup(name);
-        cyf_key_head->key = strdup(key);
+        cyf_key_head->name = strdup(name.c_str());
+        
+        cyf_key_head->keylen = key.size();
+        
+        cyf_key_head->key = (char *) malloc(key.size());
+        if (cyf_key_head->key == NULL) { perror("malloc"); exit(1); }
+        memcpy(cyf_key_head->key, key.c_str(), key.size());
+        
         cyf_key_head->next = NULL;
     }
-    return "";
+    return BinSeq();
 }

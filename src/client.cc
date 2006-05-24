@@ -19,7 +19,6 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <iostream>
 #include <map>
 #include <string>
 using namespace std;
@@ -79,8 +78,6 @@ void async_establishClient(const string &destination)
     
     he = gethostbyname(hostname.c_str());
     if (he == NULL) {
-        cout << "CON:" << hostname << ":" << port << endl;
-    
         return;
     }
     

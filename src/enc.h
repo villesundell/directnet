@@ -21,6 +21,8 @@
 #ifndef DN_GPG_H
 #define DN_GPG_H
 
+#include "binseq.h"
+
 /* Find any necessary binaries
  *   - should be called encInit
  * envp: envp from main
@@ -32,27 +34,27 @@ int findEnc(char **envp);
  * to: the remote user
  * msg: the message
  * returns: a MALLOC'D buffer with the encrypted message or NULL on failure */
-char *encTo(const char *from, const char *to, const char *msg);
+BinSeq encTo(BinSeq from, BinSeq to, BinSeq msg);
 
 /* Decrypt a message from a user
  * from: the remote user
  * to: the local user
  * msg: the message
  * returns: a MALLOC'D buffer with the decrypted message or NULL on failure */
-char *encFrom(const char *from, const char *to, const char *msg);
+BinSeq encFrom(BinSeq from, BinSeq to, BinSeq msg);
 
 /* Create the encryption key
  * returns: the created key or NULL on failure */
-char *encCreateKey();
+BinSeq encCreateKey();
 
 /* Export the encryption key
  * returns: the encryption key or NULL on failure */
-char *encExportKey();
+BinSeq encExportKey();
 
 /* Import an encryption key
  * name: the name of the owner of the key
  * key: the key
  * returns: some message describing the import, usually "" */
-char *encImportKey(const char *name, const char *key);
+BinSeq encImportKey(BinSeq name, BinSeq key);
 
 #endif // DN_GPG_H

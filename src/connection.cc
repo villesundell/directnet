@@ -19,7 +19,6 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <iostream>
 #include <sstream>
 using namespace std;
 
@@ -402,7 +401,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         // a chat message
         if (handleRoutedMsg(msg)) {
-            char *unenmsg;
+            BinSeq unenmsg;
             
             // Should we just ignore it?
             if (dn_trans_keys->find(msg.params[1].c_str()) == dn_trans_keys->end()) {
@@ -421,15 +420,13 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             // Decrypt it
             unenmsg = encFrom(msg.params[2].c_str(), dn_name, msg.params[5].c_str());
             if (unenmsg[0] == '\0') {
-                free(unenmsg);
                 return;
             }
-            uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg);
+            uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg.c_str());
             
             // Pass it on
             if (dn_chats->find(msg.params[3].c_str()) == dn_chats->end()) {
                 // explode
-                free(unenmsg);
                 return;
             }
             vector<string> *chan = (*dn_chats)[msg.params[3].c_str()];
@@ -450,20 +447,19 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 }
                 nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
                 
-                char *encd = encTo(dn_name, (*chan)[i].c_str(), unenmsg);
+                BinSeq encd = encTo(dn_name, (*chan)[i].c_str(), unenmsg.c_str());
                 nmsg.params[5] = encd;
-                free(encd);
                 
                 handleRoutedMsg(nmsg);
             }
-            
-            free(unenmsg);
         }
         
     } else if ((msg.cmd == "dcr" &&
                 msg.ver[0] == 1 && msg.ver[1] == 1) ||
                (msg.cmd == "dce" &&
                 msg.ver[0] == 1 && msg.ver[1] == 1)) {
+        // stub
+        return;
         REQ_PARAMS(3);
         
         if (handleRoutedMsg(msg)) {
@@ -660,29 +656,26 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         if (handleRoutedMsg(msg)) {
             // This is our message
-            char *unencmsg, *dispmsg, *sig, *sigm;
+            BinSeq unencmsg;
+            char *dispmsg, *sig, *sigm;
             int austat, iskey;
             
             // Decrypt it
             unencmsg = encFrom(msg.params[1].c_str(), dn_name, msg.params[2].c_str());
             
             // And verify the signature
-            dispmsg = authVerify(unencmsg, &sig, &austat);
+            dispmsg = authVerify(unencmsg.c_str(), &sig, &austat);
             
             // Make our signature tag
             iskey = 0;
             if (austat == -1) {
-                free(unencmsg);
                 sigm = strdup("n");
             } else if (austat == 0) {
-                free(unencmsg);
                 sigm = strdup("u");
             } else if (austat == 1 && sig) {
-                free(unencmsg);
                 sigm = (char *) malloc((strlen(sig) + 3) * sizeof(char));
                 sprintf(sigm, "s %s", sig);
             } else if (austat == 1 && !sig) {
-                free(unencmsg);
                 sigm = strdup("s");
             } else if (austat == 2) {
                 /* this IS a signature, totally different response */
@@ -690,7 +683,6 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 iskey = 1;
                 sigm = NULL;
             } else {
-                free(unencmsg);
                 sigm = strdup("?");
             }
             if (sig) free(sig);
@@ -943,7 +935,8 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
 {
     Message omsg(1, "msg", 1, 1);
     Route *route;
-    char *signedmsg, *encdmsg;
+    char *signedmsg;
+    BinSeq encdmsg;
     
     if (dn_routes->find(to) == dn_routes->end()) {
         uiNoRoute(to);
@@ -968,7 +961,6 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
     free(signedmsg);
     
     omsg.params.push_back(encdmsg);
-    free(encdmsg);
     
     if (away) {
         omsg.cmd = "msa";
