@@ -58,7 +58,7 @@ char authPW[] = "GPG Password";
  * args: arguments to pass to GPG
  * pass: 1 if it needs a passphrase
  * returns: a MALLOC'D buffer with the output */
-char *gpgWrap(const char *inp, const char *args, int pass)
+BinSeq *gpgWrap(const BinSeq &inp, const BinSeq &args, int pass)
 {
 #ifndef __WIN32
     FILE *fi, *fo;
@@ -73,7 +73,7 @@ char *gpgWrap(const char *inp, const char *args, int pass)
     if (!fo) { perror("tmpfile"); return NULL; }
     
     /* 2) write our input */
-    fputs(inp, fi);
+    fwrite(inp.c_str(), 1, inp.size(), fi);
     fseek(fi, 0, SEEK_SET);
     
     /* 3) pipe the passphrase */
@@ -95,9 +95,9 @@ char *gpgWrap(const char *inp, const char *args, int pass)
     /* 4) fork and run the command */
     pid = fork();
     if (pid == 0) {
-        cmd = (char *) malloc((strlen(GPG_bin) + strlen(args) + strlen(pspc) + 12) * sizeof(char));
+        cmd = (char *) malloc((strlen(GPG_bin) + args.size() + strlen(pspc) + 12) * sizeof(char));
         if (cmd == NULL) { exit(-1); }
-        sprintf(cmd, "%s %s %s --no-tty", GPG_bin, args, pspc);
+        sprintf(cmd, "%s %s %s --no-tty", GPG_bin, args.c_str(), pspc);
         
         dup2(fileno(fi), 0);
         dup2(fileno(fo), 1);
@@ -126,7 +126,9 @@ char *gpgWrap(const char *inp, const char *args, int pass)
     fclose(fi);
     fclose(fo);
     free(pspc);
-    return co;
+    BinSeq *tr = new BinSeq(co);
+    free(co);
+    return tr;
 #else
     return NULL;
 #endif
@@ -134,7 +136,7 @@ char *gpgWrap(const char *inp, const char *args, int pass)
 
 int authInit()
 {
-    char *ret;
+    BinSeq *ret;
     int i;
     
     GPG_have = 0;
@@ -172,7 +174,7 @@ int authInit()
         } else {
             // this is it
             GPG_have = 1;
-            free(ret);
+            delete ret;
             break;
         }
     }
@@ -195,34 +197,39 @@ void authSetPW(const char *nm, const char *pswd)
     }
 }
 
-char *authSign(const char *msg)
+BinSeq *authSign(const BinSeq &msg)
 {
-    char *arg, *outp;
+    char *carg;
+    BinSeq arg;
+    BinSeq *outp;
     
-    CPASS return strdup(msg);
+    CPASS return new BinSeq(msg);
     
-    arg = (char *) malloc((18 + strlen(GPG_name)) * sizeof(char));
-    sprintf(arg, "--clearsign -u \"%s\"", GPG_name);
+    carg = (char *) malloc((18 + strlen(GPG_name)) * sizeof(char));
+    sprintf(carg, "--clearsign -u \"%s\"", GPG_name);
+    arg.push_back(carg);
+    free(carg);
     
     outp = gpgWrap(msg, arg, 1);
-    free(arg);
-    return outp ? outp : strdup(msg);
+    return outp;
 }
 
-char *authVerify(const char *msg, char **who, int *status)
+BinSeq *authVerify(const BinSeq &msg, char **who, int *status)
 {
-    char *toret, *validity, *tmp, *tmp2;
+    char *toret, *tmp, *tmp2;
+    BinSeq *validity;
+    const char *cmsg = msg.c_str();
     
     *who = NULL;
     *status = -1;
     
     /* the special case is that this is a key */
-    if (!strncmp(msg, "-----BEGIN PGP PUBLIC KEY BLOCK-----\n", 37)) {
-        CPASS return strdup("");
+    if (!strncmp(cmsg, "-----BEGIN PGP PUBLIC KEY BLOCK-----\n", 37)) {
+        CPASS return new BinSeq();
         /* figure out who */
-        if ((validity = gpgWrap(msg, "", 0))) {
+        if ((validity = gpgWrap(msg, BinSeq(), 0))) {
             /* look for "pub" */
-            char *curl = validity;
+            char *curl = validity->c_str();
             while (curl) {
                 if (!strncmp(curl, "pub  ", 5)) {
                     /* Look for the name, after two ' 's */
@@ -249,20 +256,20 @@ char *authVerify(const char *msg, char **who, int *status)
                 }
             }
             
-            free(validity);
+            delete validity;
         }
         return NULL;
     }
     
     /* sanity check */
-    if (strncmp(msg, "-----BEGIN PGP SIGNED MESSAGE-----\n", 35)) {
-        return strdup(msg);
+    if (strncmp(cmsg, "-----BEGIN PGP SIGNED MESSAGE-----\n", 35)) {
+        return new BinSeq(msg);
     }
     
     /* first test the validity */
     CPASS goto getmsg;
     if ((validity = gpgWrap(msg, "--verify --status-fd 1", 0))) {
-        char *curl = validity;
+        char *curl = validity->c_str();
         while (curl) {
             if (!strncmp(curl, "[GNUPG:] GOODSIG ", 17)) {
                 *status = 1;
@@ -303,7 +310,7 @@ char *authVerify(const char *msg, char **who, int *status)
             }
         }
         
-        free(validity);
+        delete validity;
     }
     
     /* just grab out the message portion */
@@ -311,7 +318,7 @@ char *authVerify(const char *msg, char **who, int *status)
     char *curl;
     getmsg:
     toret = NULL;
-    curl = strchr(msg, '\n');
+    curl = strchr(cmsg, '\n');
     while (curl) {
         curl++;
         if (*curl == '\n') {
@@ -337,26 +344,31 @@ char *authVerify(const char *msg, char **who, int *status)
         }
     }
     
-    if (toret) return toret;
+    if (toret) {
+        BinSeq *tr = new BinSeq(toret);
+        free(toret);
+        return tr;
+    }
     
-    return strdup(msg);
+    return new BinSeq(msg);
 }
 
-int authImport(const char *msg)
+int authImport(const BinSeq &msg)
 {
     /* all we can do is try, so do so */
-    char *attempt = gpgWrap(msg, "--import", 0);
+    BinSeq *attempt = gpgWrap(msg, "--import", 0);
     if (attempt) {
-        free(attempt);
+        delete attempt;
         return 1;
     } else {
         return 0;
     }
 }
 
-char *authExport()
+BinSeq *authExport()
 {
-    char *cmd, *ret;
+    char *cmd;
+    BinSeq *ret;
     
     CPASS return NULL;
     

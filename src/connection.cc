@@ -310,7 +310,7 @@ void sendCmd(struct connection *conn, Message &msg)
 {
     int len, p;
     
-    //msg.debug("OUTGOING");
+    msg.debug("OUTGOING");
     
     BinSeq buf = msg.toBinSeq();
     size_t newsz = conn->outbuf_sz;
@@ -363,7 +363,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     // Get the command itself
     Message msg(rdbuf);
     
-    //msg.debug("INCOMING");
+    msg.debug("INCOMING");
     
     /*****************************
      * Current protocol commands *
@@ -661,15 +661,15 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         if (handleRoutedMsg(msg)) {
             // This is our message
-            BinSeq unencmsg;
-            char *dispmsg, *sig, *sigm;
+            BinSeq unencmsg, *dispmsg;
+            char *sig, *sigm;
             int austat, iskey;
             
             // Decrypt it
             unencmsg = encFrom(msg.params[1], dn_name, msg.params[2]);
             
             // And verify the signature
-            dispmsg = authVerify(unencmsg.c_str(), &sig, &austat);
+            dispmsg = authVerify(unencmsg, &sig, &austat);
             
             // Make our signature tag
             iskey = 0;
@@ -684,7 +684,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 sigm = strdup("s");
             } else if (austat == 2) {
                 /* this IS a signature, totally different response */
-                uiAskAuthImport(msg.params[1].c_str(), unencmsg, sig);
+                uiAskAuthImport(msg.params[1], unencmsg, sig);
                 iskey = 1;
                 sigm = NULL;
             } else {
@@ -693,10 +693,10 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             if (sig) free(sig);
             
             if (!iskey) {
-                uiDispMsg(msg.params[1].c_str(), dispmsg, sigm, msg.cmd == "msa");
+                uiDispMsg(msg.params[1].c_str(), dispmsg->c_str(), sigm, msg.cmd == "msa");
                 free(sigm);
             }
-            free(dispmsg);
+            delete dispmsg;
             
             // Are we away?
             if (awayMsg && msg.cmd != "msa") {
@@ -940,8 +940,7 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
 {
     Message omsg(1, "msg", 1, 1);
     Route *route;
-    char *signedmsg;
-    BinSeq encdmsg;
+    BinSeq encdmsg, *signedmsg;
     
     if (dn_routes->find(to) == dn_routes->end()) {
         uiNoRoute(to);
@@ -954,16 +953,16 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
     
     // Sign ...
     if (sign) {
-        signedmsg = authSign(msg.c_str());
+        signedmsg = authSign(msg);
         if (!signedmsg) return 0;
     } else {
-        signedmsg = strdup(msg.c_str());
+        signedmsg = new BinSeq(msg);
         if (!signedmsg) { perror("strdup"); exit(1); }
     }
     
     // and encrypt the message
-    encdmsg = encTo(dn_name, to, signedmsg);
-    free(signedmsg);
+    encdmsg = encTo(dn_name, to, *signedmsg);
+    delete signedmsg;
     
     omsg.params.push_back(encdmsg);
     
@@ -983,13 +982,13 @@ int sendMsg(const string &to, const string &msg)
 
 int sendAuthKey(const string &to)
 {
-    char *msg;
+    BinSeq *msg;
     int ret;
     
     msg = authExport();
     if (msg) {
-        ret = sendMsgB(to, msg, false, false);
-        free(msg);
+        ret = sendMsgB(to, *msg, false, false);
+        delete msg;
         return ret;
     } else {
         return 0;

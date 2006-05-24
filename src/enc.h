@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -34,14 +34,14 @@ int findEnc(char **envp);
  * to: the remote user
  * msg: the message
  * returns: a MALLOC'D buffer with the encrypted message or NULL on failure */
-BinSeq encTo(BinSeq from, BinSeq to, BinSeq msg);
+BinSeq encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg);
 
 /* Decrypt a message from a user
  * from: the remote user
  * to: the local user
  * msg: the message
  * returns: a MALLOC'D buffer with the decrypted message or NULL on failure */
-BinSeq encFrom(BinSeq from, BinSeq to, BinSeq msg);
+BinSeq encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg);
 
 /* Create the encryption key
  * returns: the created key or NULL on failure */
@@ -55,6 +55,6 @@ BinSeq encExportKey();
  * name: the name of the owner of the key
  * key: the key
  * returns: some message describing the import, usually "" */
-BinSeq encImportKey(BinSeq name, BinSeq key);
+BinSeq encImportKey(const BinSeq &name, const BinSeq &key);
 
 #endif // DN_GPG_H

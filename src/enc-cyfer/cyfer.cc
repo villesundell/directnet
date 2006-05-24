@@ -152,7 +152,7 @@ int findEnc(char **envp)
     return 0;
 }
 
-BinSeq encTo(BinSeq from, BinSeq to, BinSeq msg)
+BinSeq encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
 {
     int len;
     char *enc, *enc2;
@@ -169,7 +169,7 @@ BinSeq encTo(BinSeq from, BinSeq to, BinSeq msg)
     return ret;
 }
 
-BinSeq encFrom(BinSeq from, BinSeq to, BinSeq msg)
+BinSeq encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
 {
     int len;
     char *enc, *enc2;
@@ -212,7 +212,7 @@ BinSeq encExportKey() {
     return BinSeq(mypukey, mypukeylen);
 }
 
-BinSeq encImportKey(BinSeq name, BinSeq key)
+BinSeq encImportKey(const BinSeq &name, const BinSeq &key)
 {
     if (cyf_key_head) {
         struct cyf_key *cur = cyf_key_head;
