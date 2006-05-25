@@ -588,7 +588,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
         
         // Add myself to the route
-        *nroute += dn_name;
+        *nroute += encExportKey();
         
         Message omsg(0, "fnd", 1, 1);
         omsg.params.push_back(nroute->toBinSeq());
@@ -849,10 +849,10 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     reverseRoute->push_back(key);
     
     // Add his route,
-    (*dn_routes)[name] = reverseRoute;
-    if (dn_iRoutes->find(name) != dn_iRoutes->end())
-        delete (*dn_iRoutes)[name];
-    (*dn_iRoutes)[name] = new Route(*reverseRoute);
+    (*dn_routes)[key] = reverseRoute;
+    if (dn_iRoutes->find(key) != dn_iRoutes->end())
+        delete (*dn_iRoutes)[key];
+    (*dn_iRoutes)[key] = new Route(*reverseRoute);
     
     // and public key,
     encImportKey(name, key);
