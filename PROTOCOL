@@ -42,6 +42,12 @@ route). The last node will receive and interpret the command.
 Special commands propogate but the propogation is not simply routed, therefore
 more program logic is requird to parse them.
 
+All routed commands and some special commands have a route as the first
+parameter. This route takes the form of any number of one-byte element-lengths,
+followed by a byte with the value \xFF, follwed by each of the route elements,
+which must be of the lenghts described. Route elements are SHA-256 hashes of
+encryption keys.
+
 The protocol commands are documented in alphabetical order in this format:
 command(first version char)(second version char) (brief summary)
         purpose: The purpose of the command
