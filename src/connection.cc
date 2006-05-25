@@ -1015,7 +1015,7 @@ int sendAuthKey(const string &to)
 void sendFnd(const string &toc) {
     // Find a user by name
     Message omsg(0, "fnd", 1, 1);
-    omsg.params.push_back("");
+    omsg.params.push_back("\xFF\xFF");
     omsg.params.push_back(dn_name);
     omsg.params.push_back(toc);
     omsg.params.push_back(encExportKey());
