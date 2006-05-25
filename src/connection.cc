@@ -365,6 +365,10 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     
     msg.debug("INCOMING");
     
+    /* if this is a routed message, check if we don't need to handle it */
+    if (msg.type == 1 &&
+        !handleRoutedMsg(msg)) return;
+    
     /*****************************
      * Current protocol commands *
      *****************************/
@@ -376,28 +380,26 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         REQ_PARAMS(3);
         
         // "I'm on this chat"
-        if (handleRoutedMsg(msg)) {
-            // Are we even on this chat?
-            if (!chatOnChannel(msg.params[1].c_str())) {
+        // Are we even on this chat?
+        if (!chatOnChannel(msg.params[1].c_str())) {
+            return;
+        }
+            
+        // OK, this person is on our list for this chat
+        chatAddUser(msg.params[1].c_str(), msg.params[2].c_str());
+            
+        // Should we echo?
+        if (msg.cmd == "cjo") {
+            Message nmsg(1, "con", 1, 1);
+                
+            if (dn_routes->find(msg.params[2].c_str()) == dn_routes->end()) {
                 return;
             }
-            
-            // OK, this person is on our list for this chat
-            chatAddUser(msg.params[1].c_str(), msg.params[2].c_str());
-            
-            // Should we echo?
-            if (msg.cmd == "cjo") {
-                Message nmsg(1, "con", 1, 1);
+            nmsg.params.push_back((*dn_routes)[msg.params[2].c_str()]->toBinSeq());
+            nmsg.params.push_back(msg.params[1]);
+            nmsg.params.push_back(dn_name);
                 
-                if (dn_routes->find(msg.params[2].c_str()) == dn_routes->end()) {
-                    return;
-                }
-                nmsg.params.push_back((*dn_routes)[msg.params[2].c_str()]->toBinSeq());
-                nmsg.params.push_back(msg.params[1]);
-                nmsg.params.push_back(dn_name);
-                
-                handleRoutedMsg(nmsg);
-            }
+            handleRoutedMsg(nmsg);
         }
         
     } else if ((msg.cmd == "cms" &&
@@ -405,58 +407,56 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         REQ_PARAMS(6);
         
         // a chat message
-        if (handleRoutedMsg(msg)) {
-            BinSeq unenmsg;
+        BinSeq unenmsg;
             
-            // Should we just ignore it?
-            if (dn_trans_keys->find(msg.params[1].c_str()) == dn_trans_keys->end()) {
-                (*dn_trans_keys)[msg.params[1].c_str()] = 1;
-            } else {
-                return;
+        // Should we just ignore it?
+        if (dn_trans_keys->find(msg.params[1].c_str()) == dn_trans_keys->end()) {
+            (*dn_trans_keys)[msg.params[1].c_str()] = 1;
+        } else {
+            return;
+        }
+            
+        // Are we on this chat?
+        if (!chatOnChannel(msg.params[3].c_str())) {
+            return;
+        }
+            
+        // Yay, chat for us!
+            
+        // Decrypt it
+        unenmsg = encFrom(msg.params[2], dn_name, msg.params[5]);
+        if (unenmsg[0] == '\0') {
+            return;
+        }
+        uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg.c_str());
+            
+        // Pass it on
+        if (dn_chats->find(msg.params[3].c_str()) == dn_chats->end()) {
+            // explode
+            return;
+        }
+        vector<string> *chan = (*dn_chats)[msg.params[3].c_str()];
+        int s = chan->size();
+            
+        Message nmsg(1, "cms", 1, 1);
+            
+        nmsg.params.push_back("");
+        nmsg.params.push_back(msg.params[1]);
+        nmsg.params.push_back(dn_name);
+        nmsg.params.push_back(msg.params[3]);
+        nmsg.params.push_back(msg.params[4]);
+        nmsg.params.push_back("");
+            
+        for (i = 0; i < s; i++) {
+            if (dn_routes->find((*chan)[i]) == dn_routes->end()) {
+                continue;
             }
-            
-            // Are we on this chat?
-            if (!chatOnChannel(msg.params[3].c_str())) {
-                return;
-            }
-            
-            // Yay, chat for us!
-            
-            // Decrypt it
-            unenmsg = encFrom(msg.params[2], dn_name, msg.params[5]);
-            if (unenmsg[0] == '\0') {
-                return;
-            }
-            uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg.c_str());
-            
-            // Pass it on
-            if (dn_chats->find(msg.params[3].c_str()) == dn_chats->end()) {
-                // explode
-                return;
-            }
-            vector<string> *chan = (*dn_chats)[msg.params[3].c_str()];
-            int s = chan->size();
-            
-            Message nmsg(1, "cms", 1, 1);
-            
-            nmsg.params.push_back("");
-            nmsg.params.push_back(msg.params[1]);
-            nmsg.params.push_back(dn_name);
-            nmsg.params.push_back(msg.params[3]);
-            nmsg.params.push_back(msg.params[4]);
-            nmsg.params.push_back("");
-            
-            for (i = 0; i < s; i++) {
-                if (dn_routes->find((*chan)[i]) == dn_routes->end()) {
-                    continue;
-                }
-                nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toBinSeq();
+            nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toBinSeq();
                 
-                BinSeq encd = encTo(dn_name, (*chan)[i], unenmsg);
-                nmsg.params[5] = encd;
+            BinSeq encd = encTo(dn_name, (*chan)[i], unenmsg);
+            nmsg.params[5] = encd;
                 
-                handleRoutedMsg(nmsg);
-            }
+            handleRoutedMsg(nmsg);
         }
         
     } else if ((msg.cmd == "dcr" &&
@@ -467,65 +467,63 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         return;
         REQ_PARAMS(3);
         
-        if (handleRoutedMsg(msg)) {
-            // This doesn't work on OSX
+        // This doesn't work on OSX
 #if !defined(__APPLE__)
-            if (msg.cmd == "dcr" &&
-                msg.ver[0] == 1 && msg.ver[1] == 1) {
-                // dcr echos
-                Message nmsg(1, "dce", 1, 1);
-                stringstream ss;
+        if (msg.cmd == "dcr" &&
+            msg.ver[0] == 1 && msg.ver[1] == 1) {
+            // dcr echos
+            Message nmsg(1, "dce", 1, 1);
+            stringstream ss;
                 
-                Route *route;
-                string first;
-                conn_t *firc;
-                int firfd, locip_len, gsnr;
-                struct sockaddr locip;
-                struct sockaddr_in *locip_i;
+            Route *route;
+            string first;
+            conn_t *firc;
+            int firfd, locip_len, gsnr;
+            struct sockaddr locip;
+            struct sockaddr_in *locip_i;
                 
-                // First, echo, then try to connect
-                if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) return;
-                route = (*dn_routes)[msg.params[1].c_str()];
-                nmsg.params.push_back(route->toBinSeq());
-                nmsg.params.push_back(dn_name);
+            // First, echo, then try to connect
+            if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) return;
+            route = (*dn_routes)[msg.params[1].c_str()];
+            nmsg.params.push_back(route->toBinSeq());
+            nmsg.params.push_back(dn_name);
                 
-                // grab before the first \n for the next name in the line
-                first = (*route)[0];
+            // grab before the first \n for the next name in the line
+            first = (*route)[0];
                 
-                // then get the fd
-                if (dn_conn->find(first) == dn_conn->end()) goto try_connect;
+            // then get the fd
+            if (dn_conn->find(first) == dn_conn->end()) goto try_connect;
                 
-                firc = (conn_t *) (*dn_conn)[first];
+            firc = (conn_t *) (*dn_conn)[first];
                 
-                firfd = firc->fd;
+            firfd = firc->fd;
                 
-                // then turn the fd into a sockaddr
-                locip_len = sizeof(struct sockaddr);
+            // then turn the fd into a sockaddr
+            locip_len = sizeof(struct sockaddr);
 #ifndef __WIN32
-                gsnr = getsockname(firfd, &locip, (unsigned int *) &locip_len);
+            gsnr = getsockname(firfd, &locip, (unsigned int *) &locip_len);
 #else
-                gsnr = getsockname(firfd, &locip, (int *) &locip_len);
+            gsnr = getsockname(firfd, &locip, (int *) &locip_len);
 #endif
-                if (gsnr == 0) {
-                    locip_i = (struct sockaddr_in *) &locip;
-                    ss.str("");
-                    ss << inet_ntoa(locip_i->sin_addr);
-                } else {
-                    goto try_connect;
-                }
-                ss << string(":") << serv_port;
-                nmsg.params.push_back(ss.str());
-                
-                handleRoutedMsg(nmsg);
-                
-                try_connect:
-                1;
+            if (gsnr == 0) {
+                locip_i = (struct sockaddr_in *) &locip;
+                ss.str("");
+                ss << inet_ntoa(locip_i->sin_addr);
+            } else {
+                goto try_connect;
             }
-            
-            // Then, attempt the connection
-            async_establishClient(msg.params[2].c_str());
-#endif
+            ss << string(":") << serv_port;
+            nmsg.params.push_back(ss.str());
+                
+            handleRoutedMsg(nmsg);
+                
+            try_connect:
+            1;
         }
+            
+        // Then, attempt the connection
+        async_establishClient(msg.params[2].c_str());
+#endif
 
     } else if (msg.cmd == "fnd" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
@@ -660,52 +658,50 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         REQ_PARAMS(3);
 	//REJOIN_PARAMS(3);
         
-        if (handleRoutedMsg(msg)) {
-            // This is our message
-            BinSeq unencmsg, *dispmsg;
-            char *sig, *sigm;
-            int austat, iskey;
+        // This is our message
+        BinSeq unencmsg, *dispmsg;
+        char *sig, *sigm;
+        int austat, iskey;
             
-            // Decrypt it
-            unencmsg = encFrom(msg.params[1], dn_name, msg.params[2]);
+        // Decrypt it
+        unencmsg = encFrom(msg.params[1], dn_name, msg.params[2]);
             
-            // And verify the signature
-            dispmsg = authVerify(unencmsg, &sig, &austat);
+        // And verify the signature
+        dispmsg = authVerify(unencmsg, &sig, &austat);
             
-            // Make our signature tag
-            iskey = 0;
-            if (austat == -1) {
-                sigm = strdup("n");
-            } else if (austat == 0) {
-                sigm = strdup("u");
-            } else if (austat == 1 && sig) {
-                sigm = (char *) malloc((strlen(sig) + 3) * sizeof(char));
-                sprintf(sigm, "s %s", sig);
-            } else if (austat == 1 && !sig) {
-                sigm = strdup("s");
-            } else if (austat == 2) {
-                /* this IS a signature, totally different response */
-                uiAskAuthImport(msg.params[1], unencmsg, sig);
-                iskey = 1;
-                sigm = NULL;
-            } else {
-                sigm = strdup("?");
-            }
-            if (sig) free(sig);
-            
-            if (!iskey) {
-                uiDispMsg(msg.params[1].c_str(), dispmsg->c_str(), sigm, msg.cmd == "msa");
-                free(sigm);
-            }
-            delete dispmsg;
-            
-            // Are we away?
-            if (awayMsg && msg.cmd != "msa") {
-                sendMsgB(msg.params[1].c_str(), *awayMsg, true, true);
-            }
-            
-            return;
+        // Make our signature tag
+        iskey = 0;
+        if (austat == -1) {
+            sigm = strdup("n");
+        } else if (austat == 0) {
+            sigm = strdup("u");
+        } else if (austat == 1 && sig) {
+            sigm = (char *) malloc((strlen(sig) + 3) * sizeof(char));
+            sprintf(sigm, "s %s", sig);
+        } else if (austat == 1 && !sig) {
+            sigm = strdup("s");
+        } else if (austat == 2) {
+            /* this IS a signature, totally different response */
+            uiAskAuthImport(msg.params[1], unencmsg, sig);
+            iskey = 1;
+            sigm = NULL;
+        } else {
+            sigm = strdup("?");
         }
+        if (sig) free(sig);
+            
+        if (!iskey) {
+            uiDispMsg(msg.params[1].c_str(), dispmsg->c_str(), sigm, msg.cmd == "msa");
+            free(sigm);
+        }
+        delete dispmsg;
+            
+        // Are we away?
+        if (awayMsg && msg.cmd != "msa") {
+            sendMsgB(msg.params[1].c_str(), *awayMsg, true, true);
+        }
+            
+        return;
     }
 }
 
@@ -844,7 +840,7 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     encImportKey(name, key);
     
     // then send your route back to him
-    Message omsg(1, "fnr", 1, 1);
+    Message omsg(2, "fnr", 1, 1);
     omsg.params.push_back(reverseRoute->toBinSeq());
     omsg.params.push_back(dn_name);
     omsg.params.push_back(route->toBinSeq());
