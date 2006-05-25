@@ -716,7 +716,7 @@ bool handleRoutedMsg(const Message &msg)
     Route *route;
     string next, buf, last;
     
-    if (msg.params[0].size() == 0) {
+    if (msg.params[0].size() <= 1) {
         return true; // This is our data
     }
     
