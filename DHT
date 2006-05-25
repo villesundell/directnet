@@ -1,0 +1,101 @@
+[HTI = hash table identifier]
+
+Hst(1)(1) (hash set)
+        purpose: set a value in the distributed hash
+        type: hash
+        parameters:
+                HTI
+                key
+                value
+                ttl [not currently used]
+
+Had(1)(1) (hash add)
+        purpose: add a value to a list of values currently assigned in the distributed hash
+        type: hash
+        parameters:
+                HTI
+                key
+                value
+                ttl [not currently used]
+
+Hg1(1)(1) (hash get 1st)
+        purpose: get the first value for a key
+        type: returnable hash
+        parameters:
+                HTI
+                key
+                route
+
+Hr1(1)(1) (hash return 1st)
+        purpose: response to Hg1
+        type: hash return
+        parameters:
+                route
+                HTI
+                key
+                value
+
+Hgr(1)(1) (hash get random)
+        purpose: get any value for a key
+        type: returnable hash
+        parameters:
+                HTI
+                key
+                route
+
+Hrr(1)(1) (hash return random)
+        purpose: response to Hgr
+        type: hash return
+        parameters:
+                route
+                HTI
+                key
+                value
+
+Hga(1)(1) (hash get all)
+        purpose: get all values for a key
+        type: returnable hash
+        parameters:
+                HTI
+                key
+                route
+
+Hra(1)(1) (hash get all)
+        purpose: response to Hga
+        type: hash return
+        parameters:
+                route
+                HTI
+                key
+                values (in the same form as parameters in messages)
+
+Hfn(1)(1) (hash find)
+        purpose: find a route to the user with the given encryption key
+        type: returnable hash
+        parameters:
+                HTI
+                key
+                route
+                encryption key
+                type
+                        first byte: 0 for regular search, 1 for positive
+                        division, 2 for negative division, 3 for search for
+                        successors, 4 for search for predecessors
+                        second byte (for divisions): the level of division (0-
+                        255)
+
+Hfr(1)(1) (hash find response)
+        purpose: reply to Hfn
+        type: hash return
+        parameters:
+                route
+                HTI
+                encryption key
+                type
+                        first byte: 0 for regular search response, 1 for
+                        positive division response, 2 for negative division
+                        response, 3 for first successor, 4 for second
+                        successor, 5 for first predecessor, 6 for second
+                        predecessor
+                        second byte (for divisions): the level of division (0-
+                        255)

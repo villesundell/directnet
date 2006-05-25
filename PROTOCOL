@@ -22,6 +22,9 @@ Information | Size | Description
             |      |   1 for routed messages
             |      |   2 for special messages (generally routed but needs
             |      |     special functionality)
+            |      |   3 for hash messages
+            |      |   4 for returnable hash messages
+            |      |   5 for hash return messages
     command |    3 | A three-character string name of the command.
     version |    2 | The version of the command.
  parameters |  Var | Two bigendian bytes for each parameter, with the value of
@@ -37,7 +40,17 @@ Direct commands are sent directly over a connection and are not continued.
 Routed commands have a set route as the first parameter, and all of the nodes
 along that route strip off their name then continue the transfer until the data
 is sent to the last node on the list (at which point it will have an empty
-route). The last node will receive and interpret the command.
+route), and the sending user as the second parameter. The last node will
+receive and interpret the command.
+
+Hash commands are sent along the hash table identified by the first parameter
+to the node with the nearest encryption to the encryption key in the second
+parameter.
+
+Returnable hash commands also have the taken thusfar in the third parameter.
+
+Hash return messages have a route, like route messages, but do not have the
+sending user as a parameter, but instead have the hash table identifier.
 
 Special commands propogate but the propogation is not simply routed, therefore
 more program logic is requird to parse them.
@@ -47,6 +60,8 @@ parameter. This route takes the form of any number of one-byte element-lengths,
 followed by a byte with the value \xFF, follwed by each of the route elements,
 which must be of the lenghts described. Route elements are SHA-256 hashes of
 encryption keys.
+
+Hash commands 
 
 The protocol commands are documented in alphabetical order in this format:
 command(first version char)(second version char) (brief summary)
