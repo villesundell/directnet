@@ -163,9 +163,10 @@ void send_handshake(conn_t *cs) {
     
     cs->fd_ev.activate();
     
-    Message msg(0, "key", 1, 1);
+    Message msg(0, "dni", 1, 1);
     msg.params.push_back(dn_name);
     msg.params.push_back(encExportKey());
+    msg.params.push_back(BinSeq("\x00\x02\x00\x00", 4));
     sendCmd(cs, msg);
     
     schedule_ping(cs);
@@ -310,7 +311,7 @@ void sendCmd(struct connection *conn, Message &msg)
 {
     int len, p;
     
-    msg.debug("OUTGOING");
+    //msg.debug("OUTGOING");
     
     BinSeq buf = msg.toBinSeq();
     size_t newsz = conn->outbuf_sz;
@@ -363,7 +364,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     // Get the command itself
     Message msg(rdbuf);
     
-    msg.debug("INCOMING");
+    //msg.debug("INCOMING");
     
     /* if this is a routed message, check if we don't need to handle it */
     if (msg.type == 1 &&
@@ -381,23 +382,23 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         // "I'm on this chat"
         // Are we even on this chat?
-        if (!chatOnChannel(msg.params[1].c_str())) {
+        if (!chatOnChannel(msg.params[2].c_str())) {
             return;
         }
             
         // OK, this person is on our list for this chat
-        chatAddUser(msg.params[1].c_str(), msg.params[2].c_str());
+        chatAddUser(msg.params[2].c_str(), msg.params[1].c_str());
             
         // Should we echo?
         if (msg.cmd == "cjo") {
             Message nmsg(1, "con", 1, 1);
-                
-            if (dn_routes->find(msg.params[2].c_str()) == dn_routes->end()) {
+            
+            if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) {
                 return;
             }
-            nmsg.params.push_back((*dn_routes)[msg.params[2].c_str()]->toBinSeq());
-            nmsg.params.push_back(msg.params[1]);
+            nmsg.params.push_back((*dn_routes)[msg.params[1].c_str()]->toBinSeq());
             nmsg.params.push_back(dn_name);
+            nmsg.params.push_back(msg.params[2]);
                 
             handleRoutedMsg(nmsg);
         }
@@ -410,8 +411,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         BinSeq unenmsg;
             
         // Should we just ignore it?
-        if (dn_trans_keys->find(msg.params[1].c_str()) == dn_trans_keys->end()) {
-            (*dn_trans_keys)[msg.params[1].c_str()] = 1;
+        if (dn_trans_keys->find(msg.params[2].c_str()) == dn_trans_keys->end()) {
+            (*dn_trans_keys)[msg.params[2].c_str()] = 1;
         } else {
             return;
         }
@@ -424,7 +425,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // Yay, chat for us!
             
         // Decrypt it
-        unenmsg = encFrom(msg.params[2], dn_name, msg.params[5]);
+        unenmsg = encFrom(msg.params[1], dn_name, msg.params[5]);
         if (unenmsg[0] == '\0') {
             return;
         }
@@ -441,8 +442,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         Message nmsg(1, "cms", 1, 1);
             
         nmsg.params.push_back("");
-        nmsg.params.push_back(msg.params[1]);
         nmsg.params.push_back(dn_name);
+        nmsg.params.push_back(msg.params[2]);
         nmsg.params.push_back(msg.params[3]);
         nmsg.params.push_back(msg.params[4]);
         nmsg.params.push_back("");
@@ -524,6 +525,44 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // Then, attempt the connection
         async_establishClient(msg.params[2].c_str());
 #endif
+
+    } else if (msg.cmd == "dni" &&
+               msg.ver[0] == 1 && msg.ver[1] == 1) {
+        REQ_PARAMS(3);
+        
+        // if the version isn't right, immediately fail
+        if (msg.params[2].size() < 4) return;
+        int remver[2];
+        remver[0] = charrayToInt(msg.params[2].c_str());
+        if (remver[0] != 2) return;
+        remver[1] = charrayToInt(msg.params[2].c_str() + 2);
+        // FIXME: when this protocol stabilizes, this will need to set up translation
+        
+        Route *route;
+        
+        // if I already have a route to this person, drop it
+        if (dn_routes->find(msg.params[0]) != dn_routes->end()) {
+            delete (*dn_routes)[msg.params[0]];
+            dn_routes->erase(msg.params[0]);
+        }
+        
+        // now accept the new FD
+        conn->name = strdup(msg.params[0].c_str());
+        if (!conn->name) abort();
+        (*dn_conn)[msg.params[0]] = conn;
+        
+        route = new Route();
+        route->push_back(msg.params[0]);
+        if (dn_routes->find(msg.params[0]) != dn_routes->end())
+            delete (*dn_routes)[msg.params[0]];
+        (*dn_routes)[msg.params[0]] = route;
+        if (dn_iRoutes->find(msg.params[0]) != dn_iRoutes->end())
+            delete (*dn_iRoutes)[msg.params[0]];
+        (*dn_iRoutes)[msg.params[0]] = new Route(*route);
+        
+        encImportKey(msg.params[0], msg.params[1]);
+        
+        uiEstRoute(msg.params[0].c_str());
 
     } else if (msg.cmd == "fnd" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
@@ -615,36 +654,6 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             uiEstRoute(msg.params[1]);
         }
     
-    } else if (msg.cmd == "key" &&
-               msg.ver[0] == 1 && msg.ver[1] == 1) {
-        REQ_PARAMS(2);
-        
-        Route *route;
-        
-        // if I already have a route to this person, drop it
-        if (dn_routes->find(msg.params[0]) != dn_routes->end()) {
-            delete (*dn_routes)[msg.params[0]];
-            dn_routes->erase(msg.params[0]);
-        }
-        
-        // now accept the new FD
-        conn->name = strdup(msg.params[0].c_str());
-        if (!conn->name) abort();
-        (*dn_conn)[msg.params[0]] = conn;
-        
-        route = new Route();
-        route->push_back(msg.params[0]);
-        if (dn_routes->find(msg.params[0]) != dn_routes->end())
-            delete (*dn_routes)[msg.params[0]];
-        (*dn_routes)[msg.params[0]] = route;
-        if (dn_iRoutes->find(msg.params[0]) != dn_iRoutes->end())
-            delete (*dn_iRoutes)[msg.params[0]];
-        (*dn_iRoutes)[msg.params[0]] = new Route(*route);
-        
-        encImportKey(msg.params[0], msg.params[1]);
-        
-        uiEstRoute(msg.params[0].c_str());
-
     } else if (msg.cmd == "lst" &&
                msg.ver[0] == 1 && msg.ver[1] == 1) {
         REQ_PARAMS(2);
@@ -1012,8 +1021,8 @@ void joinChat(const string &chat)
     // Send a cjo to everybody we have a route to
     Message msg(1, "cjo", 1, 1);
     msg.params.push_back("");
-    msg.params.push_back(chat);
     msg.params.push_back(dn_name);
+    msg.params.push_back(chat);
     
     map<string, Route *>::iterator ri;
     
@@ -1031,8 +1040,8 @@ void leaveChat(const string &chat)
     // Send a clv to everybody we have a route to
     Message msg(1, "clv", 1, 1);
     msg.params.push_back("");
-    msg.params.push_back(chat);
     msg.params.push_back(dn_name);
+    msg.params.push_back(chat);
     
     map<string, Route *>::iterator ri;
     
@@ -1050,11 +1059,11 @@ void sendChat(const string &to, const string &msg)
     
     Message omsg(1, "cms", 1, 1);
     omsg.params.push_back("");
+    omsg.params.push_back(dn_name);
     
     newTransKey(key);
     omsg.params.push_back(key);
     
-    omsg.params.push_back(dn_name);
     omsg.params.push_back(to);
     omsg.params.push_back(dn_name);
     omsg.params.push_back("");

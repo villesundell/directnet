@@ -52,7 +52,7 @@ command(first version char)(second version char) (brief summary)
 
 PROTOCOL COMMANDS:
 
-cjo(1)(1) (chat join) *
+cjo(1)(1) (chat join)
         purpose: Join a chat
         type: routed
         parameters:
@@ -60,15 +60,16 @@ cjo(1)(1) (chat join) *
                 local name
                 channel
 
-clv(1)(1) (chat leave) *
+clv(1)(1) (chat leave)
         purpose: Leave a chat
         type: routed
+        note: not properly implemented
         parameters:
                 route
                 local name
                 channel
 
-cms(1)(1) (chat message) * 
+cms(1)(1) (chat message)
         purpose: Send a message on a chat channel
         type: routed
         parameters:
@@ -79,7 +80,7 @@ cms(1)(1) (chat message) *
                 local name: the person who made the message
                 encrypted message
 
-con(1)(1) (chat on) *
+con(1)(1) (chat on)
         purpose: Echo to cjo
         type: routed
         parameters:
@@ -105,12 +106,15 @@ dce(1)(1) (direct connect request echo)
                 local name
                 local IP/hostname
 
-dni(1)(1) (DirectNet identity) * 
+dni(1)(1) (DirectNet identity)
         purpose: Identify yourself to a new connection
         type: direct
         parameters:
                 local name
                 public key
+                protocol version
+                        2 byte big-endian major (currently 2, must match exactly)
+                        2 byte big-endian minor (currently 0, if lower should translate)
 
 
 fnd(1)(1) (find)
