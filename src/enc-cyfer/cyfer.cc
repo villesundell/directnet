@@ -33,6 +33,7 @@ using namespace std;
 #define bool BOOL
 
 extern "C" {
+#include "cyfer/hash.h"
 #include "cyfer/pk.h"
 }
 
@@ -211,6 +212,14 @@ BinSeq encCreateKey()
 
 BinSeq encExportKey() {
     return BinSeq(mypukey, mypukeylen);
+}
+
+BinSeq encHashKey(const BinSeq &key)
+{
+    BinSeq tr("                                ");
+    CYFER_Hash(CYFER_HASH_SNEFRU, (unsigned char *) key.c_str(), key.size(),
+               (unsigned char *) tr.c_str());
+    return tr;
 }
 
 BinSeq encImportKey(const BinSeq &name, const BinSeq &key)

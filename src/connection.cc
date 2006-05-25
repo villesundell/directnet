@@ -546,14 +546,14 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // FIXME: when this protocol stabilizes, this will need to set up translation
         
         Route *route;
+        BinSeq keyhash = encHashKey(msg.params[1]);
         
         // now accept the new FD
         conn->enckey = new BinSeq(msg.params[1]);
-        //if (!conn->name) abort();
         (*dn_conn)[msg.params[1]] = conn;
         
         route = new Route();
-        route->push_back(msg.params[1]);
+        route->push_back(keyhash);
         if (dn_routes->find(msg.params[1]) != dn_routes->end())
             delete (*dn_routes)[msg.params[1]];
         (*dn_routes)[msg.params[1]] = route;
@@ -563,6 +563,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         (*dn_names)[msg.params[1]] = msg.params[0];
         (*dn_keys)[msg.params[0]] = msg.params[1];
+        (*dn_kbh)[keyhash] = msg.params[1];
         
         encImportKey(msg.params[0], msg.params[1]);
         
@@ -588,7 +589,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
         
         // Add myself to the route
-        *nroute += encExportKey();
+        *nroute += encHashKey(encExportKey());
         
         Message omsg(0, "fnd", 1, 1);
         omsg.params.push_back(nroute->toBinSeq());
@@ -644,16 +645,17 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             
             // 1) Route/name
             Route *route = new Route(msg.params[2]);
-            route->push_back(msg.params[3]);
-            if (dn_routes->find(msg.params[1]) != dn_routes->end())
-                delete (*dn_routes)[msg.params[1]];
-            (*dn_routes)[msg.params[1]] = route;
-            if (dn_iRoutes->find(msg.params[1]) != dn_iRoutes->end())
-                delete (*dn_iRoutes)[msg.params[1]];
-            (*dn_iRoutes)[msg.params[1]] = new Route(*route);
+            route->push_back(encHashKey(msg.params[3]));
+            if (dn_routes->find(msg.params[3]) != dn_routes->end())
+                delete (*dn_routes)[msg.params[3]];
+            (*dn_routes)[msg.params[3]] = route;
+            if (dn_iRoutes->find(msg.params[3]) != dn_iRoutes->end())
+                delete (*dn_iRoutes)[msg.params[3]];
+            (*dn_iRoutes)[msg.params[3]] = new Route(*route);
             
             (*dn_names)[msg.params[3]] = msg.params[1];
             (*dn_keys)[msg.params[1]] = msg.params[3];
+            (*dn_kbh)[encHashKey(msg.params[3])] = msg.params[3];
             
             // 2) Key
             encImportKey(msg.params[1], msg.params[3]);
@@ -726,7 +728,7 @@ bool handleRoutedMsg(const Message &msg)
     int i, s;
     conn_t *sendc;
     Route *route;
-    string next, buf, last;
+    BinSeq next, buf, last;
     
     if (msg.params[0].size() <= 2) {
         return true; // This is our data
@@ -740,6 +742,12 @@ bool handleRoutedMsg(const Message &msg)
     
     next = (*route)[0];
     route->pop_front();
+    
+    if (dn_kbh->find(next) == dn_kbh->end()) {
+        // failure
+        return true;
+    }
+    next = (*dn_kbh)[next];
     
     if (dn_conn->find(next) == dn_conn->end()) {
         // We need to tell the other side that this route is dead!
@@ -841,12 +849,13 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     if (dn_routes->find(key) != dn_routes->end()) {
         return;
     }
+    BinSeq keyhash = encHashKey(key);
     
     // If we haven't already gotten the fastest route, this must be it
     // Build backwards route
     Route *reverseRoute = new Route(*route);
     reverseRoute->reverse();
-    reverseRoute->push_back(key);
+    reverseRoute->push_back(keyhash);
     
     // Add his route,
     (*dn_routes)[key] = reverseRoute;
@@ -856,6 +865,7 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     
     (*dn_names)[key] = name;
     (*dn_keys)[name] = key;
+    (*dn_kbh)[keyhash] = key;
     
     // and public key,
     encImportKey(name, key);

@@ -38,6 +38,9 @@ extern char dn_name[DN_NAME_LEN+1];
 // connections by encryption key
 extern map<BinSeq, void *> *dn_conn;
 
+// encryption keys by hashes
+extern map<BinSeq, BinSeq> *dn_kbh;
+
 // names by encryption keys and vice-versa
 extern map<BinSeq, BinSeq> *dn_names;
 extern map<BinSeq, BinSeq> *dn_keys;

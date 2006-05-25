@@ -51,6 +51,10 @@ BinSeq encCreateKey();
  * returns: the encryption key or NULL on failure */
 BinSeq encExportKey();
 
+/* Hash the encryption key
+ * returns: a hash of the key */
+BinSeq encHashKey(const BinSeq &key);
+
 /* Import an encryption key
  * name: the name of the owner of the key
  * key: the key

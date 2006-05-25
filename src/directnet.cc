@@ -52,6 +52,7 @@ int serv_port = 3447;
 char dn_name[DN_NAME_LEN+1];
 
 map<BinSeq, void *> *dn_conn;
+map<BinSeq, BinSeq> *dn_kbh;
 map<BinSeq, BinSeq> *dn_names;
 map<BinSeq, BinSeq> *dn_keys;
 
@@ -110,6 +111,9 @@ void dn_init(int argc, char **argv) {
     
     // This stores connections by encryption keys
     dn_conn = new map<BinSeq, void *>;
+    
+    // This stores keys by their hashes
+    dn_kbh = new map<BinSeq, BinSeq>;
     
     // This stores names by encryption keys and vice-versa
     dn_names = new map<BinSeq, BinSeq>;
