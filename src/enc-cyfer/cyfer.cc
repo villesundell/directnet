@@ -194,6 +194,7 @@ BinSeq encCreateKey()
     ctx = init_ctx("RSA");
     
     /* Generate and export keys into temporary buffers */
+    srand(time(NULL));
     CYFER_Pk_Generate_Key(ctx, 1024);
     CYFER_Pk_KeySize(ctx, (unsigned int *) &myprkeylen, (unsigned int *) &mypukeylen);
     
