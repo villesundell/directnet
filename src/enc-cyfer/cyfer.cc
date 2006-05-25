@@ -277,3 +277,88 @@ BinSeq encImportKey(const BinSeq &name, const BinSeq &key)
     }
     return BinSeq();
 }
+
+BinSeq encKeySub(const BinSeq &a, const BinSeq &b, int *remainder)
+{
+    BinSeq r;
+    if (a.size() != b.size()) return r;
+    int carry = 0;
+    int ca, cb;
+    
+    for (int i = 0; i < a.size(); i++) {
+        ca = (unsigned char) a[i];
+        cb = (unsigned char) b[i];
+        cb += carry;
+        carry = 0;
+        
+        while (cb > ca) {
+            carry++;
+            cb -= 256;
+        }
+        ca -= cb;
+        r.push_back((unsigned char) ca);
+    }
+    
+    if (remainder) *remainder = carry;
+}
+
+BinSeq encKeyAdd(const BinSeq &a, const BinSeq &b, int *remainder)
+{
+    BinSeq r;
+    if (a.size() != b.size()) return r;
+    int carry = 0;
+    int ca, cb;
+    
+    for (int i = 0; i < a.size(); i++) {
+        ca = (unsigned char) a[i];
+        cb = (unsigned char) b[i];
+        ca += cb + carry;
+        carry = 0;
+        
+        while (ca > 255) {
+            carry++;
+            ca -= 256;
+        }
+        r.push_back((unsigned char) ca);
+    }
+    
+    if (remainder) *remainder = carry;
+}
+
+int encCmpKeys(const BinSeq &a, const BinSeq &b)
+{
+    BinSeq ra, rb, rs;
+    ra = encKeySub(BinSeq(mypukey, mypukeylen), a);
+    rb = encKeySub(BinSeq(mypukey, mypukeylen), b);
+    
+    // subtract with remainder to compare
+    int r;
+    rs = encKeySub(ra, rb, &r);
+    if (r) {
+        return 1; // if anything remaining, rb was greater than ra
+    } else {
+        // if it's empty, they're equal
+        for (int i = 0; i < rs.size(); i++) {
+            if (rs[i] != '\0') return -1;
+        }
+        return 0;
+    }
+}
+
+/* Generate a key offset from yours by 1/(2^by)
+ * returns: the generated key */
+BinSeq encOffsetKey(int by)
+{
+    BinSeq a;
+    int hi, lo;
+    
+    // a is the key to add, generate it
+    for (int i = 0; i < mypukeylen; i++) a.push_back((char) 0);
+    
+    hi = by >> 3;
+    lo = by & 0x7;
+    a[hi] = ((unsigned char) 0x1) << lo;
+    
+    // add them
+    return encKeyAdd(BinSeq(mypukey, mypukeylen), a);
+}

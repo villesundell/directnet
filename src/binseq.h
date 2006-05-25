@@ -80,7 +80,7 @@ class BinSeq : public vector<char> {
     inline BinSeq &operator+=(const string &add) { push_back(add.c_str()); return *this; }
     inline BinSeq &operator+=(char *add) { push_back(add); return *this; }
     inline BinSeq &operator+=(char add) { push_back(add); return *this; }
-    inline char operator[](int i) const { return (*((vector <char> *) this))[i]; }
+    inline char &operator[](int i) const { return (*((vector <char> *) this))[i]; }
     inline operator string() const {
         string a(c_str(), size());
         return a;

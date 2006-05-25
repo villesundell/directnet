@@ -61,4 +61,19 @@ BinSeq encHashKey(const BinSeq &key);
  * returns: some message describing the import, usually "" */
 BinSeq encImportKey(const BinSeq &name, const BinSeq &key);
 
+/* Subtract key b from a */
+BinSeq encKeySub(const BinSeq &a, const BinSeq &b, int *remainder = NULL);
+
+/* Add key b to a */
+BinSeq encKeyAdd(const BinSeq &a, const BinSeq &b, int *remainder = NULL);
+
+/* Compare two keys relative to your own
+ * (that is, subtract your own from both, then compare)
+ * returns: -1 if a is less than b, 0 if equal, 1 if a is greater than b */
+int encCmpKeys(const BinSeq &a, const BinSeq &b);
+
+/* Generate a key offset from yours by 1/(2^by)
+ * returns: the generated key */
+BinSeq encOffsetKey(int by);
+
 #endif // DN_GPG_H
