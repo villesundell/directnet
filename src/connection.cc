@@ -730,7 +730,7 @@ bool handleRoutedMsg(const Message &msg)
     Route *route;
     BinSeq next, buf, last;
     
-    if (msg.params[0].size() <= 2) {
+    if (msg.params[0].size() <= 1) {
         return true; // This is our data
     }
     

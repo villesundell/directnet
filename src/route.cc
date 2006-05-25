@@ -22,7 +22,6 @@
 #include <vector>
 using namespace std;
 
-#include "message.h"
 #include "route.h"
 
 Route::Route() : vector<BinSeq>() {}
@@ -34,12 +33,12 @@ Route::Route(const BinSeq &textform) : vector<BinSeq>()
     vector<int> elemlens;
     int i, cur;
     
-    for (i = 0; i < textform.size() - 1; i += 2) {
-        cur = charrayToInt(textform.c_str() + i);
-        if (cur == 65535) break;
+    for (i = 0; i < textform.size(); i++) {
+        cur = (unsigned char) textform[i];
+        if (cur == 255) break;
         elemlens.push_back(cur);
     }
-    i += 2;
+    i++;
     
     for (int j = 0; j < elemlens.size() && i < textform.size(); j++) {
         if (textform.size() - i >= elemlens[j]) {
@@ -53,13 +52,11 @@ BinSeq Route::toBinSeq()
 {
     BinSeq toret;
     int s = size(), i;
-    char cv[2];
     
     for (i = 0; i < s; i++) {
-        intToCharray(at(i).size(), cv);
-        toret.push_back(cv, 2);
+        toret.push_back((unsigned char) at(i).size());
     }
-    toret.push_back("\xFF\xFF", 2);
+    toret.push_back(255);
     
     for (i = 0; i < s; i++) {
         toret.push_back(at(i));
