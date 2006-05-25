@@ -720,7 +720,7 @@ bool handleRoutedMsg(const Message &msg)
         return true; // This is our data
     }
     
-    route = new Route(msg.params[0].c_str());
+    route = new Route(msg.params[0]);
     
     next = (*route)[0];
     route->pop_front();
