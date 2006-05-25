@@ -21,20 +21,21 @@
 #ifndef ROUTE_H
 #define ROUTE_H
 
-#include <string>
 #include <vector>
 using namespace std;
 
-class Route : public vector<string> {
+#include "binseq.h"
+
+class Route : public vector<BinSeq> {
     public:
     Route();
     Route(const Route &copy);
-    Route(const string &textform);
+    Route(const BinSeq &textform);
     
-    string toString();
+    BinSeq toBinSeq();
     void reverse();
     
-    void push_front(string &a);
+    void push_front(const BinSeq &a);
     void pop_front();
     
     Route &operator+=(const string &node) { push_back(node); return *this; }

@@ -392,7 +392,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 if (dn_routes->find(msg.params[2].c_str()) == dn_routes->end()) {
                     return;
                 }
-                nmsg.params.push_back((*dn_routes)[msg.params[2].c_str()]->toString());
+                nmsg.params.push_back((*dn_routes)[msg.params[2].c_str()]->toBinSeq());
                 nmsg.params.push_back(msg.params[1]);
                 nmsg.params.push_back(dn_name);
                 
@@ -450,7 +450,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 if (dn_routes->find((*chan)[i]) == dn_routes->end()) {
                     continue;
                 }
-                nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
+                nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toBinSeq();
                 
                 BinSeq encd = encTo(dn_name, (*chan)[i], unenmsg);
                 nmsg.params[5] = encd;
@@ -486,7 +486,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 // First, echo, then try to connect
                 if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) return;
                 route = (*dn_routes)[msg.params[1].c_str()];
-                nmsg.params.push_back(route->toString());
+                nmsg.params.push_back(route->toBinSeq());
                 nmsg.params.push_back(dn_name);
                 
                 // grab before the first \n for the next name in the line
@@ -537,7 +537,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             return;
         }
         
-        Route *nroute = new Route(msg.params[0].c_str());
+        Route *nroute = new Route(msg.params[0]);
         
         // Am I this person?
         if (msg.params[2] == dn_name) {
@@ -550,7 +550,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         *nroute += dn_name;
         
         Message omsg(0, "fnd", 1, 1);
-        omsg.params.push_back(nroute->toString());
+        omsg.params.push_back(nroute->toBinSeq());
         omsg.params.push_back(msg.params[1]);
         omsg.params.push_back(msg.params[2]);
         omsg.params.push_back(msg.params[3]);
@@ -581,7 +581,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             string endu;
             
             // Who's the end user?
-            ra = new Route(msg.params[0].c_str());
+            ra = new Route(msg.params[0]);
             if (ra->size() > 0) {
                 endu = (*ra)[ra->size()-1];
                 
@@ -590,7 +590,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             }
             
             // Then figure out the route from here back
-            rb = new Route(msg.params[2].c_str());
+            rb = new Route(msg.params[2]);
             
             // Loop through to find my name
             while (rb->size() > 0 && (*rb)[0] != dn_name) rb->pop_front();
@@ -602,8 +602,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             // Hoorah, add a user
             
             // 1) Route
-            Route *route = new Route(msg.params[2].c_str());
-            route->push_back(msg.params[1].c_str());
+            Route *route = new Route(msg.params[2]);
+            route->push_back(msg.params[1]);
             if (dn_routes->find(msg.params[1].c_str()) != dn_routes->end())
                 delete (*dn_routes)[msg.params[1].c_str()];
             (*dn_routes)[msg.params[1].c_str()] = route;
@@ -614,7 +614,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             // 2) Key
             encImportKey(msg.params[1], msg.params[3]);
             
-            uiEstRoute(msg.params[1].c_str());
+            uiEstRoute(msg.params[1]);
         }
     
     } else if (msg.cmd == "key" &&
@@ -634,7 +634,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         if (!conn->name) abort();
         (*dn_conn)[msg.params[0]] = conn;
         
-        route = new Route(string(msg.params[0]) + "\n");
+        route = new Route();
+        route->push_back(msg.params[0]);
         if (dn_routes->find(msg.params[0]) != dn_routes->end())
             delete (*dn_routes)[msg.params[0]];
         (*dn_routes)[msg.params[0]] = route;
@@ -730,7 +731,8 @@ bool handleRoutedMsg(const Message &msg)
         if (msg.cmd != "lst") {
             string endu;
             
-            route->push_front(next);
+            BinSeq tp(next);
+            route->push_front(tp);
             endu = (*route)[route->size()-1];
             
             // If this is me, don't send the command, just display it
@@ -745,7 +747,7 @@ bool handleRoutedMsg(const Message &msg)
                 iroute = (*dn_iRoutes)[msg.params[1].c_str()];
                 
                 // Send the command
-                lstm.params.push_back(iroute->toString());
+                lstm.params.push_back(iroute->toBinSeq());
                 lstm.params.push_back(endu);
                 handleRoutedMsg(lstm);
             }
@@ -758,7 +760,7 @@ bool handleRoutedMsg(const Message &msg)
     sendc = (conn_t *) (*dn_conn)[next];
     
     Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
-    omsg.params.push_back(route->toString());
+    omsg.params.push_back(route->toBinSeq());
     s = msg.params.size();
     for (i = 1; i < s; i++) {
         omsg.params.push_back(msg.params[i]);
@@ -772,7 +774,7 @@ bool handleRoutedMsg(const Message &msg)
 
 bool handleNLUnroutedMsg(const Message &msg)
 {
-    Route *route = new Route(msg.params[0].c_str());
+    Route *route = new Route(msg.params[0]);
     int i, s;
     
     s = route->size();
@@ -843,9 +845,9 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     
     // then send your route back to him
     Message omsg(1, "fnr", 1, 1);
-    omsg.params.push_back(reverseRoute->toString());
+    omsg.params.push_back(reverseRoute->toBinSeq());
     omsg.params.push_back(dn_name);
-    omsg.params.push_back(route->toString());
+    omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(encExportKey());
     handleRoutedMsg(omsg);
     
@@ -869,7 +871,7 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
         // First, echo, then try to connect
         if (dn_routes->find(sname) == dn_routes->end()) return;
         route = (*dn_routes)[sname];
-        nmsg.params.push_back(route->toString());
+        nmsg.params.push_back(route->toBinSeq());
         nmsg.params.push_back(dn_name);
         
         // grab before the first \n for the next name in the line
@@ -917,7 +919,7 @@ void establishConnection(const string &to)
         
         // it's a user, send a dcr
         Message omsg(1, "dcr", 1, 1);
-        omsg.params.push_back(route->toString());
+        omsg.params.push_back(route->toBinSeq());
         omsg.params.push_back(dn_name);
         
         hostbuf[127] = '\0';
@@ -948,7 +950,7 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
     }
     route = (*dn_routes)[to];
     
-    omsg.params.push_back(route->toString());
+    omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(dn_name);
     
     // Sign ...
@@ -1020,7 +1022,7 @@ void joinChat(const string &chat)
     map<string, Route *>::iterator ri;
     
     for (ri = dn_routes->begin(); ri != dn_routes->end(); ri++) {
-        msg.params[0] = ri->second->toString();
+        msg.params[0] = ri->second->toBinSeq();
         handleRoutedMsg(msg);
     }
 }
@@ -1039,7 +1041,7 @@ void leaveChat(const string &chat)
     map<string, Route *>::iterator ri;
     
     for (ri = dn_routes->begin(); ri != dn_routes->end(); ri++) {
-        msg.params[0] = ri->second->toString();
+        msg.params[0] = ri->second->toBinSeq();
         handleRoutedMsg(msg);
     }
 }
@@ -1070,7 +1072,7 @@ void sendChat(const string &to, const string &msg)
     
     for (i = 0; i < s; i++) {
         if (dn_routes->find((*chan)[i]) == dn_routes->end()) continue;
-        omsg.params[0] = (*dn_routes)[(*chan)[i]]->toString();
+        omsg.params[0] = (*dn_routes)[(*chan)[i]]->toBinSeq();
         omsg.params[5] = encTo(dn_name, (*chan)[i], msg);
         handleRoutedMsg(omsg);
     }
