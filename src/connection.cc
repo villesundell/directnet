@@ -854,6 +854,9 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
         delete (*dn_iRoutes)[key];
     (*dn_iRoutes)[key] = new Route(*reverseRoute);
     
+    (*dn_names)[key] = name;
+    (*dn_keys)[name] = key;
+    
     // and public key,
     encImportKey(name, key);
     
@@ -865,7 +868,7 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     omsg.params.push_back(encExportKey());
     handleRoutedMsg(omsg);
     
-    uiEstRoute(name);
+    uiEstRoute(name.c_str());
     
     // Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
