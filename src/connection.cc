@@ -581,7 +581,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         Route *nroute = new Route(msg.params[0]);
         
         // Am I this person?
-        if (msg.params[2] == dn_name) {
+        if (!strcmp(msg.params[2].c_str(), dn_name)) {
             recvFnd(nroute, msg.params[1], msg.params[3]);
             delete nroute;
             return;
@@ -752,7 +752,7 @@ bool handleRoutedMsg(const Message &msg)
             endu = (*route)[route->size()-1];
             
             // If this is me, don't send the command, just display it
-            if (msg.params[1] == dn_name) {
+            if (!strcmp(msg.params[1].c_str(), dn_name)) {
                 uiLoseRoute(endu);
             } else {
                 Message lstm(1, "lst", 1, 1);
@@ -795,7 +795,7 @@ bool handleNLUnroutedMsg(const Message &msg)
     
     s = route->size();
     for (i = 0; i < s; i++) {
-        if ((*route)[i] == dn_name) {
+        if ((*route)[i] == encExportKey()) {
             delete route;
             return false;
         }
