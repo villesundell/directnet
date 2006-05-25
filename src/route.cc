@@ -22,6 +22,7 @@
 #include <vector>
 using namespace std;
 
+#include "message.h"
 #include "route.h"
 
 Route::Route() : vector<BinSeq>() {}
@@ -31,16 +32,20 @@ Route::Route(const Route &copy) : vector<BinSeq>(copy) {}
 Route::Route(const BinSeq &textform) : vector<BinSeq>()
 {
     vector<int> elemlens;
-    int i;
+    int i, cur;
     
-    for (i = 0; i < textform.size() && ((unsigned char) textform[i]) != 255; i++) {
-        elemlens.push_back((int) (unsigned char) textform[i]);
+    for (i = 0; i < textform.size() - 1; i += 2) {
+        cur = charrayToInt(textform.c_str() + i);
+        if (cur == 65535) break;
+        elemlens.push_back(cur);
     }
-    i++;
+    i += 2;
     
     for (int j = 0; j < elemlens.size() && i < textform.size(); j++) {
-        push_back(textform.substr(i, elemlens[j]));
-        i += elemlens[j];
+        if (textform.size() - i >= elemlens[j]) {
+            push_back(textform.substr(i, elemlens[j]));
+            i += elemlens[j];
+        }
     }
 }
     
@@ -48,11 +53,13 @@ BinSeq Route::toBinSeq()
 {
     BinSeq toret;
     int s = size(), i;
+    char cv[2];
     
     for (i = 0; i < s; i++) {
-        toret.push_back((unsigned char) at(i).size());
+        intToCharray(at(i).size(), cv);
+        toret.push_back(cv, 2);
     }
-    toret.push_back((unsigned char) 255);
+    toret.push_back("\xFF\xFF", 2);
     
     for (i = 0; i < s; i++) {
         toret.push_back(at(i));

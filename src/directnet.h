@@ -26,6 +26,7 @@
 #include <string>
 using namespace std;
 
+#include "binseq.h"
 #include "globals.h"
 #include "route.h"
 
@@ -34,14 +35,18 @@ extern int serv_port;
 // our name
 extern char dn_name[DN_NAME_LEN+1];
 
-// connections by name
-extern map<string, void *> *dn_conn;
+// connections by encryption key
+extern map<BinSeq, void *> *dn_conn;
+
+// names by encryption keys and vice-versa
+extern map<BinSeq, BinSeq> *dn_names;
+extern map<BinSeq, BinSeq> *dn_keys;
   
-// route by name
-extern map<string, Route *> *dn_routes;
+// route by encryption key
+extern map<BinSeq, Route *> *dn_routes;
 
 // intermediate routes by name
-extern map<string, Route *> *dn_iRoutes;
+extern map<BinSeq, Route *> *dn_iRoutes;
 
 // has a key been used yet?
 extern map<string, int> *dn_trans_keys;

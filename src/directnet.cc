@@ -51,10 +51,12 @@ int serv_port = 3447;
 
 char dn_name[DN_NAME_LEN+1];
 
-map<string, void *> *dn_conn;
+map<BinSeq, void *> *dn_conn;
+map<BinSeq, BinSeq> *dn_names;
+map<BinSeq, BinSeq> *dn_keys;
 
-map<string, Route *> *dn_routes;
-map<string, Route *> *dn_iRoutes;
+map<BinSeq, Route *> *dn_routes;
+map<BinSeq, Route *> *dn_iRoutes;
 
 map<string, int> *dn_trans_keys;
 int currentTransKey;
@@ -106,13 +108,17 @@ void dn_init(int argc, char **argv) {
         
     }
     
-    // This stores connections by name
-    dn_conn = new map<string, void *>;
+    // This stores connections by encryption keys
+    dn_conn = new map<BinSeq, void *>;
+    
+    // This stores names by encryption keys and vice-versa
+    dn_names = new map<BinSeq, BinSeq>;
+    dn_keys = new map<BinSeq, BinSeq>;
       
-    // This stores routes by name
-    dn_routes = new map<string, Route *>;
+    // This stores routes by encryption keys
+    dn_routes = new map<BinSeq, Route *>;
     // This stores intermediate routes, for response on broken routes
-    dn_iRoutes = new map<string, Route *>;
+    dn_iRoutes = new map<BinSeq, Route *>;
     
     // This hash stores the state of all nonrepeating unrouted messages
     dn_trans_keys = new map<string, int>;

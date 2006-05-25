@@ -19,6 +19,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
 #include <sstream>
 using namespace std;
 
@@ -69,25 +70,25 @@ enum cev_state {
 
 class connection {
     public:
-        ~connection();
+    ~connection();
         
-        conn_t *prev, *next;
-        int fd;
-        enum cev_state state;
+    conn_t *prev, *next;
+    int fd;
+    enum cev_state state;
         
-        unsigned char *inbuf, *outbuf;
-        size_t inbuf_sz, outbuf_sz;
-        size_t inbuf_p, outbuf_p;
+    unsigned char *inbuf, *outbuf;
+    size_t inbuf_sz, outbuf_sz;
+    size_t inbuf_p, outbuf_p;
         
-        char *name;
-        bool outgoing;
-        string *outgh;
-        int outgp;
+    BinSeq *enckey;
+    bool outgoing;
+    string *outgh;
+    int outgp;
         
-        dn_event_fd fd_ev;
-        dn_event_timer ping_ev;
+    dn_event_fd fd_ev;
+    dn_event_timer ping_ev;
 
-	std::set<conn_t *>::iterator active_it;
+    std::set<conn_t *>::iterator active_it;
 };
  
 static std::set<conn_t *> active_connections;
@@ -143,7 +144,7 @@ void init_comms(int fd, const string *outgh, int outgp) {
     cs->fd_ev.trigger = conn_notify;
     cs->fd_ev.payload = (void *)cs;
     cs->state = CDN_EV_IDLE;
-    cs->name = NULL;
+    cs->enckey = NULL;
     
     if (!outgh) {
         cs->outgoing = false;
@@ -286,14 +287,20 @@ connection::~connection() {
     if (fd_ev.isActive())
         fd_ev.deactivate();
     close(fd);
-    if (name) {
-        uiLoseConn(name);
-        if (dn_routes->find(name) != dn_routes->end()) {
-            delete (*dn_routes)[name];
-            dn_routes->erase(name);
+    if (enckey) {
+        if (dn_names->find(*enckey) != dn_names->end()) {
+            uiLoseConn((*dn_names)[*enckey]);
+            dn_keys->erase((*dn_names)[*enckey]);
+            dn_names->erase(*enckey);
         }
-        dn_conn->erase(name);
-        free(name);
+        
+        if (dn_routes->find(*enckey) != dn_routes->end()) {
+            delete (*dn_routes)[*enckey];
+            dn_routes->erase(*enckey);
+        }
+        
+        dn_conn->erase(*enckey);
+        delete enckey;
     }
     
     if (outgh) {
@@ -393,10 +400,10 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         if (msg.cmd == "cjo") {
             Message nmsg(1, "con", 1, 1);
             
-            if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) {
+            if (dn_routes->find(msg.params[1]) == dn_routes->end()) {
                 return;
             }
-            nmsg.params.push_back((*dn_routes)[msg.params[1].c_str()]->toBinSeq());
+            nmsg.params.push_back((*dn_routes)[msg.params[1]]->toBinSeq());
             nmsg.params.push_back(dn_name);
             nmsg.params.push_back(msg.params[2]);
                 
@@ -477,15 +484,15 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             stringstream ss;
                 
             Route *route;
-            string first;
+            BinSeq first;
             conn_t *firc;
             int firfd, locip_len, gsnr;
             struct sockaddr locip;
             struct sockaddr_in *locip_i;
                 
             // First, echo, then try to connect
-            if (dn_routes->find(msg.params[1].c_str()) == dn_routes->end()) return;
-            route = (*dn_routes)[msg.params[1].c_str()];
+            if (dn_routes->find(msg.params[1]) == dn_routes->end()) return;
+            route = (*dn_routes)[msg.params[1]];
             nmsg.params.push_back(route->toBinSeq());
             nmsg.params.push_back(dn_name);
                 
@@ -494,9 +501,9 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
                 
             // then get the fd
             if (dn_conn->find(first) == dn_conn->end()) goto try_connect;
-                
+            
             firc = (conn_t *) (*dn_conn)[first];
-                
+            
             firfd = firc->fd;
                 
             // then turn the fd into a sockaddr
@@ -540,25 +547,22 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         Route *route;
         
-        // if I already have a route to this person, drop it
-        if (dn_routes->find(msg.params[0]) != dn_routes->end()) {
-            delete (*dn_routes)[msg.params[0]];
-            dn_routes->erase(msg.params[0]);
-        }
-        
         // now accept the new FD
-        conn->name = strdup(msg.params[0].c_str());
-        if (!conn->name) abort();
-        (*dn_conn)[msg.params[0]] = conn;
+        conn->enckey = new BinSeq(msg.params[1]);
+        //if (!conn->name) abort();
+        (*dn_conn)[msg.params[1]] = conn;
         
         route = new Route();
-        route->push_back(msg.params[0]);
-        if (dn_routes->find(msg.params[0]) != dn_routes->end())
-            delete (*dn_routes)[msg.params[0]];
-        (*dn_routes)[msg.params[0]] = route;
-        if (dn_iRoutes->find(msg.params[0]) != dn_iRoutes->end())
-            delete (*dn_iRoutes)[msg.params[0]];
-        (*dn_iRoutes)[msg.params[0]] = new Route(*route);
+        route->push_back(msg.params[1]);
+        if (dn_routes->find(msg.params[1]) != dn_routes->end())
+            delete (*dn_routes)[msg.params[1]];
+        (*dn_routes)[msg.params[1]] = route;
+        if (dn_iRoutes->find(msg.params[1]) != dn_iRoutes->end())
+            delete (*dn_iRoutes)[msg.params[1]];
+        (*dn_iRoutes)[msg.params[1]] = new Route(*route);
+        
+        (*dn_names)[msg.params[1]] = msg.params[0];
+        (*dn_keys)[msg.params[0]] = msg.params[1];
         
         encImportKey(msg.params[0], msg.params[1]);
         
@@ -595,11 +599,11 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         delete nroute;
         
         // Do I have a connection to this person?
-        if (dn_conn->find(msg.params[2].c_str()) != dn_conn->end()) {
-            remc = (conn_t *) (*dn_conn)[msg.params[2].c_str()];
+        /*if (dn_conn->find(msg.params[2]) != dn_conn->end()) {
+            remc = (conn_t *) (*dn_conn)[msg.params[2]];
             sendCmd(remc, omsg);
             return;
-        }
+        }*/
         
         // If all else fails, continue the chain
         emitUnroutedMsg(conn, omsg);
@@ -638,15 +642,18 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         } else {
             // Hoorah, add a user
             
-            // 1) Route
+            // 1) Route/name
             Route *route = new Route(msg.params[2]);
-            route->push_back(msg.params[1]);
-            if (dn_routes->find(msg.params[1].c_str()) != dn_routes->end())
-                delete (*dn_routes)[msg.params[1].c_str()];
-            (*dn_routes)[msg.params[1].c_str()] = route;
-            if (dn_iRoutes->find(msg.params[1].c_str()) != dn_iRoutes->end())
-                delete (*dn_iRoutes)[msg.params[1].c_str()];
-            (*dn_iRoutes)[msg.params[1].c_str()] = new Route(*route);
+            route->push_back(msg.params[3]);
+            if (dn_routes->find(msg.params[1]) != dn_routes->end())
+                delete (*dn_routes)[msg.params[1]];
+            (*dn_routes)[msg.params[1]] = route;
+            if (dn_iRoutes->find(msg.params[1]) != dn_iRoutes->end())
+                delete (*dn_iRoutes)[msg.params[1]];
+            (*dn_iRoutes)[msg.params[1]] = new Route(*route);
+            
+            (*dn_names)[msg.params[3]] = msg.params[1];
+            (*dn_keys)[msg.params[1]] = msg.params[3];
             
             // 2) Key
             encImportKey(msg.params[1], msg.params[3]);
@@ -721,11 +728,15 @@ bool handleRoutedMsg(const Message &msg)
     Route *route;
     string next, buf, last;
     
-    if (msg.params[0].size() <= 1) {
+    if (msg.params[0].size() <= 2) {
         return true; // This is our data
     }
     
     route = new Route(msg.params[0]);
+    
+    if (route->size() < 1) {
+        return true; // broken - presume our data
+    }
     
     next = (*route)[0];
     route->pop_front();
@@ -827,7 +838,7 @@ void emitUnroutedMsg(conn_t *from, Message &outbuf)
 void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
 {
     // Ignore it if we already have a route
-    if (dn_routes->find(name) != dn_routes->end()) {
+    if (dn_routes->find(key) != dn_routes->end()) {
         return;
     }
     
@@ -835,11 +846,9 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     // Build backwards route
     Route *reverseRoute = new Route(*route);
     reverseRoute->reverse();
-    reverseRoute->push_back(name);
+    reverseRoute->push_back(key);
     
     // Add his route,
-    if (dn_routes->find(name) != dn_routes->end())
-        delete (*dn_routes)[name];
     (*dn_routes)[name] = reverseRoute;
     if (dn_iRoutes->find(name) != dn_iRoutes->end())
         delete (*dn_iRoutes)[name];
@@ -858,8 +867,6 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     
     uiEstRoute(name);
     
-    string sname = string(name);
-    
     // Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
     {
@@ -874,8 +881,8 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
         struct sockaddr_in *locip_i;
         
         // First, echo, then try to connect
-        if (dn_routes->find(sname) == dn_routes->end()) return;
-        route = (*dn_routes)[sname];
+        if (dn_routes->find(key) == dn_routes->end()) return;
+        route = (*dn_routes)[key];
         nmsg.params.push_back(route->toBinSeq());
         nmsg.params.push_back(dn_name);
         
@@ -914,10 +921,9 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
 /* Commands used by the UI */
 void establishConnection(const string &to)
 {
-    string sto = string(to);
-    
-    if (dn_routes->find(sto) != dn_routes->end()) {
-        Route *route = (*dn_routes)[sto];
+    if (dn_keys->find(to) != dn_keys->end() &&
+        dn_routes->find((*dn_keys)[to]) != dn_routes->end()) {
+        Route *route = (*dn_routes)[(*dn_keys)[to]];
         char hostbuf[128], *ip;
         struct hostent *he;
         stringstream ss;
@@ -949,11 +955,12 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
     Route *route;
     BinSeq encdmsg, *signedmsg;
     
-    if (dn_routes->find(to) == dn_routes->end()) {
+    if (dn_keys->find(to) == dn_keys->end() ||
+        dn_routes->find((*dn_keys)[to]) == dn_routes->end()) {
         uiNoRoute(to);
         return 0;
     }
-    route = (*dn_routes)[to];
+    route = (*dn_routes)[(*dn_keys)[to]];
     
     omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(dn_name);
@@ -1024,7 +1031,7 @@ void joinChat(const string &chat)
     msg.params.push_back(dn_name);
     msg.params.push_back(chat);
     
-    map<string, Route *>::iterator ri;
+    map<BinSeq, Route *>::iterator ri;
     
     for (ri = dn_routes->begin(); ri != dn_routes->end(); ri++) {
         msg.params[0] = ri->second->toBinSeq();
@@ -1043,7 +1050,7 @@ void leaveChat(const string &chat)
     msg.params.push_back(dn_name);
     msg.params.push_back(chat);
     
-    map<string, Route *>::iterator ri;
+    map<BinSeq, Route *>::iterator ri;
     
     for (ri = dn_routes->begin(); ri != dn_routes->end(); ri++) {
         msg.params[0] = ri->second->toBinSeq();
@@ -1076,8 +1083,11 @@ void sendChat(const string &to, const string &msg)
     s = chan->size();
     
     for (i = 0; i < s; i++) {
-        if (dn_routes->find((*chan)[i]) == dn_routes->end()) continue;
-        omsg.params[0] = (*dn_routes)[(*chan)[i]]->toBinSeq();
+        if (dn_keys->find((*chan)[i]) == dn_keys->end() ||
+            dn_routes->find((*dn_keys)[(*chan)[i]]) == dn_routes->end())
+            continue;
+        
+        omsg.params[0] = (*dn_routes)[(*dn_keys)[(*chan)[i]]]->toBinSeq();
         omsg.params[5] = encTo(dn_name, (*chan)[i], msg);
         handleRoutedMsg(omsg);
     }
