@@ -1,4 +1,7 @@
 [HTI = hash table identifier]
+[Keys as used by the DHT are SHA-256'd from the desired data to look up
+(whether an encryption key, name, or anything else)]
+[None of this is implemented yet]
 
 Hst(1)(1) (hash set)
         purpose: set a value in the distributed hash
@@ -99,3 +102,15 @@ Hfr(1)(1) (hash find response)
                         predecessor
                         second byte (for divisions): the level of division (0-
                         255)
+
+Hin(1)(1) (hash table info)
+        purpose: tell the remote node what hash table(s) this node is on
+        type: direct
+        parameters:
+                list of HTIs (in the same form as routes)
+
+Hir(1)(1) (hash table info response)
+        purpose: equal response to Hin
+        type: direct
+        parameters:
+                list of HTIs (in the same form as routes)
