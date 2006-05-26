@@ -24,7 +24,7 @@
 #include "binseq.h"
 
 /* the hash of the public key */
-extern BinKey pukeyhash;
+extern BinSeq pukeyhash;
 
 /* Find any necessary binaries
  *   - should be called encInit

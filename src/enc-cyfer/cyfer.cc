@@ -50,7 +50,7 @@ struct cyf_key *cyf_key_head = NULL;
 
 char *mypukey, *myprkey;
 int mypukeylen, myprkeylen;
-BinKey pukeyhash;
+BinSeq pukeyhash;
 
 /* Helper function for creating public-key context. */
 static CYFER_PK_CTX *init_ctx(char *pk)
@@ -208,7 +208,7 @@ BinSeq encCreateKey()
     CYFER_Pk_Export_Key(ctx, (unsigned char *) myprkey, (unsigned char *) mypukey);
     CYFER_Pk_Finish(ctx);
     
-    pukeyhash = encHashKey(BinHash(mypukey, mypukeylen));
+    pukeyhash = encHashKey(BinSeq(mypukey, mypukeylen));
     
     return BinSeq(mypukey, mypukeylen);
 }

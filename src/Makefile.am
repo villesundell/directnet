@@ -6,6 +6,7 @@ directnet_SOURCES=binseq.cc \
 chat.cc \
 client.cc \
 connection.cc \
+dht.cc \
 directnet.cc \
 dnconfig.cc \
 message.cc \
@@ -35,6 +36,7 @@ libdirectnet_gaim_la_SOURCES=binseq.cc \
 chat.cc \
 client.cc \
 connection.cc \
+dht.cc \
 directnet.cc \
 dnconfig.cc \
 message.cc \

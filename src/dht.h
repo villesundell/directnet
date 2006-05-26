@@ -21,10 +21,30 @@
 #ifndef DN_DHT_H
 #define DN_DHT_H
 
+#include <map>
+#include <vector>
+using namespace std;
+
 #include "route.h"
 
-// we use "routes" for our identifier lists
-Route dhtlist;
+// DHT info is stored here
+class DHTInfo {
+    public:
+    DHTInfo();
+    BinSeq *rep; // our representative
+    BinSeq *neighbors[4]; // -2, -1, 1, 2
+    vector<BinSeq *> real_divisions;
+    vector<BinSeq *> best_divisions;
+    bool established;
+};
+
+// map the DHTs we're members of to DHTInfo nodes
+extern map<BinSeq, DHTInfo> in_dhts;
+
+/* join a DHT (but don't establish yet)
+ * ident: the identifier of the DHT
+ * rep: our initial representative (for first requests) */
+void dhtJoin(const BinSeq &ident, const BinSeq &rep);
 
 /* are we fully established into this DHT?
  * ident: The identification for the DHT
@@ -39,5 +59,6 @@ void dhtEstablish(const BinSeq &ident);
  * ident: what DHT?
  * key: the key being searched for
  * return: the encryption key of the next hop */
+BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key);
 
 #endif

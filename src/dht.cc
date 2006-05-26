@@ -18,4 +18,40 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <string.h>
+
 #include "dht.h"
+
+map<BinSeq, DHTInfo> in_dhts;
+
+DHTInfo::DHTInfo()
+{
+    rep = NULL;
+    neighbors[0] = NULL;
+    neighbors[1] = NULL;
+    neighbors[2] = NULL;
+    neighbors[3] = NULL;
+    established = false;
+}
+
+void dhtJoin(const BinSeq &ident, const BinSeq &rep)
+{
+    in_dhts.erase(ident);
+    in_dhts[ident];
+}
+
+bool dhtEstablished(const BinSeq &ident)
+{
+    if (in_dhts.find(ident) == in_dhts.end()) return false;
+    return in_dhts[ident].established;
+}
+
+void dhtEstablish(const BinSeq &ident)
+{
+    // TODO: implement
+}
+
+BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key)
+{
+    // TODO: implement
+}
