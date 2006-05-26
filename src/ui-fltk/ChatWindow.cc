@@ -17,10 +17,8 @@ Fl_Double_Window* ChatWindow::make_window() {
     { Fl_Button* o = bAutoFind = new Fl_Button(180, 290, 180, 25, "Add to Autofind List");
       o->callback((Fl_Callback*)flAddRemAutoFind);
     }
-    { Fl_Text_Display* o = textOut = new Fl_Text_Display(0, 0, 360, 260);
+    { Fl_Help_View* o = textOut = new Fl_Help_View(0, 0, 360, 260);
       Fl_Group::current()->resizable(o);
-      textOut->buffer(new Fl_Text_Buffer(32256));
-      textOut->wrap_mode(1, 0);
     }
     o->end();
   }

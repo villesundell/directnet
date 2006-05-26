@@ -11,6 +11,7 @@ extern void sendInput(Fl_Input*, void*);
 extern void flSendAuthKey(Fl_Button*, void*);
 extern void flAddRemAutoFind(Fl_Button*, void*);
 #include <FL/Fl_Text_Display.H>
+#include <FL/Fl_Help_View.h>
 
 class ChatWindow {
 public:
@@ -19,6 +20,6 @@ public:
   Fl_Input *textIn;
   Fl_Button *bSndKey;
   Fl_Button *bAutoFind;
-  Fl_Text_Display *textOut;
+  Fl_Help_View *textOut;
 };
 #endif

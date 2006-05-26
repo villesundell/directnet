@@ -92,7 +92,9 @@ void dn_init(int argc, char **argv) {
                 exit(0);
             } else if (!strncmp(argv[i], "-psn", 4)) {
                 /* this is just here because OSX is weird */
-            } else if (!strncmp(argv[i], "-p", 2)) {
+            } else if (!strncmp(argv[i], "-m", 4)) {
+                /* this is just here because OSX is weird */
+                }else if (!strncmp(argv[i], "-p", 2)) {
                 i++;
                 if (!argv[i]) {
                     fprintf(stderr, "-p must have an argument\n");

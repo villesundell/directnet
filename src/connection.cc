@@ -180,7 +180,7 @@ static void conn_notify_core(conn_t *conn, int cond) {
         kill_connection(conn);
         return;
     }
- 
+//printf ("Tullaanko?"); 
     if (cond & DN_EV_READ) {
         int ret;
         if (conn->inbuf_p == conn->inbuf_sz) {

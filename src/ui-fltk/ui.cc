@@ -40,6 +40,7 @@ using namespace std;
 using namespace std;
 
 #include "FL/fl_ask.H"
+#include <FL/Fl_Window.H>
 
 #include "AutoConnWindow.h"
 #include "AutoConnYNWindow.h"
@@ -57,6 +58,14 @@ NameWindow *nw;
 BuddyWindow *bw;
 map<string, ChatWindow *> cws;
 AutoConnWindow *acw;
+Fl_Window *miniwin;
+
+//Do we want minimode?
+int enable_minimode = 0; //Type: 'directnet -m' to enable it
+Fl_Button *minib; //That big button;)
+void minimodeCallback (Fl_Button*);//Minimodes button callback
+int mini_msg_count=0;
+void updateMinimode ();
 
 // keep track of where the buddies end and the connection list begins in onlineLis
 int olConnsLoc;
@@ -73,7 +82,17 @@ int flt1_ask(const char *msg, int t1)
 
 int main(int argc, char **argv, char **envp)
 {
+    if (argc >= 2) {
+        for (int i = 1; i < argc; i++) {
+            if (!strncmp(argv[1], "-m", 2)) {
+                enable_minimode = 1;
+            }
+        }
+   }
     dn_init(argc, argv);
+    
+
+            
     
     /* Always start by finding encryption */
     if (findEnc(envp) == -1) {
@@ -174,11 +193,22 @@ ChatWindow *getWindow(const string &name, bool show = true)
 
 void putOutput(ChatWindow *w, const string &txt)
 {
-    Fl_Text_Buffer *tb = w->textOut->buffer();
+    //Fl_Text_Buffer *tb = w->textOut->buffer();
+    if (w->textOut->value() == NULL)
+    {
+    	w->textOut->value(" ");
+    }
+    //printf ("Jono: %s", w->textOut->value());
+    string txt2 = (char*)w->textOut->value()+txt;
     
-    w->textOut->insert_position(tb->length());
-    w->textOut->insert(txt.c_str());
-    w->textOut->show_insert_position();
+    w->textOut->value (txt2.c_str());
+    //Roll to end of this page
+    w->textOut->topline (1000);
+    
+    //Adding one to counter:
+    mini_msg_count++;
+    updateMinimode ();
+    
     Fl::flush();
 }
 
@@ -194,7 +224,22 @@ void setName(Fl_Input *w, void *ignore)
     /* make the buddy window */
     bw = new BuddyWindow();
     bw->make_window();
-    bw->buddyWindow->show();
+    if (enable_minimode == 0)
+    {
+    	//Lookslike user dont want minimode
+    	bw->buddyWindow->show();
+    }
+    else
+    {
+    	//We want minimode!
+    	miniwin = new Fl_Window (100, 100, "DNMini");
+    	Fl_Group::current()->resizable(miniwin);
+    	minib = new Fl_Button (0, 0, 100, 100, "DN");
+    	minib->callback ((Fl_Callback*)minimodeCallback);
+    	Fl_Group::current()->resizable(minib);
+    	miniwin->end();
+    	miniwin->show();
+    }
     
     /* prep the onlineList */
     bw->onlineList->add("@c@mBuddies");
@@ -361,7 +406,7 @@ void sendInput(Fl_Input *w, void *ignore)
             msg = cwi->second->textIn->value();
             cwi->second->textIn->value("");
             
-            dispmsg = dn_name + string(": ") + msg + string("\n");
+            dispmsg = string("<b>")+dn_name+ string("</b>") + string(": ") + msg + string("<br>");
             
             if (to[0] == '#') {
                 // Chat room
@@ -421,9 +466,9 @@ void flDispMsg(const string &window, const string &from, const string &msg, cons
     assert(uiLoaded);
     
     if (authmsg != "") {
-        dispmsg = from + " [" + authmsg + "]: " + msg + "\n";
+        dispmsg = "<b>" + from + "</b>" + "<font color=gray> [" + authmsg + "]</font>: " + msg + "<br>";
     } else {
-        dispmsg = from + ": " + msg + "\n";
+        dispmsg = "<b>" + from + "</b>" + ": " + msg + "<br>";
     }
     
     cw = getWindow(window);
@@ -681,3 +726,40 @@ void uiNoRoute(const string &to)
     cw = getWindow(to);
     putOutput(cw, "You do not have a route to this user.\n");
 }
+
+//Minimode function:
+void minimodeCallback (Fl_Button *b)
+{
+	//Minimode button have been clicked!
+	if (bw->buddyWindow->visible())
+	{
+		bw->buddyWindow->hide();
+		minib->label("(DN)");
+	}
+	else
+	{
+		bw->buddyWindow->show();
+		mini_msg_count=0;
+		minib->label("DN");
+	}
+	updateMinimode ();
+}
+void updateMinimode ()
+{
+	//Here is update code
+	//mini_msg_count++;
+	//string temps1 = "moi"+string(mini_msg_count);
+	//minib->label(temps1.c_str());
+	if (mini_msg_count>0)
+	{
+		//We shall color that button red
+		minib->color(FL_RED);
+	}
+	else
+	{
+		//It is normal state
+		minib->color(FL_GRAY);
+	}
+	minib->redraw();
+}
+
