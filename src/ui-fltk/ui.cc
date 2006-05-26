@@ -62,7 +62,7 @@ Fl_Window *miniwin;
 
 //Do we want minimode?
 int enable_minimode = 0; //Type: 'directnet -m' to enable it
-Fl_Button *minib; //That big button;)
+Fl_Button *minib = NULL; //That big button;)
 void minimodeCallback (Fl_Button*);//Minimodes button callback
 int mini_msg_count=0;
 void updateMinimode ();
@@ -744,22 +744,24 @@ void minimodeCallback (Fl_Button *b)
 	}
 	updateMinimode ();
 }
+
 void updateMinimode ()
 {
-	//Here is update code
-	//mini_msg_count++;
-	//string temps1 = "moi"+string(mini_msg_count);
-	//minib->label(temps1.c_str());
-	if (mini_msg_count>0)
-	{
-		//We shall color that button red
-		minib->color(FL_RED);
-	}
-	else
-	{
-		//It is normal state
-		minib->color(FL_GRAY);
-	}
-	minib->redraw();
+    if (!minib) return;
+    //Here is update code
+    //mini_msg_count++;
+    //string temps1 = "moi"+string(mini_msg_count);
+    //minib->label(temps1.c_str());
+    if (mini_msg_count>0)
+    {
+        //We shall color that button red
+        minib->color(FL_RED);
+    }
+    else
+    {
+        //It is normal state
+        minib->color(FL_GRAY);
+    }
+    minib->redraw();
 }
 
