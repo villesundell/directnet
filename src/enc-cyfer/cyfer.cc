@@ -50,6 +50,7 @@ struct cyf_key *cyf_key_head = NULL;
 
 char *mypukey, *myprkey;
 int mypukeylen, myprkeylen;
+BinKey pukeyhash;
 
 /* Helper function for creating public-key context. */
 static CYFER_PK_CTX *init_ctx(char *pk)
@@ -207,6 +208,8 @@ BinSeq encCreateKey()
     CYFER_Pk_Export_Key(ctx, (unsigned char *) myprkey, (unsigned char *) mypukey);
     CYFER_Pk_Finish(ctx);
     
+    pukeyhash = encHashKey(BinHash(mypukey, mypukeylen));
+    
     return BinSeq(mypukey, mypukeylen);
 }
 
@@ -278,7 +281,7 @@ BinSeq encImportKey(const BinSeq &name, const BinSeq &key)
     return BinSeq();
 }
 
-BinSeq encKeySub(const BinSeq &a, const BinSeq &b, int *remainder)
+BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder)
 {
     BinSeq r;
     if (a.size() != b.size()) return r;
@@ -302,7 +305,7 @@ BinSeq encKeySub(const BinSeq &a, const BinSeq &b, int *remainder)
     if (remainder) *remainder = carry;
 }
 
-BinSeq encKeyAdd(const BinSeq &a, const BinSeq &b, int *remainder)
+BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
 {
     BinSeq r;
     if (a.size() != b.size()) return r;
@@ -325,15 +328,15 @@ BinSeq encKeyAdd(const BinSeq &a, const BinSeq &b, int *remainder)
     if (remainder) *remainder = carry;
 }
 
-int encCmpKeys(const BinSeq &a, const BinSeq &b)
+int encCmp(const BinSeq &a, const BinSeq &b)
 {
     BinSeq ra, rb, rs;
-    ra = encKeySub(BinSeq(mypukey, mypukeylen), a);
-    rb = encKeySub(BinSeq(mypukey, mypukeylen), b);
+    ra = encSub(pukeyhash, a);
+    rb = encSub(pukeyhash, b);
     
     // subtract with remainder to compare
     int r;
-    rs = encKeySub(ra, rb, &r);
+    rs = encSub(ra, rb, &r);
     if (r) {
         return 1; // if anything remaining, rb was greater than ra
     } else {
@@ -347,7 +350,7 @@ int encCmpKeys(const BinSeq &a, const BinSeq &b)
 
 /* Generate a key offset from yours by 1/(2^by)
  * returns: the generated key */
-BinSeq encOffsetKey(int by)
+BinSeq encOffset(int by)
 {
     BinSeq a;
     int hi, lo;
@@ -360,5 +363,5 @@ BinSeq encOffsetKey(int by)
     a[hi] = ((unsigned char) 0x1) << lo;
     
     // add them
-    return encKeyAdd(BinSeq(mypukey, mypukeylen), a);
+    return encAdd(BinSeq(mypukey, mypukeylen), a);
 }
