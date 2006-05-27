@@ -194,12 +194,49 @@ ChatWindow *getWindow(const string &name, bool show = true)
 void putOutput(ChatWindow *w, const string &txt)
 {
     //Fl_Text_Buffer *tb = w->textOut->buffer();
+    string strippedstr; //Place for stripped text
     if (w->textOut->value() == NULL)
     {
     	w->textOut->value(" ");
     }
-    //printf ("Jono: %s", w->textOut->value());
-    string txt2 = (char*)w->textOut->value()+txt;
+    //Now we should stripout all nonpermitted html-tags
+    int strlen = txt.length();
+    if (strlen>1)
+    {
+    	//If string is over 1 character long, we continue
+    	//I tried to minimize risk of buffer mallfunctions in every stage, so thats why i am checking lenghts every time;)
+	for (int i=0;i<strlen;i++)
+	{
+		if (txt[i]=='<')
+		{
+			//We found html tag
+			if ((strlen-i)>=2)
+			{
+				if (txt.substr(i,3)=="<b>"||txt.substr(i,3)=="</b"||txt.substr(i,3)=="<i>"||txt.substr(i,3)=="</i"||txt.substr(i,3)=="<fo"||txt.substr(i,3)=="</f"||txt.substr(i,3)=="<u>"||txt.substr(i,3)=="</u"||txt.substr(i,3)=="<br")
+				{
+					//This tag is legal, so we dont strip that
+					strippedstr+=txt[i];
+				}
+				else
+				{
+					strippedstr+="&lt;";
+				}
+			}
+			else
+			{
+				strippedstr+="&lt;";
+			}
+		}
+		else
+		{
+			strippedstr+=txt[i];
+		}
+	}
+    }
+    //Well, _very_ lazy way to secure our html-tags;)
+    strippedstr+="</font></b></i></u>";
+    
+    string txt2 = (char*)w->textOut->value()+strippedstr;
     
     w->textOut->value (txt2.c_str());
     //Roll to end of this page
