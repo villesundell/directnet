@@ -25,6 +25,7 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>//We need this for timestamp(s)
 
 #include "auth.h"
 #include "connection.h"
@@ -71,7 +72,7 @@ void updateMinimode ();
 int olConnsLoc;
 
 //For html widget
-string ripOutput (string &);
+void putError (ChatWindow *w, const string &txt);
 
 using namespace std;
 
@@ -198,11 +199,6 @@ ChatWindow *getWindow(const string &name, bool show = true)
     return cws[name];
 }
 
-string ripOutput (string &txt)
-{
-
-}
-
 void putOutput(ChatWindow *w, const string &txt)
 {
     //Fl_Text_Buffer *tb = w->textOut->buffer();
@@ -289,6 +285,7 @@ void putOutput(ChatWindow *w, const string &txt)
 	}
 
     }
+
     //Well, _very_ lazy way to secure our html-tags;)
     strippedstr+="</font></b></i></u><br>";
 
@@ -303,6 +300,12 @@ void putOutput(ChatWindow *w, const string &txt)
     updateMinimode ();
     
     Fl::flush();
+}
+
+void putError (ChatWindow *w, const string &txt)
+{
+	//Put error to screen
+	putOutput(w, "<b><#red>"+txt+"<#></b><br>");
 }
 
 void setName(Fl_Input *w, void *ignore)
@@ -755,7 +758,7 @@ void uiEstRoute(const string &from)
     
     cw = getWindow(from, false);
     if (cw) {
-        putOutput(cw, "Route established.\n");
+        putError(cw, "Route established.\n");
     }
 }
 
@@ -792,7 +795,7 @@ void uiLoseConn(const string &from)
     
     cw = getWindow(from, false);
     if (cw) {
-        putOutput(cw, "Connection lost.\n");
+        putError(cw, "Connection lost.\n");
     }
 }
 
@@ -806,7 +809,7 @@ void uiLoseRoute(const string &from)
     
     cw = getWindow(from, false);
     if (cw) {
-        putOutput(cw, "Route lost.\n");
+        putError(cw, "Route lost.\n");
     }
 }
 
@@ -817,7 +820,7 @@ void uiNoRoute(const string &to)
     while (!uiLoaded) sleep(0);
     
     cw = getWindow(to);
-    putOutput(cw, "You do not have a route to this user.\n");
+    putError(cw, "You do not have a route to this user.\n");
 }
 
 //Minimode function:
