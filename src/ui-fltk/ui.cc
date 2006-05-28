@@ -70,6 +70,9 @@ void updateMinimode ();
 // keep track of where the buddies end and the connection list begins in onlineLis
 int olConnsLoc;
 
+//For html widget
+string ripOutput (string &);
+
 using namespace std;
 
 static int uiQuit = 0;
@@ -168,11 +171,15 @@ ChatWindow *getWindow(const string &name, bool show = true)
 {
     int i;
     
-    if (cws.find(name) != cws.end()) {
-        if (!show && !cws[name]->chatWindow->shown()) return NULL;
-        cws[name]->chatWindow->show();
-        return cws[name];
-    }
+    //Check, do 
+    //if (minib)
+    //{
+	if (cws.find(name) != cws.end()) {
+		if (!show && !cws[name]->chatWindow->shown()) return NULL;
+		cws[name]->chatWindow->show();
+		return cws[name];
+	}
+    //}
     
     if (!show) return NULL;
     
@@ -191,6 +198,11 @@ ChatWindow *getWindow(const string &name, bool show = true)
     return cws[name];
 }
 
+string ripOutput (string &txt)
+{
+
+}
+
 void putOutput(ChatWindow *w, const string &txt)
 {
     //Fl_Text_Buffer *tb = w->textOut->buffer();
@@ -200,22 +212,65 @@ void putOutput(ChatWindow *w, const string &txt)
     	w->textOut->value(" ");
     }
     //Now we should stripout all nonpermitted html-tags
+    //Here we rip all bad html tags off
+    string colorstr="";
     int strlen = txt.length();
-    if (strlen>1)
+    if (strlen>4)
     {
-    	//If string is over 1 character long, we continue
+    	//If string is over 4 character long, we continue
     	//I tried to minimize risk of buffer mallfunctions in every stage, so thats why i am checking lenghts every time;)
-	for (int i=0;i<strlen;i++)
+    	int i=0;
+    	int i2;
+	for (i=0;i<strlen;i++)
 	{
 		if (txt[i]=='<')
 		{
 			//We found html tag
 			if ((strlen-i)>=2)
 			{
-				if (txt.substr(i,3)=="<b>"||txt.substr(i,3)=="</b"||txt.substr(i,3)=="<i>"||txt.substr(i,3)=="</i"||txt.substr(i,3)=="<fo"||txt.substr(i,3)=="</f"||txt.substr(i,3)=="<u>"||txt.substr(i,3)=="</u"||txt.substr(i,3)=="<br")
+				if (txt.substr(i,3)=="<b>"||txt.substr(i,3)=="</b"||txt.substr(i,3)=="<i>"||txt.substr(i,3)=="</i"||txt.substr(i,3)=="<u>"||txt.substr(i,3)=="</u"||txt.substr(i,4)=="<br>")
 				{
 					//This tag is legal, so we dont strip that
 					strippedstr+=txt[i];
+				}
+				else if (txt.substr(i,2)=="<#")
+				{
+					//Gregs colortag
+					colorstr = "";
+					for (i2=2;i2<10;i2++)
+					{
+						if ((i2+i)<strlen)
+						{
+							//we have space to read
+							//char* colortagtemp = (char*)&txt[i+i2];
+							if (txt[i+i2]=='>')
+							{
+								//We should leave this loop now
+								break;
+							}
+							else
+							{
+								colorstr+=txt[i+i2];
+							}
+						}
+						else
+						{
+							//We should leave this loop
+							break;
+						}
+					}
+					//Move "carret":
+					i = i+i2;
+					if (colorstr=="")
+					{
+						//Colorstring is empty
+						strippedstr+="</font>";
+					}
+					else
+					{
+						//we have color
+						strippedstr+="<font color="+colorstr+">";
+					}
 				}
 				else
 				{
@@ -232,15 +287,16 @@ void putOutput(ChatWindow *w, const string &txt)
 			strippedstr+=txt[i];
 		}
 	}
+
     }
     //Well, _very_ lazy way to secure our html-tags;)
-    strippedstr+="</font></b></i></u>";
-    
+    strippedstr+="</font></b></i></u><br>";
+
     string txt2 = (char*)w->textOut->value()+strippedstr;
     
     w->textOut->value (txt2.c_str());
     //Roll to end of this page
-    w->textOut->topline (1000);
+    //w->textOut->topline (1000);
     
     //Adding one to counter:
     mini_msg_count++;
@@ -503,7 +559,7 @@ void flDispMsg(const string &window, const string &from, const string &msg, cons
     assert(uiLoaded);
     
     if (authmsg != "") {
-        dispmsg = "<b>" + from + "</b>" + "<font color=gray> [" + authmsg + "]</font>: " + msg + "<br>";
+        dispmsg = "<b>" + from + "</b>" + "<#gray> [" + authmsg + "]<#>: " + msg + "<br>";
     } else {
         dispmsg = "<b>" + from + "</b>" + ": " + msg + "<br>";
     }
