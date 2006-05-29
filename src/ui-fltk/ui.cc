@@ -68,6 +68,9 @@ void minimodeCallback (Fl_Button*);//Minimodes button callback
 int mini_msg_count=0;
 void updateMinimode ();
 
+//Banning:
+void flBanUnban (Fl_Button*, void*);
+
 // keep track of where the buddies end and the connection list begins in onlineLis
 int olConnsLoc;
 
@@ -558,7 +561,7 @@ void flDispMsg(const string &window, const string &from, const string &msg, cons
 {
     ChatWindow *cw;
     string dispmsg;
-    
+
     assert(uiLoaded);
     
     if (authmsg != "") {
@@ -568,8 +571,11 @@ void flDispMsg(const string &window, const string &from, const string &msg, cons
     }
     
     cw = getWindow(window);
-    
-    putOutput(cw, dispmsg);
+    if (cw->bBan->color()!=FL_RED)
+    {
+    	//If we havent banned this user, we should display that message:
+    	putOutput(cw, dispmsg);
+    }
 }
 
 void flAddRemAutoFind(Fl_Button *btn, void *)
@@ -861,3 +867,17 @@ void updateMinimode ()
     minib->redraw();
 }
 
+//Ban/Unban function:
+void flBanUnban (Fl_Button *b, void *)
+{
+	if (b->color()==FL_RED)
+	{
+		b->color(FL_BACKGROUND_COLOR);
+		b->label ("Ban");
+	}
+	else
+	{
+		b->color(FL_RED);
+		b->label ("Unban");
+	}
+}
