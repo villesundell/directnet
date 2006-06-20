@@ -68,6 +68,10 @@ void minimodeCallback (Fl_Button*);//Minimodes button callback
 int mini_msg_count=0;
 void updateMinimode ();
 
+//For Timestamps:
+time_t rawtime;
+tm *timestamp;
+
 //Banning:
 void flBanUnban (Fl_Button*, void*);
 
@@ -85,6 +89,17 @@ ChatWindow *showcw = NULL;
 int flt1_ask(const char *msg, int t1)
 {
     return fl_ask(msg);
+}
+
+//Here we make timestamps
+char* make_timestamp ()
+{
+    //here happens timestamping:
+    static char timestr[10];
+    time (&rawtime); //rawtime is declared in the start of this file
+    //timestamp = localtime (&rawtime); //Timestamp is declared there too;)
+    strftime (timestr, sizeof (timestr), "%H:%M ", localtime (&rawtime));
+    return timestr;
 }
 
 int main(int argc, char **argv, char **envp)
@@ -234,14 +249,13 @@ void putOutput(ChatWindow *w, const string &txt)
 				}
 				else if (txt.substr(i,2)=="<#")
 				{
-					//Gregs colortag
+					//This is Gregs colortag-idea (<#blue> is replaced as <font color="blue"> and <#> is replaced as </font> (Solarius' addition)
 					colorstr = "";
 					for (i2=2;i2<10;i2++)
 					{
 						if ((i2+i)<strlen)
 						{
 							//we have space to read
-							//char* colortagtemp = (char*)&txt[i+i2];
 							if (txt[i+i2]=='>')
 							{
 								//We should leave this loop now
@@ -291,8 +305,10 @@ void putOutput(ChatWindow *w, const string &txt)
 
     //Well, _very_ lazy way to secure our html-tags;)
     strippedstr+="</font></b></i></u><br>";
-
-    string txt2 = (char*)w->textOut->value()+strippedstr;
+    //here happens timestamping:
+    string txt2 = (char*)w->textOut->value();
+    txt2 += "<font color=gray>";
+    txt2 += make_timestamp()+("</font>"+strippedstr);
     
     w->textOut->value (txt2.c_str());
     //Roll to end of this page
