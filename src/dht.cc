@@ -20,7 +20,10 @@
 
 #include <string.h>
 
+#include "connection.h"
 #include "dht.h"
+#include "enc.h"
+#include "message.h"
 
 map<BinSeq, DHTInfo> in_dhts;
 
@@ -48,7 +51,23 @@ bool dhtEstablished(const BinSeq &ident)
 
 void dhtEstablish(const BinSeq &ident)
 {
-    // TODO: implement
+    if (!rep) return; // yukk!
+    if (!ident.neighbors[0]) {
+        // send a neighbor request to the representative
+        Message msg(4, "Hfn", 1, 1);
+        
+        msg.params.push_back(ident.HTI);
+        msg.params.push_back(encExportKey());
+        if (dn_routes->find(*rep) != dn_routes->end())
+            msg.params.push_back((*dn_routes)[*rep]);
+        else
+            msg.params.push_back("");
+        msg.params.push_back(encExportKey());
+        BinSeq srch;
+        srch.push_back(3);
+        
+        
+    }
 }
 
 BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key)

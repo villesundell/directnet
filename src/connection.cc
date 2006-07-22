@@ -729,6 +729,14 @@ bool handleRoutedMsg(const Message &msg)
     conn_t *sendc;
     Route *route;
     BinSeq next, buf, last;
+    int rloc, sloc;
+    switch (msg.type) {
+        case 1:
+            rloc = 0;
+            sloc = 1;
+            break;
+            
+            case 
     
     if (msg.params[0].size() <= 1) {
         return true; // This is our data
@@ -760,9 +768,7 @@ bool handleRoutedMsg(const Message &msg)
             endu = (*route)[route->size()-1];
             
             // If this is me, don't send the command, just display it
-            if (!strcmp(msg.params[1].c_str(), dn_name)) {
-                uiLoseRoute(endu);
-            } else {
+            {
                 Message lstm(1, "lst", 1, 1);
                 Route *iroute;
                 

@@ -22,6 +22,7 @@
 #define DN_DHT_H
 
 #include <map>
+#include <string>
 #include <vector>
 using namespace std;
 
@@ -31,6 +32,7 @@ using namespace std;
 class DHTInfo {
     public:
     DHTInfo();
+    string HTI; // hash table identifier
     BinSeq *rep; // our representative
     BinSeq *neighbors[4]; // -2, -1, 1, 2
     vector<BinSeq *> real_divisions;
