@@ -22,13 +22,42 @@
 #ifndef DN_CONNECTION_H
 #define DN_CONNECTION_H
 
+#include <map>
+#include <set>
 #include <string>
 using namespace std;
 
+#include "dn_event.h"
 #include "message.h"
 
-struct connection;
-typedef struct connection conn_t;
+enum cev_state {
+    CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
+};
+
+class connection {
+    public:
+    ~connection();
+        
+    connection *prev, *next;
+    int fd;
+    enum cev_state state;
+        
+    unsigned char *inbuf, *outbuf;
+    size_t inbuf_sz, outbuf_sz;
+    size_t inbuf_p, outbuf_p;
+        
+    BinSeq *enckey;
+    bool outgoing;
+    string *outgh;
+    int outgp;
+        
+    dn_event_fd fd_ev;
+    dn_event_timer ping_ev;
+    
+    std::set<connection *>::iterator active_it;
+};
+ 
+typedef connection conn_t;
 
 /* Establish a connection (for use by the UI)
  * to: user, hostname or IP to connect to

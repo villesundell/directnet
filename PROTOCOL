@@ -22,9 +22,6 @@ Information | Size | Description
             |      |   1 for routed messages
             |      |   2 for special messages (generally routed but needs
             |      |     special functionality)
-            |      |   3 for hash messages
-            |      |   4 for returnable hash messages
-            |      |   5 for hash return messages
     command |    3 | A three-character string name of the command.
     version |    2 | The version of the command.
  parameters |  Var | Two bigendian bytes for each parameter, with the value of

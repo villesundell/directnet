@@ -26,13 +26,14 @@
 #include <vector>
 using namespace std;
 
+#include "connection.h"
 #include "route.h"
 
 // DHT info is stored here
 class DHTInfo {
     public:
     DHTInfo();
-    string HTI; // hash table identifier
+    BinSeq HTI; // hash table identifier
     BinSeq *rep; // our representative
     BinSeq *neighbors[4]; // -2, -1, 1, 2
     vector<BinSeq *> real_divisions;
@@ -43,10 +44,18 @@ class DHTInfo {
 // map the DHTs we're members of to DHTInfo nodes
 extern map<BinSeq, DHTInfo> in_dhts;
 
+/* list of DHTs we're currently in
+ * must: set to true if we need to be in a DHT, and should create one if we're
+ *       not */
+Route dhtIn(bool must);
+
 /* join a DHT (but don't establish yet)
  * ident: the identifier of the DHT
  * rep: our initial representative (for first requests) */
 void dhtJoin(const BinSeq &ident, const BinSeq &rep);
+
+/* create a DHT and establish ourself into it */
+void dhtCreate();
 
 /* are we fully established into this DHT?
  * ident: The identification for the DHT
@@ -60,7 +69,19 @@ void dhtEstablish(const BinSeq &ident);
 /* what's the next hop for a search?
  * ident: what DHT?
  * key: the key being searched for
- * return: the encryption key of the next hop */
+ * return: the encryption key of the next hop, "" for this node */
 BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key);
+
+/* is this message for us?  If not, continue it
+ * msg: the message itself
+ * ident: what DHT?
+ * key: the key being searched for
+ * return: true if for us */
+bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key);
+
+/* Handle a messgae related to DHTs
+ * conn: the connection
+ * msg: the message itself */
+void handleDHTMessage(conn_t *conn, Message &msg);
 
 #endif

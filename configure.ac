@@ -357,3 +357,8 @@ AC_FUNC_STAT
 AC_CHECK_FUNCS([dup2 getcwd gethostbyname gethostname gettimeofday inet_ntoa \
 memmove memset mkdir select socket strchr strdup strerror strrchr])
 AC_OUTPUT
+
+echo 'Configuration:'
+echo '              UI: '$ui
+echo '      Encryption: '$enc
+echo '  Authentication: '$auth

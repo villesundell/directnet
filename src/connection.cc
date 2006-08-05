@@ -46,6 +46,7 @@ using namespace std;
 #include "chat.h"
 #include "client.h"
 #include "connection.h"
+#include "dht.h"
 #include "directnet.h"
 #include "dn_event.h"
 #include "enc.h"
@@ -64,33 +65,6 @@ bool handleNRUnroutedMsg(conn_t *from, const Message &msg);
 int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign);
 void recvFnd(Route *route, const BinSeq &name, const BinSeq &key);
 
-enum cev_state {
-    CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
-};
-
-class connection {
-    public:
-    ~connection();
-        
-    conn_t *prev, *next;
-    int fd;
-    enum cev_state state;
-        
-    unsigned char *inbuf, *outbuf;
-    size_t inbuf_sz, outbuf_sz;
-    size_t inbuf_p, outbuf_p;
-        
-    BinSeq *enckey;
-    bool outgoing;
-    string *outgh;
-    int outgp;
-        
-    dn_event_fd fd_ev;
-    dn_event_timer ping_ev;
-
-    std::set<conn_t *>::iterator active_it;
-};
- 
 static std::set<conn_t *> active_connections;
 
 static void send_handshake(struct connection *cs);
@@ -164,11 +138,17 @@ void send_handshake(conn_t *cs) {
     
     cs->fd_ev.activate();
     
+    // send DN info ...
     Message msg(0, "dni", 1, 1);
     msg.params.push_back(dn_name);
     msg.params.push_back(encExportKey());
     msg.params.push_back(BinSeq("\x00\x02\x00\x00", 4));
     sendCmd(cs, msg);
+    
+    // and hash table info
+    Message hmsg(0, "Hin", 1, 1);
+    hmsg.params.push_back(dhtIn(false).toBinSeq());
+    sendCmd(cs, hmsg);
     
     schedule_ping(cs);
 }
@@ -362,8 +342,8 @@ void sendCmd(struct connection *conn, Message &msg)
 }
 
 #define REQ_PARAMS(x) if (msg.params.size() < x) return
-#define REJOIN_PARAMS(x) msg.recombineParams((x)-1)
-			
+#define CMD_IS(x, y, z) (msg.cmd == x && msg.ver[0] == y && msg.ver[1] == z)
+
 void handleMsg(conn_t *conn, const BinSeq &rdbuf)
 {
     int i, onparam, ostrlen;
@@ -377,14 +357,18 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     if (msg.type == 1 &&
         !handleRoutedMsg(msg)) return;
     
+    /* let the DHT handle its commands */
+    if (msg.cmd[0] == 'H') {
+        handleDHTMessage(conn, msg);
+        return;
+    }
+    
     /*****************************
      * Current protocol commands *
      *****************************/
     
-    if ((msg.cmd == "cjo" &&
-         msg.ver[0] == 1 && msg.ver[1] == 1) ||
-        (msg.cmd == "con" &&
-         msg.ver[0] == 1 && msg.ver[1] == 1)) {
+    if (CMD_IS("cjo", 1, 1) ||
+        CMD_IS("con", 1, 1)) {
         REQ_PARAMS(3);
         
         // "I'm on this chat"
@@ -410,8 +394,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             handleRoutedMsg(nmsg);
         }
         
-    } else if ((msg.cmd == "cms" &&
-                msg.ver[0] == 1 && msg.ver[1] == 1)) {
+    } else if (CMD_IS("cms", 1, 1)) {
         REQ_PARAMS(6);
         
         // a chat message
@@ -467,18 +450,15 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             handleRoutedMsg(nmsg);
         }
         
-    } else if ((msg.cmd == "dcr" &&
-                msg.ver[0] == 1 && msg.ver[1] == 1) ||
-               (msg.cmd == "dce" &&
-                msg.ver[0] == 1 && msg.ver[1] == 1)) {
+    } else if (CMD_IS("dcr", 1, 1) ||
+               CMD_IS("dce", 1, 1)) {
         // stub
         return;
         REQ_PARAMS(3);
         
         // This doesn't work on OSX
 #if !defined(__APPLE__)
-        if (msg.cmd == "dcr" &&
-            msg.ver[0] == 1 && msg.ver[1] == 1) {
+        if (CMD_IS("dcr", 1, 1)) {
             // dcr echos
             Message nmsg(1, "dce", 1, 1);
             stringstream ss;
@@ -533,8 +513,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         async_establishClient(msg.params[2].c_str());
 #endif
 
-    } else if (msg.cmd == "dni" &&
-               msg.ver[0] == 1 && msg.ver[1] == 1) {
+    } else if (CMD_IS("dni", 1, 1)) {
         REQ_PARAMS(3);
         
         // if the version isn't right, immediately fail
@@ -569,8 +548,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         uiEstRoute(msg.params[0].c_str());
 
-    } else if (msg.cmd == "fnd" &&
-               msg.ver[0] == 1 && msg.ver[1] == 1) {
+    } else if (CMD_IS("fnd", 1, 1)) {
         conn_t *remc;
         
         REQ_PARAMS(4);
@@ -609,8 +587,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // If all else fails, continue the chain
         emitUnroutedMsg(conn, omsg);
     
-    } else if (msg.cmd == "fnr" &&
-               msg.ver[0] == 1 && msg.ver[1] == 1) {
+    } else if (CMD_IS("fnr", 1, 1)) {
         bool handleit;
         
         REQ_PARAMS(4);
@@ -663,18 +640,14 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             uiEstRoute(msg.params[1]);
         }
     
-    } else if (msg.cmd == "lst" &&
-               msg.ver[0] == 1 && msg.ver[1] == 1) {
+    } else if (CMD_IS("lst", 1, 1)) {
         REQ_PARAMS(2);
       
         uiLoseRoute(msg.params[1].c_str());
     
-    } else if ((msg.cmd == "msg" &&
-                msg.ver[0] == 1 && msg.ver[1] == 1) ||
-               (msg.cmd == "msa" &&
-                msg.ver[0] == 1 && msg.ver[1] == 1)) {
+    } else if (CMD_IS("msg", 1, 1) ||
+               CMD_IS("msa", 1, 1)) {
         REQ_PARAMS(3);
-	//REJOIN_PARAMS(3);
         
         // This is our message
         BinSeq unencmsg, *dispmsg;
@@ -729,14 +702,6 @@ bool handleRoutedMsg(const Message &msg)
     conn_t *sendc;
     Route *route;
     BinSeq next, buf, last;
-    int rloc, sloc;
-    switch (msg.type) {
-        case 1:
-            rloc = 0;
-            sloc = 1;
-            break;
-            
-            case 
     
     if (msg.params[0].size() <= 1) {
         return true; // This is our data
