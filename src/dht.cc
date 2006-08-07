@@ -121,7 +121,7 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key)
     // TODO: implement
 }
 
-bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key)
+bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route)
 {
     if (in_dhts.find(msg.params[2]) == in_dhts.end()) return false;
     BinSeq nextHop = dhtNextHop(msg.params[2], msg.params[3]);
@@ -130,6 +130,20 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key)
         if (dn_routes->find(nextHop) != dn_routes->end() &&
             (*dn_routes)[nextHop]) {
             msg.params[0] = (*dn_routes)[nextHop]->toBinSeq();
+            
+            // append it to the current route
+            if (route) {
+                Route *nhop = (*dn_routes)[nextHop];
+                Route rroute(*route);
+                
+                Route::iterator ri;
+                for (ri = nhop->begin(); ri != nhop->end(); ri++) {
+                    rroute.push_back(*ri);
+                }
+                
+                *route = rroute.toBinSeq();
+            }
+            
             handleRoutedMsg(msg);
         }
         return false;
@@ -174,7 +188,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         // find
         REQ_PARAMS(7);
         
-        /*if (dhtForMe(msg, msg.params[2], msg.params[3])) {
+        if (dhtForMe(msg, msg.params[2], msg.params[3], &(msg.params[4]))) {
             DHTInfo &indht = in_dhts[msg.params[2]];
             
             if (msg.params[6].size() < 2) return;
@@ -186,26 +200,42 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     BinSeq neighbors[4];
                     
                     /* search for successors and predecessors - we are one or
-                     * the other, figure out which * /
+                     * the other, figure out which */
                     int neg;
                     BinSeq diff = encSub(msg.params[3], encExportKey(), &neg);
                     
                     if (neg) {
                         /* if it's negative, their key is smaller than ours, so
-                         * they are a predecessor * /
-                        if (indht.neighbors[1]) neighbors[0] = *(indht.neighbors[1]);
-                        neighbors[1] = encExportKey();
-                        if (indht.neighbors[2]) neighbors[2] = *(indht.neighbors[2]);
-                        if (indht.neighbors[3]) neighbors[3] = *(indht.neighbors[3]);
-                    } else {
-                        /* if it's positive, their key is larger than ours, so
-                         * they are a successor * /
+                         * they are a predecessor */
                         if (indht.neighbors[0]) neighbors[0] = *(indht.neighbors[0]);
                         if (indht.neighbors[1]) neighbors[1] = *(indht.neighbors[1]);
                         neighbors[2] = encExportKey();
                         if (indht.neighbors[2]) neighbors[3] = *(indht.neighbors[2]);
+                        
+                        /* add them to our DHT */
+                        if (indht.neighbors[0]) delete indht.neighbors[0];
+                        indht.neighbors[0] = indht.neighbors[1];
+                        indht.neighbors[1] = new BinSeq(msg.params[3]);
+                    } else {
+                        /* if it's positive, their key is larger than ours, so
+                         * they are a successor */
+                        if (indht.neighbors[1]) neighbors[0] = *(indht.neighbors[1]);
+                        neighbors[1] = encExportKey();
+                        if (indht.neighbors[2]) neighbors[2] = *(indht.neighbors[2]);
+                        if (indht.neighbors[3]) neighbors[3] = *(indht.neighbors[3]);
+                        
+                        /* add them to our DHT */
+                        if (indht.neighbors[3]) delete indht.neighbors[3];
+                        indht.neighbors[3] = indht.neighbors[2];
+                        indht.neighbors[2] = new BinSeq(msg.params[3]);
                     }
-                    */
+                    
+                    // send our four-part response
+                    
+                }
+            }
+            /* TODO: complete */
+        }
     }
     
     // after handling the command itself, make sure we're established everywhere

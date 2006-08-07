@@ -76,8 +76,9 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key);
  * msg: the message itself
  * ident: what DHT?
  * key: the key being searched for
+ * route: where to append the route
  * return: true if for us */
-bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key);
+bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);
 
 /* Handle a messgae related to DHTs
  * conn: the connection
