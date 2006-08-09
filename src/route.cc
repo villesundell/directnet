@@ -105,3 +105,10 @@ void Route::pop_front()
     
     pop_back();
 }
+
+void Route::append(const Route &a)
+{
+    for (int i = 0; i < a.size(); i++) {
+        push_back(a[i]);
+    }
+}

@@ -38,6 +38,8 @@ class Route : public vector<BinSeq> {
     void push_front(const BinSeq &a);
     void pop_front();
     
+    void append(const Route &a);
+    
     Route &operator+=(const string &node) { push_back(node); return *this; }
 };
 

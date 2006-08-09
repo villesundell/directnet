@@ -146,9 +146,11 @@ void send_handshake(conn_t *cs) {
     sendCmd(cs, msg);
     
     // and hash table info
-    Message hmsg(0, "Hin", 1, 1);
-    hmsg.params.push_back(dhtIn(false).toBinSeq());
-    sendCmd(cs, hmsg);
+    if (cs->outgoing) {
+        Message hmsg(0, "Hin", 1, 1);
+        hmsg.params.push_back(dhtIn(false).toBinSeq());
+        sendCmd(cs, hmsg);
+    }
     
     schedule_ping(cs);
 }
@@ -208,6 +210,18 @@ static void conn_notify_core(conn_t *conn, int cond) {
             }
             
             if (i >= conn->inbuf_p - 1) break;
+            
+            /* DEBUG
+            printf("HEX: ");
+            for (int j = 0; j < i; j++) {
+                printf("%.2X ", conn->inbuf[j]);
+            }
+            printf("\nMSG: ");
+            for (int j = 0; j < i; j++) {
+                printf(" %c ", (conn->inbuf[j] >= 32 && conn->inbuf[j] <= 126) ?
+                       conn->inbuf[j] : '.');
+            }
+            printf("\n\n"); */
             
             // process the message
             BinSeq buf((const char *) conn->inbuf, len);
@@ -567,7 +581,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
         
         // Add myself to the route
-        *nroute += encHashKey(encExportKey());
+        *nroute += pukeyhash;
         
         Message omsg(0, "fnd", 1, 1);
         omsg.params.push_back(nroute->toBinSeq());

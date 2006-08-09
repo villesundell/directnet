@@ -36,7 +36,9 @@ class DHTInfo {
     BinSeq HTI; // hash table identifier
     BinSeq *rep; // our representative
     BinSeq *neighbors[4]; // -2, -1, 1, 2
+    BinSeq *nbors_keys[4];
     vector<BinSeq *> real_divisions;
+    vector<BinSeq *> real_divs_keys;
     vector<BinSeq *> best_divisions;
     bool established;
 };

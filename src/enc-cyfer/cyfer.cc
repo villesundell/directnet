@@ -220,7 +220,7 @@ BinSeq encExportKey() {
 BinSeq encHashKey(const BinSeq &key)
 {
     BinSeq tr("                                ");
-    CYFER_Hash(CYFER_HASH_SNEFRU, (unsigned char *) key.c_str(), key.size(),
+    CYFER_Hash(CYFER_HASH_SHA256, (unsigned char *) key.c_str(), key.size(),
                (unsigned char *) tr.c_str());
     return tr;
 }

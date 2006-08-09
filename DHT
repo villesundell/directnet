@@ -20,7 +20,7 @@ Hst(1)(1) (hash set)
                 immediate route
                 local name
                 HTI
-                key
+                DHT key
                 value
                 ttl [not currently used]
 
@@ -31,7 +31,7 @@ Had(1)(1) (hash add)
                 immediate route
                 local name
                 HTI
-                key
+                DHT key
                 value
                 ttl [not currently used]
 
@@ -42,7 +42,7 @@ Hg1(1)(1) (hash get 1st)
                 immediate route
                 local name
                 HTI
-                key
+                DHT key
                 route
 
 Hr1(1)(1) (hash return 1st)
@@ -52,7 +52,7 @@ Hr1(1)(1) (hash return 1st)
                 route
                 local name
                 HTI
-                key
+                DHT key
                 value
 
 Hgr(1)(1) (hash get random)
@@ -60,7 +60,7 @@ Hgr(1)(1) (hash get random)
         type: returnable hash
         parameters:
                 HTI
-                key
+                DHT key
                 route
 
 Hrr(1)(1) (hash return random)
@@ -70,7 +70,7 @@ Hrr(1)(1) (hash return random)
                 route
                 local name
                 HTI
-                key
+                DHT key
                 value
 
 Hga(1)(1) (hash get all)
@@ -78,7 +78,7 @@ Hga(1)(1) (hash get all)
         type: returnable hash
         parameters:
                 HTI
-                key
+                DHT key
                 route
 
 Hra(1)(1) (hash get all)
@@ -88,7 +88,7 @@ Hra(1)(1) (hash get all)
                 route
                 local name
                 HTI
-                key
+                DHT key
                 values (in the same form as parameters in messages)
 
 Hfn(1)(1) (hash find)
@@ -98,8 +98,8 @@ Hfn(1)(1) (hash find)
                 immediate route
                 local name
                 HTI
-                key
-                route
+                DHT key
+                current route
                 encryption key
                 type
                         first byte: 0 for regular search, 1 for positive
@@ -116,12 +116,16 @@ Hfr(1)(1) (hash find response)
                 local name
                 HTI
                 encryption key
+                route to found user
                 type
                         first byte: 0 for regular search response, 1 for
                         positive division response, 2 for negative division
-                        response, 3 for first successor, 4 for second
-                        successor, 5 for first predecessor, 6 for second
-                        predecessor
+                        response, 3 for second predecessor, 4 for first
+                        predecessor, 5 for first successor, 6 for second
+                        successor, 7 for the special case of telling a now-
+                        distant /third/ successor who their second predecessor
+                        is, which is sent to the second successor and then
+                        forwarded as a 3
                         second byte (for divisions): the level of division (0-
                         255)
 
