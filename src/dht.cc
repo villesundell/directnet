@@ -320,6 +320,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     // add it to our routes
                     if (dn_routes->find(msg.params[5]) == dn_routes->end()) {
                         (*dn_routes)[msg.params[5]] = new Route(rroute);
+                        cout << "Hfn ADD:" << endl;
+                        (*dn_routes)[msg.params[5]]->debug();
                     }
                     
                     // prepare to make other routes
@@ -364,7 +366,17 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     
                     // then update affected neighbors
                     if (indht.neighbors[3]) {
-                        if (dn_routes->find(*(indht.nbors_keys[3])) != dn_routes->end()) {
+                        if (*(indht.neighbors[3]) == pukeyhash) {
+                            msgb.params[3] = encExportKey();
+                            msgb.params[4] = "";
+                            msgb.params[5][0] = '\x03';
+                            handleDHTMessage(conn, msgb);
+                        
+                            msgb.params[3] = *(indht.nbors_keys[2]);
+                            msgb.params[4] = brroute;
+                            msgb.params[5][0] = '\x04';
+                            handleDHTMessage(conn, msgb);
+                        } else if (dn_routes->find(*(indht.nbors_keys[3])) != dn_routes->end()) {
                             Route rt(*((*dn_routes)[*(indht.nbors_keys[3])]));
                             BinSeq nroute = rt.toBinSeq(); // route to them
                             
@@ -386,20 +398,15 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                             msgb.params[4] = rt.toBinSeq();
                             msgb.params[5][0] = '\x04';
                             handleRoutedMsg(msgb);
-                        } else if (*(indht.neighbors[3]) == pukeyhash) {
-                            msgb.params[3] = encExportKey();
-                            msgb.params[4] = "";
-                            msgb.params[5][0] = '\x03';
-                            handleDHTMessage(conn, msgb);
-                        
-                            msgb.params[3] = *(indht.nbors_keys[2]);
-                            msgb.params[4] = brroute;
-                            msgb.params[5][0] = '\x04';
-                            handleDHTMessage(conn, msgb);
                         }
                     }
                     if (indht.neighbors[1]) {
-                        if (dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
+                        if (*(indht.neighbors[1]) == pukeyhash) {
+                            msgb.params[3] = *(indht.nbors_keys[2]);
+                            msgb.params[4] = brroute;
+                            msgb.params[5][0] = '\x06';
+                            handleDHTMessage(conn, msgb);
+                        } else if (dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
                             Route rt(*((*dn_routes)[*(indht.nbors_keys[1])]));
                             BinSeq nroute = rt.toBinSeq(); // route to them
                             
@@ -414,15 +421,15 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                             msgb.params[4] = rt.toBinSeq();
                             msgb.params[5][0] = '\x06';
                             handleRoutedMsg(msgb);
-                        } else if (*(indht.neighbors[1]) == pukeyhash) {
-                            msgb.params[3] = *(indht.nbors_keys[2]);
-                            msgb.params[4] = brroute;
-                            msgb.params[5][0] = '\x06';
-                            handleDHTMessage(conn, msgb);
                         }
                     }
                     if (indht.neighbors[3]) {
-                        if (dn_routes->find(*(indht.nbors_keys[3])) != dn_routes->end()) {
+                        if (*(indht.neighbors[3]) == pukeyhash) {
+                            msgb.params[3] = *(indht.nbors_keys[2]);
+                            msgb.params[4] = brroute;
+                            msgb.params[5][0] = '\x07';
+                            handleDHTMessage(conn, msgb);
+                        } else if (dn_routes->find(*(indht.nbors_keys[3])) != dn_routes->end()) {
                             Route rt(*((*dn_routes)[*(indht.nbors_keys[3])]));
                             BinSeq nroute = rt.toBinSeq(); // route to them
                             
@@ -437,11 +444,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                             msgb.params[4] = rt.toBinSeq();
                             msgb.params[5][0] = '\x07';
                             handleRoutedMsg(msgb);
-                        } else if (*(indht.neighbors[3]) == pukeyhash) {
-                            msgb.params[3] = *(indht.nbors_keys[2]);
-                            msgb.params[4] = brroute;
-                            msgb.params[5][0] = '\x07';
-                            handleDHTMessage(conn, msgb);
                         }
                     }
                 }
@@ -462,6 +464,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         if (msg.params[4].size() > 1) {
             if (dn_routes->find(msg.params[3]) == dn_routes->end()) {
                 (*dn_routes)[msg.params[3]] = new Route(msg.params[4]);
+                cout << "Hfr ADD:" << endl;
+                (*dn_routes)[msg.params[3]]->debug();
             }
         }
         
