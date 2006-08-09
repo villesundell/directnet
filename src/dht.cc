@@ -18,6 +18,9 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
+using namespace std;
+
 #include <string.h>
 
 #include "connection.h"
@@ -109,7 +112,7 @@ void dhtEstablish(const BinSeq &ident)
         msg.params.push_back(rt);
         msg.params.push_back(dn_name);
         msg.params.push_back(di.HTI);
-        msg.params.push_back(encExportKey());
+        msg.params.push_back(pukeyhash);
         msg.params.push_back(rt);
         msg.params.push_back(encExportKey());
         
@@ -123,9 +126,6 @@ void dhtEstablish(const BinSeq &ident)
         // TODO: continue
     }
 }
-
-#include <iostream>
-using namespace std;
 
 void outHex(const char *dat, int count)
 {
@@ -185,7 +185,7 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key)
                 return "";
             } else {
                 // it's for them
-                return *(dhi.neighbors[2]);
+                return *(dhi.nbors_keys[2]);
             }
         } else {
             // just send it to the rep
@@ -224,19 +224,14 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
     BinSeq nextHop = dhtNextHop(msg.params[2], msg.params[3]);
     
     if (nextHop.size()) {
-        if (dn_routes->find(nextHop) != dn_routes->end() &&
-            (*dn_routes)[nextHop]) {
+        if (dn_routes->find(nextHop) != dn_routes->end()) {
             msg.params[0] = (*dn_routes)[nextHop]->toBinSeq();
             
             // append it to the current route
             if (route) {
                 Route *nhop = (*dn_routes)[nextHop];
                 Route rroute(*route);
-                
-                Route::iterator ri;
-                for (ri = nhop->begin(); ri != nhop->end(); ri++) {
-                    rroute.push_back(*ri);
-                }
+                rroute.append(*nhop);
                 
                 *route = rroute.toBinSeq();
             }
@@ -299,13 +294,13 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 {
                     BinSeq neighbors[4];
                     
-                    /* set their keys */
+                    // set their keys
                     if (indht.nbors_keys[1]) neighbors[0] = *(indht.nbors_keys[1]);
                     neighbors[1] = encExportKey();
                     if (indht.nbors_keys[2]) neighbors[2] = *(indht.nbors_keys[2]);
                     if (indht.nbors_keys[3]) neighbors[3] = *(indht.nbors_keys[3]);
                         
-                    /* add them to our DHT */
+                    // add them to our DHT
                     if (indht.nbors_keys[3]) delete indht.nbors_keys[3];
                     indht.nbors_keys[3] = indht.nbors_keys[2];
                     indht.nbors_keys[2] = new BinSeq(msg.params[5]);
@@ -323,9 +318,12 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     BinSeq brroute = rroute.toBinSeq();
                     
                     // add it to our routes
-                    if (dn_routes->find(msg.params[4]) != dn_routes->end())
-                        delete (*dn_routes)[msg.params[4]];
-                    (*dn_routes)[msg.params[4]] = new Route(rroute);
+                    if (dn_routes->find(msg.params[5]) == dn_routes->end()) {
+                        (*dn_routes)[msg.params[5]] = new Route(rroute);
+                    }
+                    
+                    // prepare to make other routes
+                    Route *subRoute;
                     
                     // send our four-part response
                     Message msgb(1, "Hfr", 1, 1);
@@ -333,21 +331,36 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     msgb.params.push_back(dn_name);
                     msgb.params.push_back(indht.HTI);
                     msgb.params.push_back(neighbors[0]);
-                    msgb.params.push_back(msg.params[4]);
+                    if (dn_routes->find(neighbors[0]) != dn_routes->end()) {
+                        subRoute = new Route(*((*dn_routes)[neighbors[0]]));
+                        if (subRoute->size()) subRoute->pop_back();
+                        subRoute->reverse();
+                        subRoute->push_back(pukeyhash);
+                        subRoute->append(rroute);
+                        msgb.params.push_back(subRoute->toBinSeq());
+                        delete subRoute;
+                    } else {
+                        msgb.params.push_back(Route().toBinSeq());
+                    }
                     msgb.params.push_back(BinSeq("\x03\x00", 2));
                     handleRoutedMsg(msgb);
                     
-                    msgb.params[3] = neighbors[1];
-                    msgb.params[5][0] = '\x04';
-                    handleRoutedMsg(msgb);
-                    
-                    msgb.params[3] = neighbors[2];
-                    msgb.params[5][0] = '\x05';
-                    handleRoutedMsg(msgb);
-                    
-                    msgb.params[3] = neighbors[3];
-                    msgb.params[5][0] = '\x06';
-                    handleRoutedMsg(msgb);
+                    for (int i = 1; i < 4; i++) {
+                        msgb.params[3] = neighbors[i];
+                        if (dn_routes->find(neighbors[i]) != dn_routes->end()) {
+                            subRoute = new Route(*((*dn_routes)[neighbors[i]]));
+                            if (subRoute->size()) subRoute->pop_back();
+                            subRoute->reverse();
+                            subRoute->push_back(pukeyhash);
+                            subRoute->append(rroute);
+                            msgb.params[4] = subRoute->toBinSeq();
+                            delete subRoute;
+                        } else {
+                            msgb.params[4] = Route().toBinSeq();
+                        }
+                        msgb.params[5][0] = '\x03' + i;
+                        handleRoutedMsg(msgb);
+                    }
                     
                     // then update affected neighbors
                     if (indht.neighbors[3]) {
@@ -446,10 +459,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         if (msg.params[5].size() < 2) return;
         
         // add the route
-        if (msg.params[4].size()) {
-            if (dn_routes->find(msg.params[3]) != dn_routes->end())
-                delete (*dn_routes)[msg.params[3]];
-            (*dn_routes)[msg.params[3]] = new Route(msg.params[4]);
+        if (msg.params[4].size() > 1) {
+            if (dn_routes->find(msg.params[3]) == dn_routes->end()) {
+                (*dn_routes)[msg.params[3]] = new Route(msg.params[4]);
+            }
         }
         
         if (msg.params[5][0] >= '\x03' &&

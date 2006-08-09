@@ -18,6 +18,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
@@ -110,5 +111,17 @@ void Route::append(const Route &a)
 {
     for (int i = 0; i < a.size(); i++) {
         push_back(a[i]);
+    }
+}
+
+void Route::debug()
+{
+    cout << "ROUTE:" << endl;
+    for (int i = 0; i < size(); i++) {
+        cout << " " << i << ": ";
+        for (int j = 0; j < at(i).size(); j++) {
+            printf("%.2X", (unsigned char) at(i)[j]);
+        }
+        cout << endl;
     }
 }
