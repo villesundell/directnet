@@ -41,6 +41,9 @@ class DHTInfo {
     vector<BinSeq *> real_divs_keys;
     vector<BinSeq *> best_divisions;
     bool established;
+    
+    // the data stored for the DHT
+    map<BinSeq, BinSeq> data;
 };
 
 // map the DHTs we're members of to DHTInfo nodes
@@ -71,16 +74,18 @@ void dhtEstablish(const BinSeq &ident);
 /* what's the next hop for a search?
  * ident: what DHT?
  * key: the key being searched for
+ * noexact: do not accept an exact match (for node dead reports)
  * return: the encryption key of the next hop, "" for this node */
-BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key);
+BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact = false);
 
 /* is this message for us?  If not, continue it
  * msg: the message itself
  * ident: what DHT?
  * key: the key being searched for
  * route: where to append the route
+ * noexact: do not accept an exact match (for node dead reports)
  * return: true if for us */
-bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);
+bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool noexact = false);
 
 /* Handle a messgae related to DHTs
  * conn: the connection

@@ -110,7 +110,7 @@ int main(int argc, char **argv, char **envp)
                 enable_minimode = 1;
             }
         }
-   }
+    }
     dn_init(argc, argv);
     
 

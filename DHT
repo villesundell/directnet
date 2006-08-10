@@ -104,7 +104,9 @@ Hfn(1)(1) (hash find)
                 type
                         first byte: 0 for regular search, 1 for positive
                         division, 2 for negative division, 3 for search for
-                        successors and predecessors
+                        successors and predecessors, 4 to report a node dead, 5
+                        for search for second successor (after losing successor
+                        do to 4)
                         second byte (for divisions): the level of division (0-
                         255)
 
@@ -115,8 +117,8 @@ Hfr(1)(1) (hash find response)
                 route
                 local name
                 HTI
-                encryption key
                 route to found user
+                encryption key
                 type
                         first byte: 0 for regular search response, 1 for
                         positive division response, 2 for negative division

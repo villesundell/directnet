@@ -283,15 +283,15 @@ BinSeq encImportKey(const BinSeq &name, const BinSeq &key)
 
 BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder)
 {
-    BinSeq r;
+    BinSeq r, rrev;
     if (a.size() != b.size()) return r;
     int carry = 0;
     int ca, cb;
     
-    for (int i = 0; i < a.size(); i++) {
+    for (int i = a.size() - 1; i >= 0; i--) {
         ca = (unsigned char) a[i];
         cb = (unsigned char) b[i];
-        cb += carry;
+        ca -= carry;
         carry = 0;
         
         while (cb > ca) {
@@ -299,10 +299,15 @@ BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder)
             cb -= 256;
         }
         ca -= cb;
-        r.push_back((unsigned char) ca);
+        rrev.push_back((unsigned char) ca);
+    }
+    for (int i = rrev.size() - 1; i >= 0; i--) {
+        r.push_back(rrev[i]);
     }
     
     if (remainder) *remainder = carry;
+    
+    return r;
 }
 
 BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
@@ -331,18 +336,18 @@ BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
 int encCmp(const BinSeq &a, const BinSeq &b)
 {
     BinSeq ra, rb, rs;
-    ra = encSub(pukeyhash, a);
-    rb = encSub(pukeyhash, b);
+    ra = encSub(a, pukeyhash);
+    rb = encSub(b, pukeyhash);
     
     // subtract with remainder to compare
     int r;
     rs = encSub(ra, rb, &r);
     if (r) {
-        return 1; // if anything remaining, rb was greater than ra
+        return -1; // if anything remaining, rb was greater than ra
     } else {
         // if it's empty, they're equal
         for (int i = 0; i < rs.size(); i++) {
-            if (rs[i] != '\0') return -1;
+            if (rs[i] != '\0') return 1;
         }
         return 0;
     }
