@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
@@ -121,5 +121,8 @@ void emitUnroutedMsg(conn_t *from, Message &omsg);
 /* The main communication method for a connection 
  * fdnum_voidptr: a void * to an int with the fdnum */
 void *communicator(void *fdnum_voidptr);
+
+/* A node has disconnected.  Do we care? */
+void disNode(const BinSeq &key);
 
 #endif // DN_CONNECTION_H

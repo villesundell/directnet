@@ -162,7 +162,7 @@ static void conn_notify_core(conn_t *conn, int cond) {
         kill_connection(conn);
         return;
     }
-//printf ("Tullaanko?"); 
+    
     if (cond & DN_EV_READ) {
         int ret;
         if (conn->inbuf_p == conn->inbuf_sz) {
@@ -256,10 +256,22 @@ static void conn_notify_core(conn_t *conn, int cond) {
 }
  
 static void kill_connection(conn_t *conn) {
+    // if we have a key, we'll need to inform others
+    BinSeq *hkey = NULL;
+    if (conn->enckey) {
+        hkey = new BinSeq(*(conn->enckey));
+    }
+    
     if (conn->state == CDN_EV_EVENT)
         conn->state = CDN_EV_DYING;
     else if (conn->state == CDN_EV_IDLE)
         delete conn;
+    
+    // inform of the disconnect
+    if (hkey) {
+        disNode(*hkey);
+        delete hkey;
+    }
 }
  
 static void conn_notify(dn_event_fd *ev, int cond) {
@@ -464,6 +476,11 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             handleRoutedMsg(nmsg);
         }
         
+    } else if (CMD_IS("dis", 1, 1)) {
+        REQ_PARAMS(1);
+        
+        disNode(msg.params[0]);
+        
     } else if (CMD_IS("dcr", 1, 1) ||
                CMD_IS("dce", 1, 1)) {
         // stub
@@ -531,12 +548,24 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         REQ_PARAMS(3);
         
         // if the version isn't right, immediately fail
-        if (msg.params[2].size() < 4) return;
+        if (msg.params[2].size() < 4) {
+            kill_connection(conn);
+            return;
+        }
         int remver[2];
         remver[0] = charrayToInt(msg.params[2].c_str());
-        if (remver[0] != 2) return;
+        if (remver[0] != 2) {
+            kill_connection(conn);
+            return;
+        }
         remver[1] = charrayToInt(msg.params[2].c_str() + 2);
         // FIXME: when this protocol stabilizes, this will need to set up translation
+        
+        // make sure they don't have the same enckey as us
+        if (msg.params[1] == encExportKey()) {
+            kill_connection(conn);
+            return;
+        }
         
         Route *route;
         BinSeq keyhash = encHashKey(msg.params[1]);
@@ -550,9 +579,6 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         if (dn_routes->find(msg.params[1]) != dn_routes->end())
             delete (*dn_routes)[msg.params[1]];
         (*dn_routes)[msg.params[1]] = route;
-        if (dn_iRoutes->find(msg.params[1]) != dn_iRoutes->end())
-            delete (*dn_iRoutes)[msg.params[1]];
-        (*dn_iRoutes)[msg.params[1]] = new Route(*route);
         
         (*dn_names)[msg.params[1]] = msg.params[0];
         (*dn_keys)[msg.params[0]] = msg.params[1];
@@ -608,30 +634,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         handleit = handleRoutedMsg(msg);
         
-        if (!handleit) {
-            // This isn't our route, but do add intermediate routes
-            Route *ra, *rb;
-            string endu;
-            
-            // Who's the end user?
-            ra = new Route(msg.params[0]);
-            if (ra->size() > 0) {
-                endu = (*ra)[ra->size()-1];
-                
-                // And add an intermediate route
-                (*dn_iRoutes)[endu] = ra;
-            }
-            
-            // Then figure out the route from here back
-            rb = new Route(msg.params[2]);
-            
-            // Loop through to find my name
-            while (rb->size() > 0 && (*rb)[0] != dn_name) rb->pop_front();
-            
-            // And add that route
-            if (rb->size() > 0)
-                (*dn_iRoutes)[msg.params[1].c_str()] = rb;
-        } else {
+        if (handleit) {
             // Hoorah, add a user
             
             // 1) Route/name
@@ -640,9 +643,6 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             if (dn_routes->find(msg.params[3]) != dn_routes->end())
                 delete (*dn_routes)[msg.params[3]];
             (*dn_routes)[msg.params[3]] = route;
-            if (dn_iRoutes->find(msg.params[3]) != dn_iRoutes->end())
-                delete (*dn_iRoutes)[msg.params[3]];
-            (*dn_iRoutes)[msg.params[3]] = new Route(*route);
             
             (*dn_names)[msg.params[3]] = msg.params[1];
             (*dn_keys)[msg.params[1]] = msg.params[3];
@@ -656,9 +656,9 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     
     } else if (CMD_IS("lst", 1, 1)) {
         REQ_PARAMS(2);
-      
+        
         uiLoseRoute(msg.params[1].c_str());
-    
+        
     } else if (CMD_IS("msg", 1, 1) ||
                CMD_IS("msa", 1, 1)) {
         REQ_PARAMS(3);
@@ -727,6 +727,9 @@ bool handleRoutedMsg(const Message &msg)
         return true; // broken - presume our data
     }
     
+    // see everyone in the route
+    seeUsers((*route));
+    
     next = (*route)[0];
     route->pop_front();
     
@@ -737,31 +740,6 @@ bool handleRoutedMsg(const Message &msg)
     next = (*dn_kbh)[next];
     
     if (dn_conn->find(next) == dn_conn->end()) {
-        // We need to tell the other side that this route is dead!
-        // Bouncing a lost could end up in an infinite loop, so don't
-        if (msg.cmd != "lst") {
-            string endu;
-            
-            BinSeq tp(next);
-            route->push_front(tp);
-            endu = (*route)[route->size()-1];
-            
-            // If this is me, don't send the command, just display it
-            {
-                Message lstm(1, "lst", 1, 1);
-                Route *iroute;
-                
-                // Do we have an intermediate route?
-                if (dn_iRoutes->find(msg.params[1].c_str()) == dn_iRoutes->end()) return 0;
-                iroute = (*dn_iRoutes)[msg.params[1].c_str()];
-                
-                // Send the command
-                lstm.params.push_back(iroute->toBinSeq());
-                lstm.params.push_back(endu);
-                handleRoutedMsg(lstm);
-            }
-        }
-        
         delete route;
         return 0;
     }
@@ -844,9 +822,6 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     
     // Add his route,
     (*dn_routes)[key] = reverseRoute;
-    if (dn_iRoutes->find(key) != dn_iRoutes->end())
-        delete (*dn_iRoutes)[key];
-    (*dn_iRoutes)[key] = new Route(*reverseRoute);
     
     (*dn_names)[key] = name;
     (*dn_keys)[name] = key;
@@ -1100,4 +1075,43 @@ void setAway(const string *msg)
         if (awayMsg) delete awayMsg;
         awayMsg = NULL;
     }
+}
+
+void disNode(const BinSeq &key)
+{
+    BinSeq hkey = encHashKey(key);
+    
+    if (dn_seen_user->find(hkey) == dn_seen_user->end()) {
+        // I don't know this user, so I don't care
+        return;
+    }
+    
+    // remove from the seen_user list
+    dn_seen_user->erase(hkey);
+    
+    // remove any routes leading to or through this user (complicated)
+    map<BinSeq, Route *>::iterator dri;
+    for (dri = dn_routes->begin(); dri != dn_routes->end(); dri++) {
+        if (dri->second &&
+            dri->second->find(hkey)) {
+            // try to get a new one
+            /* FIXME: DHT FIND USER */
+            
+            // bad route, delete it
+            delete dri->second;
+            dn_routes->erase(dri);
+            dri--;
+        }
+    }
+    
+    // DHT sanity checks (we may have just broken our DHT links!)
+    dhtCheck();
+    
+    // forward a disconnect message
+    Message msg(0, "dis", 1, 1);
+    msg.params.push_back(key);
+    
+    std::set<conn_t *>::iterator it;
+    for (it = active_connections.begin(); it != active_connections.end(); it++)
+        sendCmd(*it, msg);
 }

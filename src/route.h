@@ -40,6 +40,8 @@ class Route : public vector<BinSeq> {
     
     void append(const Route &a);
     
+    bool find(const BinSeq &a) const;
+    
     void debug();
     
     Route &operator+=(const string &node) { push_back(node); return *this; }

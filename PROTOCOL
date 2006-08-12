@@ -15,17 +15,17 @@ Neither functions as a server or a client, they are equal nodes.
 
 The protocol header is as follows:
 
-Information | Size | Description
-------------+------+-------------
-       type |    1 | The type of the message:
-            |      |   0 for direct messages
-            |      |   1 for routed messages
-            |      |   2 for special messages (generally routed but needs
-            |      |     special functionality)
-    command |    3 | A three-character string name of the command.
-    version |    2 | The version of the command.
- parameters |  Var | Two bigendian bytes for each parameter, with the value of
-            |      | the size of that parameter.  Terminated with \xFF\xFF
+     Information | Size | Description
+-----------------+------+-------------
+            type |    1 | The type of the message:
+                 |      |   0 for direct messages
+                 |      |   1 for routed messages
+                 |      |   2 for special messages (generally routed but needs
+                 |      |     special functionality)
+         command |    3 | A three-character string name of the command.
+         version |    2 | The version of the command.
+ parameter sizes |  Var | Two bigendian bytes for each parameter, with the value of
+                 |      | the size of that parameter.  Terminated with \xFF\xFF
 
 After that, the parameters are appended. They must be of the sizes described in
 the header.
@@ -35,8 +35,8 @@ The type of command dictates how it is to propogate through the network.
 Direct commands are sent directly over a connection and are not continued.
 
 Routed commands have a set route as the first parameter, and all of the nodes
-along that route strip off their name then continue the transfer until the data
-is sent to the last node on the list (at which point it will have an empty
+along that route strip off the next key then continue the transfer until the
+data is sent to the last node on the list (at which point it will have an empty
 route), and the sending user as the second parameter. The last node will
 receive and interpret the command.
 
@@ -49,7 +49,8 @@ followed by a byte with the value \xFF, follwed by each of the route elements,
 which must be of the lenghts described. Route elements are SHA-256 hashes of
 encryption keys.
 
-Hash commands 
+This document describes the basic DirectNet mesh commands. The DHT, which is
+used for route detection, is described in the document 'DHT'.
 
 The protocol commands are documented in alphabetical order in this format:
 command(first version char)(second version char) (brief summary)
@@ -57,11 +58,13 @@ command(first version char)(second version char) (brief summary)
         type: The type
         parameters:
                 A list of the parameters that are sent with this command
+        [notes:
+                Additional info]
 
 
 PROTOCOL COMMANDS:
 
-cjo(1)(1) (chat join)
+cjo(1)(1) (chat join) (scheduled for removal before 2.0.0)
         purpose: Join a chat
         type: routed
         parameters:
@@ -69,7 +72,7 @@ cjo(1)(1) (chat join)
                 local name
                 channel
 
-clv(1)(1) (chat leave)
+clv(1)(1) (chat leave) (scheduled for removal before 2.0.0)
         purpose: Leave a chat
         type: routed
         note: not properly implemented
@@ -78,7 +81,7 @@ clv(1)(1) (chat leave)
                 local name
                 channel
 
-cms(1)(1) (chat message)
+cms(1)(1) (chat message) (scheduled for removal before 2.0.0)
         purpose: Send a message on a chat channel
         type: routed
         parameters:
@@ -89,7 +92,7 @@ cms(1)(1) (chat message)
                 local name: the person who made the message
                 encrypted message
 
-con(1)(1) (chat on)
+con(1)(1) (chat on) (scheduled for removal before 2.0.0)
         purpose: Echo to cjo
         type: routed
         parameters:
@@ -97,7 +100,19 @@ con(1)(1) (chat on)
                 local name
                 channel
 
-dcr(1)(1) (direct connect request)
+dis(1)(1) (disconnect) *
+        purpose: Inform of a node's disconnection
+        type: direct
+        parameters:
+                disconnected encryption key
+        notes:
+                Upon receival, the node should check if it has ever seen this
+                key. If it has, it will remove it from anywhere it may be (DHT,
+                routes, etc), and try to reestablish broken routes, etc, then
+                send it to ALL connected nodes. If it has not seen the user,
+                this message is ignored.
+
+dcr(1)(1) (direct connect request) (scheduled for removal before 2.0.0)
         purpose: Attempt to directly connect to a remote user (also causes a dce)
         type: routed
         parameters:
@@ -107,7 +122,7 @@ dcr(1)(1) (direct connect request)
         note: This will soon be subsumed by the (yet undocumented) scr (short
               circuit request)
 
-dce(1)(1) (direct connect request echo)
+dce(1)(1) (direct connect request echo) (scheduled for removal before 2.0.0)
         purpose: Same as dcr, but is an echo to dcr (in case connection is only possible one way)
         type: routed
         parameters:
@@ -128,7 +143,7 @@ dni(1)(1) (DirectNet identity) *
                         2 byte big-endian minor (currently 0, if lower should translate)
 
 
-dnv(1)(1) (DirectNet verify) *
+dnv(1)(1) (DirectNet verify) (perhaps to be replaced) *
         purpose: Verify that the user has the private key they claim to. If
         this is received and is valid, the user is added. Otherwise, the
         connection is dropped.
@@ -136,8 +151,7 @@ dnv(1)(1) (DirectNet verify) *
         parameters:
                 challenge phrase signed with private key
 
-
-fnd(1)(1) (find)
+fnd(1)(1) (find) (scheduled for removal before 2.0.0)
         purpose: Find a user by name
         type: special - nonlooping unrouted
         parameters:
@@ -147,7 +161,7 @@ fnd(1)(1) (find)
                 public key
 
 
-fnr(1)(1) (find response)
+fnr(1)(1) (find response) (scheduled for removal before 2.0.0)
         purpose: Respond to a find by sending back the received route
         type: special - routed but with intermediate handling
         parameters:
@@ -156,7 +170,7 @@ fnr(1)(1) (find response)
                 route back
                 public key
 
-lst(1)(1) (lost route)
+lst(1)(1) (lost route) (scheduled for removal before 2.0.0) *
         purpose: Identify when a route has been lost (sent to the sender of msg, etc)
         type: routed
         parameters:
@@ -185,3 +199,22 @@ pin(1)(1) (ping)
         purpose: Ping a connection for keepalive (no pong yet)
         type: direct
         parameters: none
+
+
+Key:
+*: Not yet implemented
+
+
+Many of these are scheduled for removal before 2.0.0.  Most notably:
+
+C*: Chat commands will be handled by a plugin, and much differently (chat rooms
+will be owned and centralized)
+
+fnr/fne: Route detection is no longer a flooding command, but is done through the
+DHT.
+
+dcr/dce: To be replaced with the much-more-powerful short-circuiting system
+(scr/sce).
+
+lst: Lost-route detection will be replaced with the much-more-powerful ARLD
+(Active Route Loss Detection) method.

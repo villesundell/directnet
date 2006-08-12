@@ -28,6 +28,7 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #ifdef HAVE_SYS_WAIT
 #include <sys/wait.h>
@@ -35,6 +36,7 @@ using namespace std;
 #include <unistd.h>
 
 #include "chat.h"
+#include "compat.h"
 #include "config.h"
 #include "directnet.h"
 #include "dnconfig.h"
@@ -57,10 +59,11 @@ map<BinSeq, BinSeq> *dn_names;
 map<BinSeq, BinSeq> *dn_keys;
 
 map<BinSeq, Route *> *dn_routes;
-map<BinSeq, Route *> *dn_iRoutes;
 
 map<string, int> *dn_trans_keys;
 int currentTransKey;
+
+map<BinSeq, int> *dn_seen_user;
 
 char uiLoaded;
 
@@ -123,12 +126,13 @@ void dn_init(int argc, char **argv) {
       
     // This stores routes by encryption keys
     dn_routes = new map<BinSeq, Route *>;
-    // This stores intermediate routes, for response on broken routes
-    dn_iRoutes = new map<BinSeq, Route *>;
     
     // This hash stores the state of all nonrepeating unrouted messages
     dn_trans_keys = new map<string, int>;
     currentTransKey = 0;
+    
+    // This hash stores the last time we saw any given user
+    dn_seen_user = new map<BinSeq, int>;
     
     // This hash stores whether we're in certain chats
     dn_chats = new map<string, vector<string> *>;
@@ -182,4 +186,27 @@ void newTransKey(char *into)
     sprintf(into, "%s%d", dn_name, currentTransKey);
     (*dn_trans_keys)[string(into)] = 1;
     currentTransKey++;
+}
+
+void seeUsers(const Route &us)
+{
+    // get the current time
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    
+    int day = tv.tv_sec - (60 * 60 * 24);
+    
+    // see a user, and flush out any users we haven't seen in 24 hours
+    map<BinSeq, int>::iterator sui;
+    for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
+        if (us.find(sui->first)) {
+            // update
+            sui->second = tv.tv_sec;
+        } else {
+            if (sui->second < day) {
+                dn_seen_user->erase(sui);
+                sui--;
+            }
+        }
+    }
 }

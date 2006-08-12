@@ -92,14 +92,15 @@ bool dhtEstablished(const BinSeq &ident)
     return in_dhts[ident].established;
 }
 
-void dhtEstablish(const BinSeq &ident)
+void dhtEstablish(const BinSeq &ident, int step)
 {
     if (in_dhts.find(ident) == in_dhts.end()) return;
     
     DHTInfo &di = in_dhts[ident];
     
     if (!di.rep) return; // yukk!
-    if (!di.neighbors[0]) {
+    if ((step == -1 && !di.neighbors[0]) ||
+        step == DHT_ESTABLISH_NEIGHBORS) {
         // send a neighbor request to the representative
         Message msg(1, "Hfn", 1, 1);
         BinSeq rt;
@@ -182,6 +183,35 @@ void dhtDebug(const BinSeq &ident)
     cout << "--------------------------------------------------" << endl << endl;
 }
 
+void dhtCheck()
+{
+    // for all DHTs ...
+    map<BinSeq, DHTInfo>::iterator dhi;
+    for (dhi = in_dhts.begin(); dhi != in_dhts.end(); dhi++) {
+        DHTInfo &indht = dhi->second;
+        
+        // check neighbors...
+        for (int i = 0; i < 4; i++) {
+            if (indht.neighbors[i]) {
+                if (dn_routes->find(*(indht.nbors_keys[i])) == dn_routes->end()) {
+                    // uh oh!
+                    indht.established = false;
+                    
+                    delete indht.neighbors[i];
+                    indht.neighbors[i] = NULL;
+                    
+                    delete indht.nbors_keys[i];
+                    indht.nbors_keys[i] = NULL;
+                    
+                    dhtEstablish(indht.HTI, DHT_ESTABLISH_NEIGHBORS);
+                }
+            }
+        }
+        
+        // TODO: check divisions
+    }
+}
+
 BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact)
 {
     if (in_dhts.find(ident) == in_dhts.end()) return "";
@@ -253,10 +283,6 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
     BinSeq nextHop = dhtNextHop(msg.params[2], msg.params[3], noexact);
     
     if (nextHop.size()) {
-        cout << "Not for me, bounce to ";
-        BinSeq h = encHashKey(nextHop);
-        outHex(h.c_str(), h.size());
-        cout << endl;
         if (dn_routes->find(nextHop) != dn_routes->end()) {
             msg.params[0] = (*dn_routes)[nextHop]->toBinSeq();
             
@@ -267,15 +293,9 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
                 rroute.append(*nhop);
                 
                 *route = rroute.toBinSeq();
-                cout << "Route to them:" << endl;
-                nhop->debug();
-                cout << "Full route:" << endl;
-                rroute.debug();
             }
             
             handleRoutedMsg(msg);
-        } else {
-            cout << "ACK!  No route!" << endl;
         }
         return false;
     }
@@ -492,62 +512,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         handleRoutedMsg(msgb);
                     }
                 }
-            }
-                
-            case '\x04':
-            {
-                // reporting a node dead - the dead node is our successor
-                if (indht.neighbors[2]) delete indht.neighbors[2];
-                indht.neighbors[2] = indht.neighbors[3];
-                indht.neighbors[3] = NULL;
-                
-                if (indht.nbors_keys[2]) delete indht.nbors_keys[2];
-                indht.nbors_keys[2] = indht.nbors_keys[3];
-                indht.nbors_keys[3] = NULL;
-                
-                Message msgb(1, "Hfr", 1, 1);
-                msgb.params.push_back(Route().toBinSeq());
-                msgb.params.push_back(dn_name);
-                msgb.params.push_back(indht.HTI);
-                msgb.params.push_back(Route().toBinSeq());
-                msgb.params.push_back("");
-                msgb.params.push_back(BinSeq("\x00\x00", 2));
-                
-                // update affected neighbors
-                if (indht.neighbors[2]) {
-                    if (dn_routes->find(*(indht.nbors_keys[2])) != dn_routes->end()) {
-                        // route to the neighbor ...
-                        Route rt(*((*dn_routes)[*(indht.nbors_keys[2])]));
-                        BinSeq brt = rt.toBinSeq();
-                        
-                        // route to their new predecessor (me)
-                        if (rt.size()) rt.pop_back();
-                        rt.reverse();
-                        rt.push_back(pukeyhash);
-                        BinSeq rtm = rt.toBinSeq();
-                        
-                        msgb.params[0] = brt;
-                        msgb.params[3] = rtm;
-                        msgb.params[4] = pukeyhash;
-                        msgb.params[5][0] = '\x04';
-                        handleRoutedMsg(msgb);
-                        
-                        // route to their new second predecessor
-                        if (indht.neighbors[1]) {
-                            if (*(indht.neighbors[1]) != pukeyhash &&
-                                dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
-                                rt.append(*((*dn_routes)[*(indht.nbors_keys[1])]));
-                            }
-                            
-                            msgb.params[3] = rt.toBinSeq();
-                            msgb.params[4] = *(indht.neighbors[1]);
-                            msgb.params[5][0] = '\x03';
-                            handleRoutedMsg(msgb);
-                        }
-                    }
-                }
-                
-                // TODO: finish
             }
         }
         /* TODO: complete */

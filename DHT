@@ -13,18 +13,7 @@ hash table identifier.
 (whether an encryption key, name, or anything else)]
 [None of this is implemented yet]
 
-Hst(1)(1) (hash set)
-        purpose: set a value in the distributed hash
-        type: hash
-        parameters:
-                immediate route
-                local name
-                HTI
-                DHT key
-                value
-                ttl [not currently used]
-
-Had(1)(1) (hash add)
+Had(1)(1) (hash add) *
         purpose: add a value to a list of values currently assigned in the distributed hash
         type: hash
         parameters:
@@ -35,63 +24,18 @@ Had(1)(1) (hash add)
                 value
                 ttl [not currently used]
 
-Hg1(1)(1) (hash get 1st)
-        purpose: get the first value for a key
-        type: returnable hash
+Hen(1)(1) (hash encapsulate) *
+        purpose: encapsulate a routed message in a hash message
+        type: hash
         parameters:
                 immediate route
                 local name
                 HTI
                 DHT key
-                route
+                encapsulated message
+                ttl [not currently used]
 
-Hr1(1)(1) (hash return 1st)
-        purpose: response to Hg1
-        type: hash return
-        parameters:
-                route
-                local name
-                HTI
-                DHT key
-                value
-
-Hgr(1)(1) (hash get random)
-        purpose: get any value for a key
-        type: returnable hash
-        parameters:
-                HTI
-                DHT key
-                route
-
-Hrr(1)(1) (hash return random)
-        purpose: response to Hgr
-        type: hash return
-        parameters:
-                route
-                local name
-                HTI
-                DHT key
-                value
-
-Hga(1)(1) (hash get all)
-        purpose: get all values for a key
-        type: returnable hash
-        parameters:
-                HTI
-                DHT key
-                route
-
-Hra(1)(1) (hash get all)
-        purpose: response to Hga
-        type: hash return
-        parameters:
-                route
-                local name
-                HTI
-                DHT key
-                values (in the same form as parameters in messages)
-
-Hfn(1)(1) (hash find)
+Hfn(1)(1) (hash find) *(partial)
         purpose: find a route to the user with the given encryption key
         type: returnable hash
         parameters:
@@ -104,13 +48,11 @@ Hfn(1)(1) (hash find)
                 type
                         first byte: 0 for regular search, 1 for positive
                         division, 2 for negative division, 3 for search for
-                        successors and predecessors, 4 to report a node dead, 5
-                        for search for second successor (after losing successor
-                        do to 4)
+                        successors and predecessors
                         second byte (for divisions): the level of division (0-
                         255)
 
-Hfr(1)(1) (hash find response)
+Hfr(1)(1) (hash find response) *(partial)
         purpose: reply to Hfn
         type: hash return
         parameters:
@@ -131,6 +73,32 @@ Hfr(1)(1) (hash find response)
                         second byte (for divisions): the level of division (0-
                         255)
 
+Hg1(1)(1) (hash get 1st) *
+        purpose: get the first value for a key
+        type: returnable hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT key
+                route
+
+Hga(1)(1) (hash get all) *
+        purpose: get all values for a key
+        type: returnable hash
+        parameters:
+                HTI
+                DHT key
+                route
+
+Hgr(1)(1) (hash get random) *
+        purpose: get any value for a key
+        type: returnable hash
+        parameters:
+                HTI
+                DHT key
+                route
+
 Hin(1)(1) (hash table info)
         purpose: tell the remote node what hash table(s) this node is on
         type: direct
@@ -142,3 +110,48 @@ Hir(1)(1) (hash table info response)
         type: direct
         parameters:
                 list of HTIs (in the same form as routes)
+
+Hr1(1)(1) (hash return 1st) *
+        purpose: response to Hg1
+        type: hash return
+        parameters:
+                route
+                local name
+                HTI
+                DHT key
+                value
+
+Hra(1)(1) (hash return all) *
+        purpose: response to Hga
+        type: hash return
+        parameters:
+                route
+                local name
+                HTI
+                DHT key
+                values (in the same form as parameters in messages)
+
+Hrr(1)(1) (hash return random) *
+        purpose: response to Hgr
+        type: hash return
+        parameters:
+                route
+                local name
+                HTI
+                DHT key
+                value
+
+Hst(1)(1) (hash set) *
+        purpose: set a value in the distributed hash
+        type: hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT key
+                value
+                ttl [not currently used]
+
+
+Key:
+*: Not yet implemented

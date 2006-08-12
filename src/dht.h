@@ -67,9 +67,15 @@ void dhtCreate();
  * returns: true if fully established */
 bool dhtEstablished(const BinSeq &ident);
 
+enum {  DHT_ESTABLISH_NEIGHBORS,
+        DHT_ESTABLISH_DIVISIONS };
+
 /* do a step to establish ourself
  * ident: into what DHT? */
-void dhtEstablish(const BinSeq &ident);
+void dhtEstablish(const BinSeq &ident, int step = -1);
+
+/* do all of our DHT links have correspondant routes?  If not, reestablish */
+void dhtCheck();
 
 /* what's the next hop for a search?
  * ident: what DHT?

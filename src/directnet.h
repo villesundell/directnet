@@ -48,11 +48,11 @@ extern map<BinSeq, BinSeq> *dn_keys;
 // route by encryption key
 extern map<BinSeq, Route *> *dn_routes;
 
-// intermediate routes by name
-extern map<BinSeq, Route *> *dn_iRoutes;
-
 // has a key been used yet?
 extern map<string, int> *dn_trans_keys;
+
+// have we seen this user?  When? (by hashed enc key)
+extern map<BinSeq, int> *dn_seen_user;
 
 // our position in the transkey list
 extern int currentTransKey;
@@ -67,6 +67,9 @@ extern char dn_localip[24];
 extern char *homedir, *bindir;
 
 void newTransKey(char *into);
+
+// see a route of users
+void seeUsers(const Route &us);
 
 void dn_init(int argc, char **argv);
 void dn_goOnline();

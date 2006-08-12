@@ -114,6 +114,14 @@ void Route::append(const Route &a)
     }
 }
 
+bool Route::find(const BinSeq &a) const
+{
+    for (int i = 0; i < size(); i++) {
+        if (at(i) == a) return true;
+    }
+    return false;
+}
+
 void Route::debug()
 {
     cout << "ROUTE:" << endl;
