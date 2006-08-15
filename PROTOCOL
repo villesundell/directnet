@@ -217,4 +217,4 @@ dcr/dce: To be replaced with the much-more-powerful short-circuiting system
 (scr/sce).
 
 lst: Lost-route detection will be replaced with the much-more-powerful ARLD
-(Active Route Loss Detection) method.
+(Active Route Loss Detection) method. See dis.

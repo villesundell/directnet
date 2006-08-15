@@ -303,6 +303,13 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
     return true;
 }
 
+void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route)
+{
+    if (dhtForMe(msg, ident, key, route)) {
+        handleDHTDupMessage(NULL, msg);
+    }
+}
+
 void handleDHTDupMessage(conn_t *conn, Message msg)
 {
     handleDHTMessage(conn, msg);
@@ -315,32 +322,53 @@ void handleDHTMessage(conn_t *conn, Message &msg)
 {
     //msg.debug("DHT");
     
-    if (CMD_IS("Hin", 1, 1) ||
-        CMD_IS("Hir", 1, 1)) {
-        REQ_PARAMS(1);
+    if (CMD_IS("Had", 1, 1)) {
+        REQ_PARAMS(6);
         
-        // same format as routes
-        Route *dhtl = new Route(msg.params[0]);
+        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[3]), NULL))
+            return;
         
-        // join all of their DHTs
-        for (int i = 0; i < dhtl->size(); i++) {
-            if (in_dhts.find((*dhtl)[i]) == in_dhts.end()) {
-                if (conn->enckey) {
-                    dhtJoin((*dhtl)[i], *(conn->enckey));
-                    dhtEstablish((*dhtl)[i]);
-                }
+        // this is my data, store it
+        // TODO: data ownership, redundancy, etc
+        DHTInfo &indht = in_dhts[msg.params[2]];
+        
+        indht.data[msg.params[3]].insert(msg.params[4]);
+     
+        
+    } else if (CMD_IS("Hga", 1, 1)) {
+        REQ_PARAMS(6);
+        
+        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[3]), &(msg.params[4])))
+            return;
+        
+        DHTInfo &indht = in_dhts[msg.params[2]];
+        
+        // I should have this data, so return it
+        Route retdata;
+        
+        if (indht.data.find(msg.params[3]) != indht.data.end()) {
+            set<BinSeq> &reqd = indht.data[msg.params[3]];
+            set<BinSeq>::iterator ri;
+            for (ri = reqd.begin(); ri != reqd.end(); ri++) {
+                retdata.push_back(*ri);
             }
         }
         
-        delete dhtl;
+        // build the return message
+        Message ret(1, "Hra", 1, 1);
         
-        // echo if applicable
-        if (msg.cmd == "Hin") {
-            // and hash table info
-            Message hmsg(0, "Hir", 1, 1);
-            hmsg.params.push_back(dhtIn(true).toBinSeq());
-            sendCmd(conn, hmsg);
-        }
+        Route rroute(msg.params[0]);
+        if (rroute.size()) rroute.pop_back();
+        rroute.reverse();
+        rroute.push_back(encHashKey(msg.params[5]));
+        ret.params.push_back(rroute.toBinSeq());
+        
+        ret.params.push_back(dn_name);
+        ret.params.push_back(indht.HTI);
+        ret.params.push_back(msg.params[3]);
+        ret.params.push_back(retdata.toBinSeq());
+        
+        handleRoutedMsg(ret);
         
         
     } else if (CMD_IS("Hfn", 1, 1)) {
@@ -353,9 +381,38 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                       (msg.params[6][0] == '\x04'))) return;
         
         DHTInfo &indht = in_dhts[msg.params[2]];
-            
+        
         // we're the destination, what kind of search is it?
         switch (msg.params[6][0]) {
+            case '\x00':
+            {
+                // regular search - if we don't match exactly, failed search!
+                if (pukeyhash != msg.params[3]) return;
+                
+                Route *fromroute = new Route(msg.params[4]);
+                Route *rroute = new Route(*fromroute);
+                // rroute needs to be reversed
+                if (rroute->size()) rroute->pop_back();
+                rroute->reverse();
+                rroute->push_back(encHashKey(msg.params[5]));
+                
+                recvFnd(rroute, msg.params[1], msg.params[5]);
+                
+                // then send the Hfr back
+                Message msgb(1, "Hfr", 1, 1);
+                msgb.params.push_back(rroute->toBinSeq());
+                delete rroute;
+                msgb.params.push_back(dn_name);
+                msgb.params.push_back(indht.HTI);
+                msgb.params.push_back(fromroute->toBinSeq());
+                delete fromroute;
+                msgb.params.push_back(encExportKey());
+                msgb.params.push_back(BinSeq("\x00\x00", 2));
+                handleRoutedMsg(msgb);
+                
+                break;
+            }
+            
             case '\x03':
             {
                 // search for neighbors
@@ -512,6 +569,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         handleRoutedMsg(msgb);
                     }
                 }
+                
+                break;
             }
         }
         /* TODO: complete */
@@ -532,8 +591,15 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             }
         }
         
-        if (msg.params[5][0] >= '\x03' &&
-            msg.params[5][0] <= '\x06') {
+        if (msg.params[5][0] == '\x00') {
+            // normal search
+            Route *rt = new Route(msg.params[3]);
+            recvFnd(rt, msg.params[1], msg.params[4]);
+            delete rt;
+            
+        } else if (msg.params[5][0] >= '\x03' &&
+                   msg.params[5][0] <= '\x06') {
+            // neighbors
             int nnum = msg.params[5][0] - 3;
             
             if (indht.nbors_keys[nnum])
@@ -543,6 +609,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             if (indht.neighbors[nnum])
                 delete indht.neighbors[nnum];
             indht.neighbors[nnum] = new BinSeq(encHashKey(msg.params[4]));
+            
         } else if (msg.params[5][0] == '\x07') {
             // tell our successor who their second predecessor is
             if (indht.neighbors[2]) {
@@ -568,6 +635,61 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         /* TODO: complete */
         
         dhtEstablish(msg.params[2]);
+        
+        
+    } else if (CMD_IS("Hin", 1, 1) ||
+        CMD_IS("Hir", 1, 1)) {
+        REQ_PARAMS(1);
+        
+        // same format as routes
+        Route *dhtl = new Route(msg.params[0]);
+        
+        // join all of their DHTs
+        for (int i = 0; i < dhtl->size(); i++) {
+            if (in_dhts.find((*dhtl)[i]) == in_dhts.end()) {
+                if (conn->enckey) {
+                    dhtJoin((*dhtl)[i], *(conn->enckey));
+                    dhtEstablish((*dhtl)[i]);
+                }
+            }
+        }
+        
+        delete dhtl;
+        
+        // echo if applicable
+        if (msg.cmd == "Hin") {
+            // and hash table info
+            Message hmsg(0, "Hir", 1, 1);
+            hmsg.params.push_back(dhtIn(true).toBinSeq());
+            sendCmd(conn, hmsg);
+        }
+        
+        
+    } else if (CMD_IS("Hra", 1, 1)) {
+        REQ_PARAMS(5);
+        
+        /* FIXME: right now, this assumes that I actually performed this search
+         * and want to find this user :) */
+        if (msg.params[3].substr(0, 2) == "n:") {
+            // build the find for this user (these users?)
+            Route vals(msg.params[4]);
+            Route::iterator vi;
+            
+            for (vi = vals.begin(); vi != vals.end(); vi++) {
+                Message fms(1, "Hfn", 1, 1);
+                fms.params.push_back(Route().toBinSeq());
+                fms.params.push_back(dn_name);
+                fms.params.push_back(msg.params[2]);
+                fms.params.push_back(encHashKey(*vi));
+                fms.params.push_back(Route().toBinSeq());
+                fms.params.push_back(encExportKey());
+                fms.params.push_back(BinSeq("\x00\x00", 2));
+                
+                dhtSendMsg(fms, fms.params[2], fms.params[3], &(fms.params[4]));
+            }
+        }
+        
+        
     }
     
     map<BinSeq, DHTInfo>::iterator dhti;

@@ -13,7 +13,7 @@ hash table identifier.
 (whether an encryption key, name, or anything else)]
 [None of this is implemented yet]
 
-Had(1)(1) (hash add) *
+Had(1)(1) (hash add)
         purpose: add a value to a list of values currently assigned in the distributed hash
         type: hash
         parameters:
@@ -31,7 +31,7 @@ Hen(1)(1) (hash encapsulate) *
                 immediate route
                 local name
                 HTI
-                DHT key
+                DHT hashed key
                 encapsulated message
                 ttl [not currently used]
 
@@ -42,7 +42,7 @@ Hfn(1)(1) (hash find) *(partial)
                 immediate route
                 local name
                 HTI
-                DHT key
+                DHT hashed key
                 current route
                 encryption key
                 type
@@ -87,14 +87,19 @@ Hga(1)(1) (hash get all) *
         purpose: get all values for a key
         type: returnable hash
         parameters:
+                immediate route
+                local name
                 HTI
                 DHT key
-                route
+                current route
+                encryption key
 
 Hgr(1)(1) (hash get random) *
         purpose: get any value for a key
         type: returnable hash
         parameters:
+                immediate route
+                local name
                 HTI
                 DHT key
                 route
@@ -121,7 +126,7 @@ Hr1(1)(1) (hash return 1st) *
                 DHT key
                 value
 
-Hra(1)(1) (hash return all) *
+Hra(1)(1) (hash return all)
         purpose: response to Hga
         type: hash return
         parameters:
@@ -129,7 +134,7 @@ Hra(1)(1) (hash return all) *
                 local name
                 HTI
                 DHT key
-                values (in the same form as parameters in messages)
+                values (in the same form as routes)
 
 Hrr(1)(1) (hash return random) *
         purpose: response to Hgr

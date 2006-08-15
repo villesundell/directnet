@@ -814,14 +814,8 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     }
     BinSeq keyhash = encHashKey(key);
     
-    // If we haven't already gotten the fastest route, this must be it
-    // Build backwards route
-    Route *reverseRoute = new Route(*route);
-    reverseRoute->reverse();
-    reverseRoute->push_back(keyhash);
-    
     // Add his route,
-    (*dn_routes)[key] = reverseRoute;
+    (*dn_routes)[key] = new Route(*route);
     
     (*dn_names)[key] = name;
     (*dn_keys)[name] = key;
@@ -831,16 +825,16 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     encImportKey(name, key);
     
     // then send your route back to him
-    Message omsg(2, "fnr", 1, 1);
+    /*Message omsg(2, "fnr", 1, 1);
     omsg.params.push_back(reverseRoute->toBinSeq());
     omsg.params.push_back(dn_name);
     omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(encExportKey());
-    handleRoutedMsg(omsg);
+    handleRoutedMsg(omsg);*/
     
     uiEstRoute(name.c_str());
     
-    // Send a dcr (direct connect request) (except on OSX where it doesn't work)
+    /* Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__
     {
         Message nmsg(1, "dcr", 1, 1);
@@ -888,7 +882,7 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
         
         handleRoutedMsg(nmsg);
     }
-#endif
+#endif*/
 }
 
 /* Commands used by the UI */

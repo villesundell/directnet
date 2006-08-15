@@ -29,6 +29,7 @@ using namespace std;
 
 #include "dn_event.h"
 #include "message.h"
+#include "route.h"
 
 enum cev_state {
     CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
@@ -117,6 +118,12 @@ bool handleRoutedMsg(const Message &msg);
  * fromfd: the fd NOT to send it to, -1 to send everywhere
  * outbuf: the buffer to send */
 void emitUnroutedMsg(conn_t *from, Message &omsg);
+
+/* Receive a find of some sort (so add a user)
+ * route: The route to the distant user
+ * name: The name of the distant user
+ * key: The encryption key of the distant user */
+void recvFnd(Route *route, const BinSeq &name, const BinSeq &key);
 
 /* The main communication method for a connection 
  * fdnum_voidptr: a void * to an int with the fdnum */

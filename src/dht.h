@@ -22,6 +22,7 @@
 #define DN_DHT_H
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 using namespace std;
@@ -43,7 +44,7 @@ class DHTInfo {
     bool established;
     
     // the data stored for the DHT
-    map<BinSeq, BinSeq> data;
+    map<BinSeq, set<BinSeq> > data;
 };
 
 // map the DHTs we're members of to DHTInfo nodes
@@ -92,6 +93,13 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact = false);
  * noexact: do not accept an exact match (for node dead reports)
  * return: true if for us */
 bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool noexact = false);
+
+/* Send a properly-formed message over the DHT
+ * params same as dhtForMe */
+void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);
+
+/* Same as handleDHTMessage below, but duplicate the msg object */
+void handleDHTDupMessage(conn_t *conn, Message msg);
 
 /* Handle a messgae related to DHTs
  * conn: the connection
