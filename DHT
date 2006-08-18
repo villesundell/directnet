@@ -1,3 +1,26 @@
+The DirectNet distributed hash table is very similar to Chord. This layout is
+best described in two variants, the first being more simple, and the second
+being more efficient (and what DirectNet actually uses):
+
+Linear DHTs: All of the nodes on a network form a ring, sorted by the hash of
+their encryption keys. When node A connects to node B, and node B is in at
+least one DHT that node A is not, node A joins it by:
+        1) Sending an 'Hfn' to search for neighbors (this is how the ring is
+           formed)
+        2) Sending an 'Had' to add its name to the hash
+The Hfn finds its way to the appropriate location simply because each node
+along the way compares the key being searched to their own key. Since they're
+sorted, they know exactly where to propogate it.
+
+Binary DHTs: Binary DHTs are an extension to linear DHTs. Basically, a node
+connecting to a DHT will look for a key offset from its own key by 1/2 of the
+valid range for keys, then by 1/4th, then 1/8th, etc, until a search yields
+itself (that is, a division that small is smaller than the distance to the
+node's successor). It then uses these divisions to forward searches and other
+DHT requests. By dividing it like this, every node can guarantee that it will
+at least half the number of nodes yet to search through, reducing the problem
+to O(logn).
+
 Hash commands are sent along the hash table identified by the third parameter
 to the node with the nearest encryption to the encryption key in the fourth
 parameter. They are routed messages.
@@ -135,6 +158,17 @@ Hra(1)(1) (hash return all)
                 HTI
                 DHT key
                 values (in the same form as routes)
+
+Hrd(1)(1) (hash redundant data) *
+        purpose: tell a predecessor to redundantly store information
+        type: routed
+        parameters:
+                route
+                local name
+                HTI
+                DHT key
+                values (in the same form as routes)
+                signature of values with public key (not currently used)
 
 Hrr(1)(1) (hash return random) *
         purpose: response to Hgr

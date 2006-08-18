@@ -142,7 +142,7 @@ void send_handshake(conn_t *cs) {
     Message msg(0, "dni", 1, 1);
     msg.params.push_back(dn_name);
     msg.params.push_back(encExportKey());
-    msg.params.push_back(BinSeq("\x00\x02\x00\x00", 4));
+    msg.params.push_back(BinSeq("\x00\x01\xFD\xE8", 4));
     sendCmd(cs, msg);
     
     // and hash table info
@@ -554,11 +554,15 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
         int remver[2];
         remver[0] = charrayToInt(msg.params[2].c_str());
-        if (remver[0] != 2) {
+        if (remver[0] != 1) {
             kill_connection(conn);
             return;
         }
         remver[1] = charrayToInt(msg.params[2].c_str() + 2);
+        if (remver[1] < 65000) {
+            kill_connection(conn);
+            return;
+        }
         // FIXME: when this protocol stabilizes, this will need to set up translation
         
         // make sure they don't have the same enckey as us

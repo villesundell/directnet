@@ -69,6 +69,17 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     DHTInfo &dhti = in_dhts[ident];
     dhti.rep = new BinSeq(rep);
     dhti.HTI = ident;
+    
+    // set our name into the hash
+    BinSeq hname = "nm:" + string(dn_name);
+    Message nmsg(1, "Had", 1, 1);
+    nmsg.params.push_back(Route().toBinSeq());
+    nmsg.params.push_back(dn_name);
+    nmsg.params.push_back(ident);
+    nmsg.params.push_back(hname);
+    nmsg.params.push_back(pukeyhash);
+    nmsg.params.push_back(" ");
+    dhtSendMsg(nmsg, ident, encHashKey(hname), NULL);
 }
 
 void dhtCreate()
@@ -227,54 +238,37 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact)
             if (!dhi.rep) return "";
             return *(dhi.rep);
         }
-        
-        for (int i = 2; i >= 1; i--) {
-            if (dhi.neighbors[i]) {
-                // check if we need it more than they do
-                if (encCmp(*(dhi.neighbors[i]), key) <= accpt) {
-                    // it's for them
-                    if (*(dhi.neighbors[i]) != pukeyhash) {
-                        return *(dhi.nbors_keys[i]);
-                    } else {
-                        return "";
-                    }
-                }
-            }
-        }
-        
-        return "";
-    } else {
-        
-        for (int i = 0; i < dhi.real_divisions.size(); i++) {
-            if (dhi.real_divisions[i]) {
-                if (encCmp(*(dhi.real_divisions[i]), key) <= accpt) {
-                    // this is the next hop
-                    if (*(dhi.real_divisions[i]) != pukeyhash) {
-                        return *(dhi.real_divs_keys[i]);
-                    } else {
-                        return "";
-                    }
-                }
-            }
-        }
-        
-        // check neighbors in case the divisions aren't up yet
-        for (int i = 2; i >= 1; i--) {
-            if (dhi.neighbors[i]) {
-                if (encCmp(*(dhi.neighbors[i]), key) <= accpt) {
-                    // this is the next hop
-                    if (*(dhi.neighbors[i]) != pukeyhash) {
-                        return *(dhi.nbors_keys[i]);
-                    } else {
-                        return "";
-                    }
-                }
-            }
-        }
-        
-        // must be for us
-        return "";
     }
+    
+    for (int i = 0; i < dhi.real_divisions.size(); i++) {
+        if (dhi.real_divisions[i]) {
+            if (encCmp(*(dhi.real_divisions[i]), key) <= accpt) {
+                // this is the next hop
+                if (*(dhi.real_divisions[i]) != pukeyhash) {
+                    return *(dhi.real_divs_keys[i]);
+                } else {
+                    return "";
+                }
+            }
+        }
+    }
+    
+    // check neighbors in case the divisions aren't up yet
+    for (int i = 2; i >= 1; i--) {
+        if (dhi.neighbors[i]) {
+            if (encCmp(*(dhi.neighbors[i]), key) <= accpt) {
+                // this is the next hop
+                if (*(dhi.neighbors[i]) != pukeyhash) {
+                    return *(dhi.nbors_keys[i]);
+                } else {
+                    return "";
+                }
+            }
+        }
+    }
+    
+    // must be for us
+    return "";
 }
 
 bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool noexact)
@@ -333,8 +327,33 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         DHTInfo &indht = in_dhts[msg.params[2]];
         
         indht.data[msg.params[3]].insert(msg.params[4]);
-     
+        cout << msg.params[3].c_str() << " = " << msg.params[4].c_str() << endl;
         
+        // now send the redundant info
+        if (indht.neighbors[1] &&
+            dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
+            Route *toroute = (*dn_routes)[*(indht.nbors_keys[1])];
+            
+            // make the outgoing data
+            Route rdat;
+            set<BinSeq>::iterator di;
+            for (di = indht.data[msg.params[3]].begin();
+                 di != indht.data[msg.params[3]].end();
+                 di++) {
+                rdat.push_back(*di);
+            }
+            
+            Message rdmsg(1, "Hrd", 1, 1);
+            rdmsg.params.push_back(toroute->toBinSeq());
+            rdmsg.params.push_back(dn_name);
+            rdmsg.params.push_back(indht.HTI);
+            rdmsg.params.push_back(msg.params[3]);
+            rdmsg.params.push_back(rdat.toBinSeq());
+            rdmsg.params.push_back(BinSeq());
+            handleRoutedMsg(rdmsg);
+        }
+            
+            
     } else if (CMD_IS("Hga", 1, 1)) {
         REQ_PARAMS(6);
         
@@ -690,10 +709,27 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         }
         
         
+    } else if (CMD_IS("Hrd", 1, 1)) {
+        REQ_PARAMS(6);
+        
+        // store redundant info
+        // FIXME: verification
+        if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
+        DHTInfo &indht = in_dhts[msg.params[2]];
+        
+        Route dat(msg.params[4]);
+        Route::iterator ri;
+        indht.rdata[msg.params[3]].clear();
+        for (ri = dat.begin(); ri != dat.end(); ri++) {
+            indht.rdata[msg.params[3]].insert(*ri);
+            cout << "Redundant: " << msg.params[3].c_str() << " = " << msg.params[4].c_str() << endl;
+        }
+        
+        
     }
     
-    map<BinSeq, DHTInfo>::iterator dhti;
+    /*map<BinSeq, DHTInfo>::iterator dhti;
     for (dhti = in_dhts.begin(); dhti != in_dhts.end(); dhti++) {
         dhtDebug(dhti->first);
-    }
+    }*/
 }

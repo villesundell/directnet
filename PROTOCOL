@@ -1,7 +1,7 @@
 This document is under heavy revision, since protocol v2 is under construction.
 
-THE CURRENT PROTOCOL VERSION IS 2.0. This means that the 'dni' message will be
-sent with '2.0' as the protocol number.
+THE CURRENT PROTOCOL VERSION IS 1.65000. This means that the 'dni' message will
+be sent with '1.65000' as the protocol number.
 
 A DirectNet node is an independently operating server and client, which must
 have two variables: a nickname and an encryption key (public and private),
@@ -10,8 +10,11 @@ acceptable.
 
 When a DirectNet node connects to another node, a handshaking command, 'dni',
 is sent. This informs the other node of the nickname and encryption key of this
-node. After that, all commands can be sent and received by both parties.
-Neither functions as a server or a client, they are equal nodes.
+node. Then, the outgoing client sends hash table info, and so does the incoming
+client (upon receiving the info from the other side). See the document 'HTI'
+for more information on hash tables. After that, all commands can be sent and
+received by both parties. Neither functions as a server or a client, they are
+equal nodes.
 
 The protocol header is as follows:
 
@@ -37,8 +40,8 @@ Direct commands are sent directly over a connection and are not continued.
 Routed commands have a set route as the first parameter, and all of the nodes
 along that route strip off the next key then continue the transfer until the
 data is sent to the last node on the list (at which point it will have an empty
-route), and the sending user as the second parameter. The last node will
-receive and interpret the command.
+route). The sending user as the second parameter. The last node will receive
+and interpret the command.
 
 Special commands propogate but the propogation is not simply routed, therefore
 more program logic is requird to parse them.
@@ -50,7 +53,8 @@ which must be of the lenghts described. Route elements are SHA-256 hashes of
 encryption keys.
 
 This document describes the basic DirectNet mesh commands. The DHT, which is
-used for route detection, is described in the document 'DHT'.
+used for route detection and robust distributed data storage, is described in
+the document 'DHT'.
 
 The protocol commands are documented in alphabetical order in this format:
 command(first version char)(second version char) (brief summary)

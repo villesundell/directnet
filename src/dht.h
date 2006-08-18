@@ -45,6 +45,9 @@ class DHTInfo {
     
     // the data stored for the DHT
     map<BinSeq, set<BinSeq> > data;
+    
+    // the data stored redundantly for the DHT
+    map<BinSeq, set<BinSeq> > rdata;
 };
 
 // map the DHTs we're members of to DHTInfo nodes
