@@ -97,7 +97,10 @@ void dn_init(int argc, char **argv) {
                 /* this is just here because OSX is weird */
             } else if (!strncmp(argv[i], "-m", 4)) {
                 /* this is just here because OSX is weird */
-                }else if (!strncmp(argv[i], "-p", 2)) {
+            } else if (!strncmp(argv[i], "-n", 2)) {
+                /* this is just here so the frontend can use it */
+                i++;
+            } else if (!strncmp(argv[i], "-p", 2)) {
                 i++;
                 if (!argv[i]) {
                     fprintf(stderr, "-p must have an argument\n");

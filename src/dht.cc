@@ -146,6 +146,12 @@ void outHex(const char *dat, int count)
     }
 }
 
+#include <netdb.h>
+#include <netinet/ip.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
 void dhtDebug(const BinSeq &ident)
 {
     if (in_dhts.find(ident) == in_dhts.end()) return;
@@ -192,10 +198,50 @@ void dhtDebug(const BinSeq &ident)
     }
     
     cout << "--------------------------------------------------" << endl << endl;
+    
+    Route info;
+    info.push_back(pukeyhash);
+    if (di.neighbors[2]) {
+        info.push_back(*(di.neighbors[2]));
+    } else {
+        info.push_back(Route().toBinSeq());
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        if (i == 2) continue;
+        if (di.neighbors[i]) {
+            info.push_back(*(di.neighbors[i]));
+        }
+    }
+    
+    int fd = socket(PF_INET, SOCK_DGRAM, 0);
+    int len, i;
+    FILE *f;
+    
+    struct sockaddr_in si;
+    si.sin_family = AF_INET;
+    si.sin_port = 0;
+    si.sin_addr.s_addr = htonl(INADDR_ANY);
+    
+    bind(fd, (struct sockaddr *) &si, sizeof(si));
+    
+    struct sockaddr_in so;
+    so.sin_family = AF_INET;
+    so.sin_port = htons(3447);
+    
+    struct hostent *he = gethostbyname("localhost");
+    so.sin_addr = *((struct in_addr *) he->h_addr);
+    
+    BinSeq out = info.toBinSeq();
+    sendto(fd, out.c_str(), out.size(), 0, (struct sockaddr *) &so, sizeof(so));
+    
+    close(fd);
 }
 
 void dhtCheck()
 {
+    return;
+    
     // for all DHTs ...
     map<BinSeq, DHTInfo>::iterator dhi;
     for (dhi = in_dhts.begin(); dhi != in_dhts.end(); dhi++) {
@@ -318,6 +364,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     
     if (CMD_IS("Had", 1, 1)) {
         REQ_PARAMS(6);
+        return;
         
         if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[3]), NULL))
             return;
@@ -728,8 +775,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
     }
     
-    /*map<BinSeq, DHTInfo>::iterator dhti;
+    map<BinSeq, DHTInfo>::iterator dhti;
     for (dhti = in_dhts.begin(); dhti != in_dhts.end(); dhti++) {
         dhtDebug(dhti->first);
-    }*/
+    }
 }

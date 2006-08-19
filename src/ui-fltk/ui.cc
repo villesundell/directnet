@@ -104,10 +104,14 @@ char* make_timestamp ()
 
 int main(int argc, char **argv, char **envp)
 {
+    char *cmd_nm = NULL;
     if (argc >= 2) {
         for (int i = 1; i < argc; i++) {
             if (!strncmp(argv[1], "-m", 2)) {
                 enable_minimode = 1;
+            } else if (!strncmp(argv[i], "-n", 2)) {
+                i++;
+                cmd_nm = argv[i];
             }
         }
     }
@@ -127,7 +131,7 @@ int main(int argc, char **argv, char **envp)
     if (!authInit()) {
         printf("Authentication failed to initialize!\n");
         return -1;
-    } else if (authNeedPW()) {
+    } else if (authNeedPW() && !cmd_nm) {
         char *nm, *pswd;
         const char *cnm, *cpswd;
         
@@ -149,11 +153,13 @@ int main(int argc, char **argv, char **envp)
         authSetPW(nm, pswd);
         free(nm);
         free(pswd);
+    } else if (!cmd_nm) {
+        authSetPW("", "");
     }
 #else
     authSetPW("", "");
 #endif
-
+    
     /* And creating the key */
     encCreateKey();
     
@@ -161,6 +167,11 @@ int main(int argc, char **argv, char **envp)
     nw = new NameWindow();
     nw->make_window();
     nw->nameWindow->show();
+    if (cmd_nm) {
+        // set the name 
+        nw->nameIn->value(cmd_nm);
+        setName(nw->nameIn, NULL);
+    }
     
     Fl::run();
 #if 0 

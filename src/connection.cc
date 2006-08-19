@@ -229,6 +229,8 @@ static void conn_notify_core(conn_t *conn, int cond) {
             
             memmove(conn->inbuf, conn->inbuf + len, conn->inbuf_p - len);
             conn->inbuf_p -= len;
+            
+            if (conn->state == CDN_EV_DYING) break;
         }
     }
  

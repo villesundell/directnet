@@ -47,6 +47,15 @@ Had(1)(1) (hash add)
                 value
                 ttl [not currently used]
 
+Hdm(1)(1) (hash dump)
+        purpose: dump hash info
+        type: routed (bounces neighbor-to-neighbor)
+        parameters:
+                route
+                local name
+                HTI
+                
+
 Hen(1)(1) (hash encapsulate) *
         purpose: encapsulate a routed message in a hash message
         type: hash
