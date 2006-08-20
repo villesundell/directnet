@@ -152,6 +152,12 @@ void dhtEstablish(const BinSeq &ident, int step)
             di.real_divisions.push_back(NULL);
             di.real_divs_keys.push_back(NULL);
             
+            printf("DIVISION %d: ", ldiv);
+            outHex(pukeyhash.c_str(), pukeyhash.size());
+            printf(" -> ");
+            outHex(off.c_str(), off.size());
+            printf("\n");
+            
             // make the find messages
             Message msg(1, "Hfn", 1, 1);
             msg.params.push_back(Route().toBinSeq());
@@ -307,14 +313,10 @@ void dhtCheck()
     }
 }
 
-BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact)
+BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool closer)
 {
     if (in_dhts.find(ident) == in_dhts.end()) return "";
     DHTInfo &dhi = in_dhts[ident];
-    
-    // if noexact is set, we will only accept less than, not less than or equal to
-    int accpt = 0;
-    if (noexact) accpt = -1;
     
     if (!dhi.established) {
         if (!dhi.neighbors[2]) {
@@ -326,12 +328,11 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact)
     
     for (int i = 0; i < dhi.real_divisions.size(); i++) {
         if (dhi.real_divisions[i]) {
-            if (encCmp(*(dhi.real_divisions[i]), key) <= accpt) {
+            if ((!closer && encCmp(*(dhi.real_divisions[i]), key) <= 0) ||
+                ( closer && encCloser(*(dhi.real_divisions[i]), key))) {
                 // this is the next hop
                 if (*(dhi.real_divisions[i]) != pukeyhash) {
                     return *(dhi.real_divs_keys[i]);
-                } else {
-                    return "";
                 }
             }
         }
@@ -340,7 +341,8 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact)
     // check neighbors in case the divisions aren't up yet
     for (int i = 2; i >= 1; i--) {
         if (dhi.neighbors[i]) {
-            if (encCmp(*(dhi.neighbors[i]), key) <= accpt) {
+            if ((!closer && encCmp(*(dhi.neighbors[i]), key) <= 0) ||
+                ( closer && encCloser(*(dhi.neighbors[i]), key))) {
                 // this is the next hop
                 if (*(dhi.neighbors[i]) != pukeyhash) {
                     return *(dhi.nbors_keys[i]);
@@ -355,10 +357,10 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact)
     return "";
 }
 
-bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool noexact)
+bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool closer)
 {
     if (in_dhts.find(msg.params[2]) == in_dhts.end()) return false;
-    BinSeq nextHop = dhtNextHop(msg.params[2], msg.params[3], noexact);
+    BinSeq nextHop = dhtNextHop(msg.params[2], msg.params[3], closer);
     
     if (nextHop.size()) {
         if (dn_routes->find(nextHop) != dn_routes->end()) {
@@ -482,7 +484,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         if (msg.params[6].size() < 2) return;
         
         if (!dhtForMe(msg, msg.params[2], msg.params[3], &(msg.params[4]),
-                      (msg.params[6][0] == '\x04'))) return;
+                      (msg.params[6][0] == '\x01' || msg.params[6][0] == '\x02'))) return;
         
         DHTInfo &indht = in_dhts[msg.params[2]];
         
@@ -549,17 +551,25 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             case '\x02':
             {
                 // search for negative divisions, add info (no echo)
-                while (msg.params[6][1] > indht.real_divisions.size()) {
+                while (msg.params[6][1] >= indht.real_divisions.size()) {
                     indht.best_divisions.push_back(NULL); // BAD
                     indht.real_divisions.push_back(NULL);
                     indht.real_divs_keys.push_back(NULL);
                 }
                 int dnum = msg.params[6][1];
                 
+                // add the route
+                Route rroute(msg.params[4]);
+                if (rroute.size()) rroute.pop_back();
+                rroute.reverse();
+                rroute.push_back(encHashKey(msg.params[5]));
+                dn_addRoute(msg.params[5], rroute);
+                
+                // and the info
                 if (indht.real_divs_keys[dnum]) delete indht.real_divs_keys[dnum];
                 indht.real_divs_keys[dnum] = new BinSeq(msg.params[5]);
                 if (indht.real_divisions[dnum]) delete indht.real_divisions[dnum];
-                indht.real_divisions[dnum] = new BinSeq(msg.params[5]);
+                indht.real_divisions[dnum] = new BinSeq(encHashKey(msg.params[5]));
                 
                 dhtEstablish(indht.HTI);
                 break;

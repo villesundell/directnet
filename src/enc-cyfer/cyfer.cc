@@ -358,8 +358,31 @@ int encCmp(const BinSeq &a, const BinSeq &b)
     }
 }
 
-/* Generate a key offset from yours by 1/(2^by)
- * returns: the generated key */
+bool encCloser(const BinSeq &a, const BinSeq &b)
+{
+    BinSeq meb;
+    meb = encSub(b, pukeyhash);
+    if (meb[0] & 0x80) {
+        // negative value isn't useful here
+        meb = encSub(pukeyhash, b);
+    }
+    
+    BinSeq ab;
+    ab = encSub(b, a);
+    if (ab[0] & 0x80) {
+        ab = encSub(a, b);
+    }
+    
+    // now just compare these two differences
+    BinSeq r;
+    r = encSub(meb, ab);
+    if (r[0] & 0x80) {
+        // ab is bigger, so I'm closer
+        return true;
+    }
+    return false;
+}
+
 BinSeq encOffset(int by, bool reverse)
 {
     BinSeq a;

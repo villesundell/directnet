@@ -75,6 +75,9 @@ BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder = NULL);
  * returns: -1 if a is less than b, 0 if equal, 1 if a is greater than b */
 int encCmp(const BinSeq &a, const BinSeq &b);
 
+/* Is a closer to b than I am? */
+bool encCloser(const BinSeq &a, const BinSeq &b);
+
 /* Generate a key offset from yours by 1/(2^by)
  * reverse: subtract instead of add
  * returns: the generated key */

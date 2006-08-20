@@ -84,18 +84,18 @@ void dhtCheck();
 /* what's the next hop for a search?
  * ident: what DHT?
  * key: the key being searched for
- * noexact: do not accept an exact match (for node dead reports)
+ * closer: rather than using >=, decide hops by closeness
  * return: the encryption key of the next hop, "" for this node */
-BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool noexact = false);
+BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool closer = false);
 
 /* is this message for us?  If not, continue it
  * msg: the message itself
  * ident: what DHT?
  * key: the key being searched for
  * route: where to append the route
- * noexact: do not accept an exact match (for node dead reports)
+ * closer: rather than using >=, decide hops by closeness
  * return: true if for us */
-bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool noexact = false);
+bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool closer = false);
 
 /* Send a properly-formed message over the DHT
  * params same as dhtForMe */
