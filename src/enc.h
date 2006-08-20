@@ -76,7 +76,8 @@ BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder = NULL);
 int encCmp(const BinSeq &a, const BinSeq &b);
 
 /* Generate a key offset from yours by 1/(2^by)
+ * reverse: subtract instead of add
  * returns: the generated key */
-BinSeq encOffset(int by);
+BinSeq encOffset(int by, bool reverse = false);
 
 #endif // DN_GPG_H

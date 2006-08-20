@@ -213,3 +213,35 @@ void seeUsers(const Route &us)
         }
     }
 }
+
+void dn_addRoute(const BinSeq &to, const Route &rt)
+{
+    // add a route intelligently, "short-circuit" to the shortest known-possible route
+    Route *nroute = new Route(rt);
+    for (int i = nroute->size() - 1; i > 0; i--) {
+        if (dn_kbh->find((*nroute)[i]) != dn_kbh->end()) {
+            BinSeq &key = (*dn_kbh)[(*nroute)[i]];
+            
+            // we have their key, do we have a connection?
+            if (dn_conn->find(key) != dn_conn->end()) {
+                // yes!  Cut down the route
+                for (; i > 0; i--) nroute->pop_front();
+            }
+        }
+    }
+    
+    // now that we have an efficient route, add it
+    if (dn_routes->find(to) != dn_routes->end()) {
+        Route *oroute = (*dn_routes)[to];
+        if (oroute->size() > nroute->size()) {
+            // old route is longer, drop it
+            delete oroute;
+        } else {
+            // just keep the old one
+            delete nroute;
+            return;
+        }
+    }
+    
+    (*dn_routes)[to] = nroute;
+}

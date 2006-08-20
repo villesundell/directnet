@@ -312,25 +312,30 @@ BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder)
 
 BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
 {
-    BinSeq r;
+    BinSeq r, rrev;
     if (a.size() != b.size()) return r;
     int carry = 0;
     int ca, cb;
     
-    for (int i = 0; i < a.size(); i++) {
+    for (int i = a.size() - 1; i >= 0; i--) {
         ca = (unsigned char) a[i];
         cb = (unsigned char) b[i];
         ca += cb + carry;
         carry = 0;
         
-        while (ca > 255) {
+        while (ca >= 256) {
             carry++;
             ca -= 256;
         }
-        r.push_back((unsigned char) ca);
+        rrev.push_back((unsigned char) ca);
+    }
+    for (int i = rrev.size() - 1; i >= 0; i--) {
+        r.push_back(rrev[i]);
     }
     
     if (remainder) *remainder = carry;
+    
+    return r;
 }
 
 int encCmp(const BinSeq &a, const BinSeq &b)
@@ -355,18 +360,22 @@ int encCmp(const BinSeq &a, const BinSeq &b)
 
 /* Generate a key offset from yours by 1/(2^by)
  * returns: the generated key */
-BinSeq encOffset(int by)
+BinSeq encOffset(int by, bool reverse)
 {
     BinSeq a;
     int hi, lo;
     
     // a is the key to add, generate it
-    for (int i = 0; i < mypukeylen; i++) a.push_back((char) 0);
+    for (int i = 0; i < pukeyhash.size(); i++) a.push_back((char) 0);
     
     hi = by >> 3;
-    lo = by & 0x7;
+    lo = 7 - (by & 0x7);
     a[hi] = ((unsigned char) 0x1) << lo;
     
-    // add them
-    return encAdd(BinSeq(mypukey, mypukeylen), a);
+    // add or subtract them
+    if (!reverse) {
+        return encAdd(pukeyhash, a);
+    } else {
+        return encSub(pukeyhash, a);
+    }
 }

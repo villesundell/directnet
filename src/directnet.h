@@ -74,4 +74,7 @@ void seeUsers(const Route &us);
 void dn_init(int argc, char **argv);
 void dn_goOnline();
 
+// add a route
+void dn_addRoute(const BinSeq &to, const Route &rt);
+
 #endif // DN_DIRECTNET_H

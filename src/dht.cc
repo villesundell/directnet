@@ -103,6 +103,13 @@ bool dhtEstablished(const BinSeq &ident)
     return in_dhts[ident].established;
 }
 
+void outHex(const char *dat, int count)
+{
+    for (int i = 0; i < count; i++) {
+        printf("%.2X", ((const unsigned char *) dat)[i]);
+    }
+}
+
 void dhtEstablish(const BinSeq &ident, int step)
 {
     if (in_dhts.find(ident) == in_dhts.end()) return;
@@ -127,22 +134,46 @@ void dhtEstablish(const BinSeq &ident, int step)
         msg.params.push_back(pukeyhash);
         msg.params.push_back(rt);
         msg.params.push_back(encExportKey());
-        
-        BinSeq srch;
-        srch.push_back('\x03');
-        srch.push_back('\x00');
-        msg.params.push_back(srch);
+        msg.params.push_back(BinSeq("\x03\x00", 2));
         
         handleRoutedMsg(msg);
         
         // TODO: continue
-    }
-}
-
-void outHex(const char *dat, int count)
-{
-    for (int i = 0; i < count; i++) {
-        printf("%.2X", ((const unsigned char *) dat)[i]);
+    } else if (di.neighbors[0] && di.neighbors[1] && di.neighbors[2] && di.neighbors[3]) {
+        // check divisions
+        int ldiv = di.real_divisions.size() - 1;
+        if (ldiv < 0 || 
+            (di.real_divisions[ldiv] &&
+             *(di.real_divisions[ldiv]) != pukeyhash)) {
+            // more divisions!
+            ldiv++;
+            BinSeq off = encOffset(ldiv);
+            di.best_divisions.push_back(new BinSeq(off));
+            di.real_divisions.push_back(NULL);
+            di.real_divs_keys.push_back(NULL);
+            
+            // make the find messages
+            Message msg(1, "Hfn", 1, 1);
+            msg.params.push_back(Route().toBinSeq());
+            msg.params.push_back(dn_name);
+            msg.params.push_back(di.HTI);
+            msg.params.push_back(off);
+            msg.params.push_back(Route().toBinSeq());
+            msg.params.push_back(encExportKey());
+            msg.params.push_back(BinSeq("\x01\x00", 2));
+            msg.params[6][1] = (unsigned char) ldiv;
+            dhtSendMsg(msg, di.HTI, off, &(msg.params[4]));
+            
+            // a reverse find
+            BinSeq roff = encOffset(ldiv, true);
+            msg.params[3] = roff;
+            msg.params[6][0] = '\x02';
+            dhtSendMsg(msg, di.HTI, roff, &(msg.params[4]));
+            
+        } else {
+            // this is already established!
+            di.established = true;
+        }
     }
 }
 
@@ -158,7 +189,7 @@ void dhtDebug(const BinSeq &ident)
     
     DHTInfo &di = in_dhts[ident];
     
-    cout << "Key: ";
+    /*cout << "Key: ";
     BinSeq key = encExportKey();
     outHex(key.c_str(), key.size());
     cout << endl;
@@ -197,7 +228,7 @@ void dhtDebug(const BinSeq &ident)
         }
     }
     
-    cout << "--------------------------------------------------" << endl << endl;
+    cout << "--------------------------------------------------" << endl << endl;*/
     
     Route info;
     info.push_back(pukeyhash);
@@ -211,6 +242,12 @@ void dhtDebug(const BinSeq &ident)
         if (i == 2) continue;
         if (di.neighbors[i]) {
             info.push_back(*(di.neighbors[i]));
+        }
+    }
+    
+    for (int i = 0; i < di.real_divisions.size(); i++) {
+        if (di.real_divisions[i]) {
+            info.push_back(*(di.real_divisions[i]));
         }
     }
     
@@ -234,6 +271,7 @@ void dhtDebug(const BinSeq &ident)
     
     BinSeq out = info.toBinSeq();
     sendto(fd, out.c_str(), out.size(), 0, (struct sockaddr *) &so, sizeof(so));
+    printf("Sent DHT info.\n");
     
     close(fd);
 }
@@ -479,6 +517,54 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 break;
             }
             
+            case '\x01':
+            {
+                // search for positive divisions, simply echo
+                
+                // get the return route
+                Route toroute(msg.params[4]);
+                Route rroute(toroute);
+                // this route has us included, and doesn't have the end user
+                if (rroute.size()) rroute.pop_back();
+                rroute.reverse();
+                rroute.push_back(encHashKey(msg.params[5]));
+                
+                Message msgb(1, "Hfr", 1, 1);
+                msgb.params.push_back(rroute.toBinSeq());
+                msgb.params.push_back(dn_name);
+                msgb.params.push_back(indht.HTI);
+                msgb.params.push_back(msg.params[4]);
+                msgb.params.push_back(encExportKey());
+                msgb.params.push_back(BinSeq("\x01\x00", 2));
+                msgb.params[5][1] = msg.params[6][1];
+                if (msg.params[5] == encExportKey()) {
+                    // it's for me!
+                    handleDHTDupMessage(conn, msgb);
+                } else {
+                    handleRoutedMsg(msgb);
+                }
+                break;
+            }
+            
+            case '\x02':
+            {
+                // search for negative divisions, add info (no echo)
+                while (msg.params[6][1] > indht.real_divisions.size()) {
+                    indht.best_divisions.push_back(NULL); // BAD
+                    indht.real_divisions.push_back(NULL);
+                    indht.real_divs_keys.push_back(NULL);
+                }
+                int dnum = msg.params[6][1];
+                
+                if (indht.real_divs_keys[dnum]) delete indht.real_divs_keys[dnum];
+                indht.real_divs_keys[dnum] = new BinSeq(msg.params[5]);
+                if (indht.real_divisions[dnum]) delete indht.real_divisions[dnum];
+                indht.real_divisions[dnum] = new BinSeq(msg.params[5]);
+                
+                dhtEstablish(indht.HTI);
+                break;
+            }
+            
             case '\x03':
             {
                 // search for neighbors
@@ -498,7 +584,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 if (indht.neighbors[3]) delete indht.neighbors[3];
                 indht.neighbors[3] = indht.neighbors[2];
                 indht.neighbors[2] = new BinSeq(encHashKey(msg.params[5]));
-                    
+                
                 // get the return route
                 Route toroute(msg.params[4]);
                 Route rroute(toroute);
@@ -507,12 +593,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 rroute.reverse();
                 rroute.push_back(encHashKey(msg.params[5]));
                 BinSeq brroute = rroute.toBinSeq();
-                    
+                
                 // add it to our routes
-                if (dn_routes->find(msg.params[5]) == dn_routes->end()) {
-                    (*dn_routes)[msg.params[5]] = new Route(rroute);
-                }
-                    
+                dn_addRoute(msg.params[5], rroute);
+                
                 // prepare to make other routes
                 Route *subRoute;
                     
@@ -521,7 +605,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 msgb.params.push_back(brroute);
                 msgb.params.push_back(dn_name);
                 msgb.params.push_back(indht.HTI);
-                if (neighbors[0] == pukeyhash) {
+                if (neighbors[0] == encExportKey()) {
                     // route back to me
                     msgb.params.push_back(toroute.toBinSeq());
                 } else if (dn_routes->find(neighbors[0]) != dn_routes->end()) {
@@ -530,6 +614,9 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     msgb.params.push_back(subRoute->toBinSeq());
                     delete subRoute;
                 } else {
+                    printf("NO ROUTE TO ");
+                    outHex(neighbors[0].c_str(), neighbors[0].size());
+                    printf("\n");
                     msgb.params.push_back(Route().toBinSeq());
                 }
                 msgb.params.push_back(neighbors[0]);
@@ -537,7 +624,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 handleRoutedMsg(msgb);
                     
                 for (int i = 1; i < 4; i++) {
-                    if (neighbors[i] == pukeyhash) {
+                    if (neighbors[i] == encExportKey()) {
                         // route back to me
                         msgb.params[3] = toroute.toBinSeq();
                     } else if (dn_routes->find(neighbors[i]) != dn_routes->end()) {
@@ -546,6 +633,9 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         msgb.params[3] = subRoute->toBinSeq();
                         delete subRoute;
                     } else {
+                        printf("NO ROUTE TO ");
+                        outHex(neighbors[i].c_str(), neighbors[0].size());
+                        printf("\n");
                         msgb.params[3] = Route().toBinSeq();
                     }
                     msgb.params[4] = neighbors[i];
@@ -560,7 +650,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         msgb.params[4] = encExportKey();
                         msgb.params[5][0] = '\x03';
                         handleDHTDupMessage(conn, msgb);
-                            
+                        
                         msgb.params[3] = brroute;
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x04';
@@ -587,6 +677,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x04';
                         handleRoutedMsg(msgb);
+                    } else {
+                        printf("NO ROUTE TO ");
+                        outHex(indht.neighbors[3]->c_str(), indht.neighbors[3]->size());
+                        printf("\n");
                     }
                 }
                 if (indht.neighbors[1]) {
@@ -604,12 +698,16 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         rt.reverse();
                         rt.push_back(pukeyhash);
                         rt.append(rroute);
-                            
+                        
                         msgb.params[0] = nroute;
                         msgb.params[3] = rt.toBinSeq();
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x06';
                         handleRoutedMsg(msgb);
+                    } else {
+                        printf("NO ROUTE TO ");
+                        outHex(indht.neighbors[1]->c_str(), indht.neighbors[1]->size());
+                        printf("\n");
                     }
                 }
                 if (indht.neighbors[3]) {
@@ -633,6 +731,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x07';
                         handleRoutedMsg(msgb);
+                    } else {
+                        printf("NO ROUTE TO ");
+                        outHex(indht.neighbors[3]->c_str(), indht.neighbors[3]->size());
+                        printf("\n");
                     }
                 }
                 
@@ -643,7 +745,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
         
     } else if (CMD_IS("Hfr", 1, 1)) {
-        REQ_PARAMS(5);
+        REQ_PARAMS(6);
         
         if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
         DHTInfo &indht = in_dhts[msg.params[2]];
@@ -652,9 +754,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
         // add the route
         if (msg.params[3].size() > 1) {
-            if (dn_routes->find(msg.params[4]) == dn_routes->end()) {
-                (*dn_routes)[msg.params[4]] = new Route(msg.params[3]);
-            }
+            Route rroute(msg.params[3]);
+            dn_addRoute(msg.params[4], msg.params[3]);
         }
         
         if (msg.params[5][0] == '\x00') {
@@ -662,6 +763,17 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             Route *rt = new Route(msg.params[3]);
             recvFnd(rt, msg.params[1], msg.params[4]);
             delete rt;
+            
+        } else if (msg.params[5][0] == '\x01') {
+            // positive division
+            if (msg.params[5][1] > indht.real_divisions.size()) return; // fake!
+            int dnum = msg.params[5][1];
+            
+            // add this info
+            if (indht.real_divs_keys[dnum]) delete indht.real_divs_keys[dnum];
+            indht.real_divs_keys[dnum] = new BinSeq(msg.params[4]);
+            if (indht.real_divisions[dnum]) delete indht.real_divisions[dnum];
+            indht.real_divisions[dnum] = new BinSeq(encHashKey(msg.params[4]));
             
         } else if (msg.params[5][0] >= '\x03' &&
                    msg.params[5][0] <= '\x06') {
@@ -695,6 +807,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                     msg.params[3] = croute.toBinSeq();
                     msg.params[5][0] = '\x03';
                     handleRoutedMsg(msg);
+                } else {
+                    printf("NO ROUTE TO ");
+                    outHex(indht.neighbors[2]->c_str(), indht.neighbors[2]->size());
+                    printf("\n");
                 }
             }
         }

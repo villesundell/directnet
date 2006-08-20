@@ -336,6 +336,7 @@ void sendCmd(struct connection *conn, Message &msg)
     
     if (buf.size() >= DN_CMD_LEN) {
         // FIXME: This should inform the user
+        printf("MESSAGE TOO LONG!\n");
         return;
     }
     len = buf.size();
@@ -741,6 +742,7 @@ bool handleRoutedMsg(const Message &msg)
     
     if (dn_kbh->find(next) == dn_kbh->end()) {
         // failure
+        printf("BAD ROUTE!\n");
         return true;
     }
     next = (*dn_kbh)[next];
