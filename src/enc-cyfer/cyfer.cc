@@ -374,13 +374,14 @@ bool encCloser(const BinSeq &a, const BinSeq &b)
     }
     
     // now just compare these two differences
-    BinSeq r;
-    r = encSub(meb, ab);
-    if (r[0] & 0x80) {
+    BinSeq res;
+    int rem;
+    res = encSub(meb, ab, &rem);
+    if (rem) {
         // ab is bigger, so I'm closer
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 BinSeq encOffset(int by, bool reverse)

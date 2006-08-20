@@ -152,12 +152,6 @@ void dhtEstablish(const BinSeq &ident, int step)
             di.real_divisions.push_back(NULL);
             di.real_divs_keys.push_back(NULL);
             
-            printf("DIVISION %d: ", ldiv);
-            outHex(pukeyhash.c_str(), pukeyhash.size());
-            printf(" -> ");
-            outHex(off.c_str(), off.size());
-            printf("\n");
-            
             // make the find messages
             Message msg(1, "Hfn", 1, 1);
             msg.params.push_back(Route().toBinSeq());
