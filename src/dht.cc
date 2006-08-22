@@ -119,61 +119,198 @@ void dhtEstablish(const BinSeq &ident, int step)
     if (!di.rep) return; // yukk!
     if ((step == -1 && !di.neighbors[0]) ||
         step == DHT_ESTABLISH_NEIGHBORS) {
-        // send a neighbor request to the representative
-        Message msg(1, "Hfn", 1, 1);
-        BinSeq rt;
+        if (!di.neighbors[0] &&
+            !di.neighbors[1] &&
+            !di.neighbors[2] &&
+            !di.neighbors[3]) {
+            // send a neighbor request to the representative
+            Message msg(1, "Hfn", 1, 1);
+            BinSeq rt;
         
-        if (dn_routes->find(*di.rep) != dn_routes->end())
-            rt = (*dn_routes)[*di.rep]->toBinSeq();
-        else
-            return; // uh oh!
+            if (dn_routes->find(*di.rep) != dn_routes->end())
+                rt = (*dn_routes)[*di.rep]->toBinSeq();
+            else
+                return; // uh oh!
         
-        msg.params.push_back(rt);
-        msg.params.push_back(dn_name);
-        msg.params.push_back(di.HTI);
-        msg.params.push_back(pukeyhash);
-        msg.params.push_back(rt);
-        msg.params.push_back(encExportKey());
-        msg.params.push_back(BinSeq("\x03\x00", 2));
+            msg.params.push_back(rt);
+            msg.params.push_back(dn_name);
+            msg.params.push_back(di.HTI);
+            msg.params.push_back(pukeyhash);
+            msg.params.push_back(rt);
+            msg.params.push_back(encExportKey());
+            msg.params.push_back(BinSeq("\x03\x00", 2));
         
-        handleRoutedMsg(msg);
+            handleRoutedMsg(msg);
+        } else if (!di.neighbors[2] && di.neighbors[3]) {
+            // we lost our successor, get everything in place
+            di.neighbors[2] = di.neighbors[3];
+            di.neighbors[3] = NULL;
+            if (di.nbors_keys[2]) delete di.nbors_keys[2];
+            di.nbors_keys[2] = di.nbors_keys[3];
+            
+            Message msg(1, "Hsu", 1, 1);
+            
+            BinSeq rt;
+            
+            if (dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end())
+                rt = (*dn_routes)[*di.rep]->toBinSeq();
+            else
+                return; // uh oh!
+            
+            msg.params.push_back(rt);
+            msg.params.push_back(dn_name);
+            msg.params.push_back(di.HTI);
+            
+            handleRoutedMsg(msg);
+            
+            // now update others who were effected
+            Message msgb(1, "Hfr", 1, 1);
+            msgb.params.push_back(Route().toBinSeq());
+            msgb.params.push_back(dn_name);
+            msgb.params.push_back(di.HTI);
+            msgb.params.push_back(Route().toBinSeq());
+            msgb.params.push_back(BinSeq());
+            msgb.params.push_back(BinSeq("\x00\x00", 2));
+            
+            if (di.neighbors[1]) {
+                // my predecessor's second successor has changed
+                msgb.params[4] = *(di.nbors_keys[2]);
+                msgb.params[5][0] = '\x06';
+                
+                if (*(di.neighbors[1]) == pukeyhash) {
+                    if (dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end())
+                        msgb.params[3] = (*dn_routes)[*(di.nbors_keys[2])]->toBinSeq();
+                    else
+                        msgb.params[3] = Route().toBinSeq();
+                    handleDHTDupMessage(NULL, msgb);
+                } else if (dn_routes->find(*(di.nbors_keys[1])) != dn_routes->end()) {
+                    Route rt, *tort;
+                    
+                    tort = (*dn_routes)[*(di.nbors_keys[1])];
+                    rt = *tort;
+                    
+                    // get the route back
+                    if (rt.size()) rt.pop_back();
+                    rt.reverse();
+                    rt.push_back(pukeyhash);
+                    
+                    // and the route to the other user
+                    if (dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end())
+                        rt.append(*((*dn_routes)[*(di.nbors_keys[2])]));
+                    
+                    msgb.params[0] = tort->toBinSeq();
+                    msgb.params[3] = rt.toBinSeq();
+                    
+                    handleRoutedMsg(msgb);
+                }
+            }
+            
+            if (di.neighbors[2]) {
+                // my now-successor's first and second predecessors have changed
+                if (*(di.neighbors[2]) == pukeyhash) {
+                    msgb.params[3] = Route().toBinSeq();
+                    msgb.params[4] = encExportKey();
+                    msgb.params[5][0] = '\x04';
+                    handleDHTDupMessage(NULL, msgb);
+                    
+                    // now get the new second predecessor
+                    if (dn_routes->find(*(di.nbors_keys[1])) != dn_routes->end())
+                        msgb.params[3] = (*dn_routes)[*(di.nbors_keys[1])]->toBinSeq();
+                    else
+                        msgb.params[3] = Route().toBinSeq();
+                    msgb.params[4] = *(di.nbors_keys[1]);
+                    
+                    msgb.params[5][0] = '\x03';
+                    handleDHTDupMessage(NULL, msgb);
+                } else if (dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end()) {
+                    Route rt, *tort;
+                    
+                    tort = (*dn_routes)[*(di.nbors_keys[2])];
+                    rt = *tort;
+                    
+                    if (rt.size()) rt.pop_back();
+                    rt.reverse();
+                    rt.push_back(pukeyhash);
+                    
+                    msgb.params[0] = tort->toBinSeq();
+                    msgb.params[3] = rt.toBinSeq();
+                    msgb.params[4] = encExportKey();
+                    msgb.params[5][0] = '\x04';
+                    handleRoutedMsg(msgb);
+                    
+                    // now get the new second predecessor
+                    if (dn_routes->find(*(di.nbors_keys[1])) != dn_routes->end())
+                        rt.append(*((*dn_routes)[*(di.nbors_keys[1])]));
+                    
+                    msgb.params[3] = rt.toBinSeq();
+                    msgb.params[4] = *(di.nbors_keys[1]);
+                    msgb.params[5][0] = '\x03';
+                    handleDHTDupMessage(NULL, msgb);
+                }
+            }
+        }
         
         // TODO: continue
     } else if (di.neighbors[0] && di.neighbors[1] && di.neighbors[2] && di.neighbors[3]) {
         // check divisions
-        int ldiv = di.real_divisions.size() - 1;
-        if (ldiv < 0 || 
-            (di.real_divisions[ldiv] &&
-             *(di.real_divisions[ldiv]) != pukeyhash)) {
-            // more divisions!
-            ldiv++;
-            BinSeq off = encOffset(ldiv);
-            di.best_divisions.push_back(new BinSeq(off));
+        int ldiv = di.real_divisions.size();
+        
+        if (ldiv == 0) {
+            // start it off
+            ldiv = 1;
+            di.best_divisions.push_back(NULL);
             di.real_divisions.push_back(NULL);
             di.real_divs_keys.push_back(NULL);
-            
-            // make the find messages
-            Message msg(1, "Hfn", 1, 1);
-            msg.params.push_back(Route().toBinSeq());
-            msg.params.push_back(dn_name);
-            msg.params.push_back(di.HTI);
-            msg.params.push_back(off);
-            msg.params.push_back(Route().toBinSeq());
-            msg.params.push_back(encExportKey());
-            msg.params.push_back(BinSeq("\x01\x00", 2));
-            msg.params[6][1] = (unsigned char) ldiv;
-            dhtSendMsg(msg, di.HTI, off, &(msg.params[4]));
-            
-            // a reverse find
-            BinSeq roff = encOffset(ldiv, true);
-            msg.params[3] = roff;
-            msg.params[6][0] = '\x02';
-            dhtSendMsg(msg, di.HTI, roff, &(msg.params[4]));
-            
-        } else {
-            // this is already established!
-            di.established = true;
         }
+        
+        for (int i = 0; i < ldiv; i++) {
+            if (!(di.real_divisions[i])) {
+                // establish this division
+                BinSeq off;
+                if (!(di.best_divisions[i])) {
+                    off = encOffset(i);
+                    di.best_divisions[i] = new BinSeq(off);
+                } else {
+                    off = *(di.best_divisions[i]);
+                }
+                
+                if (di.real_divisions[i]) delete di.real_divisions[i];
+                di.real_divisions[i] = NULL;
+                
+                if (di.real_divs_keys[i]) delete di.real_divs_keys[i];
+                di.real_divs_keys[i] = NULL;
+                
+                // make the find messages
+                Message msg(1, "Hfn", 1, 1);
+                msg.params.push_back(Route().toBinSeq());
+                msg.params.push_back(dn_name);
+                msg.params.push_back(di.HTI);
+                msg.params.push_back(off);
+                msg.params.push_back(Route().toBinSeq());
+                msg.params.push_back(encExportKey());
+                msg.params.push_back(BinSeq("\x01\x00", 2));
+                msg.params[6][1] = (unsigned char) i;
+                dhtSendMsg(msg, di.HTI, off, &(msg.params[4]));
+                
+                // a reverse find
+                BinSeq roff = encOffset(i, true);
+                msg.params[3] = roff;
+                msg.params[6][0] = '\x02';
+                dhtSendMsg(msg, di.HTI, roff, &(msg.params[4]));
+                
+                return;
+            } else if (i == ldiv - 1 &&
+                       *(di.real_divisions[i]) != pukeyhash) {
+                // need at least one more
+                ldiv++;
+                di.best_divisions.push_back(NULL);
+                di.real_divisions.push_back(NULL);
+                di.real_divs_keys.push_back(NULL);
+            }
+        }
+        
+        // this is already established!
+        di.established = true;
     }
 }
 
@@ -278,8 +415,6 @@ void dhtDebug(const BinSeq &ident)
 
 void dhtCheck()
 {
-    return;
-    
     // for all DHTs ...
     map<BinSeq, DHTInfo>::iterator dhi;
     for (dhi = in_dhts.begin(); dhi != in_dhts.end(); dhi++) {
@@ -303,7 +438,23 @@ void dhtCheck()
             }
         }
         
-        // TODO: check divisions
+        // check divisions...
+        for (int i = 0; i < indht.real_divisions.size(); i++) {
+            if (indht.real_divisions[i]) {
+                if (dn_routes->find(*(indht.real_divs_keys[i])) == dn_routes->end()) {
+                    // uh oh!
+                    indht.established = false;
+                    
+                    delete indht.real_divisions[i];
+                    indht.real_divisions[i] = NULL;
+                    
+                    delete indht.real_divs_keys[i];
+                    indht.real_divs_keys[i] = NULL;
+                    
+                    dhtEstablish(indht.HTI, DHT_ESTABLISH_DIVISIONS);
+                }
+            }
+        }
     }
 }
 
@@ -890,6 +1041,36 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         for (ri = dat.begin(); ri != dat.end(); ri++) {
             indht.rdata[msg.params[3]].insert(*ri);
             cout << "Redundant: " << msg.params[3].c_str() << " = " << msg.params[4].c_str() << endl;
+        }
+        
+        
+    } else if (CMD_IS("Hsu", 1, 1)) {
+        REQ_PARAMS(4);
+        
+        if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
+        DHTInfo &indht = in_dhts[msg.params[2]];
+        
+        if (indht.neighbors[2]) {
+            Route rt(msg.params[4]);
+            Message msgb(1, "Hfr", 1, 1);
+            msgb.params.push_back(msg.params[4]);
+            msgb.params.push_back(dn_name);
+            msgb.params.push_back(indht.HTI);
+            
+            if (rt.size()) rt.pop_back();
+            rt.reverse();
+            rt.push_back(pukeyhash);
+            if (dn_routes->find(*(indht.nbors_keys[2])) != dn_routes->end())
+                rt.append(*((*dn_routes)[*(indht.nbors_keys[2])]));
+            msgb.params.push_back(rt.toBinSeq());
+            msgb.params.push_back(*(indht.nbors_keys[2]));
+            msgb.params.push_back(BinSeq("\x06\x00", 2));
+            
+            if (*(indht.neighbors[2]) == pukeyhash) {
+                handleDHTDupMessage(conn, msgb);
+            } else {
+                handleRoutedMsg(msgb);
+            }
         }
         
         

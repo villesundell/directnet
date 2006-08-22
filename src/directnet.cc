@@ -199,17 +199,17 @@ void seeUsers(const Route &us)
     
     int day = tv.tv_sec - (60 * 60 * 24);
     
-    // see a user, and flush out any users we haven't seen in 24 hours
+    // see the users
+    for (int i = 0; i < us.size(); i++) {
+        (*dn_seen_user)[us[i]] = tv.tv_sec;
+    }
+    
+    // and flush out any users we haven't seen in 24 hours
     map<BinSeq, int>::iterator sui;
     for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
-        if (us.find(sui->first)) {
-            // update
-            sui->second = tv.tv_sec;
-        } else {
-            if (sui->second < day) {
-                dn_seen_user->erase(sui);
-                sui--;
-            }
+        if (sui->second < day) {
+            dn_seen_user->erase(sui);
+            sui--;
         }
     }
 }

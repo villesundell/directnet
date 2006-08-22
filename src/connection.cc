@@ -742,7 +742,6 @@ bool handleRoutedMsg(const Message &msg)
     
     if (dn_kbh->find(next) == dn_kbh->end()) {
         // failure
-        printf("BAD ROUTE!\n");
         return true;
     }
     next = (*dn_kbh)[next];
@@ -1102,7 +1101,7 @@ void disNode(const BinSeq &key)
             // bad route, delete it
             delete dri->second;
             dn_routes->erase(dri);
-            dri--;
+            //dri--; FIXME: why doesn't this work...
         }
     }
     

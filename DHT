@@ -200,6 +200,16 @@ Hst(1)(1) (hash set) *
                 value
                 ttl [not currently used]
 
+Hsu(1)(1) (hash successor) *(partial)
+        purpose: upon losing initial successor, ask second successor who their
+                 initial successor is (returns an Hfr)
+        type: routed
+        parameters:
+                immediate route
+                local name
+                HTI
+                return route
+
 
 Key:
 *: Not yet implemented
