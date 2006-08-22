@@ -76,16 +76,28 @@ int main()
 
 void outgvis()
 {
+    // first figure out what we can/should drop
+    map<BinSeq, bool> keep;
+    map<BinSeq, vector<BinSeq> >::iterator ci;
+    for (ci = conns.begin(); ci != conns.end(); ci++) {
+        if (ci->second.size() > 1) {
+            keep[ci->second[0]] = true;
+        }
+    }
+    
     // turn our connection info into a graphviz graph
     FILE *gvo = fopen("dht.dot", "w");
     if (!gvo) return;
     
     fputs("digraph {\n  edge [color=red];\n", gvo);
     
-    map<BinSeq, vector<BinSeq> >::iterator ci;
     for (ci = conns.begin(); ci != conns.end(); ci++) {
-        if (ci->second.size() > 1) {
-            fprintf(gvo, "  %s -> %s;\n", outHex(ci->first).c_str(), outHex(ci->second[0]).c_str());
+        if (keep[ci->first]) {
+            if (ci->second.size() > 1) {
+                fprintf(gvo, "  %s -> %s;\n", outHex(ci->first).c_str(), outHex(ci->second[0]).c_str());
+            }
+        } else {
+            conns.erase(ci);
         }
     }
     

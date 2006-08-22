@@ -714,6 +714,18 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
             
         return;
+        
+        
+    } else if (CMD_IS("pir", 1, 1)) {
+        REQ_PARAMS(3);
+        
+        // just pong
+        Message rmsg(1, "por", 1, 1);
+        rmsg.params.push_back(msg.params[2]);
+        rmsg.params.push_back(dn_name);
+        handleRoutedMsg(rmsg);
+        
+        
     }
 }
 

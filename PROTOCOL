@@ -199,10 +199,28 @@ msg(1)(1) (message)
                 local name
                 encrypted message
 
+
 pin(1)(1) (ping)
         purpose: Ping a connection for keepalive (no pong yet)
         type: direct
         parameters: none
+
+
+pir(1)(1) (ping-route) * (partial)
+        purpose: keep ARLD tables up to date - just pongs at end node
+        type: routed
+        parameters:
+                route
+                local name
+                return route
+
+
+por(1)(1) (pong-route) * (partial)
+        purpose: keep ARLD tables up to date - nothing at end node
+        type: routed
+        parameters:
+                route
+                local name
 
 
 Key:

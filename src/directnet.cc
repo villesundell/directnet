@@ -37,11 +37,13 @@ using namespace std;
 
 #include "chat.h"
 #include "compat.h"
+#include "connection.h"
 #include "config.h"
 #include "directnet.h"
 #include "dnconfig.h"
 #include "enc.h"
 #include "globals.h"
+#include "message.h"
 #include "route.h"
 #include "server.h"
 #include "ui.h"
@@ -230,7 +232,7 @@ void dn_addRoute(const BinSeq &to, const Route &rt)
         }
     }
     
-    // now that we have an efficient route, add it
+    // now that we have an efficient route, is it more efficient than the alternative?
     if (dn_routes->find(to) != dn_routes->end()) {
         Route *oroute = (*dn_routes)[to];
         if (oroute->size() > nroute->size()) {
@@ -244,4 +246,17 @@ void dn_addRoute(const BinSeq &to, const Route &rt)
     }
     
     (*dn_routes)[to] = nroute;
+    
+    // send a pir
+    Message msg(1, "pir", 1, 1);
+    msg.params.push_back(nroute->toBinSeq());
+    msg.params.push_back(dn_name);
+    
+    Route rroute = *nroute;
+    if (rroute.size()) rroute.pop_back();
+    rroute.reverse();
+    rroute.push_back(pukeyhash);
+    msg.params.push_back(rroute.toBinSeq());
+    
+    handleRoutedMsg(msg);
 }

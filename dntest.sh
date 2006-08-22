@@ -12,7 +12,7 @@ cdown() {
 ./src/a.out &
 cdown 5
 
-for (( i = 0; $i < 25; i++ ))
+for (( i = 0; $i < 255; i++ ))
 do
         ./src/directnet -n $i >& dht_$i.out &
         cdown 15
