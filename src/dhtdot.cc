@@ -101,7 +101,7 @@ void outgvis()
         }
     }
     
-    fputs("}\n", gvo);
+    fputs("  node [pos=\"0,0\"];\n}\n", gvo);
     
     fclose(gvo);
     

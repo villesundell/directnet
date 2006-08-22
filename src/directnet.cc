@@ -65,7 +65,7 @@ map<BinSeq, Route *> *dn_routes;
 map<string, int> *dn_trans_keys;
 int currentTransKey;
 
-map<BinSeq, int> *dn_seen_user;
+map<BinSeq, time_t> *dn_seen_user;
 
 char uiLoaded;
 
@@ -137,7 +137,7 @@ void dn_init(int argc, char **argv) {
     currentTransKey = 0;
     
     // This hash stores the last time we saw any given user
-    dn_seen_user = new map<BinSeq, int>;
+    dn_seen_user = new map<BinSeq, time_t>;
     
     // This hash stores whether we're in certain chats
     dn_chats = new map<string, vector<string> *>;
@@ -202,16 +202,16 @@ void seeUsers(const Route &us)
     int day = tv.tv_sec - (60 * 60 * 24);
     
     // see the users
-    for (int i = 0; i < us.size(); i++) {
+    for (int i = 0; i < us.size(); i++) {\
         (*dn_seen_user)[us[i]] = tv.tv_sec;
     }
     
     // and flush out any users we haven't seen in 24 hours
-    map<BinSeq, int>::iterator sui;
+    map<BinSeq, time_t>::iterator sui;
     for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
         if (sui->second < day) {
+            printf("UNSEEING\n");
             dn_seen_user->erase(sui);
-            sui--;
         }
     }
 }

@@ -26,6 +26,8 @@
 #include <string>
 using namespace std;
 
+#include <sys/time.h>
+
 #include "binseq.h"
 #include "globals.h"
 #include "route.h"
@@ -52,7 +54,7 @@ extern map<BinSeq, Route *> *dn_routes;
 extern map<string, int> *dn_trans_keys;
 
 // have we seen this user?  When? (by hashed enc key)
-extern map<BinSeq, int> *dn_seen_user;
+extern map<BinSeq, time_t> *dn_seen_user;
 
 // our position in the transkey list
 extern int currentTransKey;

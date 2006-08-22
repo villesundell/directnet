@@ -581,11 +581,10 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         conn->enckey = new BinSeq(msg.params[1]);
         (*dn_conn)[msg.params[1]] = conn;
         
+        // and the new route
         route = new Route();
         route->push_back(keyhash);
-        if (dn_routes->find(msg.params[1]) != dn_routes->end())
-            delete (*dn_routes)[msg.params[1]];
-        (*dn_routes)[msg.params[1]] = route;
+        dn_addRoute(msg.params[1], *route);
         
         (*dn_names)[msg.params[1]] = msg.params[0];
         (*dn_keys)[msg.params[0]] = msg.params[1];
