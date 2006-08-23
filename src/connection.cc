@@ -1112,7 +1112,7 @@ void disNode(const BinSeq &key)
             // bad route, delete it
             delete dri->second;
             dn_routes->erase(dri);
-            //dri--; FIXME: why doesn't this work...
+            dri--; //FIXME: why doesn't this work...
         }
     }
     

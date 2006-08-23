@@ -101,7 +101,7 @@ void outgvis()
         }
     }
     
-    fputs("  node [pos=\"0,0\"];\n}\n", gvo);
+    fputs("}\n", gvo);
     
     fclose(gvo);
     
@@ -120,7 +120,10 @@ void outgvis()
     while (!feof(gvi) && !ferror(gvi)) {
         if (fgets(buf, 1024, gvi) <= 0) continue;
         
-        if (!strcmp(buf, "}\n")) {
+        if (!strcmp(buf, "digraph {\n")) {
+            fputs(buf, gvo);
+            fprintf(gvo, "  node [pos=\"0,0\"];\n");
+        } else if (!strcmp(buf, "}\n")) {
             // add our other info
             map<BinSeq, vector<BinSeq> >::iterator ci;
             for (ci = conns.begin(); ci != conns.end(); ci++) {
@@ -128,9 +131,10 @@ void outgvis()
                     fprintf(gvo, "  %s -> %s [color=black];\n", outHex(ci->first).c_str(), outHex(ci->second[i]).c_str());
                 }
             }
+            fputs(buf, gvo);
+        } else {
+            fputs(buf, gvo);
         }
-        
-        fputs(buf, gvo);
     }
     
     fclose(gvi);

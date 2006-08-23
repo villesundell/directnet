@@ -117,7 +117,7 @@ void dhtEstablish(const BinSeq &ident, int step)
     DHTInfo &di = in_dhts[ident];
     
     if (!di.rep) return; // yukk!
-    if ((step == -1 && !di.neighbors[0]) ||
+    if ((step == -1 && !di.neighbors[2]) ||
         step == DHT_ESTABLISH_NEIGHBORS) {
         if (!di.neighbors[0] &&
             !di.neighbors[1] &&
@@ -150,16 +150,23 @@ void dhtEstablish(const BinSeq &ident, int step)
             
             Message msg(1, "Hsu", 1, 1);
             
-            BinSeq rt;
+            Route rt, *toroute;
             
             if (dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end())
-                rt = (*dn_routes)[*di.rep]->toBinSeq();
+                toroute = (*dn_routes)[*(di.nbors_keys[2])];
             else
                 return; // uh oh!
             
-            msg.params.push_back(rt);
+            rt = *toroute;
+            
+            msg.params.push_back(toroute->toBinSeq());
             msg.params.push_back(dn_name);
             msg.params.push_back(di.HTI);
+            
+            if (rt.size()) rt.pop_back();
+            rt.reverse();
+            rt.push_back(pukeyhash);
+            msg.params.push_back(rt.toBinSeq());
             
             handleRoutedMsg(msg);
             
@@ -419,6 +426,7 @@ void dhtCheck()
     map<BinSeq, DHTInfo>::iterator dhi;
     for (dhi = in_dhts.begin(); dhi != in_dhts.end(); dhi++) {
         DHTInfo &indht = dhi->second;
+        bool divreest = false;
         
         // check neighbors...
         for (int i = 0; i < 4; i++) {
@@ -433,7 +441,7 @@ void dhtCheck()
                     delete indht.nbors_keys[i];
                     indht.nbors_keys[i] = NULL;
                     
-                    dhtEstablish(indht.HTI, DHT_ESTABLISH_NEIGHBORS);
+                    divreest = true;
                 }
             }
         }
@@ -451,10 +459,13 @@ void dhtCheck()
                     delete indht.real_divs_keys[i];
                     indht.real_divs_keys[i] = NULL;
                     
-                    dhtEstablish(indht.HTI, DHT_ESTABLISH_DIVISIONS);
+                    divreest = true;
                 }
             }
         }
+        
+        if (divreest)
+            dhtEstablish(indht.HTI);
     }
 }
 
@@ -1051,9 +1062,9 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         DHTInfo &indht = in_dhts[msg.params[2]];
         
         if (indht.neighbors[2]) {
-            Route rt(msg.params[4]);
+            Route rt(msg.params[3]);
             Message msgb(1, "Hfr", 1, 1);
-            msgb.params.push_back(msg.params[4]);
+            msgb.params.push_back(msg.params[3]);
             msgb.params.push_back(dn_name);
             msgb.params.push_back(indht.HTI);
             
