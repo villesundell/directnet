@@ -259,9 +259,9 @@ static void conn_notify_core(conn_t *conn, int cond) {
  
 static void kill_connection(conn_t *conn) {
     // if we have a key, we'll need to inform others
-    BinSeq *hkey = NULL;
+    BinSeq *key = NULL;
     if (conn->enckey) {
-        hkey = new BinSeq(*(conn->enckey));
+        key = new BinSeq(*(conn->enckey));
     }
     
     if (conn->state == CDN_EV_EVENT)
@@ -270,9 +270,13 @@ static void kill_connection(conn_t *conn) {
         delete conn;
     
     // inform of the disconnect
-    if (hkey) {
-        disNode(*hkey);
-        delete hkey;
+    printf("DISCONNECT:\n");
+    if (key) {
+        printf("OK\n");
+        disNode(*key);
+        delete key;
+    } else {
+        printf("UH OH\n");
     }
 }
  
@@ -1112,7 +1116,7 @@ void disNode(const BinSeq &key)
             // bad route, delete it
             delete dri->second;
             dn_routes->erase(dri);
-            dri--; //FIXME: why doesn't this work...
+            dri--;
         }
     }
     
@@ -1123,7 +1127,5 @@ void disNode(const BinSeq &key)
     Message msg(0, "dis", 1, 1);
     msg.params.push_back(key);
     
-    std::set<conn_t *>::iterator it;
-    for (it = active_connections.begin(); it != active_connections.end(); it++)
-        sendCmd(*it, msg);
+    emitUnroutedMsg(NULL, msg);
 }

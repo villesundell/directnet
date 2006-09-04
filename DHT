@@ -126,6 +126,18 @@ Hga(1)(1) (hash get all) *
                 current route
                 encryption key
 
+Hgn(1)(1) (hash get next / hash user-gone) * (partial)
+        purpose: get the next node in the specified direction
+        type: routed
+        parameters:
+                route
+                local name
+                HTI
+                return route
+                lost user encryption key
+                direction
+                        0 for left, 1 for right (1 byte)
+
 Hgr(1)(1) (hash get random) *
         purpose: get any value for a key
         type: returnable hash
@@ -199,16 +211,6 @@ Hst(1)(1) (hash set) *
                 DHT key
                 value
                 ttl [not currently used]
-
-Hsu(1)(1) (hash successor) *(partial)
-        purpose: upon losing initial successor, ask second successor who their
-                 initial successor is (returns an Hfr)
-        type: routed
-        parameters:
-                immediate route
-                local name
-                HTI
-                return route
 
 
 Key:

@@ -210,8 +210,8 @@ void seeUsers(const Route &us)
     map<BinSeq, time_t>::iterator sui;
     for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
         if (sui->second < day) {
-            printf("UNSEEING\n");
             dn_seen_user->erase(sui);
+            sui--;
         }
     }
 }

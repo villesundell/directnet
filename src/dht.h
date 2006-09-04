@@ -42,6 +42,7 @@ class DHTInfo {
     vector<BinSeq *> real_divs_keys;
     vector<BinSeq *> best_divisions;
     bool established;
+    bool estingNeighbors; // FIXME: should be timed
     
     // the data stored for the DHT
     map<BinSeq, set<BinSeq> > data;
