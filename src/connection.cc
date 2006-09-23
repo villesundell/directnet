@@ -1116,16 +1116,16 @@ void disNode(const BinSeq &key)
             // bad route, delete it
             delete dri->second;
             dn_routes->erase(dri);
-            dri--;
+            //dri--;
         }
     }
-    
-    // DHT sanity checks (we may have just broken our DHT links!)
-    dhtCheck();
     
     // forward a disconnect message
     Message msg(0, "dis", 1, 1);
     msg.params.push_back(key);
     
     emitUnroutedMsg(NULL, msg);
+    
+    // DHT sanity checks (we may have just broken our DHT links!)
+    dhtCheck();
 }

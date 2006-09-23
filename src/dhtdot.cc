@@ -127,7 +127,10 @@ void outgvis()
             // add our other info
             map<BinSeq, vector<BinSeq> >::iterator ci;
             for (ci = conns.begin(); ci != conns.end(); ci++) {
-                for (int i = 1; i < ci->second.size(); i++) {
+                for (int i = 1; i < 4 && i < ci->second.size(); i++) {
+                    fprintf(gvo, "  %s -> %s [color=blue];\n", outHex(ci->first).c_str(), outHex(ci->second[i]).c_str());
+                }
+                for (int i = 4; i < ci->second.size(); i++) {
                     fprintf(gvo, "  %s -> %s [color=black];\n", outHex(ci->first).c_str(), outHex(ci->second[i]).c_str());
                 }
             }
