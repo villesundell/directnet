@@ -1,8 +1,17 @@
-C++_Branch from CVS:
+C++_Branch from CVS (SVN too):
         - Rearchitected in C++
         - With connection info, include hostname and port if the co nnection is
           outgoing. This will aid shortcircuiting in the future, and generic
           services in the distant future.
+        - GUI improvements (html view in messageboxes)
+              Html viewer support tags:
+              <b>sometext</b> bold text
+              <i>sometext</i> italics text
+              <u>sometext</u> underlined text
+              <br>            newline
+              You can also use colors like:
+              [#blue]bluetexthere[#] 
+        - You can now ban users
 
 CVS from 1.0.1:
         - Removed all threading (thanks to bd_!)

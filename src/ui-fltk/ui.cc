@@ -38,6 +38,7 @@ using namespace std;
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 using namespace std;
 
 #include "FL/fl_ask.H"
@@ -60,6 +61,7 @@ BuddyWindow *bw;
 map<string, ChatWindow *> cws;
 AutoConnWindow *acw;
 Fl_Window *miniwin;
+string msgbuffer="";
 
 //Do we want minimode?
 int enable_minimode = 0; //Type: 'directnet -m' to enable it
@@ -232,6 +234,8 @@ void putOutput(ChatWindow *w, const string &txt)
 {
     //Fl_Text_Buffer *tb = w->textOut->buffer();
     string strippedstr; //Place for stripped text
+    char *msgtimestamp = ""; //Here is messages timestamp
+    
     if (w->textOut->value() == NULL)
     {
     	w->textOut->value(" ");
@@ -314,18 +318,34 @@ void putOutput(ChatWindow *w, const string &txt)
 
     }
 
-    //Well, _very_ lazy way to secure our html-tags;)
+    //Well, _very_ lazy (and non-standard) way to secure our html-tags;) (but hey, it works;))
     strippedstr+="</font></b></i></u><br>";
+    //Let's create random number for our anchors name
+    srand (time (0));
+    int msgrandomnumber = rand ();
     //here happens timestamping:
-    string txt2 = (char*)w->textOut->value();
-    txt2 += "<font color=gray>";
-    txt2 += make_timestamp()+("</font>"+strippedstr);
+    msgtimestamp = make_timestamp();
+    string txt2, htmloutput, anchorname;
     
-    w->textOut->value (txt2.c_str());
+    //Lets add that random num to anchors name with stringstreams
+    stringstream strstrm;
+    strstrm<<msgrandomnumber;
+    anchorname = (string)msgtimestamp+strstrm.str();
+    
+    //Now we shall add that anchorname to our msg buffer (and we put there message too)
+    txt2  = "<a name='"+anchorname;
+    txt2 += "'><font color=gray>";
+    txt2 += msgtimestamp+("</font></a>"+strippedstr);
+    //Let's put message to our buffer
+    msgbuffer += txt2;
+    
+    //Then we show that text
+    htmloutput = msgbuffer+"<a name='end'></a>";
+    w->textOut->value (htmloutput.c_str());
     //Roll to end of this page
-    //w->textOut->topline (1000);
+    w->textOut->topline (anchorname.c_str());
     
-    //Adding one to counter:
+    //Adding one to counter (for minimode):
     mini_msg_count++;
     updateMinimode ();
     
