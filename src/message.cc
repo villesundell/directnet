@@ -51,7 +51,7 @@ Message::Message(const BinSeq &buf)
         lens.push_back(pl);
     }
     
-    for (i += 2, j = 0; i < l && j < lens.size(); j++) {
+    for (i += 2, j = 0; j < lens.size() && i + lens[j] <= l; j++) {
         params.push_back(buf.substr(i, lens[j]));
         i += lens[j];
     }

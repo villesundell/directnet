@@ -71,7 +71,7 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     dhti.rep = new BinSeq(rep);
     dhti.HTI = ident;
     
-    // set our name into the hash
+    // send our name into the hash
     BinSeq hname = "nm:" + string(dn_name);
     Message nmsg(1, "Had", 1, 1);
     nmsg.params.push_back(Route().toBinSeq());
@@ -342,7 +342,7 @@ void dhtDebug(const BinSeq &ident)
     
     DHTInfo &di = in_dhts[ident];
     
-    cout << "Key: ";
+    /*cout << "Key: ";
     BinSeq key = encExportKey();
     outHex(key.c_str(), key.size());
     cout << endl;
@@ -381,7 +381,7 @@ void dhtDebug(const BinSeq &ident)
         }
     }
     
-    cout << "--------------------------------------------------" << endl << endl;
+    cout << "--------------------------------------------------" << endl << endl;*/
     
     Route info;
     info.push_back(pukeyhash);
@@ -537,8 +537,8 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool closer)
 
 bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool closer)
 {
-    if (in_dhts.find(msg.params[2]) == in_dhts.end()) return false;
-    BinSeq nextHop = dhtNextHop(msg.params[2], msg.params[3], closer);
+    if (in_dhts.find(ident) == in_dhts.end()) return false;
+    BinSeq nextHop = dhtNextHop(ident, key, closer);
     
     if (nextHop.size()) {
         if (dn_routes->find(nextHop) != dn_routes->end()) {
@@ -582,7 +582,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     
     if (CMD_IS("Had", 1, 1)) {
         REQ_PARAMS(6);
-        return;
         
         if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[3]), NULL))
             return;
@@ -591,13 +590,22 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         // TODO: data ownership, redundancy, etc
         DHTInfo &indht = in_dhts[msg.params[2]];
         
+        printf("I own: %s = ", msg.params[3].c_str());
+        outHex(msg.params[4].c_str(), msg.params[4].size());
+        printf("\n");
+        
         indht.data[msg.params[3]].insert(msg.params[4]);
-        cout << msg.params[3].c_str() << " = " << msg.params[4].c_str() << endl;
         
         // now send the redundant info
-        if (indht.neighbors[1] &&
-            dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
-            Route *toroute = (*dn_routes)[*(indht.nbors_keys[1])];
+        if (indht.neighbors[1]) {
+            Route *toroute;
+            if (*(indht.neighbors[1]) == pukeyhash) {
+                toroute = NULL;
+            } else if (dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
+                toroute = (*dn_routes)[*(indht.nbors_keys[1])];
+            } else {
+                return;
+            }
             
             // make the outgoing data
             Route rdat;
@@ -609,16 +617,25 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             }
             
             Message rdmsg(1, "Hrd", 1, 1);
-            rdmsg.params.push_back(toroute->toBinSeq());
+            if (toroute) {
+                rdmsg.params.push_back(toroute->toBinSeq());
+            } else {
+                rdmsg.params.push_back("");
+            }
             rdmsg.params.push_back(dn_name);
             rdmsg.params.push_back(indht.HTI);
             rdmsg.params.push_back(msg.params[3]);
             rdmsg.params.push_back(rdat.toBinSeq());
-            rdmsg.params.push_back(BinSeq());
-            handleRoutedMsg(rdmsg);
+            rdmsg.params.push_back(" ");
+            
+            if (toroute) {
+                handleRoutedMsg(rdmsg);
+            } else {
+                handleDHTDupMessage(conn, rdmsg);
+            }
         }
-            
-            
+        
+        
     } else if (CMD_IS("Hga", 1, 1)) {
         REQ_PARAMS(6);
         
@@ -1036,6 +1053,11 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 delete indht.neighbors[nnum];
             indht.neighbors[nnum] = new BinSeq(encHashKey(msg.params[4]));
             
+            // now handle data changing hands
+            if (nnum == 1) {
+                // our immediate predecessor, give them all our data as redundant
+                for (
+            
         } else if (msg.params[5][0] == '\x07') {
             // tell our successor who their second predecessor is
             if (indht.neighbors[2]) {
@@ -1133,7 +1155,9 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         indht.rdata[msg.params[3]].clear();
         for (ri = dat.begin(); ri != dat.end(); ri++) {
             indht.rdata[msg.params[3]].insert(*ri);
-            cout << "Redundant: " << msg.params[3].c_str() << " = " << msg.params[4].c_str() << endl;
+            printf("Redundant: %s = ", msg.params[3].c_str());
+            outHex(msg.params[4].c_str(), msg.params[4].size());
+            printf("\n");
         }
         
         
