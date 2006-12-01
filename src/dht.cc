@@ -1054,9 +1054,9 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             indht.neighbors[nnum] = new BinSeq(encHashKey(msg.params[4]));
             
             // now handle data changing hands
-            if (nnum == 1) {
+            /*if (nnum == 1) {
                 // our immediate predecessor, give them all our data as redundant
-                for (
+                for (*/
             
         } else if (msg.params[5][0] == '\x07') {
             // tell our successor who their second predecessor is

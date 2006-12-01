@@ -29,13 +29,19 @@ using namespace std;
 
 #include "directnet.h"
 #include "enc.h"
+#include "message.h"
 
 #define bool BOOL
 
 extern "C" {
+#include "cyfer/cipher.h"
+#include "cyfer/cyfer.h"
 #include "cyfer/hash.h"
 #include "cyfer/pk.h"
 }
+
+#define SYM_KEY_LEN 16
+#define SYM_BLOCK_LEN 16
 
 char encbinloc[256];
 
@@ -53,18 +59,12 @@ int mypukeylen, myprkeylen;
 BinSeq pukeyhash;
 
 /* Helper function for creating public-key context. */
-static CYFER_PK_CTX *init_ctx(char *pk)
+static CYFER_PK_CTX *init_pk_ctx()
 {
-    int type;
-    bool enc, sig;
     CYFER_PK_CTX *ctx;
-
-    /* Select and initialize the desired algorithm or fail miserably */
-    type = CYFER_Pk_Select(pk, &enc, &sig);
-    if (type == CYFER_PK_NONE) {
-        return NULL;
-    }
-    ctx = CYFER_Pk_Init(type);
+    
+    /* Initialize */
+    ctx = CYFER_Pk_Init(CYFER_PK_RSA);
     if (!ctx) {
         perror("Error while generating keys");
         exit(EXIT_FAILURE);
@@ -72,8 +72,29 @@ static CYFER_PK_CTX *init_ctx(char *pk)
     return ctx;
 }
 
-/* Perform encryption or decryption. */
-char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
+/* Helper function for creating symmetric-cipher context. */
+static CYFER_BLOCK_CIPHER_CTX *init_sym_ctx(unsigned char *keybuf, bool genkey)
+{
+    int i;
+    CYFER_BLOCK_CIPHER_CTX *ctx;
+    
+    /* generate the key if asked to */
+    if (genkey) {
+        for (i = 0; i < SYM_KEY_LEN / sizeof(int); i++) {
+            ((int *) keybuf)[i] = rand();
+        }
+    }
+    
+    /* Initialize */
+    ctx = CYFER_BlockCipher_Init(CYFER_CIPHER_AES, keybuf, SYM_KEY_LEN, CYFER_MODE_CBC, NULL);
+    if (!ctx) {
+        perror("Error in creating encryption context");
+    }
+    return ctx;
+}
+
+/* Perform public-key encryption or decryption. */
+char *pk_encdec(const char *name, const char *inp, int encrypt, int *len)
 {
     char *key;
     int klen, loc, oloc, osl;
@@ -84,7 +105,7 @@ char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
     struct cyf_key *cur;
     
     /* Create context */
-    ctx = init_ctx(pk);
+    ctx = init_pk_ctx();
 
     if (name != NULL) {
         cur = cyf_key_head;
@@ -149,6 +170,108 @@ char *encdec(char *pk, const char *name, const char *inp, int encrypt, int *len)
     return out ? out : strdup("");
 }
 
+/* Perform symmetric-cipher encryption or decryption. */
+char *sym_encdec(const char *inp, int encrypt, int *len, unsigned char *keybuf)
+{
+    int ilen, olen, i;
+    char *out, *ibbuf, *obbuf;
+    CYFER_BLOCK_CIPHER_CTX *ctx;
+    
+    /* Create context */
+    if (encrypt) {
+        ctx = init_sym_ctx(keybuf, true);
+    } else {
+        ctx = init_sym_ctx(keybuf, false);
+    }
+    if (!ctx) {
+        return NULL;
+    }
+    
+    /* Create the block buffers */
+    ibbuf = (char *) malloc(SYM_BLOCK_LEN);
+    obbuf = (char *) malloc(SYM_BLOCK_LEN);
+    
+    /* Create the output buffer */
+    if (*len == 0) {
+        ilen = strlen(inp);
+    } else {
+        ilen = *len;
+    }
+    
+    /* When encrypting we include the modula-length (max 65k), when we're decrypting
+       we can get the precise length easily */
+    if (encrypt) {
+        olen = ((ilen-1) / SYM_BLOCK_LEN + 1) * SYM_BLOCK_LEN;
+        out = (char *) malloc(olen + 3);
+        *len = olen + 2;
+        intToCharray(ilen % SYM_BLOCK_LEN, out);
+    } else {
+        int modulalen;
+        
+        if (ilen < 2) {
+            /* bad */
+            free(ibbuf);
+            free(obbuf);
+            return NULL;
+        }
+        
+        /* get the length */
+        modulalen = charrayToInt(inp);
+        if (modulalen == 0) modulalen = SYM_BLOCK_LEN;
+        if (modulalen > SYM_BLOCK_LEN) {
+            /* not right */
+            free(ibbuf);
+            free(obbuf);
+            return NULL;
+        }
+        olen = ilen - (SYM_BLOCK_LEN - modulalen) - 2;
+        if (olen < 0) {
+            free(ibbuf);
+            free(obbuf);
+            return NULL;
+        }
+        
+        /* allocate the output buffer */
+        out = (char *) malloc(olen + 1);
+        *len = olen;
+        
+        /* and pop off the length from input */
+        inp += 2;
+        ilen -= 2;
+    }
+    
+    /* Encrypt or decrypt */
+    for (i = 0; i < ilen; i += SYM_BLOCK_LEN) {
+        /* set up this block */
+        if (i + SYM_BLOCK_LEN > ilen) {
+            memset(ibbuf, 0, SYM_BLOCK_LEN);
+            memcpy(ibbuf, inp + i, ilen - i);
+        } else {
+            memcpy(ibbuf, inp + i, SYM_BLOCK_LEN);
+        }
+        
+        /* encrypt or decrypt */
+        if (encrypt) {
+            CYFER_BlockCipher_Encrypt(ctx, (unsigned char *) ibbuf, (unsigned char *) obbuf);
+        } else {
+            CYFER_BlockCipher_Decrypt(ctx, (unsigned char *) ibbuf, (unsigned char *) obbuf);
+        }
+        
+        /* copy into output */
+        if (i + SYM_BLOCK_LEN > olen) {
+            memcpy(out + i + (encrypt ? 2 : 0), obbuf, olen - i);
+        } else {
+            memcpy(out + i + (encrypt ? 2 : 0), obbuf, SYM_BLOCK_LEN);
+        }
+    }
+    
+    free(ibbuf);
+    free(obbuf);
+    CYFER_BlockCipher_Finish(ctx);
+    
+    return out;
+}
+
 int findEnc(char **envp)
 {
     return 0;
@@ -156,34 +279,100 @@ int findEnc(char **envp)
 
 BinSeq encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
 {
-    int len;
-    char *enc, *enc2;
+    int len, emlen;
+    char *encmsg, *enckey, *enckey2;
+    unsigned char *keybuf;
     BinSeq ret;
+    BinSeq msgVerified("DN");
     
-    len = msg.size();
-    enc = encdec("RSA", to.c_str(), msg.c_str(), 1, &len); // encrypt
-    enc2 = encdec("RSA", NULL, enc, 1, &len); // sign
-    free(enc);
+    /* Make a message with a verifier segment */
+    msgVerified += msg;
     
-    ret.push_back(enc2, len);
-    free(enc2);
+    /* First encrypt the message with a symmetric key */
+    keybuf = (unsigned char *) malloc(SYM_KEY_LEN);
+    len = msgVerified.size();
+    encmsg = sym_encdec(msgVerified.c_str(), 1, &len, keybuf);
+    if (!encmsg) {
+        free(keybuf);
+        return "";
+    }
+    emlen = len;
+    
+    /* Then encrypt and sign the symmetric key */
+    len = SYM_KEY_LEN;
+    enckey = pk_encdec(to.c_str(), (char *) keybuf, 1, &len); // encrypt
+    enckey2 = pk_encdec(NULL, enckey, 1, &len); // sign
+    free(enckey);
+    free(keybuf);
+    
+    /* Add the keylength to the message (realistically always going to be the
+       same, but doesn't hurt much) */
+    ret.push_back("\0\0", 2);
+    intToCharray(len, ret.c_str());
+    
+    /* Then put everything together */
+    ret.push_back(enckey2, len);
+    ret.push_back(encmsg, emlen);
+    free(enckey2);
+    free(encmsg);
     
     return ret;
 }
 
 BinSeq encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
 {
-    int len;
-    char *enc, *enc2;
+    int len, enckeylen;
+    char *encmsg, *enckey, *enckey2;
     BinSeq ret;
     
-    len = msg.size();
-    enc = encdec("RSA", from.c_str(), msg.c_str(), 0, &len); // de-sign
-    enc2 = encdec("RSA", NULL, enc, 0, &len); // decrypt
-    free(enc);
+    /* Sanity check */
+    if (msg.size() < 2) {
+        cout << "FAIL A" << endl;
+        return "";
+    }
     
-    ret.push_back(enc2, len);
-    free(enc2);
+    /* Get the size of the encrypted key */
+    enckeylen = charrayToInt(msg.c_str());
+    
+    /* Sanity check #2 */
+    if (msg.size() < enckeylen + 4) {
+        cout << "FAIL B" << endl;
+        return "";
+    }
+    
+    /* Get the key, which is signed and encrypted */
+    len = enckeylen;
+    enckey = pk_encdec(from.c_str(), msg.c_str() + 2, 0, &len); // unsign
+    enckey2 = pk_encdec(NULL, enckey, 0, &len); // decrypt
+    free(enckey);
+    
+    /* Sanity check #3 */
+    if (len < SYM_KEY_LEN) {
+        cout << "FAIL C " << len << endl;
+        return "";
+    }
+    
+    /* Decrypt the message itself */
+    len = msg.size() - (enckeylen + 2);
+    encmsg = sym_encdec(msg.c_str() + enckeylen + 2, 0, &len, (unsigned char *) enckey2);
+    free(enckey2);
+    if (!encmsg) {
+        cout << "FAIL D" << endl;
+        return "";
+    }
+    
+    /* Santicy check #4 */
+    if (len < 2 ||
+        encmsg[0] != 'D' ||
+        encmsg[1] != 'N') {
+        cout << "FAIL E" << endl;
+        free(encmsg);
+        return "";
+    }
+    
+    /* Finally, the output message */
+    ret.push_back(encmsg + 2, len - 2);
+    free(encmsg);
     
     return ret;
 }
@@ -193,7 +382,7 @@ BinSeq encCreateKey()
     CYFER_PK_CTX *ctx;
     
     /* Create context */
-    ctx = init_ctx("RSA");
+    ctx = init_pk_ctx();
     
     /* Generate and export keys into temporary buffers */
     srand(time(NULL));
