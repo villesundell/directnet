@@ -1,6 +1,7 @@
 /*
  * Copyright 2005, 2006  Gregor Richards
  * Copyright 2006 Bryan Donlan
+ * Copyright 2006  "Solarius"
  *
  * This file is part of DirectNet.
  *
@@ -337,10 +338,12 @@ void putOutput(ChatWindow *w, const string &txt)
     txt2 += "'><font color=gray>";
     txt2 += msgtimestamp+("</font></a>"+strippedstr);
     //Let's put message to our buffer
-    msgbuffer += txt2;
+    //msgbuffer += txt2;
     
+    //We have to get old messages to htmloutput before writing there
+    htmloutput = w->textOut->value ();
     //Then we show that text
-    htmloutput = msgbuffer+"<a name='end'></a>";
+    htmloutput += txt2+"<a name='end'></a>";
     w->textOut->value (htmloutput.c_str());
     //Roll to end of this page
     w->textOut->topline (anchorname.c_str());
