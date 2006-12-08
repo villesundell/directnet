@@ -830,21 +830,20 @@ void emitUnroutedMsg(conn_t *from, Message &outbuf)
 // recvFnd handles the situation that we've just been "found"
 void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
 {
-    // Ignore it if we already have a route
-    if (dn_routes->find(key) != dn_routes->end()) {
-        return;
-    }
     BinSeq keyhash = encHashKey(key);
     
-    // Add his route,
-    (*dn_routes)[key] = new Route(*route);
-    
-    (*dn_names)[key] = name;
-    (*dn_keys)[name] = key;
-    (*dn_kbh)[keyhash] = key;
-    
-    // and public key,
-    encImportKey(name, key);
+    // If we aren't fully established already
+    if (dn_names->find(key) == dn_names->end()) {
+        // Add the route,
+        (*dn_routes)[key] = new Route(*route);
+        
+        (*dn_names)[key] = name;
+        (*dn_keys)[name] = key;
+        (*dn_kbh)[keyhash] = key;
+        
+        // and public key
+        encImportKey(name, key);
+    }
     
     // then send your route back to him
     /*Message omsg(2, "fnr", 1, 1);
