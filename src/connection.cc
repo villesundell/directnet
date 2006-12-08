@@ -1112,6 +1112,11 @@ void disNode(const BinSeq &key)
         return;
     }
     
+    // inform the UI
+    if (dn_names->find(key) != dn_names->end()) {
+        uiLoseRoute((*dn_names)[key]);
+    }
+    
     // remove from the seen_user list
     dn_seen_user->erase(hkey);
     

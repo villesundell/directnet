@@ -130,10 +130,16 @@ void dhtEstablish(const BinSeq &ident, int step)
             Message msg(1, "Hfn", 1, 1);
             BinSeq rt;
             
-            if (dn_routes->find(*di.rep) != dn_routes->end())
+            if (dn_routes->find(*di.rep) != dn_routes->end()) {
                 rt = (*dn_routes)[*di.rep]->toBinSeq();
-            else
-                return; // uh oh!
+            } else {
+                // the only reasonable thing to do here is assume an empty DHT
+                for (int i = 0; i < 4; i++) {
+                    di.neighbors[i] = new BinSeq(pukeyhash);
+                    di.nbors_keys[i] = new BinSeq(encExportKey());
+                }
+                return;
+            }
         
             msg.params.push_back(rt);
             msg.params.push_back(dn_name);
