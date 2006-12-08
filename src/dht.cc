@@ -786,9 +786,13 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         ret.params.push_back(msg.params[3]);
         ret.params.push_back(retdata.toBinSeq());
         
-        handleRoutedMsg(ret);
+        // handle or send it
+        if (msg.params[4].size()) {
+            handleRoutedMsg(ret);
+        } else {
+            handleDHTDupMessage(conn, ret);
+        }
         
-     
     } else if (CMD_IS("Hgn", 1, 1)) {
         REQ_PARAMS(6);
         
@@ -1251,7 +1255,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
         /* FIXME: right now, this assumes that I actually performed this search
          * and want to find this user :) */
-        cout << "RECEIVED HRA" << endl;
         if (msg.params[3].size() > 3 &&
             msg.params[3].substr(0, 3) == "nm:") {
             // build the find for this user (these users?)
