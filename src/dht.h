@@ -30,6 +30,8 @@ using namespace std;
 #include "connection.h"
 #include "route.h"
 
+typedef map<BinSeq, set<BinSeq> > binseqHash;
+
 // DHT info is stored here
 class DHTInfo {
     public:
@@ -45,10 +47,10 @@ class DHTInfo {
     bool estingNeighbors; // FIXME: should be timed
     
     // the data stored for the DHT
-    map<BinSeq, set<BinSeq> > data;
+    binseqHash data;
     
     // the data stored redundantly for the DHT
-    map<BinSeq, set<BinSeq> > rdata;
+    binseqHash rdata;
 };
 
 // map the DHTs we're members of to DHTInfo nodes
@@ -101,6 +103,10 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
 /* Send a properly-formed message over the DHT
  * params same as dhtForMe */
 void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);
+
+/* Send a properly-formatted message over all DHTs
+ * params same as dhtForMe, but ident is a pointer, the value will change */
+void dhtAllSendMsg(Message &msg, BinSeq *ident, const BinSeq &key, BinSeq *route);
 
 /* Same as handleDHTMessage below, but duplicate the msg object */
 void handleDHTDupMessage(conn_t *conn, Message msg);

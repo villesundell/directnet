@@ -1000,13 +1000,24 @@ int sendAuthKey(const string &to)
 
 void sendFnd(const string &toc) {
     // Find a user by name
-    Message omsg(0, "fnd", 1, 1);
+    BinSeq nmcode = "nm:" + toc;
+    Message dmsg(1, "Hga", 1, 1);
+    dmsg.params.push_back("");
+    dmsg.params.push_back(dn_name);
+    dmsg.params.push_back("");
+    dmsg.params.push_back(nmcode);
+    dmsg.params.push_back("");
+    dmsg.params.push_back(pukeyhash);
+    
+    dhtAllSendMsg(dmsg, &(dmsg.params[2]), encHashKey(nmcode), &(dmsg.params[4]));
+    
+    /*Message omsg(0, "fnd", 1, 1);
     omsg.params.push_back("\xFF\xFF");
     omsg.params.push_back(dn_name);
     omsg.params.push_back(toc);
     omsg.params.push_back(encExportKey());
     
-    emitUnroutedMsg(NULL, omsg);
+    emitUnroutedMsg(NULL, omsg);*/
 }
 
 void joinChat(const string &chat)

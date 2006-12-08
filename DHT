@@ -124,7 +124,7 @@ Hga(1)(1) (hash get all) *
                 HTI
                 DHT key
                 current route
-                encryption key
+                hash of encryption key
 
 Hgn(1)(1) (hash get next / hash user-gone) * (partial)
         purpose: get the next node in the specified direction
