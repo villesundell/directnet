@@ -25,6 +25,9 @@
 #include <string>
 using namespace std;
 
+// the directory with configuration info
+extern string cfgdir;
+
 // configuration functions
 
 /* initConfig

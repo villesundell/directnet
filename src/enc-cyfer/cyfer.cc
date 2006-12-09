@@ -1,7 +1,7 @@
 /*
- * Copyright 2004, 2005, 2006 Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  * Many parts borrowed from cyfer/examples/pk.c
- * These parts are copyright 2004 Senko Rasic
+ * These parts are copyright 2004  Senko Rasic
  *
  * This file is part of DirectNet.
  *
@@ -26,8 +26,12 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "directnet.h"
+#include "dnconfig.h"
 #include "enc.h"
 #include "message.h"
 
@@ -377,7 +381,10 @@ BinSeq encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
     return ret;
 }
 
-BinSeq encCreateKey()
+// the file for the encryption key
+string keyfile;
+
+BinSeq genKey()
 {
     CYFER_PK_CTX *ctx;
     
@@ -385,7 +392,6 @@ BinSeq encCreateKey()
     ctx = init_pk_ctx();
     
     /* Generate and export keys into temporary buffers */
-    srand(time(NULL));
     CYFER_Pk_Generate_Key(ctx, 1024);
     CYFER_Pk_KeySize(ctx, (unsigned int *) &myprkeylen, (unsigned int *) &mypukeylen);
     
@@ -396,6 +402,62 @@ BinSeq encCreateKey()
     
     CYFER_Pk_Export_Key(ctx, (unsigned char *) myprkey, (unsigned char *) mypukey);
     CYFER_Pk_Finish(ctx);
+    
+    pukeyhash = encHashKey(BinSeq(mypukey, mypukeylen));
+    
+    // put the key into the key file
+    FILE *fkey = fopen(keyfile.c_str(), "w");
+    if (fwrite(mypukey, 1, mypukeylen, fkey) != mypukeylen ||
+        fwrite(myprkey, 1, myprkeylen, fkey) != myprkeylen) {
+        // failed to write it, just remove it
+        fclose(fkey);
+        unlink(keyfile.c_str()); // ignore errors from this
+        
+    } else {
+        // wrote the data, now chmod it if applicable
+        fclose(fkey);
+#ifndef __WIN32
+        chmod(keyfile.c_str(), 0600); // ignore errors (can't do much about it)
+#endif
+    }
+    
+    return BinSeq(mypukey, mypukeylen);
+}
+
+BinSeq encCreateKey()
+{
+    srand(time(NULL));
+    keyfile = cfgdir + "/key";
+    
+    if (access(keyfile.c_str(), R_OK) != 0) {
+        // can't read the file
+        return genKey();
+    }
+    
+    // already have an encryption key, just read it in
+    FILE *fkey = fopen(keyfile.c_str(), "rb");
+    if (!fkey) {
+        return genKey();
+    }
+    
+    // FIXME: these sizes should be detected
+    myprkeylen = 260;
+    mypukeylen = 260;
+        
+    /* allocate space */
+    myprkey = (char *) malloc(myprkeylen);
+    if (!myprkey) { perror("malloc"); exit(1); }
+    mypukey = (char *) malloc(mypukeylen);
+    if (!mypukey) { perror("malloc"); exit(1); }
+    
+    // OK, have a key file, read in the keys
+    if (fread(mypukey, 1, mypukeylen, fkey) != mypukeylen ||
+        fread(myprkey, 1, myprkeylen, fkey) != myprkeylen) {
+        // failed to read the key
+        free(myprkey);
+        free(mypukey);
+        return genKey();
+    }
     
     pukeyhash = encHashKey(BinSeq(mypukey, mypukeylen));
     

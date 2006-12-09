@@ -45,6 +45,7 @@ string dn_ac_list_f;
 set<string> *dn_ac_list;
 string dn_af_list_f;
 set<string> *dn_af_list;
+string cfgdir;
 
 /* initConfig
  * Input: none
@@ -54,7 +55,6 @@ set<string> *dn_af_list;
 void initConfig()
 {
     int i, osl;
-    string cfgdir;
     FILE *acf, *aff;
     
     // find configuration directory
