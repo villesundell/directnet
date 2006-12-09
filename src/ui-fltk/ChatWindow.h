@@ -10,7 +10,7 @@ extern void sendInput(Fl_Input*, void*);
 #include <FL/Fl_Button.H>
 extern void flSendAuthKey(Fl_Button*, void*);
 extern void flAddRemAutoFind(Fl_Button*, void*);
-#include <FL/Fl_Help_View.H>
+#include "Fl_Help_View.H"
 extern void flBanUnban(Fl_Button*, void*);
 
 class ChatWindow {

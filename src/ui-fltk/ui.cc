@@ -1,6 +1,6 @@
 /*
  * Copyright 2005, 2006  Gregor Richards
- * Copyright 2006 Bryan Donlan
+ * Copyright 2006  Bryan Donlan
  * Copyright 2006  "Solarius"
  *
  * This file is part of DirectNet.
@@ -320,25 +320,30 @@ void putOutput(ChatWindow *w, const string &txt)
     }
 
     //Well, _very_ lazy (and non-standard) way to secure our html-tags;) (but hey, it works;))
-    strippedstr+="</font></b></i></u><br>";
-    //Let's create random number for our anchors name
-    srand (time (0));
+    strippedstr+="</font></b></i></u>";
+    
+    string htmloutput;
+    htmloutput = w->textOut->value();
+    htmloutput += "<br><font color=gray>";
+    htmloutput += string(make_timestamp()) + "</font>" + strippedstr;
+    w->textOut->value(htmloutput.c_str());
+    ((Fl_Valuator*) &(w->textOut->scrollbar_))->value(
+        w->textOut->scrollbar_.maximum());
+    w->textOut->topline(w->textOut->scrollbar_.value());
+    
+    /*Let's create random number for our anchors name
     int msgrandomnumber = rand ();
     //here happens timestamping:
     msgtimestamp = make_timestamp();
     string txt2, htmloutput, anchorname;
     
-    //Lets add that random num to anchors name with stringstreams
+    Lets add that random num to anchors name with stringstreams
     stringstream strstrm;
     strstrm<<msgrandomnumber;
     anchorname = (string)msgtimestamp+strstrm.str();
     
-    //Now we shall add that anchorname to our msg buffer (and we put there message too)
-    txt2  = "<a name='"+anchorname;
-    txt2 += "'><font color=gray>";
-    txt2 += msgtimestamp+("</font></a>"+strippedstr);
-    //Let's put message to our buffer
-    //msgbuffer += txt2;
+    txt2 = "<font color=gray>";
+    txt2 += msgtimestamp+("</font>"+strippedstr);
     
     //We have to get old messages to htmloutput before writing there
     htmloutput = w->textOut->value ();
@@ -346,7 +351,7 @@ void putOutput(ChatWindow *w, const string &txt)
     htmloutput += txt2+"<a name='end'></a>";
     w->textOut->value (htmloutput.c_str());
     //Roll to end of this page
-    w->textOut->topline (anchorname.c_str());
+    w->textOut->topline (anchorname.c_str());*/
     
     //Adding one to counter (for minimode):
     mini_msg_count++;
