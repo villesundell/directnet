@@ -253,75 +253,76 @@ void putOutput(ChatWindow *w, const string &txt)
     	int i2;
 	for (i=0;i<strlen;i++)
 	{
-		if (txt[i]=='<')
-		{
-			//We found html tag
-			if ((strlen-i)>=2)
-			{
-				if (txt.substr(i,3)=="<b>"||txt.substr(i,3)=="</b"||txt.substr(i,3)=="<i>"||txt.substr(i,3)=="</i"||txt.substr(i,3)=="<u>"||txt.substr(i,3)=="</u"||txt.substr(i,4)=="<br>")
-				{
-					//This tag is legal, so we dont strip that
-					strippedstr+=txt[i];
-				}
-				else if (txt.substr(i,2)=="<#")
-				{
-					//This is Gregs colortag-idea (<#blue> is replaced as <font color="blue"> and <#> is replaced as </font> (Solarius' addition)
-					colorstr = "";
-					for (i2=2;i2<10;i2++)
-					{
-						if ((i2+i)<strlen)
-						{
-							//we have space to read
-							if (txt[i+i2]=='>')
-							{
-								//We should leave this loop now
-								break;
-							}
-							else
-							{
-								colorstr+=txt[i+i2];
-							}
-						}
-						else
-						{
-							//We should leave this loop
-							break;
-						}
-					}
-					//Move "carret":
-					i = i+i2;
-					if (colorstr=="")
-					{
-						//Colorstring is empty
-						strippedstr+="</font>";
-					}
-					else
-					{
-						//we have color
-						strippedstr+="<font color="+colorstr+">";
-					}
-				}
-				else
-				{
-					strippedstr+="&lt;";
-				}
-			}
-			else
-			{
-				strippedstr+="&lt;";
-			}
-		}
-		else
-		{
-			strippedstr+=txt[i];
-		}
+            if (txt[i]=='<')
+            {
+                //We found html tag
+                if ((strlen-i)>=2)
+                {
+                    if (txt.substr(i,3)=="<b>"||txt.substr(i,3)=="</b"||txt.substr(i,3)=="<i>"||txt.substr(i,3)=="</i"||txt.substr(i,3)=="<u>"||txt.substr(i,3)=="</u"||txt.substr(i,4)=="<br>")
+                    {
+                        //This tag is legal, so we dont strip that
+                        strippedstr+=txt[i];
+                    }
+                    else if (txt.substr(i,2)=="<#")
+                    {
+                        //This is Gregs colortag-idea (<#blue> is replaced as <font color="blue"> and <#> is replaced as </font> (Solarius' addition)
+                        colorstr = "";
+                        for (i2=2;i2<10;i2++)
+                        {
+                            if ((i2+i)<strlen)
+                            {
+                                //we have space to read
+                                if (txt[i+i2]=='>')
+                                {
+                                    //We should leave this loop now
+                                    break;
+                                }
+                                else
+                                {
+                                    colorstr+=txt[i+i2];
+                                }
+                            }
+                            else
+                            {
+                                //We should leave this loop
+                                break;
+                            }
+                        }
+                        //Move "carret":
+                        i = i+i2;
+                        if (colorstr=="")
+                        {
+                            //Colorstring is empty
+                            strippedstr+="</font>";
+                        }
+                        else
+                        {
+                            //we have color
+                            strippedstr+="<font color="+colorstr+">";
+                        }
+                    }
+                    else
+                    {
+                        strippedstr+="&lt;";
+                    }
+                }
+                else
+                {
+                    strippedstr+="&lt;";
+                }
+            }
+            else
+            {
+                strippedstr+=txt[i];
+            }
 	}
 
     }
-
+    
     //Well, _very_ lazy (and non-standard) way to secure our html-tags;) (but hey, it works;))
     strippedstr+="</font></b></i></u>";
     
+    // get the output
     string htmloutput;
     htmloutput = w->textOut->value();
     htmloutput += "<br><font color=gray>";
@@ -330,28 +331,6 @@ void putOutput(ChatWindow *w, const string &txt)
     ((Fl_Valuator*) &(w->textOut->scrollbar_))->value(
         w->textOut->scrollbar_.maximum());
     w->textOut->topline(w->textOut->scrollbar_.value());
-    
-    /*Let's create random number for our anchors name
-    int msgrandomnumber = rand ();
-    //here happens timestamping:
-    msgtimestamp = make_timestamp();
-    string txt2, htmloutput, anchorname;
-    
-    Lets add that random num to anchors name with stringstreams
-    stringstream strstrm;
-    strstrm<<msgrandomnumber;
-    anchorname = (string)msgtimestamp+strstrm.str();
-    
-    txt2 = "<font color=gray>";
-    txt2 += msgtimestamp+("</font>"+strippedstr);
-    
-    //We have to get old messages to htmloutput before writing there
-    htmloutput = w->textOut->value ();
-    //Then we show that text
-    htmloutput += txt2+"<a name='end'></a>";
-    w->textOut->value (htmloutput.c_str());
-    //Roll to end of this page
-    w->textOut->topline (anchorname.c_str());*/
     
     //Adding one to counter (for minimode):
     mini_msg_count++;
