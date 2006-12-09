@@ -26,6 +26,7 @@ using namespace std;
 #include "connection.h"
 #include "dht.h"
 #include "directnet.h"
+#include "dn_event.h"
 #include "enc.h"
 #include "message.h"
 #include "route.h"
@@ -47,12 +48,21 @@ DHTInfo::DHTInfo()
     estingNeighbors = false;
 }
 
+map<BinSeq, DHTSearchInfo> dhtSearches;
+
 Route dhtIn(bool must)
 {
     Route toret;
     
-    // if we need one, make it
-    if (must && in_dhts.size() == 0) dhtCreate();
+    // if we need one, make three (redundancy)
+    if (must && in_dhts.size() == 0) {
+        BinSeq hti = pukeyhash;
+        dhtCreate(hti);
+        hti = encHashKey(hti);
+        dhtCreate(hti);
+        hti = encHashKey(hti);
+        dhtCreate(hti);
+    }
     
     // iterate through all that we're in
     map<BinSeq, DHTInfo>::iterator di;
@@ -74,22 +84,22 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     // send our name into the hash
     BinSeq hname = "nm:" + string(dn_name);
     Message nmsg(1, "Had", 1, 1);
-    nmsg.params.push_back(Route().toBinSeq());
+    nmsg.params.push_back("");
     nmsg.params.push_back(dn_name);
     nmsg.params.push_back(ident);
     nmsg.params.push_back(hname);
     nmsg.params.push_back(pukeyhash);
     nmsg.params.push_back(" ");
-    dhtSendMsg(nmsg, ident, encHashKey(hname), NULL);
+    dhtSendMsg(nmsg, ident, encHashKey(ident + hname), NULL);
 }
 
-void dhtCreate()
+void dhtCreate(const BinSeq &key)
 {
     // make it
-    DHTInfo &newDHT = in_dhts[pukeyhash];
+    DHTInfo &newDHT = in_dhts[key];
     
     // establish it
-    newDHT.HTI = pukeyhash;
+    newDHT.HTI = key;
     newDHT.rep = new BinSeq(encExportKey());
     for (int i = 0; i < 4; i++) {
         newDHT.neighbors[i] = new BinSeq(pukeyhash);
@@ -602,6 +612,83 @@ void dhtAllSendMsg(Message &msg, BinSeq *ident, const BinSeq &key, BinSeq *route
     }
 }
 
+/* Search done callback */
+void dhtSearchDone(dn_event_timer *dne)
+{
+    BinSeq *key = (BinSeq *) dne->payload;
+    delete dne;
+    
+    // hopefully we were actually searching for this key
+    if (dhtSearches.find(*key) == dhtSearches.end()) {
+        delete key;
+        return;
+    }
+    DHTSearchInfo &ds = dhtSearches[*key];
+    
+    // figure out how many results we received
+    typedef map<set<BinSeq >, int> count_t;
+    count_t counts;
+    searchResults_t::iterator dsi;
+    for (dsi = ds.searchResults.begin();
+         dsi != ds.searchResults.end();
+         dsi++) {
+        // vote on this one
+        if (counts.find(dsi->second) != counts.end()) {
+            counts[dsi->second]++;
+        } else {
+            counts[dsi->second] = 1;
+        }
+    }
+    
+    // now figure out which is the most likely
+    count_t::iterator ci;
+    const set<BinSeq> *choice = NULL;
+    int cmax = 0;
+    for (ci = counts.begin(); ci != counts.end(); ci++) {
+        if (ci->second > cmax) {
+            cmax = ci->second;
+            choice = &(ci->first);
+        }
+    }
+    
+    // if we haven't made a choice, choose blank
+    set<BinSeq> nochoice;
+    if (!choice)
+        choice = &nochoice;
+    
+    // call the callback
+    ds.callback(*key, *choice, ds.data);
+    
+    dhtSearches.erase(*key);
+    delete key;
+}
+
+/* Send a search for data, with a callback for when it comes */
+void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
+{
+    // store the search info
+    DHTSearchInfo &dsi = dhtSearches[key];
+    dsi.callback = callback;
+    dsi.data = data;
+    
+    // make the search message
+    Message msg(1, "Hga", 1, 1);
+    msg.params.push_back("");
+    msg.params.push_back(dn_name);
+    msg.params.push_back("");
+    msg.params.push_back(key);
+    msg.params.push_back(Route().toBinSeq());
+    msg.params.push_back(pukeyhash);
+    
+    // send out the search
+    dhtAllSendMsg(msg, &(msg.params[2]), encHashKey(msg.params[2] + key), &(msg.params[4]));
+    
+    // start the clock for 10 seconds
+    dn_event_timer *dne =
+        new dn_event_timer(10, 0, dhtSearchDone, (void *) new BinSeq(key));
+    dne->activate();
+}
+
 /* We just changed neighbors, update data */
 void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int nnum)
 {
@@ -700,7 +787,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     if (CMD_IS("Had", 1, 1)) {
         REQ_PARAMS(6);
         
-        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[3]), NULL))
+        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), NULL))
             return;
         
         // this is my data, store it
@@ -756,7 +843,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     } else if (CMD_IS("Hga", 1, 1)) {
         REQ_PARAMS(6);
         
-        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[3]), &(msg.params[4])))
+        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), &(msg.params[4])))
             return;
         
         DHTInfo &indht = in_dhts[msg.params[2]];
@@ -1140,8 +1227,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     } else if (CMD_IS("Hfr", 1, 1)) {
         REQ_PARAMS(6);
         
-        cout << "RECEIVED Hfr" << endl << endl;
-        
         if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
         DHTInfo &indht = in_dhts[msg.params[2]];
         
@@ -1188,8 +1273,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             if (indht.neighbors[nnum])
                 delete indht.neighbors[nnum];
             indht.neighbors[nnum] = new BinSeq(hashedKey);
-            
-            dhtDebug(msg.params[2]);
             
         } else if (msg.params[5][0] == '\x07') {
             // tell our successor who their second predecessor is
@@ -1253,8 +1336,21 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     } else if (CMD_IS("Hra", 1, 1)) {
         REQ_PARAMS(5);
         
+        if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
+        
+        // Add this search result
+        if (dhtSearches.find(msg.params[3]) != dhtSearches.end()) {
+            // make the set from the route-style list
+            Route vals(msg.params[4]);
+            set<BinSeq> bsv;
+            for (int i = 0; i < vals.size(); i++) {
+                bsv.insert(vals[i]);
+            }
+            dhtSearches[msg.params[3]].searchResults[msg.params[2]] = bsv;
+        }
+        
         /* FIXME: right now, this assumes that I actually performed this search
-         * and want to find this user :) */
+         * and want to find this user :) * /
         if (msg.params[3].size() > 3 &&
             msg.params[3].substr(0, 3) == "nm:") {
             // build the find for this user (these users?)
@@ -1283,7 +1379,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 dhtSendMsg(fms, fms.params[2], fms.params[3], &(fms.params[4]));
             }
             cout << endl;
-        }
+        }*/
         
         
     } else if (CMD_IS("Hrd", 1, 1)) {

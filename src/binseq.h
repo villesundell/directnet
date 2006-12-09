@@ -85,6 +85,12 @@ class BinSeq : public vector<char> {
         string a(c_str(), size());
         return a;
     }
+    inline BinSeq operator+(const BinSeq &add) const {
+        BinSeq out;
+        out.push_back(*this);
+        out.push_back(add);
+        return out;
+    }
     
     // accessors
     inline int size() const { return ((vector <char> *) this)->size() - 1; }

@@ -56,6 +56,19 @@ class DHTInfo {
 // map the DHTs we're members of to DHTInfo nodes
 extern map<BinSeq, DHTInfo> in_dhts;
 
+// searches currently in progress
+typedef map<BinSeq, set<BinSeq> > searchResults_t;
+// callback form: key, values, data
+typedef void (*dhtSearchCallback)(const BinSeq &, const set<BinSeq> &, void *);
+class DHTSearchInfo {
+    public:
+    searchResults_t searchResults;
+    dhtSearchCallback callback;
+    void *data;
+};
+
+extern map<BinSeq, DHTSearchInfo> dhtSearches;
+
 /* list of DHTs we're currently in
  * must: set to true if we need to be in a DHT, and should create one if we're
  *       not */
@@ -67,7 +80,7 @@ Route dhtIn(bool must);
 void dhtJoin(const BinSeq &ident, const BinSeq &rep);
 
 /* create a DHT and establish ourself into it */
-void dhtCreate();
+void dhtCreate(const BinSeq &key);
 
 /* are we fully established into this DHT?
  * ident: The identification for the DHT
@@ -99,6 +112,9 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool closer = false);
  * closer: rather than using >=, decide hops by closeness
  * return: true if for us */
 bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool closer = false);
+
+/* Send a search for data, with a callback for when it comes */
+void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data);
 
 /* Send a properly-formed message over the DHT
  * params same as dhtForMe */
