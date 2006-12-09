@@ -26,6 +26,7 @@ using namespace std;
 #include "connection.h"
 #include "dht.h"
 #include "directnet.h"
+#include "dnconfig.h"
 #include "dn_event.h"
 #include "enc.h"
 #include "message.h"
@@ -343,6 +344,9 @@ void dhtEstablish(const BinSeq &ident, int step)
         
         // this is already established!
         di.established = true;
+        
+        // upon establishment, send finds
+        autoFind();
     }
 }
 
