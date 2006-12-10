@@ -75,6 +75,8 @@ Route dhtIn(bool must)
     return toret;
 }
 
+void dhtDataAge(dn_event_timer *te);
+
 void dhtJoin(const BinSeq &ident, const BinSeq &rep)
 {
     in_dhts.erase(ident);
@@ -83,15 +85,53 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     dhti.HTI = ident;
     
     // send our name into the hash
-    BinSeq hname = "nm:" + string(dn_name);
+    BinSeq hname("\x08nm", 3);
+    hname += dn_name;
     Message nmsg(1, "Had", 1, 1);
     nmsg.params.push_back("");
     nmsg.params.push_back(dn_name);
     nmsg.params.push_back(ident);
     nmsg.params.push_back(hname);
     nmsg.params.push_back(pukeyhash);
-    nmsg.params.push_back(" ");
+    nmsg.params.push_back("");
+    nmsg.params.push_back("");
     dhtSendMsg(nmsg, ident, encHashKey(ident + hname), NULL);
+    
+    // set up the timer
+    dn_event_timer *te = new dn_event_timer(
+        60, 0, dhtDataAge, &dhti);
+    te->activate();
+}
+
+void dhtDataAge(dn_event_timer *te)
+{
+    te->setTimeDelta(60, 0);
+    DHTInfo &indht = *((DHTInfo *) te->payload);
+    
+    // go through each piece of data, aging it
+    dataAge_t::iterator dai;
+    for (dai = indht.dataTime.begin();
+         dai != indht.dataTime.end();
+         dai++) {
+        dai->second--;
+        if (dai->second == 0) {
+            // dead: delete the data
+            indht.data.erase(dai->first);
+            indht.dataTime.erase(dai);
+            dai--;
+        }
+    }
+    for (dai = indht.rdataTime.begin();
+         dai != indht.rdataTime.end();
+         dai++) {
+        dai->second--;
+        if (dai->second == 0) {
+            // dead: delete the rdata
+            indht.rdata.erase(dai->first);
+            indht.rdataTime.erase(dai);
+            dai--;
+        }
+    }
 }
 
 void dhtCreate(const BinSeq &key)
@@ -107,6 +147,11 @@ void dhtCreate(const BinSeq &key)
         newDHT.nbors_keys[i] = new BinSeq(encExportKey());
     }
     newDHT.established = true;
+    
+    // set up the timer
+    dn_event_timer *te = new dn_event_timer(
+        60, 0, dhtDataAge, &newDHT);
+    te->activate();
 }
 
 bool dhtEstablished(const BinSeq &ident)
@@ -358,7 +403,7 @@ void dhtEstablish(const BinSeq &ident, int step)
 
 void dhtDebug(const BinSeq &ident)
 {
-    if (in_dhts.find(ident) == in_dhts.end()) return;
+    /*if (in_dhts.find(ident) == in_dhts.end()) return;
     
     DHTInfo &di = in_dhts[ident];
     
@@ -420,7 +465,7 @@ void dhtDebug(const BinSeq &ident)
         cout << endl;
     }
     
-    cout << "--------------------------------------------------" << endl << endl;
+    cout << "--------------------------------------------------" << endl << endl;*/
     
     /*Route info;
     info.push_back(pukeyhash);
@@ -713,6 +758,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 droute.push_back(*si);
             }
             rmsg.params.push_back(droute.toBinSeq());
+            rmsg.params.push_back(intToBinSeq(indht.dataTime[di->first]));
                     
             rmsg.params.push_back("");
             handleRoutedMsg(rmsg);
@@ -725,7 +771,6 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
         if (indht.neighbors[2]) {
             if (*(indht.neighbors[2]) == pukeyhash ||
                 encCmp(hashedKey, *(indht.neighbors[2])) < 0) {
-                cout << "CLOSER" << endl;
                 /* this person is closer, so nobody's lost. We can junk
                  * all our redundant data */
                 indht.rdata.clear();
@@ -749,6 +794,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         drmsg.params.push_back(indht.HTI);
                         drmsg.params.push_back(di->first);
                         drmsg.params.push_back("");
+                        drmsg.params.push_back(intToBinSeq(indht.dataTime[di->first]));
                         drmsg.params.push_back("");
                                 
                         // add data one-by-one
@@ -766,7 +812,6 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 }
                         
             } else {
-                cout << "FARTHER" << endl;
                 /* this person is farther - we've lost a node. Promote
                  * all of our redundant data into normal data */
                 indht.data.insert(indht.rdata.begin(), indht.rdata.end());
@@ -789,7 +834,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     //msg.debug("DHT");
     
     if (CMD_IS("Had", 1, 1)) {
-        REQ_PARAMS(6);
+        REQ_PARAMS(7);
         
         if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), NULL))
             return;
@@ -798,11 +843,22 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         // TODO: data ownership, redundancy, etc
         DHTInfo &indht = in_dhts[msg.params[2]];
         
-        printf("I own: %s = ", msg.params[3].c_str());
-        outHex(msg.params[4].c_str(), msg.params[4].size());
-        printf("\n");
+        // make sure the name is legit
+        if (msg.params[3].size() < 3) return;
         
+        // insert it
         indht.data[msg.params[3]].insert(msg.params[4]);
+        
+        // get and set the timeout
+        unsigned int tleft = (1 << (msg.params[3][0] & 0xF)) * 60;
+        if (msg.params[5].size() == 4 &&
+            (msg.params[3][0] & 0xF0) == 0) {
+            unsigned int msgtleft =
+                binSeqToInt(msg.params[5]);
+            if (msgtleft < tleft)
+                tleft = msgtleft;
+        }
+        indht.dataTime[msg.params[3]] = tleft;
         
         // now send the redundant info
         if (indht.neighbors[1]) {
@@ -834,7 +890,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             rdmsg.params.push_back(indht.HTI);
             rdmsg.params.push_back(msg.params[3]);
             rdmsg.params.push_back(rdat.toBinSeq());
-            rdmsg.params.push_back(" ");
+            rdmsg.params.push_back(intToBinSeq(tleft));
+            rdmsg.params.push_back("");
             
             if (toroute) {
                 handleRoutedMsg(rdmsg);
@@ -969,7 +1026,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
                 rroute->reverse();
                 rroute->push_back(encHashKey(msg.params[5]));
                 
-                cout << "RECEIVED Hfn" << endl << endl;
                 recvFnd(rroute, msg.params[1], msg.params[5]);
                 
                 // then send the Hfr back
@@ -1356,7 +1412,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         /* FIXME: right now, this assumes that I actually performed this search
          * and want to find this user :) * /
         if (msg.params[3].size() > 3 &&
-            msg.params[3].substr(0, 3) == "nm:") {
+            msg.params[3].substr(0, 3) == "\x08nm") {
             // build the find for this user (these users?)
             cout << "USERS: ";
             outHex(msg.params[4].c_str(), msg.params[4].size());
@@ -1387,7 +1443,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
         
     } else if (CMD_IS("Hrd", 1, 1)) {
-        REQ_PARAMS(6);
+        REQ_PARAMS(7);
         
         // store redundant info
         // FIXME: verification
@@ -1399,11 +1455,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         indht.rdata[msg.params[3]].clear();
         for (ri = dat.begin(); ri != dat.end(); ri++) {
             indht.rdata[msg.params[3]].insert(*ri);
-            printf("Redundant: %s = ", msg.params[3].c_str());
-            outHex(msg.params[4].c_str(), msg.params[4].size());
-            printf("\n");
         }
         
+        // set the time left
+        indht.rdataTime[msg.params[3]] = binSeqToInt(msg.params[5]);
         
     }
     
@@ -1411,4 +1466,26 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     for (dhti = in_dhts.begin(); dhti != in_dhts.end(); dhti++) {
         dhtDebug(dhti->first);
     }
+}
+
+/* Convert an int to 4-byte big-endian */
+BinSeq intToBinSeq(unsigned int val)
+{
+    BinSeq r("    ");
+    r[0] = (val & 0xFF000000) >> 24;
+    r[1] = (val & 0xFF0000  ) >> 16;
+    r[2] = (val & 0xFF00    ) >> 8;
+    r[3] =  val & 0xFF;
+    return r;
+}
+
+/* Convert a binseq 4-byte big-endian to an int */
+unsigned int binSeqToInt(const BinSeq &from)
+{
+    if (from.size() != 4) return 0;
+    return
+        (((unsigned int) from[0]) << 24) +
+        (((unsigned int) from[1]) << 16) +
+        (((unsigned int) from[2]) << 8) +
+         ((unsigned int) from[3]);
 }

@@ -31,6 +31,7 @@ using namespace std;
 #include "route.h"
 
 typedef map<BinSeq, set<BinSeq> > binseqHash;
+typedef map<BinSeq, unsigned int> dataAge_t;
 
 // DHT info is stored here
 class DHTInfo {
@@ -49,8 +50,12 @@ class DHTInfo {
     // the data stored for the DHT
     binseqHash data;
     
+    // the time remaining
+    dataAge_t dataTime;
+    
     // the data stored redundantly for the DHT
     binseqHash rdata;
+    dataAge_t rdataTime;
 };
 
 // map the DHTs we're members of to DHTInfo nodes
@@ -131,5 +136,11 @@ void handleDHTDupMessage(conn_t *conn, Message msg);
  * conn: the connection
  * msg: the message itself */
 void handleDHTMessage(conn_t *conn, Message &msg);
+
+/* Convert an int to 4-byte big-endian */
+BinSeq intToBinSeq(unsigned int val);
+
+/* Convert a binseq 4-byte big-endian to an int */
+unsigned int binSeqToInt(const BinSeq &from);
 
 #endif

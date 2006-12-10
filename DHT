@@ -45,6 +45,7 @@ Had(1)(1) (hash add)
                 HTI
                 DHT key
                 value
+                minutes remaining (4 byte big-endian)
                 ttl [not currently used]
 
 Hdm(1)(1) (hash dump)
@@ -189,6 +190,7 @@ Hrd(1)(1) (hash redundant data) *
                 HTI
                 DHT key
                 values (in the same form as routes)
+                minutes remaining (4 byte big-endian)
                 signature of values with public key (not currently used)
 
 Hrr(1)(1) (hash return random) *
