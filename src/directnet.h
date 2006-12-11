@@ -80,11 +80,14 @@ void dn_goOnline();
 void dn_addRoute(const BinSeq &to, const Route &rt);
 
 //Release notes for this version (if this one is not defined, there is no startup message.
-#define DN_RELEASENOTES "<h1>Release notes</h1><b>for DirectNet 2.0 alfa1</b><br><br>\
-This is a alfa version, which means this version is <u>only for testing purposes</u>, right now it is not stable enough for daily use. If you find any bugs, please contact us, you can find contact information at our homepage <b>directnet.sf.net</b>\
-<br> <br>\
-<b>Licence:</b><br>\
-Directnet is licenced under GPL-licence\
+#define DN_RELEASENOTES "<h1>DirectNet</h1>\
+<h2>&nbsp;2.0a1</h2>\
+<h1>Release Notes</h1>\
+This is a alpha version, which means this version is <u>only for testing \
+purposes</u>, and is not stable enough for daily use. If you find any bugs, \
+please contact the developers. You can find contact information at DirectNet's \
+homepage, <b>directnet.sf.net</b><br>\
+DirectNet is distributed under the GNU General Public License\
 "
 
 #endif // DN_DIRECTNET_H
