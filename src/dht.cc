@@ -741,7 +741,7 @@ void dhtAddRefresh(dn_event_timer *te)
     
     // refresh the time
     unsigned int rtime =
-        (1 << msg.params[3][0]) * 3600;
+        (1 << (msg.params[3][0] & 0xF)) * 3600;
     // 3/4 of the total time
     rtime *= 3;
     rtime /= 4;
@@ -867,7 +867,13 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 indht.dataTime.insert(indht.rdataTime.begin(), indht.rdataTime.end());
                 indht.rdata.clear();
                 indht.rdataTime.clear();
-                // FIXME: send redundant data to predecessor
+                
+                // update our immediate predecessor with all of our redundant data
+                if (indht.neighbors[1] &&
+                    dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
+                    dhtNeighborUpdateData(indht, *((*dn_routes)[*(indht.nbors_keys[1])]),
+                                          *(indht.neighbors[1]), 1);
+                }
             }
         }
     }
