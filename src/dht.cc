@@ -853,7 +853,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                                 
                         // then demote our data
                         indht.rdata[di->first] = di->second;
-                        indht.rdata[di->first] = indht.dataTime[di->first];
+                        indht.rdataTime[di->first] = indht.dataTime[di->first];
                         indht.data.erase(di);
                         indht.dataTime.erase(di->first);
                         direstart = true;
@@ -867,6 +867,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 indht.dataTime.insert(indht.rdataTime.begin(), indht.rdataTime.end());
                 indht.rdata.clear();
                 indht.rdataTime.clear();
+                // FIXME: send redundant data to predecessor
             }
         }
     }
