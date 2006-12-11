@@ -853,7 +853,9 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                                 
                         // then demote our data
                         indht.rdata[di->first] = di->second;
+                        indht.rdata[di->first] = indht.dataTime[di->first];
                         indht.data.erase(di);
+                        indht.dataTime.erase(di->first);
                         direstart = true;
                     }
                 }
@@ -862,7 +864,9 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 /* this person is farther - we've lost a node. Promote
                  * all of our redundant data into normal data */
                 indht.data.insert(indht.rdata.begin(), indht.rdata.end());
+                indht.dataTime.insert(indht.rdataTime.begin(), indht.rdataTime.end());
                 indht.rdata.clear();
+                indht.rdataTime.clear();
             }
         }
     }
