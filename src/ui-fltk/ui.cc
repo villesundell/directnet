@@ -61,7 +61,7 @@ NameWindow *nw;
 BuddyWindow *bw;
 map<string, ChatWindow *> cws;
 AutoConnWindow *acw;
-Fl_Window *miniwin;
+Fl_Window *miniwin, *notewin;
 string msgbuffer="";
 
 //Do we want minimode?
@@ -121,7 +121,15 @@ int main(int argc, char **argv, char **envp)
     dn_init(argc, argv);
     
 
-            
+    //Here we show release notes
+    #ifdef DN_RELEASENOTES
+    notewin = new Fl_Window (300, 400, "Release notes");
+    Fl_Group::current()->resizable(notewin);
+    Fl_Help_View *noteview = new Fl_Help_View(0, 0, 300, 400, "hello");
+    noteview->value(DN_RELEASENOTES);
+    notewin->end();
+    notewin->show();
+    #endif
     
     /* Always start by finding encryption */
     if (findEnc(envp) == -1) {
