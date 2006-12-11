@@ -48,15 +48,6 @@ Had(1)(1) (hash add)
                 minutes remaining (4 byte big-endian)
                 ttl [not currently used]
 
-Hdm(1)(1) (hash dump)
-        purpose: dump hash info
-        type: routed (bounces neighbor-to-neighbor)
-        parameters:
-                route
-                local name
-                HTI
-                
-
 Hen(1)(1) (hash encapsulate) *
         purpose: encapsulate a routed message in a hash message
         type: hash
@@ -68,7 +59,7 @@ Hen(1)(1) (hash encapsulate) *
                 encapsulated message
                 ttl [not currently used]
 
-Hfn(1)(1) (hash find) *(partial)
+Hfn(1)(1) (hash find)
         purpose: find a route to the user with the given encryption key
         type: returnable hash
         parameters:
@@ -85,7 +76,7 @@ Hfn(1)(1) (hash find) *(partial)
                         second byte (for divisions): the level of division (0-
                         255)
 
-Hfr(1)(1) (hash find response) *(partial)
+Hfr(1)(1) (hash find response)
         purpose: reply to Hfn
         type: hash return
         parameters:
@@ -106,17 +97,7 @@ Hfr(1)(1) (hash find response) *(partial)
                         second byte (for divisions): the level of division (0-
                         255)
 
-Hg1(1)(1) (hash get 1st) *
-        purpose: get the first value for a key
-        type: returnable hash
-        parameters:
-                immediate route
-                local name
-                HTI
-                DHT key
-                route
-
-Hga(1)(1) (hash get all) *
+Hga(1)(1) (hash get all)
         purpose: get all values for a key
         type: returnable hash
         parameters:
@@ -126,28 +107,6 @@ Hga(1)(1) (hash get all) *
                 DHT key
                 current route
                 hash of encryption key
-
-Hgn(1)(1) (hash get next / hash user-gone) * (partial)
-        purpose: get the next node in the specified direction
-        type: routed
-        parameters:
-                route
-                local name
-                HTI
-                return route
-                lost user encryption key
-                direction
-                        0 for predecessor, 1 for successor (1 byte)
-
-Hgr(1)(1) (hash get random) *
-        purpose: get any value for a key
-        type: returnable hash
-        parameters:
-                immediate route
-                local name
-                HTI
-                DHT key
-                route
 
 Hin(1)(1) (hash table info)
         purpose: tell the remote node what hash table(s) this node is on
@@ -161,16 +120,6 @@ Hir(1)(1) (hash table info response)
         parameters:
                 list of HTIs (in the same form as routes)
 
-Hr1(1)(1) (hash return 1st) *
-        purpose: response to Hg1
-        type: hash return
-        parameters:
-                route
-                local name
-                HTI
-                DHT key
-                value
-
 Hra(1)(1) (hash return all)
         purpose: response to Hga
         type: hash return
@@ -181,7 +130,7 @@ Hra(1)(1) (hash return all)
                 DHT key
                 values (in the same form as routes)
 
-Hrd(1)(1) (hash redundant data) *
+Hrd(1)(1) (hash redundant data)
         purpose: tell a predecessor to redundantly store information
         type: routed
         parameters:
@@ -192,28 +141,6 @@ Hrd(1)(1) (hash redundant data) *
                 values (in the same form as routes)
                 minutes remaining (4 byte big-endian)
                 signature of values with public key (not currently used)
-
-Hrr(1)(1) (hash return random) *
-        purpose: response to Hgr
-        type: hash return
-        parameters:
-                route
-                local name
-                HTI
-                DHT key
-                value
-
-Hst(1)(1) (hash set) *
-        purpose: set a value in the distributed hash
-        type: hash
-        parameters:
-                immediate route
-                local name
-                HTI
-                DHT key
-                value
-                ttl [not currently used]
-
 
 Key:
 *: Not yet implemented
