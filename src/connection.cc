@@ -1019,7 +1019,7 @@ void sendFndCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
 
 void sendFnd(const string &toc) {
     // Find a user by name
-    BinSeq nmcode = "nm:" + toc;
+    BinSeq nmcode = "\x08nm" + toc;
 
     dhtSendSearch(nmcode, sendFndCallback, NULL);
     
