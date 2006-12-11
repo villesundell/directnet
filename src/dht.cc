@@ -383,10 +383,12 @@ void dhtEstablish(const BinSeq &ident, int step)
         }
         
         // this is already established!
-        di.established = true;
-        
-        // upon establishment, send finds
-        autoFind();
+        if (!di.established) {
+            di.established = true;
+            
+            // upon establishment, send finds
+            autoFind();
+        }
     }
 }
 
