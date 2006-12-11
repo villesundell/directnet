@@ -121,7 +121,10 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
 /* Send a search for data, with a callback for when it comes */
 void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data);
 
-/* Send a properly-formed message over the DHT
+/* Send a properly-formed add message over the DHT, with a refresher loop */
+void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht);
+
+/* Send a properly-formed search message over the DHT
  * params same as dhtForMe */
 void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);
 

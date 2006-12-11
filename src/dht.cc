@@ -75,34 +75,7 @@ Route dhtIn(bool must)
     return toret;
 }
 
-void dhtDataAge(dn_event_timer *te);
-
-void dhtJoin(const BinSeq &ident, const BinSeq &rep)
-{
-    in_dhts.erase(ident);
-    DHTInfo &dhti = in_dhts[ident];
-    dhti.rep = new BinSeq(rep);
-    dhti.HTI = ident;
-    
-    // send our name into the hash
-    BinSeq hname("\x08nm", 3);
-    hname += dn_name;
-    Message nmsg(1, "Had", 1, 1);
-    nmsg.params.push_back("");
-    nmsg.params.push_back(dn_name);
-    nmsg.params.push_back(ident);
-    nmsg.params.push_back(hname);
-    nmsg.params.push_back(pukeyhash);
-    nmsg.params.push_back("");
-    nmsg.params.push_back("");
-    dhtSendMsg(nmsg, ident, encHashKey(ident + hname), NULL);
-    
-    // set up the timer
-    dn_event_timer *te = new dn_event_timer(
-        60, 0, dhtDataAge, &dhti);
-    te->activate();
-}
-
+/* Age the data in a DHT (on a timer, payload == DHT) */
 void dhtDataAge(dn_event_timer *te)
 {
     te->setTimeDelta(60, 0);
@@ -134,6 +107,24 @@ void dhtDataAge(dn_event_timer *te)
     }
 }
 
+void dhtJoin(const BinSeq &ident, const BinSeq &rep)
+{
+    in_dhts.erase(ident);
+    DHTInfo &dhti = in_dhts[ident];
+    dhti.rep = new BinSeq(rep);
+    dhti.HTI = ident;
+    
+    // send our name into the hash
+    BinSeq hname("\x08nm", 3);
+    hname += dn_name;
+    dhtSendAdd(hname, pukeyhash, &dhti);
+    
+    // set up the data aging timer
+    dn_event_timer *te = new dn_event_timer(
+        60, 0, dhtDataAge, &dhti);
+    te->activate();
+}
+
 void dhtCreate(const BinSeq &key)
 {
     // make it
@@ -148,7 +139,11 @@ void dhtCreate(const BinSeq &key)
     }
     newDHT.established = true;
     
-    // set up the timer
+    // add our own data with refresher loop et all
+    BinSeq nminfo = BinSeq("\x08nm", 3) + dn_name;
+    dhtSendAdd(nminfo, pukeyhash, &newDHT);
+    
+    // set up the data aging timer
     dn_event_timer *te = new dn_event_timer(
         60, 0, dhtDataAge, &newDHT);
     te->activate();
@@ -738,6 +733,58 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     dne->activate();
 }
 
+/* the refresher loop for dhtSendAdd */
+void dhtAddRefresh(dn_event_timer *te)
+{
+    // "Had" (for search)
+    Message &msg = *((Message *) te->payload);
+    
+    // refresh the time
+    unsigned int rtime =
+        (1 << msg.params[3][0]) * 3600;
+    // 3/4 of the total time
+    rtime *= 3;
+    rtime /= 4;
+    te->setTimeDelta(rtime, 0);
+    
+    // then refresh the data
+    dhtSendMsg(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), NULL);
+}
+
+/* Send a properly-formed add message over the DHT, with a refresher loop */
+void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht)
+{
+    // if no DHT set, run for each
+    if (!dht) {
+        map<BinSeq, DHTInfo>::iterator di;
+        
+        for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
+            dhtSendAdd(key, value, &(di->second));
+        }
+        return;
+    }
+    
+    // make the message
+    Message *msg = new Message(1, "Had", 1, 1);
+    msg->params.push_back("");
+    msg->params.push_back(dn_name);
+    msg->params.push_back(dht->HTI);
+    msg->params.push_back(key);
+    msg->params.push_back(value);
+    msg->params.push_back("");
+    msg->params.push_back("");
+    
+    // make the timer event
+    dn_event_timer *te =
+        new dn_event_timer(3600, 0, // time will be reset, unimportant
+                           dhtAddRefresh,
+                           (void *) msg);
+    te->activate();
+    
+    // run the first iteration (this will set the time and send the data)
+    dhtAddRefresh(te);
+}
+
 /* We just changed neighbors, update data */
 void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int nnum)
 {
@@ -845,6 +892,19 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
         // make sure the name is legit
         if (msg.params[3].size() < 3) return;
+        
+        // make sure it's unique if it should be
+        if (msg.params[3][0] & 0xF0 == 0) {
+            // [0] & 0xF0 == 0 means it needs to be unique
+            if (indht.data.find(msg.params[3]) != indht.data.end() &&
+                indht.data[msg.params[3]].find(msg.params[4]) ==
+                indht.data[msg.params[3]].end()) {
+                /* the key is set but the value isn't there, so it's owned by
+                 * somebody else */
+                // FIXME: this should return SOMETHING to the sender
+                return;
+            }
+        }
         
         // insert it
         indht.data[msg.params[3]].insert(msg.params[4]);
