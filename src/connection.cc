@@ -835,6 +835,10 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     // If we aren't fully established already
     if (dn_names->find(key) == dn_names->end()) {
         // Add the route,
+        if (dn_routes->find(key) != dn_routes->end()) {
+            delete (*dn_routes)[key];
+            dn_routes->erase(key);
+        }
         (*dn_routes)[key] = new Route(*route);
         
         (*dn_names)[key] = name;
@@ -843,6 +847,9 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
         
         // and public key
         encImportKey(name, key);
+        
+        // and show the UI
+        uiEstRoute(name.c_str());
     }
     
     // then send your route back to him
@@ -852,8 +859,6 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(encExportKey());
     handleRoutedMsg(omsg);*/
-    
-    uiEstRoute(name.c_str());
     
     /* Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__

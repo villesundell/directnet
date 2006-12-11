@@ -398,7 +398,7 @@ void dhtEstablish(const BinSeq &ident, int step)
 
 void dhtDebug(const BinSeq &ident)
 {
-    /*if (in_dhts.find(ident) == in_dhts.end()) return;
+    if (in_dhts.find(ident) == in_dhts.end()) return;
     
     DHTInfo &di = in_dhts[ident];
     
@@ -460,7 +460,7 @@ void dhtDebug(const BinSeq &ident)
         cout << endl;
     }
     
-    cout << "--------------------------------------------------" << endl << endl;*/
+    cout << "--------------------------------------------------" << endl << endl;
     
     /*Route info;
     info.push_back(pukeyhash);
@@ -717,15 +717,19 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     
     // make the search message
     Message msg(1, "Hga", 1, 1);
-    msg.params.push_back("");
+    msg.params.push_back(Route().toBinSeq());
     msg.params.push_back(dn_name);
     msg.params.push_back("");
     msg.params.push_back(key);
-    msg.params.push_back(Route().toBinSeq());
+    msg.params.push_back("");
     msg.params.push_back(pukeyhash);
     
     // send out the search
-    dhtAllSendMsg(msg, &(msg.params[2]), encHashKey(msg.params[2] + key), &(msg.params[4]));
+    map<BinSeq, DHTInfo>::iterator di;
+    for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
+        msg.params[2] = di->first;
+        dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[4]));
+    }
     
     // start the clock for 10 seconds
     dn_event_timer *dne =
@@ -1006,7 +1010,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         ret.params.push_back(retdata.toBinSeq());
         
         // handle or send it
-        if (msg.params[4].size()) {
+        if (rroute.size() > 1) {
             handleRoutedMsg(ret);
         } else {
             handleDHTDupMessage(conn, ret);
