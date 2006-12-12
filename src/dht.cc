@@ -392,11 +392,11 @@ void dhtEstablish(const BinSeq &ident, int step)
     }
 }
 
-#include <netdb.h>
+/*#include <netdb.h>
 #include <netinet/ip.h>
 #include <stdio.h>
 #include <sys/socket.h>
-#include <sys/types.h>
+#include <sys/types.h>*/
 
 void dhtDebug(const BinSeq &ident)
 {

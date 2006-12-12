@@ -59,7 +59,7 @@ struct cyf_key {
 struct cyf_key *cyf_key_head = NULL;
 
 char *mypukey, *myprkey;
-int mypukeylen, myprkeylen;
+size_t mypukeylen, myprkeylen;
 BinSeq pukeyhash;
 
 /* Helper function for creating public-key context. */
@@ -393,7 +393,7 @@ BinSeq genKey()
     
     /* Generate and export keys into temporary buffers */
     CYFER_Pk_Generate_Key(ctx, 1024);
-    CYFER_Pk_KeySize(ctx, (unsigned int *) &myprkeylen, (unsigned int *) &mypukeylen);
+    CYFER_Pk_KeySize(ctx, &myprkeylen, &mypukeylen);
     
     myprkey = (char *) malloc(myprkeylen);
     if (!myprkey) { perror("malloc"); exit(1); }
@@ -608,6 +608,8 @@ int encCmp(const BinSeq &a, const BinSeq &b)
         return 0;
     }
 }
+
+#undef bool
 
 bool encCloser(const BinSeq &a, const BinSeq &b)
 {
