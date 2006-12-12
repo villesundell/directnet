@@ -25,7 +25,9 @@
 #include <vector>
 using namespace std;
 
+extern "C" {
 #include <string.h>
+}
 
 class BinSeq : public vector<char> {
     public:

@@ -26,7 +26,9 @@
 #include <string>
 using namespace std;
 
+extern "C" {
 #include <sys/time.h>
+}
 
 #include "binseq.h"
 #include "globals.h"

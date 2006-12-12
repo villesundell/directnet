@@ -19,6 +19,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+extern "C" {
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -35,6 +36,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+}
 
 #include "client.h"
 #include "connection.h"
@@ -88,7 +90,9 @@ dn_event_fd *establishServer()
     addr.sin_family = AF_INET;
     addr.sin_port = htons(serv_port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
+#ifndef NESTEDVM
     memset(&(addr.sin_zero), '\0', 8);
+#endif
     
     if (bind(server_sock, (struct sockaddr *) &addr, sizeof(struct sockaddr)) == -1) {
         perror("bind");

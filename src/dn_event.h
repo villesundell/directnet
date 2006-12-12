@@ -21,13 +21,16 @@
 #ifndef EVENT_H
 #define EVENT_H 1
 
+extern "C" {
 #ifdef __WIN32
 #include <sys/timeb.h>
 #endif
 
 #include <stdlib.h>
 #ifndef __WIN32
+#ifndef NESTEDVM
 #include <sys/select.h>
+#endif
 #else
 #include <winsock.h>
 #endif
@@ -35,6 +38,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+}
 
 #include <cassert>
 

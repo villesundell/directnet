@@ -23,6 +23,7 @@
 #include <string>
 using namespace std;
 
+extern "C" {
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@ using namespace std;
 #include <sys/wait.h>
 #endif
 #include <unistd.h>
+}
 
 #include "chat.h"
 #include "compat.h"
@@ -153,7 +155,10 @@ void dn_init(int argc, char **argv) {
 }
     
 void dn_goOnline() {
+    // no server for NESTEDVM
+#ifndef NESTEDVM 
     establishServer();
+#endif
     
     autoConnect();
     
@@ -170,7 +175,7 @@ char *findHome(char **envp)
         }
     }
    
-#ifdef WIN32
+#if defined(WIN32) || defined(NESTEDVM)
     // On Windoze we'll accept curdir
     {
         char *cdir = (char *) malloc(1024);

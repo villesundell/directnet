@@ -23,6 +23,7 @@
 #include <sstream>
 using namespace std;
 
+extern "C" {
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -30,6 +31,12 @@ using namespace std;
 #include <sys/socket.h>
 #else
 #include <winsock.h>
+#endif
+
+#ifdef NESTEDVM
+#define send(x, y, z, a) write(x, y, z)
+#define recv(x, y, z, a) read(x, y, z)
+#include <sys/unistd.h>
 #endif
 
 #include <errno.h>
@@ -40,6 +47,7 @@ using namespace std;
 #include <sys/types.h>
 #include <unistd.h>
 #include <assert.h>
+}
 
 #include "auth.h"
 #include "binseq.h"
@@ -494,8 +502,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         return;
         REQ_PARAMS(3);
         
-        // This doesn't work on OSX
-#if !defined(__APPLE__)
+        // This doesn't work on OSX or NESTEDVM
+#if !defined(__APPLE__) && !defined(NESTEDVM)
         if (CMD_IS("dcr", 1, 1)) {
             // dcr echos
             Message nmsg(1, "dce", 1, 1);
@@ -922,6 +930,7 @@ void establishConnection(const string &to)
         stringstream ss;
         
         // it's a user, send a dcr
+#ifndef NESTEDVM
         Message omsg(1, "dcr", 1, 1);
         omsg.params.push_back(route->toBinSeq());
         omsg.params.push_back(dn_name);
@@ -936,6 +945,7 @@ void establishConnection(const string &to)
         omsg.params.push_back(ss.str());
         
         handleRoutedMsg(omsg);
+#endif
     } else {
         // It's a hostname or IP
         async_establishClient(to);

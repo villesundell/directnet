@@ -23,6 +23,7 @@
 #include <string>
 using namespace std;
 
+extern "C" {
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -38,12 +39,15 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+}
 
 #include "connection.h"
 #include "directnet.h"
 #include "client.h"
 #include "dn_event.h"
+extern "C" {
 #include <errno.h>
+}
 
 struct outgc {
     string outgh;
@@ -98,9 +102,12 @@ void async_establishClient(const string &destination)
     addr.sin_addr = *((struct in_addr *)he->h_addr);
     /*inet_aton(hostname, &inIP);
     addr.sin_addr = inIP;*/
+#ifndef NESTEDVM
     memset(&(addr.sin_zero), '\0', 8);
+#endif
     
     ret = connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr));
+#ifndef NESTEDVM
     if (
 #ifndef __WIN32
         errno != EINPROGRESS
@@ -112,6 +119,7 @@ void async_establishClient(const string &destination)
         close(fd);
         return;
     }
+#endif
     
     outgc *ogc = new outgc;
     ogc->outgh = hostname;

@@ -21,7 +21,9 @@
 #include <iostream>
 using namespace std;
 
+extern "C" {
 #include <string.h>
+}
 
 #include "connection.h"
 #include "dht.h"

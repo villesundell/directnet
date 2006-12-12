@@ -22,9 +22,11 @@
 #include <string>
 using namespace std;
 
+extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+}
 
 #include "chat.h"
 #include "globals.h"

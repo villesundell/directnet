@@ -22,6 +22,7 @@
 #include <string>
 using namespace std;
 
+extern "C" {
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,7 @@ using namespace std;
 #ifdef __WIN32
 #include <io.h>
 #endif
+}
 
 #include "client.h"
 #include "connection.h"
