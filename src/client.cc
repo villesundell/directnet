@@ -41,7 +41,6 @@ using namespace std;
 
 #include "connection.h"
 #include "directnet.h"
-#include "dnconfig.h"
 #include "client.h"
 #include "dn_event.h"
 #include <errno.h>
@@ -73,7 +72,7 @@ void async_establishClient(const string &destination)
         port = atoi(hostname.substr(i + 1).c_str());
         hostname = hostname.substr(0, i);
     } else {
-        port = 3336;
+        port = 3447;
     }
     
     he = gethostbyname(hostname.c_str());
@@ -123,7 +122,6 @@ void async_establishClient(const string &destination)
 }
 
 static void connect_act(dn_event_fd *ev, int cond) {
-    static bool firstc = true;
     int fd = ev->getFD();
     outgc *ogc = (outgc *)ev->payload;
     delete ev;
@@ -142,12 +140,6 @@ static void connect_act(dn_event_fd *ev, int cond) {
     
     init_comms(fd, &ogc->outgh, ogc->outgp);
     delete ogc;
-    
-    // if this is the first connection, do autofind
-    if (firstc) {
-        firstc = false;
-        autoFind();
-    }
     
     return;
 }

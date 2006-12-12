@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
-AC_INIT(directnet, [1.0.1], [cdgregorr@users.sourceforge.net])
+AC_INIT(directnet, [2.0a1], [cdgregorr@users.sourceforge.net])
 AC_CONFIG_AUX_DIR([scripts])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/ui.h])
@@ -32,6 +32,7 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 
 # Checks for libraries.
 # On solaris, we need -lnsl and -lsocket
@@ -51,6 +52,7 @@ AC_CHECK_FUNC(gettimeofday,[
  AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Defined if gettimeofday() is available])
  HAVE_GETTIMEOFDAY=true
 ], [
+ AC_CHECK_FUNCS([ftime])
  HAVE_GETTIMEOFDAY=false
 ])
 AM_CONDITIONAL(NO_GETTIMEOFDAY, test "x$HAVE_GETTIMEOFDAY" = "xfalse")
@@ -152,7 +154,7 @@ fi
 if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
 then
 	slang_ui=ok
-	AC_CHECK_HEADER([slang.h], [],
+	AC_CHECK_HEADER([slang/slang.h], [],
           [slang_ui=notok])
         AC_CHECK_LIB([slang], [SLtt_cls], [],
           [slang_ui=notok])
@@ -342,14 +344,21 @@ AC_SUBST(AUTH_DIR)
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h malloc.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
 AC_FUNC_FORK
-#AC_FUNC_MALLOC # This test breaks on MingW
+AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
+AC_TYPE_SIZE_T
 AC_FUNC_STAT
-AC_CHECK_FUNCS([dup2 gethostbyname gethostname inet_ntoa memset mkdir socket])
+AC_CHECK_FUNCS([dup2 getcwd gethostbyname gethostname gettimeofday inet_ntoa \
+memmove memset mkdir select socket strchr strdup strerror strrchr])
 AC_OUTPUT
+
+echo 'Configuration:'
+echo '              UI: '$ui
+echo '      Encryption: '$enc
+echo '  Authentication: '$auth

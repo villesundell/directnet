@@ -45,6 +45,7 @@ string dn_ac_list_f;
 set<string> *dn_ac_list;
 string dn_af_list_f;
 set<string> *dn_af_list;
+string cfgdir;
 
 /* initConfig
  * Input: none
@@ -54,14 +55,13 @@ set<string> *dn_af_list;
 void initConfig()
 {
     int i, osl;
-    string cfgdir;
     FILE *acf, *aff;
     
     // find configuration directory
 #ifndef __WIN32
-    cfgdir = homedir + string("/.directnet");
+    cfgdir = homedir + string("/.directnet2");
 #else
-    cfgdir = homedir + string("/DNConfig");
+    cfgdir = homedir + string("/DN2Config");
 #endif
     
     // attempt to create it

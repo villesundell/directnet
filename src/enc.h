@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -21,6 +21,11 @@
 #ifndef DN_GPG_H
 #define DN_GPG_H
 
+#include "binseq.h"
+
+/* the hash of the public key */
+extern BinSeq pukeyhash;
+
 /* Find any necessary binaries
  *   - should be called encInit
  * envp: envp from main
@@ -32,27 +37,50 @@ int findEnc(char **envp);
  * to: the remote user
  * msg: the message
  * returns: a MALLOC'D buffer with the encrypted message or NULL on failure */
-char *encTo(const char *from, const char *to, const char *msg);
+BinSeq encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg);
 
 /* Decrypt a message from a user
  * from: the remote user
  * to: the local user
  * msg: the message
  * returns: a MALLOC'D buffer with the decrypted message or NULL on failure */
-char *encFrom(const char *from, const char *to, const char *msg);
+BinSeq encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg);
 
 /* Create the encryption key
  * returns: the created key or NULL on failure */
-char *encCreateKey();
+BinSeq encCreateKey();
 
 /* Export the encryption key
  * returns: the encryption key or NULL on failure */
-char *encExportKey();
+BinSeq encExportKey();
+
+/* Hash the encryption key
+ * returns: a hash of the key */
+BinSeq encHashKey(const BinSeq &key);
 
 /* Import an encryption key
  * name: the name of the owner of the key
  * key: the key
  * returns: some message describing the import, usually "" */
-char *encImportKey(const char *name, const char *key);
+BinSeq encImportKey(const BinSeq &name, const BinSeq &key);
+
+/* Subtract key b from a */
+BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder = NULL);
+
+/* Add key b to a */
+BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder = NULL);
+
+/* Compare two keys relative to your own
+ * (that is, subtract your own from both, then compare)
+ * returns: -1 if a is less than b, 0 if equal, 1 if a is greater than b */
+int encCmp(const BinSeq &a, const BinSeq &b);
+
+/* Is a closer to b than I am? */
+bool encCloser(const BinSeq &a, const BinSeq &b);
+
+/* Generate a key offset from yours by 1/(2^by)
+ * reverse: subtract instead of add
+ * returns: the generated key */
+BinSeq encOffset(int by, bool reverse = false);
 
 #endif // DN_GPG_H

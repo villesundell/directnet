@@ -28,7 +28,6 @@
 #endif
 
 #include <fcntl.h>
-#include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  * Copyright 2006 Bryan Donlan
  *
  * This file is part of DirectNet.
@@ -22,13 +22,43 @@
 #ifndef DN_CONNECTION_H
 #define DN_CONNECTION_H
 
+#include <map>
+#include <set>
 #include <string>
 using namespace std;
 
+#include "dn_event.h"
 #include "message.h"
+#include "route.h"
 
-struct connection;
-typedef struct connection conn_t;
+enum cev_state {
+    CDN_EV_IDLE, CDN_EV_EVENT, CDN_EV_DYING
+};
+
+class connection {
+    public:
+    ~connection();
+        
+    connection *prev, *next;
+    int fd;
+    enum cev_state state;
+        
+    unsigned char *inbuf, *outbuf;
+    size_t inbuf_sz, outbuf_sz;
+    size_t inbuf_p, outbuf_p;
+        
+    BinSeq *enckey;
+    bool outgoing;
+    string *outgh;
+    int outgp;
+        
+    dn_event_fd fd_ev;
+    dn_event_timer ping_ev;
+    
+    std::set<connection *>::iterator active_it;
+};
+ 
+typedef connection conn_t;
 
 /* Establish a connection (for use by the UI)
  * to: user, hostname or IP to connect to
@@ -72,22 +102,10 @@ void sendChat(const string &to, const string &msg);
  * msg: the away message or NULL for back */
 void setAway(const string *msg);
 
-/* Build the top of a command buffer
- * command: command to use
- * vera: version major part
- * verb: version minor part
- * param: first parameter */
-string buildCmd(const string &command, char vera, char verb, const string &param);
-
-/* Add a parameter to a command buffer
- * into: buffer to add to
- * newparam: the param to add */
-void addParam(string &into, const string &newparam);
-
 /* Send a command buffer to an fd
  * fdnum: the fd to send to
  * buf: the buffer to send */
-void sendCmd(struct connection *conn, string &buf);
+void sendCmd(struct connection *conn, Message &msg);
 
 /* Continue a routed message or tell the calling function to handle it
  * command: the command
@@ -99,10 +117,19 @@ bool handleRoutedMsg(const Message &msg);
 /* Send an unrouted message
  * fromfd: the fd NOT to send it to, -1 to send everywhere
  * outbuf: the buffer to send */
-void emitUnroutedMsg(conn_t *from, string &outbuf);
+void emitUnroutedMsg(conn_t *from, Message &omsg);
+
+/* Receive a find of some sort (so add a user)
+ * route: The route to the distant user
+ * name: The name of the distant user
+ * key: The encryption key of the distant user */
+void recvFnd(Route *route, const BinSeq &name, const BinSeq &key);
 
 /* The main communication method for a connection 
  * fdnum_voidptr: a void * to an int with the fdnum */
 void *communicator(void *fdnum_voidptr);
+
+/* A node has disconnected.  Do we care? */
+void disNode(const BinSeq &key);
 
 #endif // DN_CONNECTION_H

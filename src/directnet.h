@@ -26,6 +26,9 @@
 #include <string>
 using namespace std;
 
+#include <sys/time.h>
+
+#include "binseq.h"
 #include "globals.h"
 #include "route.h"
 
@@ -34,17 +37,24 @@ extern int serv_port;
 // our name
 extern char dn_name[DN_NAME_LEN+1];
 
-// connections by name
-extern map<string, void *> *dn_conn;
-  
-// route by name
-extern map<string, Route *> *dn_routes;
+// connections by encryption key
+extern map<BinSeq, void *> *dn_conn;
 
-// intermediate routes by name
-extern map<string, Route *> *dn_iRoutes;
+// encryption keys by hashes
+extern map<BinSeq, BinSeq> *dn_kbh;
+
+// names by encryption keys and vice-versa
+extern map<BinSeq, BinSeq> *dn_names;
+extern map<BinSeq, BinSeq> *dn_keys;
+  
+// route by encryption key
+extern map<BinSeq, Route *> *dn_routes;
 
 // has a key been used yet?
 extern map<string, int> *dn_trans_keys;
+
+// have we seen this user?  When? (by hashed enc key)
+extern map<BinSeq, time_t> *dn_seen_user;
 
 // our position in the transkey list
 extern int currentTransKey;
@@ -60,7 +70,24 @@ extern char *homedir, *bindir;
 
 void newTransKey(char *into);
 
+// see a route of users
+void seeUsers(const Route &us);
+
 void dn_init(int argc, char **argv);
 void dn_goOnline();
+
+// add a route
+void dn_addRoute(const BinSeq &to, const Route &rt);
+
+//Release notes for this version (if this one is not defined, there is no startup message.
+#define DN_RELEASENOTES "<h1>DirectNet</h1>\
+<h2>&nbsp;2.0a1</h2>\
+<h1>Release Notes</h1>\
+This is a alpha version, which means this version is <u>only for testing \
+purposes</u>, and is not stable enough for daily use. If you find any bugs, \
+please contact the developers. You can find contact information at DirectNet's \
+homepage, <b>directnet.sf.net</b><br>\
+DirectNet is distributed under the GNU General Public License\
+"
 
 #endif // DN_DIRECTNET_H

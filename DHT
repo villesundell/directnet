@@ -1,0 +1,145 @@
+The DirectNet distributed hash table is very similar to Chord. This layout is
+best described in two variants, the first being more simple, and the second
+being more efficient (and what DirectNet actually uses):
+
+Linear DHTs: All of the nodes on a network form a ring, sorted by the hash of
+their encryption keys. When node A connects to node B, and node B is in at
+least one DHT that node A is not, node A joins it by:
+        1) Sending an 'Hfn' to search for neighbors (this is how the ring is
+           formed)
+        2) Sending an 'Had' to add its name to the hash
+The Hfn finds its way to the appropriate location simply because each node
+along the way compares the key being searched to their own key. Since they're
+sorted, they know exactly where to propogate it.
+
+Binary DHTs: Binary DHTs are an extension to linear DHTs. Basically, a node
+connecting to a DHT will look for a key offset from its own key by 1/2 of the
+valid range for keys, then by 1/4th, then 1/8th, etc, until a search yields
+itself (that is, a division that small is smaller than the distance to the
+node's successor). It then uses these divisions to forward searches and other
+DHT requests. By dividing it like this, every node can guarantee that it will
+at least half the number of nodes yet to search through, reducing the problem
+to O(logn).
+
+Hash commands are sent along the hash table identified by the third parameter
+to the node with the nearest encryption to the encryption key in the fourth
+parameter. They are routed messages.
+
+Returnable hash commands also have the taken thusfar in the fifth parameter.
+They are also routed messages.
+
+Hash return commands have a route, like other routed messages, but have the
+hash table identifier.
+
+[HTI = hash table identifier]
+[Keys as used by the DHT are SHA-256'd from the desired data to look up
+(whether an encryption key, name, or anything else)]
+[None of this is implemented yet]
+
+Had(1)(1) (hash add)
+        purpose: add a value to a list of values currently assigned in the distributed hash
+        type: hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT key
+                value
+                minutes remaining (4 byte big-endian)
+                ttl [not currently used]
+
+Hen(1)(1) (hash encapsulate) *
+        purpose: encapsulate a routed message in a hash message
+        type: hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT hashed key
+                encapsulated message
+                ttl [not currently used]
+
+Hfn(1)(1) (hash find)
+        purpose: find a route to the user with the given encryption key
+        type: returnable hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT hashed key
+                current route
+                encryption key
+                type
+                        first byte: 0 for regular search, 1 for positive
+                        division, 2 for negative division, 3 for search for
+                        successors and predecessors
+                        second byte (for divisions): the level of division (0-
+                        255)
+
+Hfr(1)(1) (hash find response)
+        purpose: reply to Hfn
+        type: hash return
+        parameters:
+                route
+                local name
+                HTI
+                route to found user
+                encryption key
+                type
+                        first byte: 0 for regular search response, 1 for
+                        positive division response, 2 for negative division
+                        response, 3 for second predecessor, 4 for first
+                        predecessor, 5 for first successor, 6 for second
+                        successor, 7 for the special case of telling a now-
+                        distant /third/ successor who their second predecessor
+                        is, which is sent to the second successor and then
+                        forwarded as a 3
+                        second byte (for divisions): the level of division (0-
+                        255)
+
+Hga(1)(1) (hash get all)
+        purpose: get all values for a key
+        type: returnable hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT key
+                current route
+                hash of encryption key
+
+Hin(1)(1) (hash table info)
+        purpose: tell the remote node what hash table(s) this node is on
+        type: direct
+        parameters:
+                list of HTIs (in the same form as routes)
+
+Hir(1)(1) (hash table info response)
+        purpose: equal response to Hin
+        type: direct
+        parameters:
+                list of HTIs (in the same form as routes)
+
+Hra(1)(1) (hash return all)
+        purpose: response to Hga
+        type: hash return
+        parameters:
+                route
+                local name
+                HTI
+                DHT key
+                values (in the same form as routes)
+
+Hrd(1)(1) (hash redundant data)
+        purpose: tell a predecessor to redundantly store information
+        type: routed
+        parameters:
+                route
+                local name
+                HTI
+                DHT key
+                value
+                minutes remaining (4 byte big-endian)
+
+Key:
+*: Not yet implemented

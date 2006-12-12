@@ -28,6 +28,7 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #ifdef HAVE_SYS_WAIT
 #include <sys/wait.h>
@@ -35,11 +36,14 @@ using namespace std;
 #include <unistd.h>
 
 #include "chat.h"
+#include "compat.h"
+#include "connection.h"
 #include "config.h"
 #include "directnet.h"
 #include "dnconfig.h"
 #include "enc.h"
 #include "globals.h"
+#include "message.h"
 #include "route.h"
 #include "server.h"
 #include "ui.h"
@@ -47,17 +51,21 @@ using namespace std;
 
 extern char **environ; // XXX: should use getenv
 
-int serv_port = 3336;
+int serv_port = 3447;
 
 char dn_name[DN_NAME_LEN+1];
 
-map<string, void *> *dn_conn;
+map<BinSeq, void *> *dn_conn;
+map<BinSeq, BinSeq> *dn_kbh;
+map<BinSeq, BinSeq> *dn_names;
+map<BinSeq, BinSeq> *dn_keys;
 
-map<string, Route *> *dn_routes;
-map<string, Route *> *dn_iRoutes;
+map<BinSeq, Route *> *dn_routes;
 
 map<string, int> *dn_trans_keys;
 int currentTransKey;
+
+map<BinSeq, time_t> *dn_seen_user;
 
 char uiLoaded;
 
@@ -89,6 +97,11 @@ void dn_init(int argc, char **argv) {
                 exit(0);
             } else if (!strncmp(argv[i], "-psn", 4)) {
                 /* this is just here because OSX is weird */
+            } else if (!strncmp(argv[i], "-m", 4)) {
+                /* this is just here because OSX is weird */
+            } else if (!strncmp(argv[i], "-n", 2)) {
+                /* this is just here so the frontend can use it */
+                i++;
             } else if (!strncmp(argv[i], "-p", 2)) {
                 i++;
                 if (!argv[i]) {
@@ -99,24 +112,32 @@ void dn_init(int argc, char **argv) {
             } else {
                 fprintf(stderr, "Use:\n%s [-v] [-p port]\n", argv[0]);
                 fprintf(stderr, "  -v: Display the version number and quit.\n");
-                fprintf(stderr, "  -p: Set the port to listen for connections on (default 3336).\n\n");
+                fprintf(stderr, "  -p: Set the port to listen for connections on (default 3447).\n\n");
                 exit(1);
             }
         }
         
     }
     
-    // This stores connections by name
-    dn_conn = new map<string, void *>;
+    // This stores connections by encryption keys
+    dn_conn = new map<BinSeq, void *>;
+    
+    // This stores keys by their hashes
+    dn_kbh = new map<BinSeq, BinSeq>;
+    
+    // This stores names by encryption keys and vice-versa
+    dn_names = new map<BinSeq, BinSeq>;
+    dn_keys = new map<BinSeq, BinSeq>;
       
-    // This stores routes by name
-    dn_routes = new map<string, Route *>;
-    // This stores intermediate routes, for response on broken routes
-    dn_iRoutes = new map<string, Route *>;
+    // This stores routes by encryption keys
+    dn_routes = new map<BinSeq, Route *>;
     
     // This hash stores the state of all nonrepeating unrouted messages
     dn_trans_keys = new map<string, int>;
     currentTransKey = 0;
+    
+    // This hash stores the last time we saw any given user
+    dn_seen_user = new map<BinSeq, time_t>;
     
     // This hash stores whether we're in certain chats
     dn_chats = new map<string, vector<string> *>;
@@ -170,4 +191,72 @@ void newTransKey(char *into)
     sprintf(into, "%s%d", dn_name, currentTransKey);
     (*dn_trans_keys)[string(into)] = 1;
     currentTransKey++;
+}
+
+void seeUsers(const Route &us)
+{
+    // get the current time
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    
+    int day = tv.tv_sec - (60 * 60 * 24);
+    
+    // see the users
+    for (int i = 0; i < us.size(); i++) {\
+        (*dn_seen_user)[us[i]] = tv.tv_sec;
+    }
+    
+    // and flush out any users we haven't seen in 24 hours
+    map<BinSeq, time_t>::iterator sui;
+    for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
+        if (sui->second < day) {
+            dn_seen_user->erase(sui);
+            sui--;
+        }
+    }
+}
+
+void dn_addRoute(const BinSeq &to, const Route &rt)
+{
+    // add a route intelligently, "short-circuit" to the shortest known-possible route
+    Route *nroute = new Route(rt);
+    for (int i = nroute->size() - 1; i > 0; i--) {
+        if (dn_kbh->find((*nroute)[i]) != dn_kbh->end()) {
+            BinSeq &key = (*dn_kbh)[(*nroute)[i]];
+            
+            // we have their key, do we have a connection?
+            if (dn_conn->find(key) != dn_conn->end()) {
+                // yes!  Cut down the route
+                for (; i > 0; i--) nroute->pop_front();
+            }
+        }
+    }
+    
+    // now that we have an efficient route, is it more efficient than the alternative?
+    if (dn_routes->find(to) != dn_routes->end()) {
+        Route *oroute = (*dn_routes)[to];
+        if (oroute->size() > nroute->size()) {
+            // old route is longer, drop it
+            delete oroute;
+        } else {
+            // just keep the old one
+            delete nroute;
+            return;
+        }
+    }
+    
+    (*dn_routes)[to] = nroute;
+    
+    // send a pir
+    Message msg(1, "pir", 1, 1);
+    msg.params.push_back(nroute->toBinSeq());
+    msg.params.push_back(dn_name);
+    
+    Route rroute = *nroute;
+    if (rroute.size()) rroute.pop_back();
+    rroute.reverse();
+    rroute.push_back(pukeyhash);
+    msg.params.push_back(rroute.toBinSeq());
+    
+    handleRoutedMsg(msg);
 }

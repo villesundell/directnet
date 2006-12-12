@@ -1,6 +1,7 @@
 /*
  * Copyright 2005, 2006  Gregor Richards
- * Copyright 2006 Bryan Donlan
+ * Copyright 2006  Bryan Donlan
+ * Copyright 2006  "Solarius"
  *
  * This file is part of DirectNet.
  *
@@ -19,9 +20,13 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
+using namespace std;
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>//We need this for timestamp(s)
 
 #include "auth.h"
 #include "connection.h"
@@ -34,9 +39,11 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 using namespace std;
 
 #include "FL/fl_ask.H"
+#include <FL/Fl_Window.H>
 
 #include "AutoConnWindow.h"
 #include "AutoConnYNWindow.h"
@@ -45,7 +52,7 @@ using namespace std;
 #include "ChatWindow.h"
 #include "NameWindow.h"
 
-#ifdef WIN32
+#ifdef __WIN32
 #define sleep _sleep
 #include <malloc.h>
 #endif
@@ -54,9 +61,28 @@ NameWindow *nw;
 BuddyWindow *bw;
 map<string, ChatWindow *> cws;
 AutoConnWindow *acw;
+Fl_Window *miniwin, *notewin;
+string msgbuffer="";
+
+//Do we want minimode?
+int enable_minimode = 0; //Type: 'directnet -m' to enable it
+Fl_Button *minib = NULL; //That big button;)
+void minimodeCallback (Fl_Button*);//Minimodes button callback
+int mini_msg_count=0;
+void updateMinimode ();
+
+//For Timestamps:
+time_t rawtime;
+tm *timestamp;
+
+//Banning:
+void flBanUnban (Fl_Button*, void*);
 
 // keep track of where the buddies end and the connection list begins in onlineLis
 int olConnsLoc;
+
+//For html widget
+void putError (ChatWindow *w, const string &txt);
 
 using namespace std;
 
@@ -68,9 +94,42 @@ int flt1_ask(const char *msg, int t1)
     return fl_ask(msg);
 }
 
+//Here we make timestamps
+char* make_timestamp ()
+{
+    //here happens timestamping:
+    static char timestr[10];
+    time (&rawtime); //rawtime is declared in the start of this file
+    //timestamp = localtime (&rawtime); //Timestamp is declared there too;)
+    strftime (timestr, sizeof (timestr), "%H:%M ", localtime (&rawtime));
+    return timestr;
+}
+
 int main(int argc, char **argv, char **envp)
 {
+    char *cmd_nm = NULL;
+    if (argc >= 2) {
+        for (int i = 1; i < argc; i++) {
+            if (!strncmp(argv[1], "-m", 2)) {
+                enable_minimode = 1;
+            } else if (!strncmp(argv[i], "-n", 2)) {
+                i++;
+                cmd_nm = argv[i];
+            }
+        }
+    }
     dn_init(argc, argv);
+    
+
+    //Here we show release notes
+    #ifdef DN_RELEASENOTES
+    notewin = new Fl_Window (300, 400, "Release notes");
+    Fl_Group::current()->resizable(notewin);
+    Fl_Help_View *noteview = new Fl_Help_View(0, 0, 300, 400, "hello");
+    noteview->value(DN_RELEASENOTES);
+    notewin->end();
+    notewin->show();
+    #endif
     
     /* Always start by finding encryption */
     if (findEnc(envp) == -1) {
@@ -78,12 +137,13 @@ int main(int argc, char **argv, char **envp)
         return -1;
     }
     
+#if 0 // authentication doesn't work right now
 #ifndef __WIN32
     /* Then authentication */
     if (!authInit()) {
         printf("Authentication failed to initialize!\n");
         return -1;
-    } else if (authNeedPW()) {
+    } else if (authNeedPW() && !cmd_nm) {
         char *nm, *pswd;
         const char *cnm, *cpswd;
         
@@ -105,11 +165,15 @@ int main(int argc, char **argv, char **envp)
         authSetPW(nm, pswd);
         free(nm);
         free(pswd);
+    } else if (!cmd_nm) {
+        authSetPW("", "");
     }
 #else
     authSetPW("", "");
 #endif
-
+#endif
+    authSetPW("", "");
+    
     /* And creating the key */
     encCreateKey();
     
@@ -117,6 +181,11 @@ int main(int argc, char **argv, char **envp)
     nw = new NameWindow();
     nw->make_window();
     nw->nameWindow->show();
+    if (cmd_nm) {
+        // set the name 
+        nw->nameIn->value(cmd_nm);
+        setName(nw->nameIn, NULL);
+    }
     
     Fl::run();
 #if 0 
@@ -146,11 +215,15 @@ ChatWindow *getWindow(const string &name, bool show = true)
 {
     int i;
     
-    if (cws.find(name) != cws.end()) {
-        if (!show && !cws[name]->chatWindow->shown()) return NULL;
-        cws[name]->chatWindow->show();
-        return cws[name];
-    }
+    //Check, do 
+    //if (minib)
+    //{
+	if (cws.find(name) != cws.end()) {
+		if (!show && !cws[name]->chatWindow->shown()) return NULL;
+		cws[name]->chatWindow->show();
+		return cws[name];
+	}
+    //}
     
     if (!show) return NULL;
     
@@ -171,12 +244,116 @@ ChatWindow *getWindow(const string &name, bool show = true)
 
 void putOutput(ChatWindow *w, const string &txt)
 {
-    Fl_Text_Buffer *tb = w->textOut->buffer();
+    //Fl_Text_Buffer *tb = w->textOut->buffer();
+    string strippedstr; //Place for stripped text
+    char *msgtimestamp = ""; //Here is messages timestamp
     
-    w->textOut->insert_position(tb->length());
-    w->textOut->insert(txt.c_str());
-    w->textOut->show_insert_position();
+    if (w->textOut->value() == NULL)
+    {
+    	w->textOut->value(" ");
+    }
+    //Now we should stripout all nonpermitted html-tags
+    //Here we rip all bad html tags off
+    string colorstr="";
+    int strlen = txt.length();
+    if (strlen>4)
+    {
+    	//If string is over 4 character long, we continue
+    	//I tried to minimize risk of buffer mallfunctions in every stage, so thats why i am checking lenghts every time;)
+    	int i=0;
+    	int i2;
+	for (i=0;i<strlen;i++)
+	{
+            if (txt[i]=='<')
+            {
+                //We found html tag
+                if ((strlen-i)>=2)
+                {
+                    if (txt.substr(i,3)=="<b>"||txt.substr(i,3)=="</b"||txt.substr(i,3)=="<i>"||txt.substr(i,3)=="</i"||txt.substr(i,3)=="<u>"||txt.substr(i,3)=="</u"||txt.substr(i,4)=="<br>")
+                    {
+                        //This tag is legal, so we dont strip that
+                        strippedstr+=txt[i];
+                    }
+                    else if (txt.substr(i,2)=="<#")
+                    {
+                        //This is Gregs colortag-idea (<#blue> is replaced as <font color="blue"> and <#> is replaced as </font> (Solarius' addition)
+                        colorstr = "";
+                        for (i2=2;i2<10;i2++)
+                        {
+                            if ((i2+i)<strlen)
+                            {
+                                //we have space to read
+                                if (txt[i+i2]=='>')
+                                {
+                                    //We should leave this loop now
+                                    break;
+                                }
+                                else
+                                {
+                                    colorstr+=txt[i+i2];
+                                }
+                            }
+                            else
+                            {
+                                //We should leave this loop
+                                break;
+                            }
+                        }
+                        //Move "carret":
+                        i = i+i2;
+                        if (colorstr=="")
+                        {
+                            //Colorstring is empty
+                            strippedstr+="</font>";
+                        }
+                        else
+                        {
+                            //we have color
+                            strippedstr+="<font color="+colorstr+">";
+                        }
+                    }
+                    else
+                    {
+                        strippedstr+="&lt;";
+                    }
+                }
+                else
+                {
+                    strippedstr+="&lt;";
+                }
+            }
+            else
+            {
+                strippedstr+=txt[i];
+            }
+	}
+
+    }
+    
+    //Well, _very_ lazy (and non-standard) way to secure our html-tags;) (but hey, it works;))
+    strippedstr+="</font></b></i></u>";
+    
+    // get the output
+    string htmloutput;
+    htmloutput = w->textOut->value();
+    htmloutput += "<br><font color=gray>";
+    htmloutput += string(make_timestamp()) + "</font>" + strippedstr;
+    w->textOut->value(htmloutput.c_str());
+    ((Fl_Valuator*) &(w->textOut->scrollbar_))->value(
+        w->textOut->scrollbar_.maximum());
+    w->textOut->topline(w->textOut->scrollbar_.value());
+    
+    //Adding one to counter (for minimode):
+    mini_msg_count++;
+    updateMinimode ();
+    
     Fl::flush();
+}
+
+void putError (ChatWindow *w, const string &txt)
+{
+	//Put error to screen
+	putOutput(w, "<b><#red>"+txt+"<#></b><br>");
 }
 
 void setName(Fl_Input *w, void *ignore)
@@ -191,7 +368,22 @@ void setName(Fl_Input *w, void *ignore)
     /* make the buddy window */
     bw = new BuddyWindow();
     bw->make_window();
-    bw->buddyWindow->show();
+    if (enable_minimode == 0)
+    {
+    	//Lookslike user dont want minimode
+    	bw->buddyWindow->show();
+    }
+    else
+    {
+    	//We want minimode!
+    	miniwin = new Fl_Window (100, 100, "DNMini");
+    	Fl_Group::current()->resizable(miniwin);
+    	minib = new Fl_Button (0, 0, 100, 100, "DN");
+    	minib->callback ((Fl_Callback*)minimodeCallback);
+    	Fl_Group::current()->resizable(minib);
+    	miniwin->end();
+    	miniwin->show();
+    }
     
     /* prep the onlineList */
     bw->onlineList->add("@c@mBuddies");
@@ -358,7 +550,7 @@ void sendInput(Fl_Input *w, void *ignore)
             msg = cwi->second->textIn->value();
             cwi->second->textIn->value("");
             
-            dispmsg = dn_name + string(": ") + msg + string("\n");
+            dispmsg = string("<b>")+dn_name+ string("</b>") + string(": ") + msg + string("<br>");
             
             if (to[0] == '#') {
                 // Chat room
@@ -414,18 +606,21 @@ void flDispMsg(const string &window, const string &from, const string &msg, cons
 {
     ChatWindow *cw;
     string dispmsg;
-    
+
     assert(uiLoaded);
     
     if (authmsg != "") {
-        dispmsg = from + " [" + authmsg + "]: " + msg + "\n";
+        dispmsg = "<b>" + from + "</b>" + "<#gray> [" + authmsg + "]<#>: " + msg + "<br>";
     } else {
-        dispmsg = from + ": " + msg + "\n";
+        dispmsg = "<b>" + from + "</b>" + ": " + msg + "<br>";
     }
     
     cw = getWindow(window);
-    
-    putOutput(cw, dispmsg);
+    if (cw->bBan->color()!=FL_RED)
+    {
+    	//If we havent banned this user, we should display that message:
+    	putOutput(cw, dispmsg);
+    }
 }
 
 void flAddRemAutoFind(Fl_Button *btn, void *)
@@ -614,7 +809,7 @@ void uiEstRoute(const string &from)
     
     cw = getWindow(from, false);
     if (cw) {
-        putOutput(cw, "Route established.\n");
+        putError(cw, "Route established.\n");
     }
 }
 
@@ -651,7 +846,7 @@ void uiLoseConn(const string &from)
     
     cw = getWindow(from, false);
     if (cw) {
-        putOutput(cw, "Connection lost.\n");
+        putError(cw, "Connection lost.\n");
     }
 }
 
@@ -665,7 +860,7 @@ void uiLoseRoute(const string &from)
     
     cw = getWindow(from, false);
     if (cw) {
-        putOutput(cw, "Route lost.\n");
+        putError(cw, "Route lost.\n");
     }
 }
 
@@ -676,5 +871,58 @@ void uiNoRoute(const string &to)
     while (!uiLoaded) sleep(0);
     
     cw = getWindow(to);
-    putOutput(cw, "You do not have a route to this user.\n");
+    putError(cw, "You do not have a route to this user.\n");
+}
+
+//Minimode function:
+void minimodeCallback (Fl_Button *b)
+{
+	//Minimode button have been clicked!
+	if (bw->buddyWindow->visible())
+	{
+		bw->buddyWindow->hide();
+		minib->label("(DN)");
+	}
+	else
+	{
+		bw->buddyWindow->show();
+		mini_msg_count=0;
+		minib->label("DN");
+	}
+	updateMinimode ();
+}
+
+void updateMinimode ()
+{
+    if (!minib) return;
+    //Here is update code
+    //mini_msg_count++;
+    //string temps1 = "moi"+string(mini_msg_count);
+    //minib->label(temps1.c_str());
+    if (mini_msg_count>0)
+    {
+        //We shall color that button red
+        minib->color(FL_RED);
+    }
+    else
+    {
+        //It is normal state
+        minib->color(FL_GRAY);
+    }
+    minib->redraw();
+}
+
+//Ban/Unban function:
+void flBanUnban (Fl_Button *b, void *)
+{
+	if (b->color()==FL_RED)
+	{
+		b->color(FL_BACKGROUND_COLOR);
+		b->label ("Block");
+	}
+	else
+	{
+		b->color(FL_RED);
+		b->label ("Unblock");
+	}
 }

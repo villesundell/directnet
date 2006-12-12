@@ -1,5 +1,5 @@
 /*
- * Copyright 2005  Gregor Richards
+ * Copyright 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -21,6 +21,8 @@
 #ifndef DN_AUTH_H
 #define DN_AUTH_H
 
+#include "binseq.h"
+
 /* Initialize authentication
  * returns: 1 on success, 0 otherwise*/
 int authInit();
@@ -37,7 +39,7 @@ void authSetPW(const char *nm, const char *pswd);
 /* Sign a message
  * msg: the message
  * returns: a MALLOC'D buffer with the signed message */
-char *authSign(const char *msg);
+BinSeq *authSign(const BinSeq &msg);
 
 /* Verify a signature
  * msg: the message w/ signature
@@ -48,16 +50,16 @@ char *authSign(const char *msg);
  *          1: valid signature
  *          2: is a signature (not a signed message)
  * returns: a MALLOC'D buffer with the unsigned message */
-char *authVerify(const char *msg, char **who, int *status);
+BinSeq *authVerify(const BinSeq &msg, char **who, int *status);
 
 /* Import a signature
  * msg: the signature
  * returns: 1 on success, 0 otherwise */
-int authImport(const char *msg);
+int authImport(const BinSeq &msg);
 
 /* Export your signature
  * returns: a MALLOC'D buffer with the user's signature or NULL on error */
-char *authExport();
+BinSeq *authExport();
 
 /* Some text for UIs */
 extern char authUsername[];

@@ -1,5 +1,5 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0106 
+version 1.0107 
 header_name {.h} 
 code_name {.cc}
 class ChatWindow {open
@@ -9,26 +9,29 @@ class ChatWindow {open
     Fl_Window chatWindow {
       label User
       callback closeChat open
-      xywh {320 253 360 315} type Double resizable visible
+      xywh {325 215 420 315} type Double resizable visible
     } {
       Fl_Input textIn {
         callback sendInput
-        xywh {0 265 360 25} when 8
+        xywh {0 265 420 25} when 8
+      }
+      Fl_Button bBan {
+        label Block
+        callback flBanUnban
+        xywh {0 290 60 25}
       }
       Fl_Button bSndKey {
         label {Send Authentication Key}
         callback flSendAuthKey
-        xywh {0 290 180 25}
+        xywh {60 290 180 25}
       }
       Fl_Button bAutoFind {
         label {Add to Autofind List}
         callback flAddRemAutoFind
-        xywh {180 290 180 25}
+        xywh {240 290 180 25}
       }
-      Fl_Text_Display textOut {
-        xywh {0 0 360 260} resizable
-        code0 {textOut->buffer(new Fl_Text_Buffer(32256));}
-        code1 {textOut->wrap_mode(1, 0);}
+      Fl_Help_View textOut {
+        xywh {0 0 420 260} resizable
       }
     }
   }

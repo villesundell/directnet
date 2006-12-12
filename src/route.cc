@@ -18,34 +18,49 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
 
 #include "route.h"
 
-Route::Route() : vector<string>() {}
+Route::Route() : vector<BinSeq>() {}
 
-Route::Route(const Route &copy) : vector<string>(copy) {}
+Route::Route(const Route &copy) : vector<BinSeq>(copy) {}
 
-Route::Route(const string &textform) : vector<string>()
+Route::Route(const BinSeq &textform) : vector<BinSeq>()
 {
-    int x = 0, y;
-    while (x < textform.length() &&
-           (y = textform.find_first_of('\n', x)) != string::npos) {
-        if (y - x > 0)
-            push_back(textform.substr(x, y - x));
-        x = y + 1;
+    vector<int> elemlens;
+    int i, cur;
+    
+    for (i = 0; i < textform.size(); i++) {
+        cur = (unsigned char) textform[i];
+        if (cur == 255) break;
+        elemlens.push_back(cur);
+    }
+    i++;
+    
+    for (int j = 0; j < elemlens.size() && i < textform.size(); j++) {
+        if (textform.size() - i >= elemlens[j]) {
+            push_back(textform.substr(i, elemlens[j]));
+            i += elemlens[j];
+        }
     }
 }
     
-string Route::toString()
+BinSeq Route::toBinSeq()
 {
-    string toret;
-    int s = size();
+    BinSeq toret;
+    int s = size(), i;
     
-    for (int i = 0; i < s; i++) {
-        toret += at(i) + "\n";
+    for (i = 0; i < s; i++) {
+        toret.push_back((unsigned char) at(i).size());
+    }
+    toret.push_back(255);
+    
+    for (i = 0; i < s; i++) {
+        toret.push_back(at(i));
     }
     
     return toret;
@@ -54,7 +69,7 @@ string Route::toString()
 void Route::reverse()
 {
     int i, j, s = size();
-    string temp;
+    BinSeq temp;
     
     j = s - 1;
     for (i = 0; i < j; j = s - ++i - 1) {
@@ -64,7 +79,7 @@ void Route::reverse()
     }
 }
 
-void Route::push_front(string &a)
+void Route::push_front(const BinSeq &a)
 {
     int i, s;
     
@@ -90,4 +105,31 @@ void Route::pop_front()
     }
     
     pop_back();
+}
+
+void Route::append(const Route &a)
+{
+    for (int i = 0; i < a.size(); i++) {
+        push_back(a[i]);
+    }
+}
+
+bool Route::find(const BinSeq &a) const
+{
+    for (int i = 0; i < size(); i++) {
+        if (at(i) == a) return true;
+    }
+    return false;
+}
+
+void Route::debug()
+{
+    cout << "ROUTE:" << endl;
+    for (int i = 0; i < size(); i++) {
+        cout << " " << i << ": ";
+        for (int j = 0; j < at(i).size(); j++) {
+            printf("%.2X", (unsigned char) at(i)[j]);
+        }
+        cout << endl;
+    }
 }
