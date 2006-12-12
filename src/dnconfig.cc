@@ -58,14 +58,11 @@ void initConfig()
     FILE *acf, *aff;
     
     // find configuration directory
-    /*
 #ifndef __WIN32
-    cfgdir = homedir + string("/.directnet");
+    cfgdir = homedir + string("/.directnet2");
 #else
-    cfgdir = homedir + string("/DNConfig");
+    cfgdir = homedir + string("/DN2Config");
 #endif
-*/
-    cfgdir = homedir + string("/.dnpv2");
     
     // attempt to create it
 #ifndef __WIN32

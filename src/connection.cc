@@ -142,7 +142,7 @@ void send_handshake(conn_t *cs) {
     Message msg(0, "dni", 1, 1);
     msg.params.push_back(dn_name);
     msg.params.push_back(encExportKey());
-    msg.params.push_back(BinSeq("\x00\x01\xFD\xE8", 4));
+    msg.params.push_back(BinSeq("\x00\x01\xFD\xE9", 4));
     sendCmd(cs, msg);
     
     // and hash table info
@@ -566,7 +566,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             return;
         }
         remver[1] = charrayToInt(msg.params[2].c_str() + 2);
-        if (remver[1] < 65000) {
+        if (remver[1] < 65001) {
             kill_connection(conn);
             return;
         }

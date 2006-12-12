@@ -52,7 +52,7 @@ using namespace std;
 #include "ChatWindow.h"
 #include "NameWindow.h"
 
-#ifdef WIN32
+#ifdef __WIN32
 #define sleep _sleep
 #include <malloc.h>
 #endif
@@ -137,6 +137,7 @@ int main(int argc, char **argv, char **envp)
         return -1;
     }
     
+#if 0 // authentication doesn't work right now
 #ifndef __WIN32
     /* Then authentication */
     if (!authInit()) {
@@ -170,6 +171,8 @@ int main(int argc, char **argv, char **envp)
 #else
     authSetPW("", "");
 #endif
+#endif
+    authSetPW("", "");
     
     /* And creating the key */
     encCreateKey();
