@@ -918,11 +918,11 @@ void flBanUnban (Fl_Button *b, void *)
 	if (b->color()==FL_RED)
 	{
 		b->color(FL_BACKGROUND_COLOR);
-		b->label ("Ban");
+		b->label ("Block");
 	}
 	else
 	{
 		b->color(FL_RED);
-		b->label ("Unban");
+		b->label ("Unblock");
 	}
 }

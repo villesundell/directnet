@@ -30,8 +30,37 @@ using namespace std;
 #include "connection.h"
 #include "route.h"
 
-typedef map<BinSeq, set<BinSeq> > binseqHash;
-typedef map<BinSeq, unsigned int> dataAge_t;
+// A single item of data in the DHT
+class DHTDataItem {
+    public:
+    inline DHTDataItem(const DHTDataItem &copy) {
+        value = copy.value;
+        timeleft = new unsigned int;
+        *timeleft = *(copy.timeleft);
+    }
+    inline DHTDataItem(const BinSeq &sv, unsigned int stl) {
+        value = sv;
+        timeleft = new unsigned int;
+        *timeleft = stl;
+    }
+    inline ~DHTDataItem() {
+        if (timeleft) delete timeleft;
+    }
+    inline bool operator==(const DHTDataItem &v) const {
+        return (value == v.value);
+    }
+    inline bool operator<(const DHTDataItem &v) const {
+        return (value < v.value);
+    }
+    inline bool operator>(const DHTDataItem &v) const {
+        return (value > v.value);
+    }
+    BinSeq value;
+    unsigned int *timeleft;
+};
+
+typedef set<DHTDataItem> dhtDataValue_t;
+typedef map<BinSeq, dhtDataValue_t > dhtData_t;
 
 // DHT info is stored here
 class DHTInfo {
@@ -48,14 +77,10 @@ class DHTInfo {
     bool estingNeighbors; // FIXME: should be timed
     
     // the data stored for the DHT
-    binseqHash data;
-    
-    // the time remaining
-    dataAge_t dataTime;
+    dhtData_t data;
     
     // the data stored redundantly for the DHT
-    binseqHash rdata;
-    dataAge_t rdataTime;
+    dhtData_t rdata;
 };
 
 // map the DHTs we're members of to DHTInfo nodes

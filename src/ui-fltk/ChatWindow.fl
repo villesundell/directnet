@@ -9,29 +9,29 @@ class ChatWindow {open
     Fl_Window chatWindow {
       label User
       callback closeChat open
-      xywh {335 215 360 315} type Double resizable visible
+      xywh {325 215 420 315} type Double resizable visible
     } {
       Fl_Input textIn {
         callback sendInput
-        xywh {0 265 360 25} when 8
+        xywh {0 265 420 25} when 8
+      }
+      Fl_Button bBan {
+        label Block
+        callback flBanUnban
+        xywh {0 290 60 25}
       }
       Fl_Button bSndKey {
         label {Send Authentication Key}
         callback flSendAuthKey
-        xywh {0 290 170 25}
+        xywh {60 290 180 25}
       }
       Fl_Button bAutoFind {
         label {Add to Autofind List}
         callback flAddRemAutoFind
-        xywh {170 290 150 25}
+        xywh {240 290 180 25}
       }
-      Fl_Help_View textOut {selected
-        xywh {0 0 360 260} resizable
-      }
-      Fl_Button bBan {
-        label Ban
-        callback flBanUnban
-        xywh {320 290 40 25}
+      Fl_Help_View textOut {
+        xywh {0 0 420 260} resizable
       }
     }
   }

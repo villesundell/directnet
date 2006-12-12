@@ -82,26 +82,43 @@ void dhtDataAge(dn_event_timer *te)
     DHTInfo &indht = *((DHTInfo *) te->payload);
     
     // go through each piece of data, aging it
-    dataAge_t::iterator dai;
-    for (dai = indht.dataTime.begin();
-         dai != indht.dataTime.end();
+    dhtData_t::iterator dai;
+    dhtDataValue_t::iterator dvi;
+    
+    for (dai = indht.data.begin();
+         dai != indht.data.end();
          dai++) {
-        dai->second--;
-        if (dai->second == 0) {
-            // dead: delete the data
-            indht.data.erase(dai->first);
-            indht.dataTime.erase(dai);
+        for (dvi = dai->second.begin();
+             dvi != dai->second.end();
+             dvi++) {
+            (*(dvi->timeleft))--;
+            if (*(dvi->timeleft) == 0) {
+                dai->second.erase(dvi);
+                dvi--;
+            }
+        }
+        
+        if (dai->second.size() == 0) {
+            indht.data.erase(dai);
             dai--;
         }
     }
-    for (dai = indht.rdataTime.begin();
-         dai != indht.rdataTime.end();
+    
+    for (dai = indht.rdata.begin();
+         dai != indht.rdata.end();
          dai++) {
-        dai->second--;
-        if (dai->second == 0) {
-            // dead: delete the rdata
-            indht.rdata.erase(dai->first);
-            indht.rdataTime.erase(dai);
+        for (dvi = dai->second.begin();
+             dvi != dai->second.end();
+             dvi++) {
+            (*(dvi->timeleft))--;
+            if (*(dvi->timeleft) == 0) {
+                dai->second.erase(dvi);
+                dvi--;
+            }
+        }
+        
+        if (dai->second.size() == 0) {
+            indht.rdata.erase(dai);
             dai--;
         }
     }
@@ -444,7 +461,7 @@ void dhtDebug(const BinSeq &ident)
     }
     
     cout << "  Data:" << endl;
-    binseqHash::iterator dati;
+    dhtData_t::iterator dati;
     for (dati = di.data.begin(); dati != di.data.end(); dati++) {
         cout << "    " << dati->first.c_str() << endl;
         BinSeq hash = encHashKey(dati->first);
@@ -796,25 +813,23 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
 {
     if (nnum == 1) {
         // our immediate predecessor, give them all our data as redundant
-        binseqHash::iterator di;
+        dhtData_t::iterator di;
         for (di = indht.data.begin(); di != indht.data.end(); di++) {
             Message rmsg(1, "Hrd", 1, 1);
             rmsg.params.push_back(rroute.toBinSeq());
             rmsg.params.push_back(dn_name);
             rmsg.params.push_back(indht.HTI);
             rmsg.params.push_back(di->first);
-                    
-            // make the outgoing data
-            Route droute;
-            set<BinSeq>::iterator si;
-            for (si = di->second.begin(); si != di->second.end(); si++) {
-                droute.push_back(*si);
-            }
-            rmsg.params.push_back(droute.toBinSeq());
-            rmsg.params.push_back(intToBinSeq(indht.dataTime[di->first]));
-                    
             rmsg.params.push_back("");
-            handleRoutedMsg(rmsg);
+            rmsg.params.push_back("");
+            
+            // make each outgoing message
+            dhtDataValue_t::iterator dvi;
+            for (dvi = di->second.begin(); dvi != di->second.end(); dvi++) {
+                rmsg.params[4] = dvi->value;
+                rmsg.params[5] = intToBinSeq(*(dvi->timeleft));
+                handleRoutedMsg(rmsg);
+            }
         }
                 
     } else if (nnum == 2) {
@@ -829,7 +844,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 indht.rdata.clear();
                         
                 // and perhaps reassign some data
-                binseqHash::iterator di;
+                dhtData_t::iterator di;
                 bool direstart = false;
                 for (di = indht.data.begin(); di != indht.data.end(); di++) {
                     if (direstart) {
@@ -847,21 +862,20 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         drmsg.params.push_back(indht.HTI);
                         drmsg.params.push_back(di->first);
                         drmsg.params.push_back("");
-                        drmsg.params.push_back(intToBinSeq(indht.dataTime[di->first]));
+                        drmsg.params.push_back("");
                         drmsg.params.push_back("");
                                 
                         // add data one-by-one
-                        set<BinSeq>::iterator si;
+                        dhtDataValue_t::iterator si;
                         for (si = di->second.begin(); si != di->second.end(); si++) {
-                            drmsg.params[4] = *si;
+                            drmsg.params[4] = si->value;
+                            drmsg.params[5] = intToBinSeq(*(si->timeleft));
                             handleRoutedMsg(drmsg);
                         }
-                                
+                        
                         // then demote our data
                         indht.rdata[di->first] = di->second;
-                        indht.rdataTime[di->first] = indht.dataTime[di->first];
                         indht.data.erase(di);
-                        indht.dataTime.erase(di->first);
                         direstart = true;
                     }
                 }
@@ -870,9 +884,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                 /* this person is farther - we've lost a node. Promote
                  * all of our redundant data into normal data */
                 indht.data.insert(indht.rdata.begin(), indht.rdata.end());
-                indht.dataTime.insert(indht.rdataTime.begin(), indht.rdataTime.end());
                 indht.rdata.clear();
-                indht.rdataTime.clear();
                 
                 // update our immediate predecessor with all of our redundant data
                 if (indht.neighbors[1] &&
@@ -913,20 +925,23 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         // make sure it's unique if it should be
         if (msg.params[3][0] & 0xF0 == 0) {
             // [0] & 0xF0 == 0 means it needs to be unique
-            if (indht.data.find(msg.params[3]) != indht.data.end() &&
-                indht.data[msg.params[3]].find(msg.params[4]) ==
-                indht.data[msg.params[3]].end()) {
+            if (indht.data.find(msg.params[3]) != indht.data.end()) {
+                // check if we don't already have this value
+                dhtDataValue_t::iterator dvi;
+                for (dvi = indht.data[msg.params[3]].begin();
+                     dvi != indht.data[msg.params[3]].end();
+                     dvi++) {
+                    if (dvi->value == msg.params[4]) goto dataok;
+                }
                 /* the key is set but the value isn't there, so it's owned by
                  * somebody else */
                 // FIXME: this should return SOMETHING to the sender
                 return;
             }
         }
+dataok:
         
-        // insert it
-        indht.data[msg.params[3]].insert(msg.params[4]);
-        
-        // get and set the timeout
+        // get and set the data and timeout
         unsigned int tleft = (1 << (msg.params[3][0] & 0xF)) * 60;
         if (msg.params[5].size() == 4 &&
             (msg.params[3][0] & 0xF0) == 0) {
@@ -935,7 +950,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             if (msgtleft < tleft)
                 tleft = msgtleft;
         }
-        indht.dataTime[msg.params[3]] = tleft;
+        indht.data[msg.params[3]].erase(DHTDataItem(msg.params[4], 0));
+        indht.data[msg.params[3]].insert(DHTDataItem(msg.params[4], tleft));
         
         // now send the redundant info
         if (indht.neighbors[1]) {
@@ -949,14 +965,6 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             }
             
             // make the outgoing data
-            Route rdat;
-            set<BinSeq>::iterator di;
-            for (di = indht.data[msg.params[3]].begin();
-                 di != indht.data[msg.params[3]].end();
-                 di++) {
-                rdat.push_back(*di);
-            }
-            
             Message rdmsg(1, "Hrd", 1, 1);
             if (toroute) {
                 rdmsg.params.push_back(toroute->toBinSeq());
@@ -966,7 +974,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
             rdmsg.params.push_back(dn_name);
             rdmsg.params.push_back(indht.HTI);
             rdmsg.params.push_back(msg.params[3]);
-            rdmsg.params.push_back(rdat.toBinSeq());
+            rdmsg.params.push_back(msg.params[4]);
             rdmsg.params.push_back(intToBinSeq(tleft));
             rdmsg.params.push_back("");
             
@@ -990,10 +998,10 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         Route retdata;
         
         if (indht.data.find(msg.params[3]) != indht.data.end()) {
-            set<BinSeq> &reqd = indht.data[msg.params[3]];
-            set<BinSeq>::iterator ri;
+            dhtDataValue_t &reqd = indht.data[msg.params[3]];
+            dhtDataValue_t::iterator ri;
             for (ri = reqd.begin(); ri != reqd.end(); ri++) {
-                retdata.push_back(*ri);
+                retdata.push_back(ri->value);
             }
         }
         
@@ -1520,22 +1528,16 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         
         
     } else if (CMD_IS("Hrd", 1, 1)) {
-        REQ_PARAMS(7);
+        REQ_PARAMS(6);
         
         // store redundant info
         // FIXME: verification
         if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
         DHTInfo &indht = in_dhts[msg.params[2]];
         
-        Route dat(msg.params[4]);
-        Route::iterator ri;
-        indht.rdata[msg.params[3]].clear();
-        for (ri = dat.begin(); ri != dat.end(); ri++) {
-            indht.rdata[msg.params[3]].insert(*ri);
-        }
-        
-        // set the time left
-        indht.rdataTime[msg.params[3]] = binSeqToInt(msg.params[5]);
+        indht.rdata[msg.params[3]].erase(DHTDataItem(msg.params[4], 0));
+        indht.rdata[msg.params[3]].insert(DHTDataItem(msg.params[4],
+                                                      binSeqToInt(msg.params[5])));
         
     }
     

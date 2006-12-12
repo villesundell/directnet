@@ -4,24 +4,24 @@
 
 Fl_Double_Window* ChatWindow::make_window() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(360, 315, "User");
+  { Fl_Double_Window* o = chatWindow = new Fl_Double_Window(420, 315, "User");
     w = o;
     o->callback((Fl_Callback*)closeChat, (void*)(this));
-    { Fl_Input* o = textIn = new Fl_Input(0, 265, 360, 25);
+    { Fl_Input* o = textIn = new Fl_Input(0, 265, 420, 25);
       o->callback((Fl_Callback*)sendInput);
       o->when(FL_WHEN_ENTER_KEY);
     }
-    { Fl_Button* o = bSndKey = new Fl_Button(0, 290, 170, 25, "Send Authentication Key");
+    { Fl_Button* o = bBan = new Fl_Button(0, 290, 60, 25, "Block");
+      o->callback((Fl_Callback*)flBanUnban);
+    }
+    { Fl_Button* o = bSndKey = new Fl_Button(60, 290, 180, 25, "Send Authentication Key");
       o->callback((Fl_Callback*)flSendAuthKey);
     }
-    { Fl_Button* o = bAutoFind = new Fl_Button(170, 290, 150, 25, "Add to Autofind List");
+    { Fl_Button* o = bAutoFind = new Fl_Button(240, 290, 180, 25, "Add to Autofind List");
       o->callback((Fl_Callback*)flAddRemAutoFind);
     }
-    { Fl_Help_View* o = textOut = new Fl_Help_View(0, 0, 360, 260);
+    { Fl_Help_View* o = textOut = new Fl_Help_View(0, 0, 420, 260);
       Fl_Group::current()->resizable(o);
-    }
-    { Fl_Button* o = bBan = new Fl_Button(320, 290, 40, 25, "Ban");
-      o->callback((Fl_Callback*)flBanUnban);
     }
     o->end();
   }
