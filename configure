@@ -2448,7 +2448,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 ac_config_headers="$ac_config_headers config.h"
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/auth-gpg/Makefile src/auth-none/Makefile src/enc-cyfer/Makefile src/enc-fake/Makefile src/gaim2-plugin/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-slang/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/auth-gpg/Makefile src/auth-none/Makefile src/enc-cyfer/Makefile src/gaim2-plugin/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-java/Makefile src/ui-slang/Makefile"
 
 
 if test ! -e ${srcdir}/src/enc-cyfer/cyfer
@@ -20516,6 +20516,22 @@ echo "$as_me: Using slang UI" >&6;}
 fi
 
 
+if test "x$ui" = "xjava"
+then
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_CXX=true
+        UI_LIBS=
+        UI_LDFLAGS=
+        UI_DIR=ui-java
+        found_ui=yes
+        ui=java
+        { echo "$as_me:$LINENO: Using Java UI" >&5
+echo "$as_me: Using Java UI" >&6;}
+fi
+
+
 if test "x$found_ui" = "xno"
 then
         { { echo "$as_me:$LINENO: error: Couldn't find a working UI." >&5
@@ -20869,21 +20885,6 @@ echo "$as_me: error: You need GMP to support Cyfer encryption." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-fi
-
-if test "x$enc" = "xfake" || (test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
-then
-        ENC_CFLAGS=
-        ENC_CPPFLAGS=
-        ENC_CXXFLAGS=
-        ENC_CXX=false
-        ENC_LIBS=
-        ENC_LDFLAGS=
-        ENC_DIR=enc-fake
-        found_enc=yes
-        enc=fake
-        { echo "$as_me:$LINENO: Using fake encryption" >&5
-echo "$as_me: Using fake encryption" >&6;}
 fi
 
 if test "x$found_enc" = "xno"
@@ -23156,10 +23157,10 @@ do
     "src/auth-gpg/Makefile") CONFIG_FILES="$CONFIG_FILES src/auth-gpg/Makefile" ;;
     "src/auth-none/Makefile") CONFIG_FILES="$CONFIG_FILES src/auth-none/Makefile" ;;
     "src/enc-cyfer/Makefile") CONFIG_FILES="$CONFIG_FILES src/enc-cyfer/Makefile" ;;
-    "src/enc-fake/Makefile") CONFIG_FILES="$CONFIG_FILES src/enc-fake/Makefile" ;;
     "src/gaim2-plugin/Makefile") CONFIG_FILES="$CONFIG_FILES src/gaim2-plugin/Makefile" ;;
     "src/ui-dumb/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
     "src/ui-fltk/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-fltk/Makefile" ;;
+    "src/ui-java/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-java/Makefile" ;;
     "src/ui-slang/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-slang/Makefile" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
 

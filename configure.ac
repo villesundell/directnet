@@ -15,10 +15,10 @@ src/Makefile
 src/auth-gpg/Makefile
 src/auth-none/Makefile
 src/enc-cyfer/Makefile
-src/enc-fake/Makefile
 src/gaim2-plugin/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
+src/ui-java/Makefile
 src/ui-slang/Makefile
 ])
 
@@ -175,6 +175,21 @@ then
 fi
 
 
+if test "x$ui" = "xjava"
+then
+        UI_CFLAGS=
+        UI_CPPFLAGS=
+        UI_CXXFLAGS=
+        UI_CXX=true
+        UI_LIBS=
+        UI_LDFLAGS=
+        UI_DIR=ui-java
+        found_ui=yes
+        ui=java
+        AS_MESSAGE([Using Java UI])
+fi
+
+
 if test "x$found_ui" = "xno"
 then
         AC_MSG_ERROR([Couldn't find a working UI.])
@@ -258,20 +273,6 @@ then
                 --disable-shared --host=$host_alias --build=$build_alias || exit 1
         cd $ORIGDIR
         ], [AC_MSG_ERROR([You need GMP to support Cyfer encryption.])])
-fi
-
-if test "x$enc" = "xfake" || (test "x$enc" = "xdetermine" && test "x$found_enc" = "xno" )
-then
-        ENC_CFLAGS=
-        ENC_CPPFLAGS=
-        ENC_CXXFLAGS=
-        ENC_CXX=false
-        ENC_LIBS=
-        ENC_LDFLAGS=
-        ENC_DIR=enc-fake
-        found_enc=yes
-        enc=fake
-        AS_MESSAGE([Using fake encryption])
 fi
 
 if test "x$found_enc" = "xno"

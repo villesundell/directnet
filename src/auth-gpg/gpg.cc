@@ -60,7 +60,7 @@ char authPW[] = "GPG Password";
  * returns: a MALLOC'D buffer with the output */
 BinSeq *gpgWrap(const BinSeq &inp, const BinSeq &args, int pass)
 {
-#ifndef __WIN32
+#if !defined(__WIN32) && !defined(NESTEDVM)
     FILE *fi, *fo;
     char *co;
     int pspp[2], res, pid;
