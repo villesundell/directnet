@@ -12,13 +12,18 @@ then
 fi
 . $1/env.sh
 
-CFLAGS="$CFLAGS -DNESTEDVM" \
-CXXFLAGS="$CXXFLAGS -DNESTEDVM" \
-./configure --host=mips-unknown-elf --build=`./scripts/config.guess` --enable-ui=dumb || exit 1
-make || exit 1
+#CFLAGS="$CFLAGS -DNESTEDVM" \
+#CXXFLAGS="$CXXFLAGS -DNESTEDVM" \
+#./configure --host=mips-unknown-elf --build=`./scripts/config.guess` --enable-ui=java || exit 1
+#make || exit 1
 
 java -cp $1/build:$1/upstream/build/classgen/build org.ibex.nestedvm.Compiler \
-  -outfile DirectNet.class -o unixRuntime DirectNet src/directnet || exit 1
+  -outfile src/ui-java/net/imdirect/directnet/DirectNet.class \
+  -o unixRuntime,supportCall net.imdirect.directnet.DirectNet src/directnet || exit 1
+
+cd src/ui-java || exit 1
+javac net/imdirect/directnet/UI.java || exit 1
+cd ../..
 
 if [ ! -e org ]
 then
@@ -27,7 +32,10 @@ then
 fi
 
 echo 'Manifest-Version: 1.0
-Main-Class: DirectNet
+Main-Class: net.imdirect.directnet.UI
 Classpath: DirectNet.jar' > DirectNet.manifest
-jar -cfm DirectNet.jar DirectNet.manifest DirectNet.class org/ || exit 1
+jar -cfm DirectNet.jar DirectNet.manifest org/ \
+  -C src/ui-java net/imdirect/directnet/DirectNet.class \
+  -C src/ui-java net/imdirect/directnet/UI.class \
+  -C src/ui-java net/imdirect/directnet/UI\$1.class || exit 1
 

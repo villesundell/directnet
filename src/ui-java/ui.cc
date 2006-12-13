@@ -42,9 +42,9 @@ using namespace std;
 #include <sys/time.h>
 #include <event.h>
 
-extern "C" _call_java(int, int, int, int);
+extern "C" int _call_java(int, int, int, int);
 
-extern "C" javaSetNick(char *to)
+extern "C" void javaSetNick(char *to)
 {
     strncpy(dn_name, to, DN_NAME_LEN);
 }
@@ -60,8 +60,7 @@ int main(int argc, char **argv, char **envp)
     }
     
     authSetPW("", "");
-#endif
-        
+    
     // Then ask for the nick
     _call_java(1, 0, 0, 0); // java syscall 1 = set nick, use javaSetNick
     
@@ -78,9 +77,9 @@ void uiDispMsg(const string &from, const string &msg, const string &authmsg, int
 {
     // java syscall 2 = display message
     struct {
-        char *from;
-        char *msg;
-        char *authmsg;
+        const char *from;
+        const char *msg;
+        const char *authmsg;
         int away;
     } minfo;
     minfo.from = from.c_str();
@@ -90,7 +89,7 @@ void uiDispMsg(const string &from, const string &msg, const string &authmsg, int
     _call_java(2, (int) &minfo, 0, 0);
 }
 
-extern "C" javaAuthImport(char *key)
+extern "C" void javaAuthImport(char *key)
 {
     authImport(key);
 }
@@ -105,7 +104,7 @@ void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
     // java syscall 3 = display a chat message
-    _call_java(3, (int) chat.c_str(), int from.c_str(), int msg.c_str());
+    _call_java(3, (int) chat.c_str(), (int) from.c_str(), (int) msg.c_str());
 }
 
 void uiEstConn(const string &from)
@@ -142,7 +141,12 @@ void uiNoRoute(const string &to)
 extern "C" {
     void javaSetAway(char *msg)
     {
-        setAway(msg);
+        if (msg) {
+            string smsg = msg;
+            setAway(&smsg);
+        } else {
+            setAway(NULL);
+        }
     }
 
     void javaEstablishConnection(char *host)

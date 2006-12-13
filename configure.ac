@@ -64,6 +64,7 @@ AS_HELP_STRING([--enable-ui[[=fltk|dumb]]], [set the UI]),
 [case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
+        java) ui=java ;;
         slang) ui=slang ;;
         *) AC_MSG_ERROR([Invalid UI chosen.]) ;;
 esac], [ui=determine])
@@ -187,6 +188,10 @@ then
         found_ui=yes
         ui=java
         AS_MESSAGE([Using Java UI])
+        AC_CHECK_LIB([event], [event_loop], [
+                      LIBS="-levent $LIBS"
+                      ], [AC_MSG_FAILURE([libevent not found])])
+        AC_CHECK_HEADERS([event.h], [], [AC_MSG_FAILURE([event.h not found])])
 fi
 
 
@@ -241,10 +246,9 @@ AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM2_PLUGIN" = "xyes")
 
 # Check for encryption to use
 AC_ARG_ENABLE(enc,
-AS_HELP_STRING([--enable-enc[[=cyfer|fake]]], [set the encryption (cyfer or fake)]),
+AS_HELP_STRING([--enable-enc[[=cyfer]]], [set the encryption (only cyfer works)]),
 [case "$enableval" in
         cyfer) enc=cyfer ;;
-        fake) enc=fake ;;
         *) AC_MSG_ERROR([Invalid encryption chosen.]) ;;
 esac], [enc=determine])
 
