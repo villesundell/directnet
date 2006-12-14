@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *

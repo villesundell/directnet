@@ -12,23 +12,27 @@ then
 fi
 . $1/env.sh
 
-#CFLAGS="$CFLAGS -DNESTEDVM" \
-#CXXFLAGS="$CXXFLAGS -DNESTEDVM" \
-#./configure --host=mips-unknown-elf --build=`./scripts/config.guess` --enable-ui=java || exit 1
-#make || exit 1
+if [ 1 = 0 ] ; then
+CFLAGS="$CFLAGS -DNESTEDVM" \
+CXXFLAGS="$CXXFLAGS -DNESTEDVM" \
+./configure --host=mips-unknown-elf --build=`./scripts/config.guess` --enable-ui=dumb || exit 1
+make || exit 1
+fi
 
 java -cp $1/build:$1/upstream/build/classgen/build org.ibex.nestedvm.Compiler \
   -outfile src/ui-java/net/imdirect/directnet/DirectNet.class \
   -o unixRuntime,supportCall net.imdirect.directnet.DirectNet src/directnet || exit 1
 
 cd src/ui-java || exit 1
-javac net/imdirect/directnet/UI.java || exit 1
+javac -cp .:$1/build:$1/upstream/build/classgen/build \
+  net/imdirect/directnet/UI.java || exit 1
 cd ../..
 
 if [ ! -e org ]
 then
-    cp -a $1/build/org .
-    cp -a $1/upstream/build/classgen/build/org .
+    cp -pR $1/build/org .
+    cp -pR $1/upstream/build/classgen/build/org .
+    #cp -pRf src/ui-java/org/ibex/nestedvm/*.class org/ibex/nestedvm
 fi
 
 echo 'Manifest-Version: 1.0

@@ -860,7 +860,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         direstart = false;
                     }
                             
-                    BinSeq dataHash = encHashKey(di->first);
+                    BinSeq dataHash = encHashKey(indht.HTI + di->first);
                     if (encCmp(dataHash, hashedKey) > 0) {
                         // this data belongs with this user
                         Message drmsg(1, "Had", 1, 1);
