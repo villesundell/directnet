@@ -39,6 +39,12 @@ extern "C" {
 #include "globals.h"
 #include "route.h"
 
+// protocol version
+#define PROTO_MAJOR 1
+#define PROTO_MAJOR_STR "\x00\x01"
+#define PROTO_MINOR 65002
+#define PROTO_MINOR_STR "\xFD\xEA"
+
 extern int serv_port;
 
 // our name

@@ -155,7 +155,7 @@ void send_handshake(conn_t *cs) {
     Message msg(0, "dni", 1, 1);
     msg.params.push_back(dn_name);
     msg.params.push_back(encExportKey());
-    msg.params.push_back(BinSeq("\x00\x01\xFD\xE9", 4));
+    msg.params.push_back(BinSeq(PROTO_MAJOR_STR PROTO_MINOR_STR, 4));
     sendCmd(cs, msg);
     
     // and hash table info
@@ -574,12 +574,12 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
         int remver[2];
         remver[0] = charrayToInt(msg.params[2].c_str());
-        if (remver[0] != 1) {
+        if (remver[0] != PROTO_MAJOR) {
             kill_connection(conn);
             return;
         }
         remver[1] = charrayToInt(msg.params[2].c_str() + 2);
-        if (remver[1] < 65001) {
+        if (remver[1] < PROTO_MINOR) {
             kill_connection(conn);
             return;
         }
