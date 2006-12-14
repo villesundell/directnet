@@ -16,6 +16,11 @@
  *    You should have received a copy of the GNU General Public License
  *    along with DirectNet; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *    As a special exception, the copyright holders of this library give you
+ *    permission to link this library with independent modules licensed under
+ *    the terms of the Apache License, version 2.0 or later, as distributed by
+ *    the Apache Software Foundation.
  */
 
 #include <set>
