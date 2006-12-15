@@ -1,3 +1,12 @@
+2.0a2:
+        - DHT data aging is now per-value instead of per-key (this will help
+          with unowned chats)
+        - Buildable under NestedVM (this could eventually lead to a DN Java
+          applet)
+        - Changed the license to allow legal linking against NestedVM.
+        - Added a bit more protocol documentation.
+        - Fixed a bug which caused some data loss in the DHT
+
 2.0a1:
         - Rearchitected in C++
         - With connection info, include hostname and port if the connection is

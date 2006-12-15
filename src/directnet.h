@@ -94,7 +94,7 @@ void dn_addRoute(const BinSeq &to, const Route &rt);
 
 //Release notes for this version (if this one is not defined, there is no startup message.
 #define DN_RELEASENOTES "<h1>DirectNet</h1>\
-<h2>&nbsp;2.0a1</h2>\
+<h2>&nbsp;2.0a2</h2>\
 <h1>Release Notes</h1>\
 This is a alpha version, which means this version is <u>only for testing \
 purposes</u>, and is not stable enough for daily use. If you find any bugs, \
