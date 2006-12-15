@@ -1021,7 +1021,7 @@ dataok:
         ret.params.push_back(retdata.toBinSeq());
         
         // handle or send it
-        if (rroute.size() > 1) {
+        if (msg.params[4] != pukeyhash) {
             handleRoutedMsg(ret);
         } else {
             handleDHTDupMessage(conn, ret);
