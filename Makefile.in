@@ -219,11 +219,11 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = src
+SUBDIRS = src docs
 appsdir = $(datadir)/applications
 apps_DATA = directnet.desktop
 docsdir = $(datadir)/doc/directnet
-docs_DATA = AUTHORS ChangeLog COPYING PROTOCOL README
+docs_DATA = AUTHORS ChangeLog COPYING README
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

@@ -2448,7 +2448,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 ac_config_headers="$ac_config_headers config.h"
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/auth-gpg/Makefile src/auth-none/Makefile src/enc-cyfer/Makefile src/gaim2-plugin/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-java/Makefile src/ui-slang/Makefile"
+ac_config_files="$ac_config_files Makefile docs/Makefile src/Makefile src/auth-gpg/Makefile src/auth-none/Makefile src/enc-cyfer/Makefile src/gaim2-plugin/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-java/Makefile src/ui-slang/Makefile"
 
 
 if test ! -e ${srcdir}/src/enc-cyfer/cyfer
@@ -23377,6 +23377,7 @@ do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "docs/Makefile") CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/auth-gpg/Makefile") CONFIG_FILES="$CONFIG_FILES src/auth-gpg/Makefile" ;;
     "src/auth-none/Makefile") CONFIG_FILES="$CONFIG_FILES src/auth-none/Makefile" ;;

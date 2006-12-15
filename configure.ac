@@ -11,6 +11,7 @@ AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES(
 [
 Makefile
+docs/Makefile
 src/Makefile
 src/auth-gpg/Makefile
 src/auth-none/Makefile
