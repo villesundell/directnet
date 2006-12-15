@@ -744,7 +744,6 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     // make the search message
     Message msg(1, "Hga", 1, 1);
     msg.params.push_back(Route().toBinSeq());
-    msg.params.push_back(dn_name);
     msg.params.push_back("");
     msg.params.push_back(key);
     msg.params.push_back("");
@@ -797,7 +796,6 @@ void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht)
     // make the message
     Message *msg = new Message(1, "Had", 1, 1);
     msg->params.push_back("");
-    msg->params.push_back(dn_name);
     msg->params.push_back(dht->HTI);
     msg->params.push_back(key);
     msg->params.push_back(value);
@@ -824,7 +822,6 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
         for (di = indht.data.begin(); di != indht.data.end(); di++) {
             Message rmsg(1, "Hrd", 1, 1);
             rmsg.params.push_back(rroute.toBinSeq());
-            rmsg.params.push_back(dn_name);
             rmsg.params.push_back(indht.HTI);
             rmsg.params.push_back(di->first);
             rmsg.params.push_back("");
@@ -865,7 +862,6 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         // this data belongs with this user
                         Message drmsg(1, "Had", 1, 1);
                         drmsg.params.push_back(rroute.toBinSeq());
-                        drmsg.params.push_back(dn_name);
                         drmsg.params.push_back(indht.HTI);
                         drmsg.params.push_back(di->first);
                         drmsg.params.push_back("");
@@ -917,28 +913,28 @@ void handleDHTMessage(conn_t *conn, Message &msg)
     //msg.debug("DHT");
     
     if (CMD_IS("Had", 1, 1)) {
-        REQ_PARAMS(7);
+        REQ_PARAMS(6);
         
-        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), NULL))
+        if (!dhtForMe(msg, msg.params[1], encHashKey(msg.params[1] + msg.params[2]), NULL))
             return;
         
         // this is my data, store it
         // TODO: data ownership, redundancy, etc
-        DHTInfo &indht = in_dhts[msg.params[2]];
+        DHTInfo &indht = in_dhts[msg.params[1]];
         
         // make sure the name is legit
-        if (msg.params[3].size() < 3) return;
+        if (msg.params[2].size() < 3) return;
         
         // make sure it's unique if it should be
-        if (msg.params[3][0] & 0xF0 == 0) {
+        if (msg.params[2][0] & 0xF0 == 0) {
             // [0] & 0xF0 == 0 means it needs to be unique
-            if (indht.data.find(msg.params[3]) != indht.data.end()) {
+            if (indht.data.find(msg.params[2]) != indht.data.end()) {
                 // check if we don't already have this value
                 dhtDataValue_t::iterator dvi;
-                for (dvi = indht.data[msg.params[3]].begin();
-                     dvi != indht.data[msg.params[3]].end();
+                for (dvi = indht.data[msg.params[2]].begin();
+                     dvi != indht.data[msg.params[2]].end();
                      dvi++) {
-                    if (dvi->value == msg.params[4]) goto dataok;
+                    if (dvi->value == msg.params[3]) goto dataok;
                 }
                 /* the key is set but the value isn't there, so it's owned by
                  * somebody else */
@@ -949,16 +945,16 @@ void handleDHTMessage(conn_t *conn, Message &msg)
 dataok:
         
         // get and set the data and timeout
-        unsigned int tleft = (1 << (msg.params[3][0] & 0xF)) * 60;
-        if (msg.params[5].size() == 4 &&
-            (msg.params[3][0] & 0xF0) == 0) {
+        unsigned int tleft = (1 << (msg.params[2][0] & 0xF)) * 60;
+        if (msg.params[4].size() == 4 &&
+            (msg.params[2][0] & 0xF0) == 0) {
             unsigned int msgtleft =
-                binSeqToInt(msg.params[5]);
+                binSeqToInt(msg.params[4]);
             if (msgtleft < tleft)
                 tleft = msgtleft;
         }
-        indht.data[msg.params[3]].erase(DHTDataItem(msg.params[4], 0));
-        indht.data[msg.params[3]].insert(DHTDataItem(msg.params[4], tleft));
+        indht.data[msg.params[2]].erase(DHTDataItem(msg.params[3], 0));
+        indht.data[msg.params[2]].insert(DHTDataItem(msg.params[3], tleft));
         
         // now send the redundant info
         if (indht.neighbors[1]) {
@@ -978,7 +974,6 @@ dataok:
             } else {
                 rdmsg.params.push_back("");
             }
-            rdmsg.params.push_back(dn_name);
             rdmsg.params.push_back(indht.HTI);
             rdmsg.params.push_back(msg.params[3]);
             rdmsg.params.push_back(msg.params[4]);
@@ -994,18 +989,18 @@ dataok:
         
         
     } else if (CMD_IS("Hga", 1, 1)) {
-        REQ_PARAMS(6);
+        REQ_PARAMS(5);
         
-        if (!dhtForMe(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), &(msg.params[4])))
+        if (!dhtForMe(msg, msg.params[1], encHashKey(msg.params[1] + msg.params[2]), &(msg.params[3])))
             return;
         
-        DHTInfo &indht = in_dhts[msg.params[2]];
+        DHTInfo &indht = in_dhts[msg.params[1]];
         
         // I should have this data, so return it
         Route retdata;
         
-        if (indht.data.find(msg.params[3]) != indht.data.end()) {
-            dhtDataValue_t &reqd = indht.data[msg.params[3]];
+        if (indht.data.find(msg.params[2]) != indht.data.end()) {
+            dhtDataValue_t &reqd = indht.data[msg.params[2]];
             dhtDataValue_t::iterator ri;
             for (ri = reqd.begin(); ri != reqd.end(); ri++) {
                 retdata.push_back(ri->value);
@@ -1015,15 +1010,14 @@ dataok:
         // build the return message
         Message ret(1, "Hra", 1, 1);
         
-        Route rroute(msg.params[4]);
+        Route rroute(msg.params[3]);
         if (rroute.size()) rroute.pop_back();
         rroute.reverse();
-        rroute.push_back(msg.params[5]);
+        rroute.push_back(msg.params[4]);
         ret.params.push_back(rroute.toBinSeq());
         
-        ret.params.push_back(dn_name);
         ret.params.push_back(indht.HTI);
-        ret.params.push_back(msg.params[3]);
+        ret.params.push_back(msg.params[2]);
         ret.params.push_back(retdata.toBinSeq());
         
         // handle or send it
@@ -1486,65 +1480,33 @@ dataok:
         
         
     } else if (CMD_IS("Hra", 1, 1)) {
-        REQ_PARAMS(5);
+        REQ_PARAMS(4);
         
-        if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
+        if (in_dhts.find(msg.params[1]) == in_dhts.end()) return;
         
         // Add this search result
-        if (dhtSearches.find(msg.params[3]) != dhtSearches.end()) {
+        if (dhtSearches.find(msg.params[2]) != dhtSearches.end()) {
             // make the set from the route-style list
-            Route vals(msg.params[4]);
+            Route vals(msg.params[3]);
             set<BinSeq> bsv;
             for (int i = 0; i < vals.size(); i++) {
                 bsv.insert(vals[i]);
             }
-            dhtSearches[msg.params[3]].searchResults[msg.params[2]] = bsv;
+            dhtSearches[msg.params[2]].searchResults[msg.params[1]] = bsv;
         }
-        
-        /* FIXME: right now, this assumes that I actually performed this search
-         * and want to find this user :) * /
-        if (msg.params[3].size() > 3 &&
-            msg.params[3].substr(0, 3) == "\x08nm") {
-            // build the find for this user (these users?)
-            cout << "USERS: ";
-            outHex(msg.params[4].c_str(), msg.params[4].size());
-            cout << endl;
-            Route vals(msg.params[4]);
-            Route::iterator vi;
-            
-            Message fms(1, "Hfn", 1, 1);
-            fms.params.push_back(Route().toBinSeq());
-            fms.params.push_back(dn_name);
-            fms.params.push_back(msg.params[2]);
-            fms.params.push_back("");
-            fms.params.push_back(Route().toBinSeq());
-            fms.params.push_back(encExportKey());
-            fms.params.push_back(BinSeq("\x00\x00", 2));
-            
-            for (vi = vals.begin(); vi != vals.end(); vi++) {
-                cout << "Searching for ";
-                outHex(vi->c_str(), vi->size());
-                cout << endl;
-                
-                fms.params[3] = *vi;
-                
-                dhtSendMsg(fms, fms.params[2], fms.params[3], &(fms.params[4]));
-            }
-            cout << endl;
-        }*/
         
         
     } else if (CMD_IS("Hrd", 1, 1)) {
-        REQ_PARAMS(6);
+        REQ_PARAMS(5);
         
         // store redundant info
         // FIXME: verification
-        if (in_dhts.find(msg.params[2]) == in_dhts.end()) return;
-        DHTInfo &indht = in_dhts[msg.params[2]];
+        if (in_dhts.find(msg.params[1]) == in_dhts.end()) return;
+        DHTInfo &indht = in_dhts[msg.params[1]];
         
-        indht.rdata[msg.params[3]].erase(DHTDataItem(msg.params[4], 0));
-        indht.rdata[msg.params[3]].insert(DHTDataItem(msg.params[4],
-                                                      binSeqToInt(msg.params[5])));
+        indht.rdata[msg.params[2]].erase(DHTDataItem(msg.params[3], 0));
+        indht.rdata[msg.params[2]].insert(DHTDataItem(msg.params[3],
+                                                      binSeqToInt(msg.params[4])));
         
     }
     

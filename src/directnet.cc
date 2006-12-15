@@ -260,7 +260,6 @@ void dn_addRoute(const BinSeq &to, const Route &rt)
     // send a pir
     Message msg(1, "pir", 1, 1);
     msg.params.push_back(nroute->toBinSeq());
-    msg.params.push_back(dn_name);
     
     Route rroute = *nroute;
     if (rroute.size()) rroute.pop_back();

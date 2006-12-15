@@ -153,7 +153,6 @@ void send_handshake(conn_t *cs) {
     
     // send DN info ...
     Message msg(0, "dni", 1, 1);
-    msg.params.push_back(dn_name);
     msg.params.push_back(encExportKey());
     msg.params.push_back(BinSeq(PROTO_MAJOR_STR PROTO_MINOR_STR, 4));
     sendCmd(cs, msg);
@@ -565,20 +564,20 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
 #endif
 
     } else if (CMD_IS("dni", 1, 1)) {
-        REQ_PARAMS(3);
+        REQ_PARAMS(2);
         
         // if the version isn't right, immediately fail
-        if (msg.params[2].size() < 4) {
+        if (msg.params[1].size() < 4) {
             kill_connection(conn);
             return;
         }
         int remver[2];
-        remver[0] = charrayToInt(msg.params[2].c_str());
+        remver[0] = charrayToInt(msg.params[1].c_str());
         if (remver[0] != PROTO_MAJOR) {
             kill_connection(conn);
             return;
         }
-        remver[1] = charrayToInt(msg.params[2].c_str() + 2);
+        remver[1] = charrayToInt(msg.params[1].c_str() + 2);
         if (remver[1] < PROTO_MINOR) {
             kill_connection(conn);
             return;
@@ -586,31 +585,25 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // FIXME: when this protocol stabilizes, this will need to set up translation
         
         // make sure they don't have the same enckey as us
-        if (msg.params[1] == encExportKey()) {
+        if (msg.params[0] == encExportKey()) {
             kill_connection(conn);
             return;
         }
         
         Route *route;
-        BinSeq keyhash = encHashKey(msg.params[1]);
+        BinSeq keyhash = encHashKey(msg.params[0]);
         
         // now accept the new FD
-        conn->enckey = new BinSeq(msg.params[1]);
-        (*dn_conn)[msg.params[1]] = conn;
+        conn->enckey = new BinSeq(msg.params[0]);
+        (*dn_conn)[msg.params[0]] = conn;
         
         // and the new route
         route = new Route();
         route->push_back(keyhash);
-        dn_addRoute(msg.params[1], *route);
+        dn_addRoute(msg.params[0], *route);
         
-        (*dn_names)[msg.params[1]] = msg.params[0];
-        (*dn_keys)[msg.params[0]] = msg.params[1];
-        (*dn_kbh)[keyhash] = msg.params[1];
+        (*dn_kbh)[keyhash] = msg.params[0];
         
-        encImportKey(msg.params[0], msg.params[1]);
-        
-        uiEstRoute(msg.params[0].c_str());
-
     } else if (CMD_IS("fnd", 1, 1)) {
         conn_t *remc;
         
@@ -733,12 +726,11 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         
     } else if (CMD_IS("pir", 1, 1)) {
-        REQ_PARAMS(3);
+        REQ_PARAMS(2);
         
         // just pong
         Message rmsg(1, "por", 1, 1);
-        rmsg.params.push_back(msg.params[2]);
-        rmsg.params.push_back(dn_name);
+        rmsg.params.push_back(msg.params[1]);
         handleRoutedMsg(rmsg);
         
         

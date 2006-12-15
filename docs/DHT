@@ -31,6 +31,10 @@ They are also routed messages.
 Hash return commands have a route, like other routed messages, but have the
 hash table identifier.
 
+IMPORTANT: Lookup and add commands will propogate a key->value combo to the
+appropriate node. The key is hashed to find this out. The hash used is
+SHA-256(HTI + key) .
+
 [HTI = hash table identifier]
 [Keys as used by the DHT are SHA-256'd from the desired data to look up
 (whether an encryption key, name, or anything else)]
@@ -41,7 +45,6 @@ Had(1)(1) (hash add)
         type: hash
         parameters:
                 immediate route
-                local name
                 HTI
                 DHT key
                 value
@@ -53,7 +56,6 @@ Hen(1)(1) (hash encapsulate) *
         type: hash
         parameters:
                 immediate route
-                local name
                 HTI
                 DHT hashed key
                 encapsulated message
@@ -102,7 +104,6 @@ Hga(1)(1) (hash get all)
         type: returnable hash
         parameters:
                 immediate route
-                local name
                 HTI
                 DHT key
                 current route
@@ -125,7 +126,6 @@ Hra(1)(1) (hash return all)
         type: hash return
         parameters:
                 route
-                local name
                 HTI
                 DHT key
                 values (in the same form as routes)
@@ -135,7 +135,6 @@ Hrd(1)(1) (hash redundant data)
         type: routed
         parameters:
                 route
-                local name
                 HTI
                 DHT key
                 value

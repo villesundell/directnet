@@ -1,0 +1,31 @@
+This document is intended to aid in the creation of DirectNet-compatible
+clients. It does not describe the protocol itself, which is described in the
+documents PROTOCOL and DHT, but focuses on the actual lifespan of a node in the
+DirectNet network.
+
+When a DirectNet node connects to another node, a handshaking command, 'dni',
+is sent. This informs the other node of the encryption key of this node.
+
+The connecting side then sends a DHT establishment command, 'Hin'. If the
+receiving side is on any DHTs, it sends the list back in an 'Hir' command. If
+it isn't, it creates three (yes, three) DHTs with arbitrary HTIs and sends
+those back in an 'Hir' command. The unestablished connecting side will then
+send an 'Had' to add its name to the hash, and start establishing itself into
+the DHTs.
+
+A node is established in the DHT when:
+* It knows its second predecessor, first predecessor, first successor and
+  second successor.
+* It has enough binary divisions that the smallest one is self-referential.
+
+To accomplish establishment, the node sends an 'Hfn' command to find neighbors,
+and upon successfully finding neighbors, starts sending 'Hfn' command to find
+divisions.
+
+After that, all protocol commands can be sent and received by both parties.
+Neither functions as a server or a client, they are equal nodes.
+
+A node does not need to send any messages to disconnect, but it is preferable
+to send a 'dis' command. The 'dis' command propogates to all nodes that
+recognize the key. If the exiting node does not send a 'dis' command, all of
+the nodes that it is connected to will when they detect the disconnect.

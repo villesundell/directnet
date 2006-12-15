@@ -1,20 +1,15 @@
 This document is under heavy revision, since protocol v2 is under construction.
 
-THE CURRENT PROTOCOL VERSION IS 1.65000. This means that the 'dni' message will
-be sent with '1.65000' as the protocol number.
+THE CURRENT PROTOCOL VERSION IS 1.65002. This means that the 'dni' message will
+be sent with '1.65002' as the protocol number.
 
 A DirectNet node is an independently operating server and client, which must
 have two variables: a nickname and an encryption key (public and private),
 using RSA. The server listens to TCP port 3447 by default, though any port is
 acceptable.
 
-When a DirectNet node connects to another node, a handshaking command, 'dni',
-is sent. This informs the other node of the nickname and encryption key of this
-node. Then, the outgoing client sends hash table info, and so does the incoming
-client (upon receiving the info from the other side). See the document 'HTI'
-for more information on hash tables. After that, all commands can be sent and
-received by both parties. Neither functions as a server or a client, they are
-equal nodes.
+For information on how to actually use these protocol commands (that is, the
+life of a DirectNet node), read the document IMPLEMENTATION.
 
 The protocol header is as follows:
 
@@ -134,26 +129,16 @@ dce(1)(1) (direct connect request echo) (scheduled for removal before 2.0.0)
                 local name
                 local IP/hostname
 
-dni(1)(1) (DirectNet identity) *
+dni(1)(1) (DirectNet identity)
         purpose: Identify yourself to a new connection. Receiving this will
         cause a dnv to be sent.
         type: direct
         parameters:
-                local name
                 public key
-                challenge phrase
                 protocol version
-                        2 byte big-endian major (currently 2, must match exactly)
-                        2 byte big-endian minor (currently 0, if lower should translate)
+                        2 byte big-endian major
+                        2 byte big-endian minor
 
-
-dnv(1)(1) (DirectNet verify) (perhaps to be replaced) *
-        purpose: Verify that the user has the private key they claim to. If
-        this is received and is valid, the user is added. Otherwise, the
-        connection is dropped.
-        type: direct
-        parameters:
-                challenge phrase signed with private key
 
 fnd(1)(1) (find) (scheduled for removal before 2.0.0)
         purpose: Find a user by name
@@ -211,7 +196,6 @@ pir(1)(1) (ping-route) * (partial)
         type: routed
         parameters:
                 route
-                local name
                 return route
 
 
@@ -220,7 +204,6 @@ por(1)(1) (pong-route) * (partial)
         type: routed
         parameters:
                 route
-                local name
 
 
 Key:
