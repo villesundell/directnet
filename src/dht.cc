@@ -753,7 +753,7 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     map<BinSeq, DHTInfo>::iterator di;
     for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
         msg.params[1] = di->first;
-        dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[4]));
+        dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[3]));
     }
     
     // start the clock for 10 seconds
