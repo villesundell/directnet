@@ -752,7 +752,7 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     // send out the search
     map<BinSeq, DHTInfo>::iterator di;
     for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
-        msg.params[2] = di->first;
+        msg.params[1] = di->first;
         dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[4]));
     }
     
@@ -770,14 +770,14 @@ void dhtAddRefresh(dn_event_timer *te)
     
     // refresh the time
     unsigned int rtime =
-        (1 << (msg.params[3][0] & 0xF)) * 3600;
+        (1 << (msg.params[2][0] & 0xF)) * 3600;
     // 3/4 of the total time
     rtime *= 3;
     rtime /= 4;
     te->setTimeDelta(rtime, 0);
     
     // then refresh the data
-    dhtSendMsg(msg, msg.params[2], encHashKey(msg.params[2] + msg.params[3]), NULL);
+    dhtSendMsg(msg, msg.params[1], encHashKey(msg.params[1] + msg.params[2]), NULL);
 }
 
 /* Send a properly-formed add message over the DHT, with a refresher loop */
@@ -830,8 +830,8 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
             // make each outgoing message
             dhtDataValue_t::iterator dvi;
             for (dvi = di->second.begin(); dvi != di->second.end(); dvi++) {
-                rmsg.params[4] = dvi->value;
-                rmsg.params[5] = intToBinSeq(*(dvi->timeleft));
+                rmsg.params[3] = dvi->value;
+                rmsg.params[4] = intToBinSeq(*(dvi->timeleft));
                 handleRoutedMsg(rmsg);
             }
         }
@@ -871,8 +871,8 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         // add data one-by-one
                         dhtDataValue_t::iterator si;
                         for (si = di->second.begin(); si != di->second.end(); si++) {
-                            drmsg.params[4] = si->value;
-                            drmsg.params[5] = intToBinSeq(*(si->timeleft));
+                            drmsg.params[3] = si->value;
+                            drmsg.params[4] = intToBinSeq(*(si->timeleft));
                             handleRoutedMsg(drmsg);
                         }
                         
@@ -975,8 +975,8 @@ dataok:
                 rdmsg.params.push_back("");
             }
             rdmsg.params.push_back(indht.HTI);
+            rdmsg.params.push_back(msg.params[2]);
             rdmsg.params.push_back(msg.params[3]);
-            rdmsg.params.push_back(msg.params[4]);
             rdmsg.params.push_back(intToBinSeq(tleft));
             rdmsg.params.push_back("");
             

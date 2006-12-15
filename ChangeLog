@@ -6,6 +6,8 @@
         - Changed the license to allow legal linking against NestedVM.
         - Added a bit more protocol documentation.
         - Fixed a bug which caused some data loss in the DHT
+        - Changed some protocol commands
+        - Made connection to a new node not establish a UI-visible route
 
 2.0a1:
         - Rearchitected in C++

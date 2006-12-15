@@ -1,6 +1,6 @@
 /*
  * Copyright 2004, 2005, 2006  Gregor Richards
- * Copyright 2006 Bryan Donlan
+ * Copyright 2006  Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -566,6 +566,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     } else if (CMD_IS("dni", 1, 1)) {
         REQ_PARAMS(2);
         
+        if (conn == NULL) return;
+        
         // if the version isn't right, immediately fail
         if (msg.params[1].size() < 4) {
             kill_connection(conn);
@@ -603,6 +605,10 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         dn_addRoute(msg.params[0], *route);
         
         (*dn_kbh)[keyhash] = msg.params[0];
+        
+        // inform the UI
+        if (conn->outgh)
+            uiEstConn(*(conn->outgh));
         
     } else if (CMD_IS("fnd", 1, 1)) {
         conn_t *remc;

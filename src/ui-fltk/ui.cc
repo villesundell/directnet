@@ -769,7 +769,9 @@ void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 
 void uiEstConn(const string &from)
 {
-    /* what to use here...? */
+    // FIXME: this desperately needs to change
+    string cemsg = "Connection to " + from + " established.";
+    uiDispMsg("DirectNet", cemsg, "", 0);
 }
 
 void uiEstRoute(const string &from)
