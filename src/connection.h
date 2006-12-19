@@ -1,6 +1,6 @@
 /*
  * Copyright 2004, 2005, 2006  Gregor Richards
- * Copyright 2006 Bryan Donlan
+ * Copyright 2006  Bryan Donlan
  *
  * This file is part of DirectNet.
  *
