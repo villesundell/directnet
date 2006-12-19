@@ -53,6 +53,19 @@ Had(1)(1) (hash add)
                 minutes remaining (4 byte big-endian)
                 ttl [not currently used]
 
+Hag(1)(1) (hash add and get)
+        purpose: atomic Had and Hga
+        type: hash
+        parameters:
+                immediate route
+                HTI
+                DHT key
+                value
+                minutes remaining (4 byte big-endian)
+                current route
+                hash of encryption key [not currently used]
+                ttl [not currently used]
+
 Hen(1)(1) (hash encapsulate) *
         purpose: encapsulate a routed message in a hash message
         type: hash

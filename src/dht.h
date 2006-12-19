@@ -101,8 +101,23 @@ class DHTSearchInfo {
     dhtSearchCallback callback;
     void *data;
 };
-
 extern map<BinSeq, DHTSearchInfo> dhtSearches;
+
+// finds currently in progress (finds are for users, searches are for data)
+// callback form: enc key, name, data
+typedef void (*fndCallback)(const BinSeq &, const BinSeq &, void *);
+class fndCallbackWData {
+    public:
+    fndCallback callback;
+    void *data;
+    
+    inline void set(fndCallback sc, void *sd)
+    {
+        callback = sc;
+        data = sd;
+    }
+};
+extern map<BinSeq, fndCallbackWData> dhtFnds;
 
 /* list of DHTs we're currently in
  * must: set to true if we need to be in a DHT, and should create one if we're
@@ -154,6 +169,10 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data);
 /* Send a properly-formed add message over the DHT, with a refresher loop */
 void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht);
 
+/* Send an atomic add/search */
+void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
+                      dhtSearchCallback callback, void *data);
+
 /* Send a properly-formed search message over the DHT
  * params same as dhtForMe */
 void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);
@@ -162,13 +181,22 @@ void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *ro
  * params same as dhtForMe, but ident is a pointer, the value will change */
 void dhtAllSendMsg(Message &msg, BinSeq *ident, const BinSeq &key, BinSeq *route);
 
-/* Send a find by username (for use by the UI)
+/* Send a find by username
  * to: user to search for
  * callback: function to call (or NULL) upon successful find
  * data: data to send to the callback
  * NOTE: this does not have the dht prefix due to history */
-typedef void (*fndCallback)(const string &, void *);
 void sendFnd(const string &to, fndCallback callback, void *data);
+
+/* Send a find by username (for use by the UI)
+ * to: user to search for */
+inline void sendFnd(const string &to) { sendFnd(to, NULL, NULL); }
+
+/* Send a find by key
+ * key: key to search for
+ * callback: function to call (or NULL) upon successful find
+ * data: data to send to the callback */
+void dhtFindKey(const BinSeq &key, fndCallback callback, void *data);
 
 /* Same as handleDHTMessage below, but duplicate the msg object */
 void handleDHTDupMessage(conn_t *conn, Message msg);

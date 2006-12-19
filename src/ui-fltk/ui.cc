@@ -470,7 +470,7 @@ void estCht(Fl_Input *w, void *ignore)
     
     w->value("");
 
-    joinChat(chatOn + 1);
+    //joinChat(chatOn + 1); FIXME
     getWindow(chatOn);
 }
 
@@ -482,7 +482,7 @@ void closeChat(Fl_Double_Window *w, void *ignore)
     
     // if it's a chat window, we should leave the chat now
     if (name[0] == '#') {
-        leaveChat(name + 1);
+        // leaveChat(name + 1); FIXME
     }
     
     w->hide();

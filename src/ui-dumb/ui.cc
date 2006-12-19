@@ -273,7 +273,7 @@ void handleUInput(const string &inp)
             
             if (currentPartner[0] == '#') {
                 // Join the chat
-                joinChat(currentPartner.substr(1));
+                // joinChat(currentPartner.substr(1)); FIXME
             }
         } else if (params[0][1] == 'u') {
             // auto*

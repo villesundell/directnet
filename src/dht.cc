@@ -58,6 +58,8 @@ DHTInfo::DHTInfo()
 
 map<BinSeq, DHTSearchInfo> dhtSearches;
 
+map<BinSeq, fndCallbackWData> dhtFnds;
+
 Route dhtIn(bool must)
 {
     Route toret;
@@ -783,11 +785,40 @@ void sendFndCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
     }
 }
 
-void sendFnd(const string &toc) {
+void sendFnd(const string &toc, fndCallback callback, void *data)
+{
     // Find a user by name
     BinSeq nmcode = "\x08nm" + toc;
     
+    if (callback) {
+        // FIXME: this should expire
+        dhtFnds[toc].set(callback, data);
+    }
+    
     dhtSendSearch(nmcode, sendFndCallback, NULL);
+}
+
+/* Send a find by key
+ * key: key to search for
+ * callback: function to call (or NULL) upon successful find
+ * data: data to send to the callback */
+void dhtFindKey(const BinSeq &key, fndCallback callback, void *data)
+{
+    Message fms(1, "Hfn", 1, 1);
+    fms.params.push_back("");
+    fms.params.push_back(dn_name);
+    fms.params.push_back("");
+    fms.params.push_back(key);
+    fms.params.push_back("");
+    fms.params.push_back(encExportKey());
+    fms.params.push_back(BinSeq("\x00\x00", 2));
+    
+    if (callback) {
+        // FIXME: this should expire
+        dhtFnds[key].set(callback, data);
+    }
+    
+    dhtAllSendMsg(fms);
 }
 
 /* the refresher loop for dhtSendAdd */
@@ -839,6 +870,39 @@ void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht)
     
     // run the first iteration (this will set the time and send the data)
     dhtAddRefresh(te);
+}
+
+/* Send an atomic add/search */
+void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
+                      dhtSearchCallback callback, void *data)
+{
+    // store the search info
+    DHTSearchInfo &dsi = dhtSearches[key];
+    dsi.callback = callback;
+    dsi.data = data;
+    
+    // make the message
+    Message msg(1, "Hag", 1, 1);
+    msg.params.push_back("");
+    msg.params.push_back(dht->HTI);
+    msg.params.push_back(key);
+    msg.params.push_back(value);
+    msg.params.push_back("");
+    msg.params.push_back("");
+    msg.params.push_back("");
+    msg.params.push_back("");
+    
+    // send out the search
+    map<BinSeq, DHTInfo>::iterator di;
+    for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
+        msg.params[1] = di->first;
+        dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[5]));
+    }
+    
+    // start the clock for 10 seconds
+    dn_event_timer *dne =
+        new dn_event_timer(10, 0, dhtSearchDone, (void *) new BinSeq(key));
+    dne->activate();
 }
 
 /* We just changed neighbors, update data */
@@ -1015,6 +1079,30 @@ dataok:
             }
         }
         
+        
+    } else if (CMD_IS("Hag", 1, 1)) {
+        REQ_PARAMS(8);
+        
+        if (!dhtForMe(msg, msg.params[1], encHashKey(msg.params[1] + msg.params[2]), &(msg.params[5])))
+            return;
+        
+        // atomic add and get: divide it
+        Message had(1, "Had", 1, 1);
+        had.params.push_back(msg.params[0]);
+        had.params.push_back(msg.params[1]);
+        had.params.push_back(msg.params[2]);
+        had.params.push_back(msg.params[3]);
+        had.params.push_back(msg.params[4]);
+        had.params.push_back(msg.params[7]);
+        handleDHTDupMessage(had, conn);
+        
+        Message hga(1, "Hga", 1, 1);
+        hga.params.push_back(msg.params[0]);
+        hga.params.push_back(msg.params[1]);
+        hga.params.push_back(msg.params[2]);
+        hga.params.push_back(msg.params[5]);
+        hga.params.push_back(msg.params[6]);
+        handleDHTDupMessage(hga, conn);
         
     } else if (CMD_IS("Hga", 1, 1)) {
         REQ_PARAMS(5);
@@ -1417,6 +1505,15 @@ dataok:
             Route *rt = new Route(msg.params[3]);
             recvFnd(rt, msg.params[1], msg.params[4]);
             delete rt;
+            
+            // could be a callback on this find
+            if (dhtFnds.find(msg.params[1]) != dhtFnds.end()) {
+                fndCallbackWData &fcwd = dhtFnds[msg.params[1]];
+                if (fcwd.callback) {
+                    fcwd.callback(msg.params[4], msg.params[1], fcwd.data);
+                }
+                dhtFnds.erase(msg.params[1]);
+            }
             
         } else if (msg.params[5][0] == '\x01') {
             // positive division

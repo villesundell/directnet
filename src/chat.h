@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -27,33 +27,42 @@
 #define DN_CHAT_H
 
 #include <map>
-#include <string>
 #include <vector>
 using namespace std;
 
-extern map<string, vector<string> *> *dn_chats;
+#include "binseq.h"
+
+class ChatInfo {
+    public:
+    bool owner;
+    BinSeq name;
+    BinSeq rep; // should be a set for unowned?
+    set<BinSeq> list; // unimplemented
+};
+
+extern map<BinSeq, ChatInfo> dn_chats;
 
 /* Am I on this channel?
  * channel: the channel to query
  * returns: 1 if on the channel, 0 otherwise */
-char chatOnChannel(const string &channel);
+bool chatOnChannel(const BinSeq &channel);
 
 /* Add a user to my perception of a chat room
  * channel: the channel
  * name: the user */
-void chatAddUser(const string &channel, const string &name);
+void chatAddUser(const BinSeq &channel, const BinSeq &name);
 
 /* Remove a user from my perception of a chat room
  * channel: the channel
  * name: the user */
-void chatRemUser(const string &channel, const string &name);
+void chatRemUser(const BinSeq &channel, const BinSeq &name);
 
 /* Join a chat
  * channel: the channel */
-void chatJoin(const string &channel);
+void chatJoin(const BinSeq &channel);
 
 /* Leave a chat
  * channel: the channel */
-void chatLeave(const string &channel);
+void chatLeave(const BinSeq &channel);
 
 #endif

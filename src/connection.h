@@ -86,19 +86,6 @@ int sendMsg(const string &to, const string &msg);
  * returns: 1 on success, 0 otherwise */
 int sendAuthKey(const string &to);
 
-/* Join a chat (for use by the UI)
- * chat: room to join */
-void joinChat(const string &chat);
-
-/* Leave a chat (for use by the UI)
- * chat: room to leave */
-void leaveChat(const string &chat);
-
-/* Send a message on a chat (for use by the UI)
- * to: room to send to
- * msg: the message */
-void sendChat(const string &to, const string &msg);
-
 /* Set away status (for use by the UI)
  * msg: the away message or NULL for back */
 void setAway(const string *msg);

@@ -146,9 +146,6 @@ void dn_init(int argc, char **argv) {
     // This hash stores the last time we saw any given user
     dn_seen_user = new map<BinSeq, time_t>;
     
-    // This hash stores whether we're in certain chats
-    dn_chats = new map<string, vector<string> *>;
-    
     // We don't yet know our local IP
     dn_localip[0] = '\0';
     

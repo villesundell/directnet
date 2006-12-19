@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -34,56 +34,100 @@ extern "C" {
 }
 
 #include "chat.h"
+#include "dht.h"
 #include "globals.h"
+#include "message.h"
 
-map<string, vector<string> *> *dn_chats;
+map<BinSeq, ChatInfo> dn_chats;
 
-char chatOnChannel(const string &channel)
+/* Am I on this channel?
+ * channel: the channel to query
+ * returns: true if on the channel, false otherwise */
+bool chatOnChannel(const BinSeq &channel)
 {
-    if (dn_chats->find(channel) != dn_chats->end()) {
-        return 1;
-    } else {
-        return 0;
+    if (dn_chats.find(channel) != dn_chats.end()) return true;
+    return false;
+}
+
+/* Add a user to my perception of a chat room
+ * channel: the channel
+ * name: the user */
+void chatAddUser(const BinSeq &channel, const BinSeq &name)
+{
+    if (dn_chats.find(channel) != dh_chats.end()) {
+        dn_chats[channel].list.insert(name);
+        // FIXME: inform the UI
     }
 }
 
-void chatAddUser(const string &channel, const string &name)
+/* Remove a user from my perception of a chat room
+ * channel: the channel
+ * name: the user */
+void chatRemUser(const BinSeq &channel, const BinSeq &name)
 {
-    if (dn_chats->find(channel) == dn_chats->end()) {
-        (*dn_chats)[channel] = new vector<string>;
-    }
-    
-    (*dn_chats)[channel]->push_back(name);
-}
-
-void chatRemUser(const string &channel, const string &name)
-{
-    vector<string> *chan;
-    int i, s;
-    
-    if (dn_chats->find(channel) == dn_chats->end()) return;
-    
-    chan = (*dn_chats)[channel];
-    
-    // find and remove the user
-    s = chan->size();
-    for (i = 0; i < s; i++) {
-        if ((*chan)[i] == name) {
-            chan->erase(chan->begin() + i);
-            break;
-        }
+    if (dn_chats.find(channel) != dh_chats.end()) {
+        dn_chats[channel].list.erase(name);
+        // FIXME: inform the UI
     }
 }
 
-void chatJoin(const string &channel)
+/* Callback for joining a channel, once we've found the owner */
+void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
 {
-    if (dn_chats->find(channel) == dn_chats->end())
-    {
-        (*dn_chats)[channel] = new vector<string>;
+    BinSeq channel = *((BinSeq *) data);
+    delete data;
+    
+    if (name == "") {
+        // FIXME: inform the UI
+        return;
     }
+    
+    Route toroute, rroute;
+    
+    if (dn_routes->find(key) != dn_routes->end()) {
+        toroute = *((*dn_routes)[key]);
+    }
+    
+    rroute = toroute;
+    if (rroute.size()) rroute.pop_back();
+    rroute.reverse();
+    rroute.push_back(pukeyhash);
+    
+    // send a join request
+    Message cjo(1, "cjo", 1, 1);
+    cjo.params.push_back(toroute.toBinSeq());
+    cjo.params.push_back(rroute.toBinSeq());
+    cjo.params.push_back(dn_name);
+    cjo.params.push_back(encExportKey());
+    cjo.params.push_back(channel);
+    
+    handleRoutedMsg(cjo);
 }
 
-void chatLeave(const string &channel)
+/* Callback for finding info on a channel to join */
+void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
 {
-    dn_chats->erase(channel);
+    // there should only be one key
+    if (values.size() != 1) {
+        // FIXME: inform the UI
+        delete data;
+        return;
+    }
+    
+    // find the owner
+    dhtFindKey(values[0], chatJoinOwnerCallback, data);
+}
+
+/* Join a chat
+ * channel: the channel */
+void chatJoin(const BinSeq &channel)
+{
+    if (channel.size() &&
+        channel[0] == '#') {
+        // channel is encoded as an owned channel
+        BinSeq chankey("\x01oc", 3);
+        chankey += channel.substr(1);
+        
+        dhtSendAddSearch(chankey, pukeyhash, chatJoinDataCallback, new BinSeq(channel));
+    }
 }
