@@ -42,6 +42,7 @@ extern "C" {
 
 #include "client.h"
 #include "connection.h"
+#include "dht.h"
 #include "directnet.h"
 #include "dnconfig.h"
 #include "globals.h"

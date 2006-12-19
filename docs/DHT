@@ -35,6 +35,8 @@ IMPORTANT: Lookup and add commands will propogate a key->value combo to the
 appropriate node. The key is hashed to find this out. The hash used is
 SHA-256(HTI + key) .
 
+Information about the format of DHT keys is at the bottom of this document.
+
 [HTI = hash table identifier]
 [Keys as used by the DHT are SHA-256'd from the desired data to look up
 (whether an encryption key, name, or anything else)]
@@ -142,3 +144,37 @@ Hrd(1)(1) (hash redundant data)
 
 Key:
 *: Not yet implemented
+
+
+MORE ABOUT DHT KEYS
+-------------------
+
+Keys in the distributed hash table have a special format:
+* first four bits
+  * a bitfield signifying the type of data. The least significant bit specifies
+    one value (0) or many (1), the second specifies that values are hashes of
+    encryption keys (0) or arbitrary data (1). The other two are not yet used.
+  * anyone may add any data to an unset key. A single-value key can only be set
+    to the same value (which will update its timeout), otherwise the request
+    will be silently ignored. A multi-value can have any value added by anyone
+    at any time. UNIMPLEMENTED: Keys with hashes of encryption keys as values
+    can only be unset by the owner of the encryption key.
+  * the remaining bits are reserved
+* second four bits
+  * 2^n = number of hours maximum lifespan for the data
+* second two bytes
+  * signifies the type of key
+The rest is the actual key.
+
+Currently used keys:
+
+nm (name)
+        type: 00
+        longevity: 256 (2^8) hours
+                associates a nickname with the hash of an encryption key
+
+oc (owned chat)
+        type: 00
+        longevity: 2 (2^1) hour
+                associates a channel name (without the # which signifies an
+                owned chat room) with the owner's key

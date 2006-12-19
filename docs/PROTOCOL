@@ -63,41 +63,46 @@ command(first version char)(second version char) (brief summary)
 
 PROTOCOL COMMANDS:
 
-cjo(1)(1) (chat join) (scheduled for removal before 2.0.0)
+cjd(1)(1) (chat joined) *
+        purpose: response to cjo
+        type: routed
+        parameters:
+                route
+                fail message
+                        empty for successful join, reason otherwise
+                local name (if joined)
+                encryption key (if joined)
+                channel
+
+cjo(1)(1) (chat join) *
         purpose: Join a chat
         type: routed
         parameters:
                 route
+                return route
                 local name
+                encryption key
                 channel
 
-clv(1)(1) (chat leave) (scheduled for removal before 2.0.0)
+clv(1)(1) (chat leave) *
         purpose: Leave a chat
         type: routed
-        note: not properly implemented
         parameters:
                 route
                 local name
+                encryption key
                 channel
 
-cms(1)(1) (chat message) (scheduled for removal before 2.0.0)
+cms(1)(1) (chat message) *
         purpose: Send a message on a chat channel
         type: routed
         parameters:
                 route
-                intermediate name: the person sending this package
+                intermediate name: the person sending this message
                 transmission key
                 channel
                 local name: the person who made the message
                 encrypted message
-
-con(1)(1) (chat on) (scheduled for removal before 2.0.0)
-        purpose: Echo to cjo
-        type: routed
-        parameters:
-                route
-                local name
-                channel
 
 dis(1)(1) (disconnect) *
         purpose: Inform of a node's disconnection

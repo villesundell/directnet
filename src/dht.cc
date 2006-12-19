@@ -762,6 +762,34 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     dne->activate();
 }
 
+// the callback for sendFnd
+void sendFndCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
+{
+    // Connect to each of these users
+    Message fms(1, "Hfn", 1, 1);
+    fms.params.push_back(Route().toBinSeq());
+    fms.params.push_back(dn_name);
+    fms.params.push_back("");
+    fms.params.push_back("");
+    fms.params.push_back(Route().toBinSeq());
+    fms.params.push_back(encExportKey());
+    fms.params.push_back(BinSeq("\x00\x00", 2));
+    
+    set<BinSeq>::iterator vi;
+    for (vi = values.begin(); vi != values.end(); vi++) {
+        fms.params[3] = *vi;
+        
+        dhtAllSendMsg(fms, &(fms.params[2]), fms.params[3], &(fms.params[4]));
+    }
+}
+
+void sendFnd(const string &toc) {
+    // Find a user by name
+    BinSeq nmcode = "\x08nm" + toc;
+    
+    dhtSendSearch(nmcode, sendFndCallback, NULL);
+}
+
 /* the refresher loop for dhtSendAdd */
 void dhtAddRefresh(dn_event_timer *te)
 {

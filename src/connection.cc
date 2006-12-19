@@ -1015,41 +1015,6 @@ int sendAuthKey(const string &to)
     }
 }
 
-void sendFndCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
-{
-    // Connect to each of these users
-    Message fms(1, "Hfn", 1, 1);
-    fms.params.push_back(Route().toBinSeq());
-    fms.params.push_back(dn_name);
-    fms.params.push_back("");
-    fms.params.push_back("");
-    fms.params.push_back(Route().toBinSeq());
-    fms.params.push_back(encExportKey());
-    fms.params.push_back(BinSeq("\x00\x00", 2));
-    
-    set<BinSeq>::iterator vi;
-    for (vi = values.begin(); vi != values.end(); vi++) {
-        fms.params[3] = *vi;
-        
-        dhtAllSendMsg(fms, &(fms.params[2]), fms.params[3], &(fms.params[4]));
-    }
-}
-
-void sendFnd(const string &toc) {
-    // Find a user by name
-    BinSeq nmcode = "\x08nm" + toc;
-
-    dhtSendSearch(nmcode, sendFndCallback, NULL);
-    
-    /*Message omsg(0, "fnd", 1, 1);
-    omsg.params.push_back("\xFF\xFF");
-    omsg.params.push_back(dn_name);
-    omsg.params.push_back(toc);
-    omsg.params.push_back(encExportKey());
-    
-    emitUnroutedMsg(NULL, omsg);*/
-}
-
 void joinChat(const string &chat)
 {
     // Join the chat

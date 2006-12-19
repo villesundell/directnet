@@ -162,6 +162,14 @@ void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *ro
  * params same as dhtForMe, but ident is a pointer, the value will change */
 void dhtAllSendMsg(Message &msg, BinSeq *ident, const BinSeq &key, BinSeq *route);
 
+/* Send a find by username (for use by the UI)
+ * to: user to search for
+ * callback: function to call (or NULL) upon successful find
+ * data: data to send to the callback
+ * NOTE: this does not have the dht prefix due to history */
+typedef void (*fndCallback)(const string &, void *);
+void sendFnd(const string &to, fndCallback callback, void *data);
+
 /* Same as handleDHTMessage below, but duplicate the msg object */
 void handleDHTDupMessage(conn_t *conn, Message msg);
 

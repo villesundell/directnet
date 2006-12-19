@@ -56,6 +56,7 @@ extern char **environ;
 #include "client.h"
 // Make sure we get DN connection.h, not Gaim connection.h
 #include "../connection.h"
+#include "dht.h"
 #include "directnet.h"
 #include "dnconfig.h"
 #include "gaim-plugin.h"

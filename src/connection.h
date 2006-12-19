@@ -86,10 +86,6 @@ int sendMsg(const string &to, const string &msg);
  * returns: 1 on success, 0 otherwise */
 int sendAuthKey(const string &to);
 
-/* Send a find (for use by the UI)
- * to: user to search for */
-void sendFnd(const string &to);
-
 /* Join a chat (for use by the UI)
  * chat: room to join */
 void joinChat(const string &chat);

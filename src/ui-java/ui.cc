@@ -36,6 +36,7 @@ using namespace std;
 #include "auth.h"
 #include "client.h"
 #include "connection.h"
+#include "dht.h"
 #include "directnet.h"
 #include "dnconfig.h"
 #include "enc.h"
