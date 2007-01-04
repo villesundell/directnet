@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2004, 2005, 2006, 2007  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -71,6 +71,22 @@ void chatRemUser(const BinSeq &channel, const BinSeq &name)
     }
 }
 
+/* Callback for joining a channel, when we've finally successfully joined
+ * chan: The channel
+ * rep: The owner or representative */
+void chatJoined(const BinSeq &chan, const BinSeq &rep)
+{
+    if (dn_chats.find(chan) != dn_chats.end())
+        dn_chats.erase(chan);
+    
+    ChatInfo &ci = dn_chats[chan];
+    ci.owner = false;
+    ci.name = chane;
+    ci.rep = rep;
+    
+    // FIXME: tell the UI
+}
+
 /* Callback for joining a channel, once we've found the owner */
 void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
 {
@@ -107,15 +123,31 @@ void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
 /* Callback for finding info on a channel to join */
 void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
 {
-    // there should only be one key
-    if (values.size() != 1) {
+    // there should only be one enc key
+    if (values.size() != 1 || key.size() <= 3) {
         // FIXME: inform the UI
         delete data;
         return;
     }
     
-    // find the owner
-    dhtFindKey(values[0], chatJoinOwnerCallback, data);
+    // get the room name
+    BinSeq *rname = (BinSeq *) data;
+    
+    // if I'm the owner, just create the chat
+    if (values[0] == pukeyhash) {
+        if (dn_chats.find(*rname) != dn_chats.end())
+            dn_chats.erase(*rname);
+        
+        ChatInfo &ci = dn_chats[*rname];
+        ci.owner = true;
+        ci.name = rname;
+        ci.rep = pukeyhash;
+        
+        // FIXME: tell the UI
+    } else {
+        // find the owner
+        dhtFindKey(values[0], chatJoinOwnerCallback, data);
+    }
 }
 
 /* Join a chat

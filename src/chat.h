@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2004, 2005, 2006, 2007  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -56,6 +56,11 @@ void chatAddUser(const BinSeq &channel, const BinSeq &name);
  * channel: the channel
  * name: the user */
 void chatRemUser(const BinSeq &channel, const BinSeq &name);
+
+/* Callback for joining a channel, when we've finally successfully joined
+ * chan: The channel
+ * rep: The owner or representative */
+void chatJoined(const BinSeq &chan, const BinSeq &rep)
 
 /* Join a chat
  * channel: the channel */

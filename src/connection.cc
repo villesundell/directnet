@@ -412,32 +412,37 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
      * Current protocol commands *
      *****************************/
     
-    if (CMD_IS("cjo", 1, 1) ||
-        CMD_IS("con", 1, 1)) {
-        REQ_PARAMS(3);
+    if (CMD_IS("cjd", 1, 1)) {
+        REQ_PARAMS(5);
+        
+        
+        
+    } else if (CMD_IS("cjo", 1, 1)) {
+        // FIXME: incomplete
+        REQ_PARAMS(5);
         
         // "I'm on this chat"
         // Are we even on this chat?
-        if (!chatOnChannel(msg.params[2].c_str())) {
+        if (!chatOnChannel(msg.params[4].c_str())) {
             return;
         }
-            
+        
         // OK, this person is on our list for this chat
-        chatAddUser(msg.params[2].c_str(), msg.params[1].c_str());
-            
-        // Should we echo?
-        if (msg.cmd == "cjo") {
-            Message nmsg(1, "con", 1, 1);
-            
-            if (dn_routes->find(msg.params[1]) == dn_routes->end()) {
-                return;
-            }
-            nmsg.params.push_back((*dn_routes)[msg.params[1]]->toBinSeq());
-            nmsg.params.push_back(dn_name);
-            nmsg.params.push_back(msg.params[2]);
-                
-            handleRoutedMsg(nmsg);
+        chatAddUser(msg.params[4].c_str(), msg.params[2].c_str());
+        
+        // Echo a cjd
+        Message nmsg(1, "cjd", 1, 1);
+        
+        if (dn_routes->find(msg.params[3]) == dn_routes->end()) {
+            return;
         }
+        nmsg.params.push_back((*dn_routes)[msg.params[1]]->toBinSeq());
+        nmsg.params.push_back("");
+        nmsg.params.push_back(dn_name);
+        nmsg.params.push_back(pukeyhash);
+        nmsg.params.push_back(msg.params[4]);
+        
+        handleRoutedMsg(nmsg);
         
     } else if (CMD_IS("cms", 1, 1)) {
         REQ_PARAMS(6);
