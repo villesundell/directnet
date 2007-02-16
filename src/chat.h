@@ -88,7 +88,7 @@ void chatRemUser(const BinSeq &channel, const BinSeq &key);
 /* Callback for joining a channel, when we've finally successfully joined
  * chan: The channel
  * rep: The owner or representative */
-void chatJoined(const BinSeq &chan, const BinSeq &rep)
+void chatJoined(const BinSeq &chan, const BinSeq &rep);
 
 /* Join a chat (for use by the UI)
  * channel: the channel */

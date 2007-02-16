@@ -148,7 +148,7 @@ void chatJoined(const BinSeq &chan, const BinSeq &rep)
     
     ChatInfo &ci = dn_chats[chan];
     ci.owner = false;
-    ci.name = chane;
+    ci.name = chan;
     ci.rep = rep;
     
     // FIXME: tell the UI
@@ -201,13 +201,14 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
     BinSeq *rname = (BinSeq *) data;
     
     // if I'm the owner, just create the chat
-    if (values[0] == pukeyhash) {
+    BinSeq value = *(values.begin());
+    if (value == pukeyhash) {
         if (dn_chats.find(*rname) != dn_chats.end())
             dn_chats.erase(*rname);
         
         ChatInfo &ci = dn_chats[*rname];
         ci.owner = true;
-        ci.name = rname;
+        ci.name = *rname;
         ci.rep = pukeyhash;
         
         delete rname;
@@ -215,7 +216,6 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
         // FIXME: tell the UI
     } else {
         // find the owner
-        BinSeq value = *(values.begin());
         dhtFindKey(value, chatJoinOwnerCallback, data);
     }
 }
