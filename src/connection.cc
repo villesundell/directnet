@@ -386,9 +386,6 @@ void sendCmd(struct connection *conn, Message &msg)
     conn->fd_ev.setCond(conn->fd_ev.getCond() | DN_EV_WRITE);
 }
 
-#define REQ_PARAMS(x) if (msg.params.size() < x) return
-#define CMD_IS(x, y, z) (msg.cmd == x && msg.ver[0] == y && msg.ver[1] == z)
-
 void handleMsg(conn_t *conn, const BinSeq &rdbuf)
 {
     int i, onparam, ostrlen;
@@ -402,7 +399,15 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
     if (msg.type == 1 &&
         !handleRoutedMsg(msg)) return;
     
-    /* let the DHT handle its commands */
+    /*****************************************
+     * Commands handled by different modules *
+     *****************************************/
+    // Chat
+    if (msg.cmd[0] == 'C') {
+        handleChatMessage(conn, msg);
+    }
+    
+    // DHT
     if (msg.cmd[0] == 'H') {
         handleDHTMessage(conn, msg);
         return;
@@ -412,95 +417,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
      * Current protocol commands *
      *****************************/
     
-    if (CMD_IS("cjd", 1, 1)) {
-        REQ_PARAMS(5);
-        
-        
-        
-    } else if (CMD_IS("cjo", 1, 1)) {
-        // FIXME: incomplete
-        REQ_PARAMS(5);
-        
-        // "I'm on this chat"
-        // Are we even on this chat?
-        if (!chatOnChannel(msg.params[4].c_str())) {
-            return;
-        }
-        
-        // OK, this person is on our list for this chat
-        chatAddUser(msg.params[4].c_str(), msg.params[2].c_str());
-        
-        // Echo a cjd
-        Message nmsg(1, "cjd", 1, 1);
-        
-        if (dn_routes->find(msg.params[3]) == dn_routes->end()) {
-            return;
-        }
-        nmsg.params.push_back((*dn_routes)[msg.params[1]]->toBinSeq());
-        nmsg.params.push_back("");
-        nmsg.params.push_back(dn_name);
-        nmsg.params.push_back(pukeyhash);
-        nmsg.params.push_back(msg.params[4]);
-        
-        handleRoutedMsg(nmsg);
-        
-    } else if (CMD_IS("cms", 1, 1)) {
-        REQ_PARAMS(6);
-        
-        // a chat message
-        BinSeq unenmsg;
-            
-        // Should we just ignore it?
-        if (dn_trans_keys->find(msg.params[2].c_str()) == dn_trans_keys->end()) {
-            (*dn_trans_keys)[msg.params[2].c_str()] = 1;
-        } else {
-            return;
-        }
-            
-        // Are we on this chat?
-        if (!chatOnChannel(msg.params[3].c_str())) {
-            return;
-        }
-            
-        // Yay, chat for us!
-            
-        // Decrypt it
-        unenmsg = encFrom(msg.params[1], dn_name, msg.params[5]);
-        if (unenmsg[0] == '\0') {
-            return;
-        }
-        uiDispChatMsg(msg.params[3].c_str(), msg.params[4].c_str(), unenmsg.c_str());
-            
-        // Pass it on
-        if (dn_chats->find(msg.params[3].c_str()) == dn_chats->end()) {
-            // explode
-            return;
-        }
-        vector<string> *chan = (*dn_chats)[msg.params[3].c_str()];
-        int s = chan->size();
-            
-        Message nmsg(1, "cms", 1, 1);
-            
-        nmsg.params.push_back("");
-        nmsg.params.push_back(dn_name);
-        nmsg.params.push_back(msg.params[2]);
-        nmsg.params.push_back(msg.params[3]);
-        nmsg.params.push_back(msg.params[4]);
-        nmsg.params.push_back("");
-            
-        for (i = 0; i < s; i++) {
-            if (dn_routes->find((*chan)[i]) == dn_routes->end()) {
-                continue;
-            }
-            nmsg.params[0] = (*dn_routes)[(*chan)[i]]->toBinSeq();
-                
-            BinSeq encd = encTo(dn_name, (*chan)[i], unenmsg);
-            nmsg.params[5] = encd;
-                
-            handleRoutedMsg(nmsg);
-        }
-        
-    } else if (CMD_IS("dis", 1, 1)) {
+    if (CMD_IS("dis", 1, 1)) {
         REQ_PARAMS(1);
         
         disNode(msg.params[0]);

@@ -120,4 +120,8 @@ void *communicator(void *fdnum_voidptr);
 /* A node has disconnected.  Do we care? */
 void disNode(const BinSeq &key);
 
+// convenience macros for handle*Msg
+#define REQ_PARAMS(x) if (msg.params.size() < x) return
+#define CMD_IS(x, y, z) (msg.cmd == x && msg.ver[0] == y && msg.ver[1] == z)
+
 #endif // DN_CONNECTION_H

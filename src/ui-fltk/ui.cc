@@ -1,5 +1,5 @@
 /*
- * Copyright 2005, 2006  Gregor Richards
+ * Copyright 2005, 2006, 2007  Gregor Richards
  * Copyright 2006  Bryan Donlan
  * Copyright 2006  "Solarius"
  *
@@ -34,6 +34,7 @@ using namespace std;
 #include <time.h>//We need this for timestamp(s)
 
 #include "auth.h"
+#include "chat.h"
 #include "connection.h"
 #include "dht.h"
 #include "directnet.h"

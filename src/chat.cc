@@ -23,6 +23,7 @@
  *    the Apache Software Foundation.
  */
 
+#include <iostream>
 #include <map>
 #include <string>
 using namespace std;
@@ -35,10 +36,64 @@ extern "C" {
 
 #include "chat.h"
 #include "dht.h"
+#include "directnet.h"
+#include "enc.h"
 #include "globals.h"
 #include "message.h"
 
 map<BinSeq, ChatInfo> dn_chats;
+
+/* Handle a chat message
+ * conn: the connection
+ * msg: the message itself */
+void handleChatMessage(conn_t *conn, Message &msg)
+{
+    if (CMD_IS("Cjo", 1, 1)) {
+        REQ_PARAMS(5);
+        
+        // Am I even on this channel?
+        if (dn_chats.find(msg.params[4]) == dn_chats.end())
+            return;
+        
+        ChatInfo &ci = dn_chats[msg.params[4]];
+        // If it's an owned chat and I'm not the owner, this request is invalid
+        // FIXME: only owned chat supported
+        if (!ci.owner)
+            return;
+        
+        // FIXME: no way to reject users
+        
+        // add them
+        chatAddUser(msg.params[4], msg.params[3], msg.params[1]);
+        cout << "Added " << msg.params[1].c_str() << endl;
+        
+        // make the message
+        Message rmsg(1, "Con", 1, 1);
+        rmsg.params.push_back(msg.params[2]);
+        rmsg.params.push_back(dn_name);
+        rmsg.params.push_back(msg.params[4]);
+        
+        // make the user list
+        Route ulist;
+        set<ChatKeyNameAssoc>::iterator li;
+        for (li = ci.list.begin(); li != ci.list.end(); li++) {
+            ulist.push_back(li->name);
+        }
+        rmsg.params.push_back(ulist.toBinSeq());
+        
+        // send it out
+        handleRoutedMsg(rmsg);
+        
+    }
+}
+
+/* Send a chat message (for use by the UI)
+ * to: the channel
+ * msg: the message */
+void sendChat(const BinSeq &to, const BinSeq &msg)
+{
+    // STUB
+}
 
 /* Am I on this channel?
  * channel: the channel to query
@@ -51,22 +106,34 @@ bool chatOnChannel(const BinSeq &channel)
 
 /* Add a user to my perception of a chat room
  * channel: the channel
+ * key: the user's key
  * name: the user */
-void chatAddUser(const BinSeq &channel, const BinSeq &name)
+void chatAddUser(const BinSeq &channel, const BinSeq &key, const BinSeq &name)
 {
-    if (dn_chats.find(channel) != dh_chats.end()) {
-        dn_chats[channel].list.insert(name);
+    if (dn_chats.find(channel) != dn_chats.end()) {
+        ChatKeyNameAssoc assoc(key, name);
+        dn_chats[channel].list.insert(assoc);
         // FIXME: inform the UI
     }
 }
 
 /* Remove a user from my perception of a chat room
  * channel: the channel
- * name: the user */
-void chatRemUser(const BinSeq &channel, const BinSeq &name)
+ * key: the user's key */
+void chatRemUser(const BinSeq &channel, const BinSeq &key)
 {
-    if (dn_chats.find(channel) != dh_chats.end()) {
-        dn_chats[channel].list.erase(name);
+    if (dn_chats.find(channel) != dn_chats.end()) {
+        // find the matching one
+        ChatInfo &ci = dn_chats[channel];
+        set<ChatKeyNameAssoc>::iterator li;
+        for (li = ci.list.begin();
+             li != ci.list.end();
+             li++) {
+            if (li->key == key) {
+                ci.list.erase(li);
+                break;
+            }
+        }
         // FIXME: inform the UI
     }
 }
@@ -91,7 +158,7 @@ void chatJoined(const BinSeq &chan, const BinSeq &rep)
 void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
 {
     BinSeq channel = *((BinSeq *) data);
-    delete data;
+    delete (BinSeq *) data;
     
     if (name == "") {
         // FIXME: inform the UI
@@ -110,10 +177,10 @@ void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
     rroute.push_back(pukeyhash);
     
     // send a join request
-    Message cjo(1, "cjo", 1, 1);
+    Message cjo(1, "Cjo", 1, 1);
     cjo.params.push_back(toroute.toBinSeq());
-    cjo.params.push_back(rroute.toBinSeq());
     cjo.params.push_back(dn_name);
+    cjo.params.push_back(rroute.toBinSeq());
     cjo.params.push_back(encExportKey());
     cjo.params.push_back(channel);
     
@@ -123,10 +190,10 @@ void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
 /* Callback for finding info on a channel to join */
 void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
 {
-    // there should only be one enc key
-    if (values.size() != 1 || key.size() <= 3) {
+    // there should only be one value
+    if (values.size() != 1) {
         // FIXME: inform the UI
-        delete data;
+        delete (BinSeq *) data;
         return;
     }
     
@@ -143,14 +210,17 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
         ci.name = rname;
         ci.rep = pukeyhash;
         
+        delete rname;
+        
         // FIXME: tell the UI
     } else {
         // find the owner
-        dhtFindKey(values[0], chatJoinOwnerCallback, data);
+        BinSeq value = *(values.begin());
+        dhtFindKey(value, chatJoinOwnerCallback, data);
     }
 }
 
-/* Join a chat
+/* Join a chat (for use by the UI)
  * channel: the channel */
 void chatJoin(const BinSeq &channel)
 {
@@ -161,5 +231,8 @@ void chatJoin(const BinSeq &channel)
         chankey += channel.substr(1);
         
         dhtSendAddSearch(chankey, pukeyhash, chatJoinDataCallback, new BinSeq(channel));
+        
+    } else {
+        // FIXME: inform the UI
     }
 }

@@ -27,20 +27,47 @@
 #define DN_CHAT_H
 
 #include <map>
-#include <vector>
+#include <set>
 using namespace std;
 
 #include "binseq.h"
+#include "connection.h"
+
+class ChatKeyNameAssoc {
+    public:
+    inline ChatKeyNameAssoc(const BinSeq &skey, const BinSeq &sname) {
+        key = skey;
+        name = sname;
+    }
+    inline bool operator<(const ChatKeyNameAssoc &to) const
+    { return key < to.key; }
+    inline bool operator>(const ChatKeyNameAssoc &to) const
+    { return key > to.key; }
+    inline bool operator==(const ChatKeyNameAssoc &to) const
+    { return key == to.key; }
+    BinSeq key;
+    BinSeq name;
+};
 
 class ChatInfo {
     public:
     bool owner;
     BinSeq name;
     BinSeq rep; // should be a set for unowned?
-    set<BinSeq> list; // unimplemented
+    set<ChatKeyNameAssoc> list; // list of keys, names
 };
 
 extern map<BinSeq, ChatInfo> dn_chats;
+
+/* Handle a chat message
+ * conn: the connection
+ * msg: the message itself */
+void handleChatMessage(conn_t *conn, Message &msg);
+
+/* Send a chat message (for use by the UI)
+ * to: the channel
+ * msg: the message */
+void sendChat(const BinSeq &to, const BinSeq &msg);
 
 /* Am I on this channel?
  * channel: the channel to query
@@ -49,20 +76,21 @@ bool chatOnChannel(const BinSeq &channel);
 
 /* Add a user to my perception of a chat room
  * channel: the channel
+ * key: the user's key
  * name: the user */
-void chatAddUser(const BinSeq &channel, const BinSeq &name);
+void chatAddUser(const BinSeq &channel, const BinSeq &key, const BinSeq &name);
 
 /* Remove a user from my perception of a chat room
  * channel: the channel
- * name: the user */
-void chatRemUser(const BinSeq &channel, const BinSeq &name);
+ * key: the user's key */
+void chatRemUser(const BinSeq &channel, const BinSeq &key);
 
 /* Callback for joining a channel, when we've finally successfully joined
  * chan: The channel
  * rep: The owner or representative */
 void chatJoined(const BinSeq &chan, const BinSeq &rep)
 
-/* Join a chat
+/* Join a chat (for use by the UI)
  * channel: the channel */
 void chatJoin(const BinSeq &channel);
 

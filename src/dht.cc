@@ -818,7 +818,7 @@ void dhtFindKey(const BinSeq &key, fndCallback callback, void *data)
         dhtFnds[key].set(callback, data);
     }
     
-    dhtAllSendMsg(fms);
+    dhtAllSendMsg(fms, &(fms.params[2]), key, &(fms.params[0]));
 }
 
 /* the refresher loop for dhtSendAdd */
@@ -884,7 +884,7 @@ void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
     // make the message
     Message msg(1, "Hag", 1, 1);
     msg.params.push_back("");
-    msg.params.push_back(dht->HTI);
+    msg.params.push_back("");
     msg.params.push_back(key);
     msg.params.push_back(value);
     msg.params.push_back("");
@@ -997,9 +997,6 @@ void handleDHTDupMessage(conn_t *conn, Message msg)
     handleDHTMessage(conn, msg);
 }
 
-#define REQ_PARAMS(x) if (msg.params.size() < x) return
-#define CMD_IS(x, y, z) (msg.cmd == x && msg.ver[0] == y && msg.ver[1] == z)
-
 void handleDHTMessage(conn_t *conn, Message &msg)
 {
     //msg.debug("DHT");
@@ -1094,7 +1091,7 @@ dataok:
         had.params.push_back(msg.params[3]);
         had.params.push_back(msg.params[4]);
         had.params.push_back(msg.params[7]);
-        handleDHTDupMessage(had, conn);
+        handleDHTDupMessage(conn, had);
         
         Message hga(1, "Hga", 1, 1);
         hga.params.push_back(msg.params[0]);
@@ -1102,7 +1099,7 @@ dataok:
         hga.params.push_back(msg.params[2]);
         hga.params.push_back(msg.params[5]);
         hga.params.push_back(msg.params[6]);
-        handleDHTDupMessage(hga, conn);
+        handleDHTDupMessage(conn, hga);
         
     } else if (CMD_IS("Hga", 1, 1)) {
         REQ_PARAMS(5);
