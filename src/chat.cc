@@ -40,6 +40,7 @@ extern "C" {
 #include "enc.h"
 #include "globals.h"
 #include "message.h"
+#include "ui.h"
 
 map<BinSeq, ChatInfo> dn_chats;
 
@@ -84,6 +85,62 @@ void handleChatMessage(conn_t *conn, Message &msg)
         // send it out
         handleRoutedMsg(rmsg);
         
+        // inform the UI
+        uiDispChatMsg(msg.params[4], "DirectNet", msg.params[1] + " has joined the channel.");
+        
+    } else if (CMD_IS("Con", 1, 1)) {
+        REQ_PARAMS(4);
+        
+        // FIXME: this presumes we actually /wanted/ to be on this channel
+        
+        ChatInfo &ci = dn_chats[msg.params[2]];
+        ci.owner = false;
+        ci.name = msg.params[2];
+        ci.rep = msg.params[1];
+        
+        // now turn the list into join/leave events
+        Route rulist(msg.params[3]);
+        Route::iterator ri;
+        set<ChatKeyNameAssoc>::iterator li;
+        
+        // 1) Joins
+        for (ri = rulist.begin(); ri != rulist.end(); ri++) {
+            // if this user is not in the list, we gained one
+            bool inlist = false;
+            for (li = ci.list.begin(); li != ci.list.end(); li++) {
+                if (*ri == li->name) {
+                    inlist = true;
+                    break;
+                }
+            }
+            
+            if (!inlist) {
+                // gain it, tell the UI
+                ChatKeyNameAssoc assoc("", *ri);
+                ci.list.insert(assoc);
+                // FIXME: better UI message would be nice
+                uiDispChatMsg(msg.params[2], "DirectNet", (*ri) + " has joined the channel.");
+            }
+        }
+        
+        // 2) Parts
+        for (li = ci.list.begin(); li != ci.list.end(); li++) {
+            // if this user is not in the list, we lost one
+            bool inlist = false;
+            for (ri = rulist.begin(); ri != rulist.end(); ri++) {
+                if (*ri == li->name) {
+                    inlist = true;
+                    break;
+                }
+            }
+            
+            if (!inlist) {
+                // lose it, tell the UI
+                ci.list.erase(li);
+                li--;
+                uiDispChatMsg(msg.params[2], "DirectNet", (*ri) + " has left the channel.");
+            }
+        }
     }
 }
 
@@ -136,22 +193,6 @@ void chatRemUser(const BinSeq &channel, const BinSeq &key)
         }
         // FIXME: inform the UI
     }
-}
-
-/* Callback for joining a channel, when we've finally successfully joined
- * chan: The channel
- * rep: The owner or representative */
-void chatJoined(const BinSeq &chan, const BinSeq &rep)
-{
-    if (dn_chats.find(chan) != dn_chats.end())
-        dn_chats.erase(chan);
-    
-    ChatInfo &ci = dn_chats[chan];
-    ci.owner = false;
-    ci.name = chan;
-    ci.rep = rep;
-    
-    // FIXME: tell the UI
 }
 
 /* Callback for joining a channel, once we've found the owner */
@@ -212,9 +253,10 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
         ci.name = *rname;
         ci.rep = pukeyhash;
         
-        delete rname;
+        // FIXME: tell the UI in a better way
+        uiDispChatMsg(*rname, "DirectNet", "Channel created.");
         
-        // FIXME: tell the UI
+        delete rname;
     } else {
         // find the owner
         dhtFindKey(value, chatJoinOwnerCallback, data);

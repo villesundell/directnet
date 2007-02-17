@@ -824,7 +824,7 @@ void dhtFindKey(const BinSeq &key, fndCallback callback, void *data)
         dhtFnds[key].set(callback, data);
     }
     
-    dhtAllSendMsg(fms, &(fms.params[2]), key, &(fms.params[0]));
+    dhtAllSendMsg(fms, &(fms.params[2]), key, &(fms.params[4]));
 }
 
 /* the refresher loop for dhtSendAdd */
@@ -1511,12 +1511,23 @@ dataok:
             delete rt;
             
             // could be a callback on this find
+            bool found = false;
+            fndCallbackWData fcwd;
+            BinSeq hkey = encHashKey(msg.params[4]);
             if (dhtFnds.find(msg.params[1]) != dhtFnds.end()) {
-                fndCallbackWData &fcwd = dhtFnds[msg.params[1]];
+                found = true;
+                fcwd = dhtFnds[msg.params[1]];
+                dhtFnds.erase(msg.params[1]);
+            } else if (dhtFnds.find(hkey) != dhtFnds.end()) {
+                found = true;
+                fcwd = dhtFnds[hkey];
+                dhtFnds.erase(hkey);
+            }
+            
+            if (found) {
                 if (fcwd.callback) {
                     fcwd.callback(msg.params[4], msg.params[1], fcwd.data);
                 }
-                dhtFnds.erase(msg.params[1]);
             }
             
         } else if (msg.params[5][0] == '\x01') {
