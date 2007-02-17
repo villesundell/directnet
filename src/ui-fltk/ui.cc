@@ -552,7 +552,7 @@ void sendInput(Fl_Input *w, void *ignore)
             
             if (to[0] == '#') {
                 // Chat room
-                sendChat(to.substr(1), msg);
+                sendChat(to, msg);
                 putOutput(cwi->second, dispmsg);
             } else {
                 if (sendMsg(to, msg)) {

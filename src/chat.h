@@ -53,7 +53,8 @@ class ChatInfo {
     public:
     bool owner;
     BinSeq name;
-    BinSeq rep; // should be a set for unowned?
+    BinSeq repkey; // should be a set for unowned?
+    BinSeq repname;
     set<ChatKeyNameAssoc> list; // list of keys, names
 };
 
