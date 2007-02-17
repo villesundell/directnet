@@ -66,12 +66,11 @@ void handleChatMessage(conn_t *conn, Message &msg)
         
         // add them
         chatAddUser(msg.params[4], msg.params[3], msg.params[1]);
-        cout << "Added " << msg.params[1].c_str() << endl;
         
         // make the message
         Message rmsg(1, "Con", 1, 1);
-        rmsg.params.push_back(msg.params[2]);
-        rmsg.params.push_back(dn_name);
+        rmsg.params.push_back("");
+        rmsg.params.push_back("");
         rmsg.params.push_back(msg.params[4]);
         
         // make the user list
@@ -82,8 +81,14 @@ void handleChatMessage(conn_t *conn, Message &msg)
         }
         rmsg.params.push_back(ulist.toBinSeq());
         
-        // send it out
-        handleRoutedMsg(rmsg);
+        // send it to each user
+        for (li = ci.list.begin(); li != ci.list.end(); li++) {
+            if (dn_routes->find(li->key) != dn_routes->end()) {
+                rmsg.params[0] = (*dn_routes)[li->key]->toBinSeq();
+                rmsg.params[1] = li->name;
+                handleRoutedMsg(rmsg);
+            }
+        }
         
         // inform the UI
         uiDispChatMsg(msg.params[4], "DirectNet", msg.params[1] + " has joined the channel.");
