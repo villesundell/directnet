@@ -460,19 +460,10 @@ void estFnd(Fl_Input *w, void *ignore)
 
 void estCht(Fl_Input *w, void *ignore)
 {
-    char chatOn[strlen(w->value()) + 2];
-    
-    if (*w->value() == '#') {
-        strcpy(chatOn, w->value());
-    } else {
-        chatOn[0] = '#';
-        strcpy(chatOn + 1, w->value());
-    }
+    chatJoin(w->value());
+    getWindow(w->value());
     
     w->value("");
-
-    //joinChat(chatOn + 1); FIXME
-    getWindow(chatOn);
 }
 
 void closeChat(Fl_Double_Window *w, void *ignore)

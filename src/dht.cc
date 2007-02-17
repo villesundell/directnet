@@ -426,6 +426,9 @@ void dhtEstablish(const BinSeq &ident, int step)
 
 void dhtDebug(const BinSeq &ident)
 {
+#ifndef DHT_DEBUG
+    return;
+#else
     if (in_dhts.find(ident) == in_dhts.end()) return;
     
     DHTInfo &di = in_dhts[ident];
@@ -534,6 +537,7 @@ void dhtDebug(const BinSeq &ident)
     //printf("Sent DHT info.\n");
     
     close(fd);*/
+#endif
 }
 
 void dhtCheck()
@@ -680,6 +684,7 @@ void dhtAllSendMsg(Message &msg, BinSeq *ident, const BinSeq &key, BinSeq *route
     map<BinSeq, DHTInfo>::iterator di;
     for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
         *ident = di->first;
+        *route = "";
         dhtSendMsg(msg, di->first, key, route);
     }
 }
@@ -755,6 +760,7 @@ void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data)
     map<BinSeq, DHTInfo>::iterator di;
     for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
         msg.params[1] = di->first;
+        msg.params[3] = "";
         dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[3]));
     }
     
@@ -889,13 +895,14 @@ void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
     msg.params.push_back(value);
     msg.params.push_back("");
     msg.params.push_back("");
-    msg.params.push_back("");
+    msg.params.push_back(pukeyhash);
     msg.params.push_back("");
     
     // send out the search
     map<BinSeq, DHTInfo>::iterator di;
     for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
         msg.params[1] = di->first;
+        msg.params[5] = "";
         dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[5]));
     }
     
@@ -1015,7 +1022,7 @@ void handleDHTMessage(conn_t *conn, Message &msg)
         if (msg.params[2].size() < 3) return;
         
         // make sure it's unique if it should be
-        if (msg.params[2][0] & 0xF0 == 0) {
+        if ((msg.params[2][0] & 0xF0) == 0) {
             // [0] & 0xF0 == 0 means it needs to be unique
             if (indht.data.find(msg.params[2]) != indht.data.end()) {
                 // check if we don't already have this value

@@ -63,7 +63,7 @@ Hag(1)(1) (hash add and get)
                 value
                 minutes remaining (4 byte big-endian)
                 current route
-                hash of encryption key [not currently used]
+                hash of encryption key
                 ttl [not currently used]
 
 Hen(1)(1) (hash encapsulate) *

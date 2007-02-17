@@ -192,6 +192,7 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
 {
     // there should only be one value
     if (values.size() != 1) {
+        set<BinSeq>::iterator vi;
         // FIXME: inform the UI
         delete (BinSeq *) data;
         return;

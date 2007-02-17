@@ -33,7 +33,7 @@ class BuddyWindow {open
       Fl_Input chatJoin {
         label {  Join or create chat:}
         callback estCht
-        xywh {0 375 255 25} labelcolor 7 align 5 when 8 deactivate
+        xywh {0 375 255 25} labelcolor 7 align 5 when 8
       }
       Fl_Button bSetAway {
         label Away

@@ -1214,7 +1214,6 @@ Fl_Double_Window* BuddyWindow::make_window() {
       o->callback((Fl_Callback*)estCht);
       o->align(FL_ALIGN_TOP_LEFT);
       o->when(FL_WHEN_ENTER_KEY);
-      o->deactivate();
     }
     { Fl_Button* o = bSetAway = new Fl_Button(0, 405, 125, 25, "Away");
       o->callback((Fl_Callback*)fSetAway);
