@@ -368,6 +368,10 @@ void setName(Fl_Input *w, void *ignore)
     int i;
     set<string>::iterator afi, aci;
     
+    // we no longer need the release-notes window
+    if (notewin)
+        notewin->hide();
+    
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
     nw->nameWindow->hide();
@@ -377,12 +381,12 @@ void setName(Fl_Input *w, void *ignore)
     bw->make_window();
     if (enable_minimode == 0)
     {
-    	//Lookslike user dont want minimode
+    	// Standard mode
     	bw->buddyWindow->show();
     }
     else
     {
-    	//We want minimode!
+    	// Mini-mode
     	miniwin = new Fl_Window (100, 100, "DNMini");
     	Fl_Group::current()->resizable(miniwin);
     	minib = new Fl_Button (0, 0, 100, 100, "DN");
@@ -474,7 +478,7 @@ void closeChat(Fl_Double_Window *w, void *ignore)
     
     // if it's a chat window, we should leave the chat now
     if (name[0] == '#') {
-        // leaveChat(name + 1); FIXME
+        chatLeave(name);
     }
     
     w->hide();

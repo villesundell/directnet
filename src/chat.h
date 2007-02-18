@@ -65,6 +65,10 @@ extern map<BinSeq, ChatInfo> dn_chats;
  * msg: the message itself */
 void handleChatMessage(conn_t *conn, Message &msg);
 
+/* Send a Con message (for internal use)
+ * ci: The channel */
+void sendCon(ChatInfo &ci);
+
 /* Send a chat message (for use by the UI)
  * to: the channel
  * msg: the message */
@@ -90,7 +94,7 @@ void chatRemUser(const BinSeq &channel, const BinSeq &key);
  * channel: the channel */
 void chatJoin(const BinSeq &channel);
 
-/* Leave a chat
+/* Leave a chat (for use by the UI)
  * channel: the channel */
 void chatLeave(const BinSeq &channel);
 
