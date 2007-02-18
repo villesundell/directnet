@@ -34,6 +34,7 @@ using namespace std;
 #include <unistd.h>
 
 #include "auth.h"
+#include "chat.h"
 #include "client.h"
 #include "connection.h"
 #include "dht.h"
@@ -293,7 +294,7 @@ void handleUInput(const string &inp)
         
         // Is it a chat?
         if (currentPartner[0] == '#') {
-            sendChat(currentPartner.substr(1), inp);
+            sendChat(currentPartner, inp);
         } else {
             if (sendMsg(currentPartner, inp)) {
                 cout << "to " << currentPartner << ": " << inp << endl;
