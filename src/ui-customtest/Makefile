@@ -1,16 +1,22 @@
-CC=gcc
-CFLAGS=
+CXX=g++
+CXXFLAGS=-O2 -g
 AR=ar
+ARFLAGS=rc
 
 OBJS=ui.o
 
-all: $(OBJS)
-	$(AR) rcu libui.a $(OBJS)
+all: libui.a
 
-.SUFFIXES: .c .o
+listlibs:
+	@echo "-levent"
 
-.c.o:
-	$(CC) -I.. $(CFLAGS) -c $< -o $@
+libui.a: $(OBJS)
+	$(AR) $(ARFLAGS) libui.a $(OBJS)
+
+.SUFFIXES: .cc .o
+
+.cc.o:
+	$(CXX) -I.. -I../.. $(CXXFLAGS) -c $< -o $@
 
 
 clean:

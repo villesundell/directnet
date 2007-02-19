@@ -66,11 +66,23 @@ void initConfig()
     FILE *acf, *aff;
     
     // find configuration directory
+    if (cfgdir == "") { // allow the UI to override
 #ifndef __WIN32
-    cfgdir = homedir + string("/.directnet2");
+        cfgdir = homedir + string("/.directnet2");
 #else
-    cfgdir = homedir + string("/DN2Config");
+        cfgdir = homedir + string("/DN2Config");
 #endif
+    } else if (
+#ifndef __WIN32
+        cfgdir[0] != '/' &&
+        (cfgdir.length() < 3 || cfgdir[1] != ':' || (cfgdir[2] != '\\' && cfgdir[2] != '/'))
+#else
+        cfgdir[0] != '/'
+#endif
+        ) {
+        // if it's relative, assume it's under homedir
+        cfgdir = homedir + ("/" + cfgdir);
+    }
     
     // attempt to create it
 #ifndef __WIN32

@@ -281,15 +281,11 @@ static void kill_connection(conn_t *conn) {
     else if (conn->state == CDN_EV_IDLE)
         delete conn;
     
-    /* inform of the disconnect
-    printf("DISCONNECT:\n");
+    // inform of the disconnect
     if (key) {
-        printf("OK\n");
         disNode(*key);
         delete key;
-    } else {
-        printf("UH OH\n");
-    } */
+    }
 }
  
 static void conn_notify(dn_event_fd *ev, int cond) {

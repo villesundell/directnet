@@ -84,11 +84,16 @@ ui=custom
 found_ui=yes
 UI_CFLAGS=
 UI_CXXFLAGS=
-UI_CXX=false
 UI_LIBS=
 UI_LDFLAGS=
 UI_DIR=ui-$custom_ui
 AS_MESSAGE([Using custom UI: $custom_ui])
+
+# Look for forced custom flags
+ORIGDIR=`pwd`
+cd $ORIGDIR/$srcdir/src/$UI_DIR || exit 1
+UI_LIBS="`make listlibs CC="$CC" CXX="$CXX" CFLAGS="$CFLAGS" CXXFLAGS="$CXXFLAGS"`"
+cd $ORIGDIR
 ])
 
 AC_ARG_ENABLE(custom-ui-libs,
@@ -96,14 +101,6 @@ AS_HELP_STRING([--enable-custom-ui-libs=<libs>],
 [add <libs> to the linker line.  Any necessary CFLAGS are assumed to be in \$CFLAGS]),
 [
 UI_LIBS="$enableval"
-])
-
-AC_ARG_ENABLE(custom-ui-cxx,
-AS_HELP_STRING([--enable-custom-ui-cxx],
-[tells the linker that the custom UI is C++, and so it must link with a C++ compiler.  If the
-custom UI is C++, you MUST use this.]),
-[
-UI_CXX=true
 ])
 
 
@@ -123,7 +120,6 @@ The fltk-config script could not be found.
         else
                 UI_CFLAGS=$FLTK_CFLAGS
                 UI_CXXFLAGS=$FLTK_CFLAGS
-                UI_CXX=true
                 UI_LIBS=$FLTK_LIBS
                 UI_LDFLAGS=
                 UI_DIR=ui-fltk
@@ -139,7 +135,6 @@ then
         UI_CFLAGS=
         UI_CPPFLAGS=
         UI_CXXFLAGS=
-        UI_CXX=false
         UI_LIBS=
         UI_LDFLAGS=
         UI_DIR=ui-dumb
@@ -166,7 +161,6 @@ then
 	        UI_CFLAGS=
 	        UI_CPPFLAGS=
 	        UI_CXXFLAGS=
-	        UI_CXX=true
 	        UI_LIBS=-lslang
 	        UI_LDFLAGS=
 	        UI_DIR=ui-slang
@@ -182,7 +176,6 @@ then
         UI_CFLAGS=
         UI_CPPFLAGS=
         UI_CXXFLAGS=
-        UI_CXX=true
         UI_LIBS=
         UI_LDFLAGS=
         UI_DIR=ui-java
@@ -207,8 +200,6 @@ AC_SUBST(UI_CXXFLAGS)
 AC_SUBST(UI_LIBS)
 AC_SUBST(UI_LDFLAGS)
 AC_SUBST(UI_DIR)
-AC_SUBST(UI_CXX)
-AM_CONDITIONAL(UI_CXX, test "x$UI_CXX" = "xtrue")
 
 
 # Check if we should enable the Gaim2 plugin

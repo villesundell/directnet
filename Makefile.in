@@ -39,7 +39,7 @@ host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	TODO scripts/compile scripts/config.guess scripts/config.sub \
+	scripts/compile scripts/config.guess scripts/config.sub \
 	scripts/depcomp scripts/install-sh scripts/ltmain.sh \
 	scripts/missing
 subdir = .
@@ -164,10 +164,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 UI_CFLAGS = @UI_CFLAGS@
 UI_CPPFLAGS = @UI_CPPFLAGS@
-UI_CXX = @UI_CXX@
 UI_CXXFLAGS = @UI_CXXFLAGS@
-UI_CXX_FALSE = @UI_CXX_FALSE@
-UI_CXX_TRUE = @UI_CXX_TRUE@
 UI_DIR = @UI_DIR@
 UI_LDFLAGS = @UI_LDFLAGS@
 UI_LIBS = @UI_LIBS@
