@@ -376,6 +376,11 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
         // FIXME: tell the UI in a better way
         uiDispChatMsg(*rname, "DirectNet", "Channel created.");
         
+        // start the refresher (to make sure I keep it)
+        
+        // send another add, to make sure we keep the channel
+        dhtSendAdd(key, pukeyhash, NULL);
+        
         delete rname;
     } else {
         // find the owner
