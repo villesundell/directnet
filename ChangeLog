@@ -1,3 +1,8 @@
+2.0a4:
+        - When a node disconnects without leaving chat rooms, the host now
+          properly removes the user.
+        - Fixed a problem with hanging in DHT data aging.
+
 2.0a3:
         - Implemented (owned) chat rooms.
         - Fixed ui-dumb.
