@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2004, 2005, 2006, 2007  Gregor Richards
  * Copyright 2006  Bryan Donlan
  *
  * This file is part of DirectNet.
@@ -94,9 +94,9 @@ void dn_addRoute(const BinSeq &to, const Route &rt);
 
 //Release notes for this version (if this one is not defined, there is no startup message.
 #define DN_RELEASENOTES "<h1>DirectNet</h1>\
-<h2>&nbsp;2.0a2</h2>\
+<h2>&nbsp;2.0a3</h2>\
 <h1>Release Notes</h1>\
-This is a alpha version, which means this version is <u>only for testing \
+This is an alpha version of DirectNet, which means it is <u>only for testing \
 purposes</u>, and is not stable enough for daily use. If you find any bugs, \
 please contact the developers. You can find contact information at DirectNet's \
 homepage, <b>directnet.sf.net</b><br>\

@@ -1,3 +1,13 @@
+2.0a3:
+        - Implemented (owned) chat rooms.
+        - Fixed ui-dumb.
+        - Fixed ui-customtest.
+        - Improved custom UI support.
+        - Improved the DHT code.
+        - Implemented atomic add-and-get in the DHT.
+        - FLTK: Made the release-notes window close automatically after
+          entering a name.
+
 2.0a2:
         - DHT data aging is now per-value instead of per-key (this will help
           with unowned chats)
