@@ -95,13 +95,13 @@ void dhtDataAge(dn_event_timer *te)
     dhtDataValue_t::iterator dvi;
     
     for (dai = indht.data.begin();
-         dai != indht.data.end();
+         indht.data.size() && dai != indht.data.end();
          dai++) {
         for (dvi = dai->second.begin();
-             dvi != dai->second.end();
+             dai->second.size() && dvi != dai->second.end();
              dvi++) {
             (*(dvi->timeleft))--;
-            if (*(dvi->timeleft) == 0) {
+            if (*(dvi->timeleft) <= 0) {
                 dai->second.erase(dvi);
                 dvi--;
             }
@@ -114,13 +114,13 @@ void dhtDataAge(dn_event_timer *te)
     }
     
     for (dai = indht.rdata.begin();
-         dai != indht.rdata.end();
+         indht.rdata.size() && dai != indht.rdata.end();
          dai++) {
         for (dvi = dai->second.begin();
-             dvi != dai->second.end();
+             dvi->second.size() && dvi != dai->second.end();
              dvi++) {
             (*(dvi->timeleft))--;
-            if (*(dvi->timeleft) == 0) {
+            if (*(dvi->timeleft) <= 0) {
                 dai->second.erase(dvi);
                 dvi--;
             }
