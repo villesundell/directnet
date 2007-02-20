@@ -98,4 +98,8 @@ void chatJoin(const BinSeq &channel);
  * channel: the channel */
 void chatLeave(const BinSeq &channel);
 
+/* When a node is disconnected, call this to remove it from channels
+ * key: The node's key */
+void chatDis(const BinSeq &key);
+
 #endif

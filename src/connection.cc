@@ -977,6 +977,9 @@ void disNode(const BinSeq &key)
         }
     }
     
+    // remove it from any chats
+    chatDis(key);
+    
     // forward a disconnect message
     Message msg(0, "dis", 1, 1);
     msg.params.push_back(key);

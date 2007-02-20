@@ -448,3 +448,37 @@ void chatLeave(const BinSeq &channel)
     // either way, remove this channel from our list
     dn_chats.erase(channel);
 }
+
+/* When a node is disconnected, call this to remove it from channels
+ * key: The node's key */
+void chatDis(const BinSeq &key)
+{
+    // For every chat ...
+    map<BinSeq, ChatInfo>::iterator cli;
+    for (cli = dn_chats.begin(); cli != dn_chats.end(); cli++) {
+        ChatInfo &ci = cli->second;
+        if (!ci.owner) continue;
+        
+        // For every user ...
+        bool changed = false;
+        set<ChatKeyNameAssoc>::iterator li;
+        for (li = ci.list.begin(); ci.list.size() && li != ci.list.end(); li++) {
+            if (li->key == key) {
+                // If this user has disconnected, remove it
+                
+                // Inform the UI (FIXME)
+                uiDispChatMsg(ci.name, "DirectNet", li->name + " has left the channel.");
+                
+                // Then delete the user
+                changed = true;
+                ci.list.erase(li);
+                li--;
+            }
+        }
+        
+        if (changed) {
+            // some user disconnected, so send the new list
+            sendCon(ci);
+        }
+    }
+}
