@@ -11,39 +11,16 @@ class BuddyWindow {open
       callback mainWinClosed open
       xywh {320 143 255 430} type Double color 0 resizable visible
     } {
+      Fl_Menu_Bar mBar {open
+        xywh {0 0 255 25} box FLAT_BOX
+      } {}
       Fl_Browser onlineList {
         callback flSelectBuddy
-        image {dn-toplogo.ppm} xywh {0 50 255 180} type Hold labelcolor 7 align 5 when 3 resizable
+        xywh {0 25 255 380} type Hold labelcolor 7 align 5 when 3 resizable
       }
       Fl_Button chatButton {
-        label Chat
         callback talkTo
-        xywh {0 235 255 25}
-      }
-      Fl_Input connectInput {
-        label {  Connect to (IP or hostname):}
-        callback estConn
-        xywh {0 285 255 25} labelcolor 7 align 5 when 8
-      }
-      Fl_Input findUser {
-        label {  Find (username):}
-        callback estFnd
-        xywh {0 330 255 25} labelcolor 7 align 5 when 8
-      }
-      Fl_Input chatJoin {
-        label {  Join or create chat:}
-        callback estCht
-        xywh {0 375 255 25} labelcolor 7 align 5 when 8
-      }
-      Fl_Button bSetAway {
-        label Away
-        callback fSetAway
-        xywh {0 405 125 25}
-      }
-      Fl_Button bBack {
-        label Back
-        callback fBack
-        xywh {130 405 125 25}
+        xywh {0 405 255 25} deactivate
       }
     }
   }

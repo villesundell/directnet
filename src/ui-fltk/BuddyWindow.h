@@ -5,27 +5,18 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 extern void mainWinClosed(Fl_Double_Window*, void*);
+#include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Browser.H>
 extern void flSelectBuddy(Fl_Browser*, void*);
 #include <FL/Fl_Button.H>
 extern void talkTo(Fl_Button*, void*);
-#include <FL/Fl_Input.H>
-extern void estConn(Fl_Input*, void*);
-extern void estFnd(Fl_Input*, void*);
-extern void estCht(Fl_Input*, void*);
-extern void fSetAway(Fl_Button*, void*);
-extern void fBack(Fl_Button*, void*);
 
 class BuddyWindow {
 public:
   Fl_Double_Window* make_window();
   Fl_Double_Window *buddyWindow;
+  Fl_Menu_Bar *mBar;
   Fl_Browser *onlineList;
   Fl_Button *chatButton;
-  Fl_Input *connectInput;
-  Fl_Input *findUser;
-  Fl_Input *chatJoin;
-  Fl_Button *bSetAway;
-  Fl_Button *bBack;
 };
 #endif

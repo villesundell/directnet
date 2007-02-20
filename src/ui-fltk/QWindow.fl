@@ -1,0 +1,39 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0107 
+header_name {.h} 
+code_name {.cc}
+class QWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window qWin {
+      label Q open
+      xywh {313 167 400 70} type Double modal visible
+    } {
+      Fl_Input qInp {
+        label {Q?}
+        xywh {0 20 400 25} align 5 when 8
+      }
+      Fl_Button okButton {
+        label OK
+        xywh {0 45 200 25}
+      }
+      Fl_Button cancelButton {
+        label Cancel
+        xywh {200 45 200 25}
+      }
+    }
+  }
+} 
+
+Function {destroyQWin(Fl_Widget *o, void *qw)} {open
+} {
+  code {if (qw) {
+    QWindow *qwin = (QWindow *) qw;
+    if (qwin->qWin) {
+        qwin->qWin->hide();
+        delete qwin->qWin;
+    }
+    delete qwin;
+}} {}
+} 

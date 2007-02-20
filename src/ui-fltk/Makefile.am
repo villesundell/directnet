@@ -8,5 +8,6 @@ AwayWindow.cc \
 BuddyWindow.cc \
 ChatWindow.cc \
 NameWindow.cc \
+QWindow.cc \
 event.cc \
 ui.cc

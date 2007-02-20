@@ -50,6 +50,7 @@ using namespace std;
 using namespace std;
 
 #include "FL/fl_ask.H"
+#include <FL/Fl_Menu.H>
 #include <FL/Fl_Window.H>
 
 #include "AutoConnWindow.h"
@@ -58,6 +59,7 @@ using namespace std;
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
 #include "NameWindow.h"
+#include "QWindow.h"
 
 #ifdef __WIN32
 #define sleep _sleep
@@ -81,6 +83,14 @@ void updateMinimode ();
 //For Timestamps:
 time_t rawtime;
 tm *timestamp;
+
+// Decls
+void showConnWindow(Fl_Widget *w, void *ignore);
+void estConn(Fl_Widget *w, void *data);
+void showFindWindow(Fl_Widget *w, void *ignore);
+void estFnd(Fl_Widget *w, void *ignore);
+void showChatWindow(Fl_Widget *w, void *ignore);
+void estChat(Fl_Input *w, void *ignore);
 
 //Banning:
 void flBanUnban (Fl_Button*, void*);
@@ -379,6 +389,26 @@ void setName(Fl_Input *w, void *ignore)
     /* make the buddy window */
     bw = new BuddyWindow();
     bw->make_window();
+    
+    /* Make the menu bar */
+    Fl_Menu_Item menu[] = {
+        { "&Network", 0, 0, 0, FL_SUBMENU },
+        { "New &Connection", FL_CTRL + 'n', (Fl_Callback *) showConnWindow },
+        { "&Quit", FL_CTRL + 'q', (Fl_Callback *) mainWinClosed },
+        { 0 },
+    
+        { "&Users", 0, 0, 0, FL_SUBMENU },
+        { "&Find User", FL_CTRL + 'f', (Fl_Callback *) showFindWindow },
+        { 0 },
+    
+        { "&Chat", 0, 0, 0, FL_SUBMENU },
+        { "&Join Chat Channel", FL_CTRL + 'j', (Fl_Callback *) showChatWindow },
+        { 0 },
+    
+        { 0 }
+    };
+    bw->mBar->copy(menu);
+    
     if (enable_minimode == 0)
     {
     	// Standard mode
@@ -428,18 +458,44 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
         cwi->second->chatWindow->hide();
     }
     
-    w->hide();
+    if (bw && bw->buddyWindow) {
+        bw->buddyWindow->hide();
+    }
     
     uiQuit = 1;
 }
 
-void estConn(Fl_Input *w, void *ignore)
+// <CONNECTION>
+void showConnWindow(Fl_Widget *w, void *ignore)
+{
+    QWindow *connWin = new QWindow();
+    connWin->make_window();
+    connWin->qWin->label("DirectNet Connection");
+    connWin->qInp->label("Hostname to connect to:");
+    connWin->qInp->callback((Fl_Callback *) estConn, (void *) connWin);
+    connWin->okButton->callback((Fl_Callback *) estConn, (void *) connWin);
+    connWin->qWin->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->cancelButton->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->qWin->show();
+}
+
+void estConn(Fl_Widget *w, void *data)
 {
     char *connTo;
     AutoConnYNWindow *acynw;
     
-    connTo = strdup(w->value());
-    w->value("");
+    if (!data) return;
+    
+    // get the input ...
+    QWindow *connWin = (QWindow *) data;
+    connTo = strdup(connWin->qInp->value());
+    
+    // get rid of the window
+    connWin->qWin->hide();
+    delete connWin->qWin;
+    delete connWin;
+    
+    // of course, establish the connection
     establishConnection(connTo);
     
     if (!checkAutoConnect(connTo)) {
@@ -451,23 +507,76 @@ void estConn(Fl_Input *w, void *ignore)
         free(connTo);
     }
 }
+// </CONNECTION>
 
-void estFnd(Fl_Input *w, void *ignore)
+// <FIND>
+void showFindWindow(Fl_Widget *w, void *ignore)
 {
-    char *connTo;
-    
-    connTo = strdup(w->value());
-    w->value("");
-    sendFnd(connTo);
-    free(connTo);
+    QWindow *connWin = new QWindow();
+    connWin->make_window();
+    connWin->qWin->label("Find User");
+    connWin->qInp->label("User to search for:");
+    connWin->qInp->callback((Fl_Callback *) estFnd, (void *) connWin);
+    connWin->okButton->callback((Fl_Callback *) estFnd, (void *) connWin);
+    connWin->qWin->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->cancelButton->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->qWin->show();
 }
 
-void estCht(Fl_Input *w, void *ignore)
+void estFnd(Fl_Widget *w, void *data)
 {
-    chatJoin(w->value());
-    getWindow(w->value());
+    char *findU;
     
-    w->value("");
+    if (!data) return;
+    
+    // get the input ...
+    QWindow *connWin = (QWindow *) data;
+    findU = strdup(connWin->qInp->value());
+    
+    // get rid of the window
+    connWin->qWin->hide();
+    delete connWin->qWin;
+    delete connWin;
+    
+    // of course, establish the connection
+    sendFnd(findU);
+    free(findU);
+}
+// </FIND>
+
+// <CHAT>
+void showChatWindow(Fl_Widget *w, void *ignore)
+{
+    QWindow *connWin = new QWindow();
+    connWin->make_window();
+    connWin->qWin->label("Join Chat");
+    connWin->qInp->label("Chat to join:");
+    connWin->qInp->callback((Fl_Callback *) estChat, (void *) connWin);
+    connWin->okButton->callback((Fl_Callback *) estChat, (void *) connWin);
+    connWin->qWin->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->cancelButton->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->qWin->show();
+}
+
+void estChat(Fl_Input *w, void *data)
+{
+    char *joinC;
+    
+    if (!data) return;
+    
+    // get the input ...
+    QWindow *connWin = (QWindow *) data;
+    joinC = strdup(connWin->qInp->value());
+    
+    // get rid of the window
+    connWin->qWin->hide();
+    delete connWin->qWin;
+    delete connWin;
+    
+    // of course, join the chat
+    chatJoin(joinC);
+    getWindow(joinC);
+    free(joinC);
 }
 
 void closeChat(Fl_Double_Window *w, void *ignore)
@@ -488,13 +597,33 @@ void closeChat(Fl_Double_Window *w, void *ignore)
 
 void flSelectBuddy(Fl_Browser *flb, void *ignore)
 {
+    static int previous = 0;
     int i = flb->value();
-
+    
     // ignore selection of the headers
-    if (i == 1 || i == olConnsLoc) {
+    if (i == 1) {
         flb->deselect();
+        
+        // get rid of any display in the chat button
+        bw->chatButton->label("");
+        bw->chatButton->deactivate();
+        
         return;
+    } else if (i == olConnsLoc) {
+        // go either above or below
+        if (previous > olConnsLoc) {
+            i--;
+            previous = i;
+            flb->value(i);
+            flSelectBuddy(flb, ignore);
+            return;
+        } else {
+            i++;
+            flb->value(i);
+        }
     }
+    
+    previous = i;
     
     // change the chat button depending on where in the list we are
     if (i < olConnsLoc) {
@@ -504,6 +633,7 @@ void flSelectBuddy(Fl_Browser *flb, void *ignore)
     } else {
         bw->chatButton->label("Add new Autoconnection");
     }
+    bw->chatButton->activate();
 }
 
 void talkTo(Fl_Button *b, void *ignore)
@@ -593,13 +723,13 @@ void fAwayMsg(Fl_Input *w, void *ignore)
 {
     string am = w->value();
     setAway(&am);
-    bw->bSetAway->color(FL_RED);
+    //bw->bSetAway->color(FL_RED);
     awayMWin->hide();
 }
 
 void fBack(Fl_Button *w, void *ignore)
 {
-    bw->bSetAway->color(FL_GRAY);
+    //bw->bSetAway->color(FL_GRAY);
     Fl::redraw();
     setAway(NULL);
 }

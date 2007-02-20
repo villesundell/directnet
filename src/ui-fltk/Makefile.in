@@ -54,7 +54,8 @@ libui_a_LIBADD =
 am_libui_a_OBJECTS = AutoConnWindow.$(OBJEXT) \
 	AutoConnYNWindow.$(OBJEXT) AwayWindow.$(OBJEXT) \
 	BuddyWindow.$(OBJEXT) ChatWindow.$(OBJEXT) \
-	NameWindow.$(OBJEXT) event.$(OBJEXT) ui.$(OBJEXT)
+	NameWindow.$(OBJEXT) QWindow.$(OBJEXT) event.$(OBJEXT) \
+	ui.$(OBJEXT)
 libui_a_OBJECTS = $(am_libui_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -211,6 +212,7 @@ AwayWindow.cc \
 BuddyWindow.cc \
 ChatWindow.cc \
 NameWindow.cc \
+QWindow.cc \
 event.cc \
 ui.cc
 
@@ -267,6 +269,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuddyWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ChatWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NameWindow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/QWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ui.Po@am__quote@
 
