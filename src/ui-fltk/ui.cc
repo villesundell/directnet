@@ -55,7 +55,6 @@ using namespace std;
 
 #include "AutoConnWindow.h"
 #include "AutoConnYNWindow.h"
-#include "AwayWindow.h"
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
 #include "NameWindow.h"
@@ -90,7 +89,10 @@ void estConn(Fl_Widget *w, void *data);
 void showFindWindow(Fl_Widget *w, void *ignore);
 void estFnd(Fl_Widget *w, void *ignore);
 void showChatWindow(Fl_Widget *w, void *ignore);
-void estChat(Fl_Input *w, void *ignore);
+void estChat(Fl_Widget *w, void *ignore);
+void showAwayWindow(Fl_Widget *w, void *ignore);
+void flSetAway(Fl_Widget *w, void *data);
+void setBack(Fl_Widget *w, void *data);
 
 //Banning:
 void flBanUnban (Fl_Button*, void*);
@@ -394,6 +396,8 @@ void setName(Fl_Input *w, void *ignore)
     Fl_Menu_Item menu[] = {
         { "&Network", 0, 0, 0, FL_SUBMENU },
         { "New &Connection", FL_CTRL + 'n', (Fl_Callback *) showConnWindow },
+        { "Set &Away Message", FL_CTRL + 'a', (Fl_Callback *) showAwayWindow },
+        { "Unset Away", FL_CTRL + 'b', (Fl_Callback *) setBack },
         { "&Quit", FL_CTRL + 'q', (Fl_Callback *) mainWinClosed },
         { 0 },
     
@@ -558,7 +562,7 @@ void showChatWindow(Fl_Widget *w, void *ignore)
     connWin->qWin->show();
 }
 
-void estChat(Fl_Input *w, void *data)
+void estChat(Fl_Widget *w, void *data)
 {
     char *joinC;
     
@@ -575,7 +579,13 @@ void estChat(Fl_Input *w, void *data)
     
     // of course, join the chat
     chatJoin(joinC);
-    getWindow(joinC);
+    ChatWindow *cw = getWindow(joinC);
+    
+    // now hide the useless buttons
+    cw->bBan->hide();
+    cw->bSndKey->hide();
+    cw->bAutoFind->hide();
+    
     free(joinC);
 }
 
@@ -594,6 +604,49 @@ void closeChat(Fl_Double_Window *w, void *ignore)
     
     free(name);
 }
+// </CHAT>
+
+// <AWAY>
+void showAwayWindow(Fl_Widget *w, void *ignore)
+{
+    QWindow *connWin = new QWindow();
+    connWin->make_window();
+    connWin->qWin->label("Away");
+    connWin->qInp->label("Away message:");
+    connWin->qInp->callback((Fl_Callback *) flSetAway, (void *) connWin);
+    connWin->okButton->callback((Fl_Callback *) flSetAway, (void *) connWin);
+    connWin->qWin->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->cancelButton->callback((Fl_Callback *) destroyQWin, (void *) connWin);
+    connWin->qWin->show();
+}
+
+void flSetAway(Fl_Widget *w, void *data)
+{
+    string awayMsg;
+    
+    if (!data) return;
+    
+    // get the input ...
+    QWindow *connWin = (QWindow *) data;
+    awayMsg = connWin->qInp->value();
+    
+    // get rid of the window
+    connWin->qWin->hide();
+    delete connWin->qWin;
+    delete connWin;
+    
+    // set away
+    if (awayMsg != "")
+        setAway(&awayMsg);
+    else
+        setAway(NULL);
+}
+
+void setBack(Fl_Widget *w, void *data)
+{
+    setAway(NULL);
+}
+// </AWAY>
 
 void flSelectBuddy(Fl_Browser *flb, void *ignore)
 {
@@ -711,27 +764,6 @@ void flSendAuthKey(Fl_Button *w, void *ignore)
             return;
         }
     }
-}
-
-void fSetAway(Fl_Button *w, void *ignore)
-{
-    awayWindow();
-    awayMWin->show();
-}
-
-void fAwayMsg(Fl_Input *w, void *ignore)
-{
-    string am = w->value();
-    setAway(&am);
-    //bw->bSetAway->color(FL_RED);
-    awayMWin->hide();
-}
-
-void fBack(Fl_Button *w, void *ignore)
-{
-    //bw->bSetAway->color(FL_GRAY);
-    Fl::redraw();
-    setAway(NULL);
 }
 
 void flDispMsg(const string &window, const string &from, const string &msg, const string &authmsg)

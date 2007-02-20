@@ -52,10 +52,9 @@ ARFLAGS = cru
 libui_a_AR = $(AR) $(ARFLAGS)
 libui_a_LIBADD =
 am_libui_a_OBJECTS = AutoConnWindow.$(OBJEXT) \
-	AutoConnYNWindow.$(OBJEXT) AwayWindow.$(OBJEXT) \
-	BuddyWindow.$(OBJEXT) ChatWindow.$(OBJEXT) \
-	NameWindow.$(OBJEXT) QWindow.$(OBJEXT) event.$(OBJEXT) \
-	ui.$(OBJEXT)
+	AutoConnYNWindow.$(OBJEXT) BuddyWindow.$(OBJEXT) \
+	ChatWindow.$(OBJEXT) NameWindow.$(OBJEXT) QWindow.$(OBJEXT) \
+	event.$(OBJEXT) ui.$(OBJEXT)
 libui_a_OBJECTS = $(am_libui_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -208,7 +207,6 @@ AM_LDFLAGS = @UI_LDFLAGS@
 noinst_LIBRARIES = libui.a
 libui_a_SOURCES = AutoConnWindow.cc \
 AutoConnYNWindow.cc \
-AwayWindow.cc \
 BuddyWindow.cc \
 ChatWindow.cc \
 NameWindow.cc \
@@ -265,7 +263,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AutoConnWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AutoConnYNWindow.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AwayWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuddyWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ChatWindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NameWindow.Po@am__quote@
