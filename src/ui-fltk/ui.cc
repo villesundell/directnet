@@ -636,15 +636,22 @@ void flSetAway(Fl_Widget *w, void *data)
     delete connWin;
     
     // set away
-    if (awayMsg != "")
+    if (awayMsg != "") {
         setAway(&awayMsg);
-    else
+        if (bw)
+            bw->status->value(("Away: " + awayMsg).c_str());
+    } else {
         setAway(NULL);
+        if (bw)
+            bw->status->value("");
+    }
 }
 
 void setBack(Fl_Widget *w, void *data)
 {
     setAway(NULL);
+    if (bw)
+        bw->status->value("");
 }
 // </AWAY>
 

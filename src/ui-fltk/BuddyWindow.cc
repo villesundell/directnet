@@ -11,7 +11,7 @@ Fl_Double_Window* BuddyWindow::make_window() {
     { Fl_Menu_Bar* o = mBar = new Fl_Menu_Bar(0, 0, 255, 25);
       o->box(FL_FLAT_BOX);
     }
-    { Fl_Browser* o = onlineList = new Fl_Browser(0, 25, 255, 380);
+    { Fl_Browser* o = onlineList = new Fl_Browser(0, 25, 255, 355);
       o->type(2);
       o->labelcolor(FL_BACKGROUND2_COLOR);
       o->callback((Fl_Callback*)flSelectBuddy);
@@ -19,9 +19,12 @@ Fl_Double_Window* BuddyWindow::make_window() {
       o->when(3);
       Fl_Group::current()->resizable(o);
     }
-    { Fl_Button* o = chatButton = new Fl_Button(0, 405, 255, 25);
+    { Fl_Button* o = chatButton = new Fl_Button(0, 380, 255, 25);
       o->callback((Fl_Callback*)talkTo);
       o->deactivate();
+    }
+    { Fl_Output* o = status = new Fl_Output(0, 405, 255, 25);
+      o->box(FL_FLAT_BOX);
     }
     o->end();
   }

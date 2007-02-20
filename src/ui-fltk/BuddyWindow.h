@@ -10,6 +10,7 @@ extern void mainWinClosed(Fl_Double_Window*, void*);
 extern void flSelectBuddy(Fl_Browser*, void*);
 #include <FL/Fl_Button.H>
 extern void talkTo(Fl_Button*, void*);
+#include <FL/Fl_Output.H>
 
 class BuddyWindow {
 public:
@@ -18,5 +19,6 @@ public:
   Fl_Menu_Bar *mBar;
   Fl_Browser *onlineList;
   Fl_Button *chatButton;
+  Fl_Output *status;
 };
 #endif

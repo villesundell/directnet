@@ -16,11 +16,14 @@ class BuddyWindow {open
       } {}
       Fl_Browser onlineList {
         callback flSelectBuddy
-        xywh {0 25 255 380} type Hold labelcolor 7 align 5 when 3 resizable
+        xywh {0 25 255 355} type Hold labelcolor 7 align 5 when 3 resizable
       }
       Fl_Button chatButton {
         callback talkTo
-        xywh {0 405 255 25} deactivate
+        xywh {0 380 255 25} deactivate
+      }
+      Fl_Output status {
+        xywh {0 405 255 25} box FLAT_BOX
       }
     }
   }
