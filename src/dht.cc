@@ -87,8 +87,8 @@ Route dhtIn(bool must)
 /* Age the data in a DHT (on a timer, payload == DHT) */
 void dhtDataAge(dn_event_timer *te)
 {
-    // FIXME te->setTimeDelta(60, 0);
-    te->setTimeDelta(1, 0);
+    te->setTimeDelta(60, 0);
+    // SPEEDUP te->setTimeDelta(1, 0);
     DHTInfo &indht = *((DHTInfo *) te->payload);
     
     // go through each piece of data, aging it
@@ -151,10 +151,10 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     dhtSendAdd(hname, pukeyhash, &dhti);
     
     // set up the data aging timer
-    /* FIXME dn_event_timer *te = new dn_event_timer(
-        60, 0, dhtDataAge, &dhti); */
     dn_event_timer *te = new dn_event_timer(
-        1, 0, dhtDataAge, &dhti);
+        60, 0, dhtDataAge, &dhti);
+    /* SPEEDUP dn_event_timer *te = new dn_event_timer(
+        1, 0, dhtDataAge, &dhti); */
     te->activate();
 }
 
@@ -179,6 +179,8 @@ void dhtCreate(const BinSeq &key)
     // set up the data aging timer
     dn_event_timer *te = new dn_event_timer(
         60, 0, dhtDataAge, &newDHT);
+    /* SPEEDUP dn_event_timer *te = new dn_event_timer(
+        1, 0, dhtDataAge, &newDHT); */
     te->activate();
 }
 
@@ -841,9 +843,9 @@ void dhtAddRefresh(dn_event_timer *te)
     Message &msg = *((Message *) te->payload);
     
     // refresh the time
-    /* FIXME unsigned int rtime =
-        (1 << (msg.params[2][0] & 0xF)) * 3600; */
-    unsigned int rtime = (1 << (msg.params[2][0] & 0xF)) * 60;
+    unsigned int rtime =
+        (1 << (msg.params[2][0] & 0xF)) * 3600;
+    /* SPEEDUP unsigned int rtime = (1 << (msg.params[2][0] & 0xF)) * 60; */
     // 3/4 of the total time
     rtime *= 3;
     rtime /= 4;
@@ -1049,8 +1051,8 @@ void handleDHTMessage(conn_t *conn, Message &msg)
 dataok:
         
         // get and set the data and timeout
-        // FIXME unsigned int tleft = (1 << (msg.params[2][0] & 0xF)) * 60;
-        unsigned int tleft = (1 << (msg.params[2][0] & 0xF));
+        unsigned int tleft = (1 << (msg.params[2][0] & 0xF)) * 60;
+        // SPEEDUP unsigned int tleft = (1 << (msg.params[2][0] & 0xF));
         if (msg.params[4].size() == 4 &&
             (msg.params[2][0] & 0xF0) == 0) {
             unsigned int msgtleft =
