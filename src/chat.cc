@@ -87,15 +87,11 @@ void handleChatMessage(conn_t *conn, Message &msg)
             return;
         
         // now find the user in the list ...
-        set<ChatKeyNameAssoc>::iterator li;
+        map<BinSeq, ChatKeyNameAssoc>::iterator li;
         bool removed = false;
-        for (li = ci.list.begin(); li != ci.list.end(); li++) {
-            if (li->key == msg.params[2]) {
-                // OK, remove them
-                ci.list.erase(li);
-                removed = true;
-                break;
-            }
+        if (ci.list.find(msg.params[1]) != ci.list.end()) {
+            removed = true;
+            ci.list.erase(msg.params[1]);
         }
         
         // don't send out a new message if we haven't actually removed anyone
@@ -126,13 +122,13 @@ void handleChatMessage(conn_t *conn, Message &msg)
         // If we're the owner, forward this
         if (ci.owner) {
             msg.params[1] = dn_name;
-            set<ChatKeyNameAssoc>::iterator li;
+            map<BinSeq, ChatKeyNameAssoc>::iterator li;
             for (li = ci.list.begin(); li != ci.list.end(); li++) {
-                if (li->name == msg.params[3]) continue;
-                if (li->name == dn_name) continue;
-                if (dn_routes->find(li->key) != dn_routes->end()) {
-                    msg.params[0] = (*dn_routes)[li->key]->toBinSeq();
-                    msg.params[4] = encTo(dn_name, li->name, unencmsg);
+                if (li->second.name == msg.params[3]) continue;
+                if (li->second.name == dn_name) continue;
+                if (dn_routes->find(li->second.key) != dn_routes->end()) {
+                    msg.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
+                    msg.params[4] = encTo(dn_name, li->second.name, unencmsg);
                     handleRoutedMsg(msg);
                 }
             }
@@ -152,18 +148,12 @@ void handleChatMessage(conn_t *conn, Message &msg)
         // now turn the list into join/leave events
         Route rulist(msg.params[4]);
         Route::iterator ri;
-        set<ChatKeyNameAssoc>::iterator li;
+        map<BinSeq, ChatKeyNameAssoc>::iterator li;
         
         // 1) Joins
         for (ri = rulist.begin(); ri != rulist.end(); ri++) {
             // if this user is not in the list, we gained one
-            bool inlist = false;
-            for (li = ci.list.begin(); li != ci.list.end(); li++) {
-                if (*ri == li->name) {
-                    inlist = true;
-                    break;
-                }
-            }
+            bool inlist = (ci.list.find(*ri) != ci.list.end());
             
             if (!inlist) {
                 // tell the UI
@@ -171,30 +161,24 @@ void handleChatMessage(conn_t *conn, Message &msg)
                 uiDispChatMsg(msg.params[3], "DirectNet", (*ri) + " has joined the channel.");
                 
                 // gain it
-                ChatKeyNameAssoc assoc("", *ri);
-                ci.list.insert(assoc);
+                ci.list[*ri] = ChatKeyNameAssoc("", *ri);
             }
         }
         
         // 2) Parts
+findparts:
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
             // if this user is not in the list, we lost one
-            bool inlist = false;
-            for (ri = rulist.begin(); ri != rulist.end(); ri++) {
-                if (*ri == li->name) {
-                    inlist = true;
-                    break;
-                }
-            }
+            bool inlist = rulist.find(li->second.name);
             
             if (!inlist) {
                 // tell the UI
-                uiDispChatMsg(msg.params[3], "DirectNet", li->name + " has left the channel.");
+                uiDispChatMsg(msg.params[3], "DirectNet", li->second.name + " has left the channel.");
                 
                 // lose it
                 ci.list.erase(li);
                 if (ci.list.size() == 0) break;
-                li--;
+                goto findparts;
             }
         }
     }
@@ -213,17 +197,17 @@ void sendCon(ChatInfo &ci)
         
     // make the user list
     Route ulist;
-    set<ChatKeyNameAssoc>::iterator li;
+    map<BinSeq, ChatKeyNameAssoc>::iterator li;
     for (li = ci.list.begin(); li != ci.list.end(); li++) {
-        ulist.push_back(li->name);
+        ulist.push_back(li->first);
     }
     rmsg.params.push_back(ulist.toBinSeq());
         
     // send it to each user
     for (li = ci.list.begin(); li != ci.list.end(); li++) {
-        if (li->name == dn_name) continue;
-        if (dn_routes->find(li->key) != dn_routes->end()) {
-            rmsg.params[0] = (*dn_routes)[li->key]->toBinSeq();
+        if (li->first == dn_name) continue;
+        if (dn_routes->find(li->second.key) != dn_routes->end()) {
+            rmsg.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
             handleRoutedMsg(rmsg);
         }
     }
@@ -251,12 +235,12 @@ void sendChat(const BinSeq &to, const BinSeq &msg)
     
     if (ci.owner) {
         // we're the owner, so go over the entire list
-        set<ChatKeyNameAssoc>::iterator li;
+        map<BinSeq, ChatKeyNameAssoc>::iterator li;
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
-            if (li->name == dn_name) continue;
-            if (dn_routes->find(li->key) != dn_routes->end()) {
-                cms.params[0] = (*dn_routes)[li->key]->toBinSeq();
-                cms.params[4] = encTo(dn_name, li->name, msg);
+            if (li->first == dn_name) continue;
+            if (dn_routes->find(li->second.key) != dn_routes->end()) {
+                cms.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
+                cms.params[4] = encTo(dn_name, li->first, msg);
                 handleRoutedMsg(cms);
             }
         }
@@ -288,7 +272,7 @@ void chatAddUser(const BinSeq &channel, const BinSeq &key, const BinSeq &name)
 {
     if (dn_chats.find(channel) != dn_chats.end()) {
         ChatKeyNameAssoc assoc(key, name);
-        dn_chats[channel].list.insert(assoc);
+        dn_chats[channel].list[name] = assoc;
         // FIXME: inform the UI
     }
 }
@@ -301,9 +285,9 @@ void chatRemUser(const BinSeq &channel, const BinSeq &key)
     if (dn_chats.find(channel) != dn_chats.end()) {
         // find the matching one
         ChatInfo &ci = dn_chats[channel];
-        set<ChatKeyNameAssoc>::iterator li;
+        map<BinSeq, ChatKeyNameAssoc>::iterator li;
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
-            if (li->key == key) {
+            if (li->second.key == key) {
                 ci.list.erase(li);
                 break;
             }
@@ -371,7 +355,7 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
         ci.repkey = "";
         ci.repname = "";
         ChatKeyNameAssoc assoc(encExportKey(), dn_name);
-        ci.list.insert(assoc);
+        ci.list[dn_name] = assoc;
         
         // FIXME: tell the UI in a better way
         uiDispChatMsg(*rname, "DirectNet", "Channel created.");
@@ -429,11 +413,11 @@ void chatLeave(const BinSeq &channel)
         // FIXME: this should remove the data
         
         // now send the Con to all users
-        set<ChatKeyNameAssoc>::iterator li;
+        map<BinSeq, ChatKeyNameAssoc>::iterator li;
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
-            if (li->name == dn_name) continue;
-            if (dn_routes->find(li->key) != dn_routes->end()) {
-                con.params[0] = (*dn_routes)[li->key]->toBinSeq();
+            if (li->first == dn_name) continue;
+            if (dn_routes->find(li->second.key) != dn_routes->end()) {
+                con.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
                 handleRoutedMsg(con);
             }
         }
@@ -466,18 +450,19 @@ void chatDis(const BinSeq &key)
         
         // For every user ...
         bool changed = false;
-        set<ChatKeyNameAssoc>::iterator li;
+        map<BinSeq, ChatKeyNameAssoc>::iterator li;
+finddisconnects:
         for (li = ci.list.begin(); ci.list.size() && li != ci.list.end(); li++) {
-            if (li->key == key) {
+            if (li->second.key == key) {
                 // If this user has disconnected, remove it
                 
                 // Inform the UI (FIXME)
-                uiDispChatMsg(ci.name, "DirectNet", li->name + " has left the channel.");
+                uiDispChatMsg(ci.name, "DirectNet", li->first + " has left the channel.");
                 
                 // Then delete the user
                 changed = true;
                 ci.list.erase(li);
-                li--;
+                goto finddisconnects;
             }
         }
         

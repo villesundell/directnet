@@ -35,6 +35,7 @@ using namespace std;
 
 class ChatKeyNameAssoc {
     public:
+    inline ChatKeyNameAssoc() { key = ""; name = ""; }
     inline ChatKeyNameAssoc(const BinSeq &skey, const BinSeq &sname) {
         key = skey;
         name = sname;
@@ -55,7 +56,7 @@ class ChatInfo {
     BinSeq name;
     BinSeq repkey; // should be a set for unowned?
     BinSeq repname;
-    set<ChatKeyNameAssoc> list; // list of keys, names
+    map<BinSeq, ChatKeyNameAssoc> list; // name -> (info)
 };
 
 extern map<BinSeq, ChatInfo> dn_chats;

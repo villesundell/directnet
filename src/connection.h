@@ -90,6 +90,10 @@ int sendAuthKey(const string &to);
  * msg: the away message or NULL for back */
 void setAway(const string *msg);
 
+/* Get away status and message
+ * Return NULL if not away, message otherwise */
+const string *getAway();
+
 /* Send a command buffer to an fd
  * fdnum: the fd to send to
  * buf: the buffer to send */
@@ -119,6 +123,9 @@ void *communicator(void *fdnum_voidptr);
 
 /* A node has disconnected.  Do we care? */
 void disNode(const BinSeq &key);
+
+/* Am I online (do I have any connections)? */
+bool dnOnline();
 
 // convenience macros for handle*Msg
 #define REQ_PARAMS(x) if (msg.params.size() < x) return

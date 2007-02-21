@@ -375,6 +375,31 @@ void putError (ChatWindow *w, const string &txt)
 	putOutput(w, "<b><#red>"+txt+"<#></b><br>");
 }
 
+// Update the status bar
+void updateStatus()
+{
+    if (!bw) return;
+    
+    // status string: {Online,Offline}[ - Away]
+    string stat;
+    
+    // 1) Online/offline
+    if (dnOnline()) {
+        stat = "Online";
+    } else {
+        stat = "Offline";
+    }
+    
+    // 2) Away
+    const string *ga = getAway();
+    if (ga) {
+        stat += " - Away: " + *ga;
+    }
+    
+    bw->status->value(stat.c_str());
+}
+
+// set the name and show the main window
 void setName(Fl_Input *w, void *ignore)
 {
     int i;
@@ -448,6 +473,9 @@ void setName(Fl_Input *w, void *ignore)
     
     /* finally, the option to add new autoconnections */
     bw->onlineList->add("@c@iAdd new autoconnection");
+    
+    // get the initial status
+    updateStatus();
     
     uiLoaded = 1;
 
@@ -638,20 +666,17 @@ void flSetAway(Fl_Widget *w, void *data)
     // set away
     if (awayMsg != "") {
         setAway(&awayMsg);
-        if (bw)
-            bw->status->value(("Away: " + awayMsg).c_str());
     } else {
         setAway(NULL);
-        if (bw)
-            bw->status->value("");
     }
+    
+    updateStatus();
 }
 
 void setBack(Fl_Widget *w, void *data)
 {
     setAway(NULL);
-    if (bw)
-        bw->status->value("");
+    updateStatus();
 }
 // </AWAY>
 
@@ -938,6 +963,7 @@ void uiEstConn(const string &from)
     // FIXME: this desperately needs to change
     string cemsg = "Connection to " + from + " established.";
     uiDispMsg("DirectNet", cemsg, "", 0);
+    updateStatus();
 }
 
 void uiEstRoute(const string &from)
@@ -984,6 +1010,7 @@ void uiEstRoute(const string &from)
     if (cw) {
         putError(cw, "Route established.\n");
     }
+    updateStatus();
 }
 
 void removeFromList(const string &name)
@@ -1021,6 +1048,7 @@ void uiLoseConn(const string &from)
     if (cw) {
         putError(cw, "Connection lost.\n");
     }
+    updateStatus();
 }
 
 void uiLoseRoute(const string &from)
@@ -1035,6 +1063,7 @@ void uiLoseRoute(const string &from)
     if (cw) {
         putError(cw, "Route lost.\n");
     }
+    updateStatus();
 }
 
 void uiNoRoute(const string &to)

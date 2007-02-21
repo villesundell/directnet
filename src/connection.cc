@@ -944,6 +944,11 @@ void setAway(const string *msg)
     }
 }
 
+const string *getAway()
+{
+    return awayMsg;
+}
+
 void disNode(const BinSeq &key)
 {
     BinSeq hkey = encHashKey(key);
@@ -989,3 +994,10 @@ void disNode(const BinSeq &key)
     // DHT sanity checks (we may have just broken our DHT links!)
     dhtCheck();
 }
+
+/* Am I online (do I have any connections)? */
+bool dnOnline()
+{
+    return (active_connections.size() != 0);
+}
+
