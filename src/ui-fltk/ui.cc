@@ -57,6 +57,7 @@ using namespace std;
 #include "AutoConnYNWindow.h"
 #include "BuddyWindow.h"
 #include "ChatWindow.h"
+#include "DHTWindow.h"
 #include "NameWindow.h"
 #include "QWindow.h"
 
@@ -93,6 +94,8 @@ void estChat(Fl_Widget *w, void *ignore);
 void showAwayWindow(Fl_Widget *w, void *ignore);
 void flSetAway(Fl_Widget *w, void *data);
 void setBack(Fl_Widget *w, void *data);
+void dhtAction(string label);
+void dhtTimeUpdate(dn_event_timer *dte);
 
 //Banning:
 void flBanUnban (Fl_Button*, void*);
@@ -572,6 +575,7 @@ void estFnd(Fl_Widget *w, void *data)
     
     // of course, establish the connection
     sendFnd(findU);
+    dhtAction(string("Searching for user ") + findU);
     free(findU);
 }
 // </FIND>
@@ -600,6 +604,9 @@ void estChat(Fl_Widget *w, void *data)
     QWindow *connWin = (QWindow *) data;
     joinC = strdup(connWin->qInp->value());
     
+    if (joinC[0] != '#')
+        return; // invalid
+    
     // get rid of the window
     connWin->qWin->hide();
     delete connWin->qWin;
@@ -607,6 +614,7 @@ void estChat(Fl_Widget *w, void *data)
     
     // of course, join the chat
     chatJoin(joinC);
+    dhtAction(string("Joining ") + joinC);
     ChatWindow *cw = getWindow(joinC);
     
     // now hide the useless buttons
@@ -679,6 +687,44 @@ void setBack(Fl_Widget *w, void *data)
     updateStatus();
 }
 // </AWAY>
+
+// display the DHT Action window and perform an action
+void dhtAction(string label)
+{
+    DHTWindow *dw = new DHTWindow();
+    dw->make_window();
+    
+    dw->tWin->copy_label(label.c_str());
+    dw->tBar->copy_label(label.c_str());
+    dw->tWin->show();
+    
+    // start the timer
+    dn_event_timer *dte = new dn_event_timer(
+        0, 100000,
+        dhtTimeUpdate, dw);
+    dte->activate();
+}
+
+void dhtTimeUpdate(dn_event_timer *dte)
+{
+    dte->setTimeDelta(0, 100000);
+    DHTWindow *dw = (DHTWindow *) dte->payload;
+    
+    // update the bar
+    float at = dw->tBar->value();
+    at += 1.0;
+    if (at >= 100.0) {
+        // we're done
+        dte->deactivate();
+        delete dte;
+        
+        dw->tWin->hide();
+        delete dw->tWin;
+        delete dw;
+    } else {
+        dw->tBar->value(at);
+    }
+}
 
 void flSelectBuddy(Fl_Browser *flb, void *ignore)
 {
