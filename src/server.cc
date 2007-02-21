@@ -136,6 +136,10 @@ static void serverAccept(int server_sock) {
     int sin_size;
     int acceptfd;
     struct sockaddr_in rem_addr;
+    int flags;
+#ifdef __WIN32
+    unsigned long nblock;
+#endif
     
     //acceptfd = accept(server_sock, (struct sockaddr *)&rem_addr, (unsigned int *) &sin_size);
     acceptfd = accept(server_sock, NULL, NULL);
@@ -144,6 +148,15 @@ static void serverAccept(int server_sock) {
         perror("accept failed");
         return;
     }
+    
+    // make it non-blocking
+#ifndef __WIN32
+    flags = fcntl(acceptfd, F_GETFL);
+    fcntl(acceptfd, F_SETFL, flags | O_NONBLOCK);
+#else
+    nblock = 1;
+    ioctlsocket(acceptfd, FIONBIO, &nblock);
+#endif
     
     init_comms(acceptfd, NULL, 0);
 }
