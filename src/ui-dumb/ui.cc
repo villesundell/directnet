@@ -495,6 +495,22 @@ void uiNoRoute(const string &to)
     }
 }
 
+/* Display the first-time question, block for a response
+ * Returns: True or false for yes or no */
+bool uiFirstTime()
+{
+    if (!hub) {
+        char buf[1024];
+        buf[0] = 'n';
+        printf("%s\n", DN_FIRSTTIME);
+        fgets(buf, 1024, stdin);
+        printf("\n");
+        return (buf[0] == 'y' || buf[0] == 'Y');
+    } else {
+        return false;
+    }
+}
+
 class dn_event_private {
     public:
     struct event cevt;

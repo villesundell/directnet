@@ -42,8 +42,8 @@ extern "C" {
 // protocol version
 #define PROTO_MAJOR 1
 #define PROTO_MAJOR_STR "\x00\x01"
-#define PROTO_MINOR 65003
-#define PROTO_MINOR_STR "\xFD\xEB"
+#define PROTO_MINOR 65004
+#define PROTO_MINOR_STR "\xFD\xEC"
 
 extern int serv_port;
 
@@ -102,5 +102,29 @@ please contact the developers. You can find contact information at DirectNet's \
 homepage, <b>directnet.sf.net</b><br>\
 DirectNet is distributed under the GNU General Public License\
 "
+#define DN_RELEASENOTES_NOHTML "DirectNet 2.0a5\n\
+Release Notes\n\
+This is an alpha version of DirectNet, which means it is only for testing\n\
+purposes, and is not stable enough for daily use. If you find any bugs, please\n\
+contact the developers. You can find contact information at DirectNet's\n\
+homepage, directnet.sf.net\n\n\
+DirectNet is distributed under the GNU General Public License\
+"
+
+// First-time question
+#define DN_FIRSTTIME "\
+This appears to be the first time you've used DirectNet. Would you like to\n\
+connect to the primary DirectNet network? (via hub.imdirect.net)\
+"
+#define DN_FIRSTTIME_HUB "hub.imdirect.net" "<h1>DirectNet</h1>\
+<h2>&nbsp;2.0a5</h2>\
+<h1>Release Notes</h1>\
+This is an alpha version of DirectNet, which means it is <u>only for testing \
+purposes</u>, and is not stable enough for daily use. If you find any bugs, \
+please contact the developers. You can find contact information at DirectNet's \
+homepage, <b>directnet.sf.net</b><br>\
+DirectNet is distributed under the GNU General Public License\
+"
+#define DN_FIRSTTIME_HUBS "hub.imdirect.net\nhub2.imdirect.net\n"
 
 #endif // DN_DIRECTNET_H

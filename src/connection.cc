@@ -658,6 +658,52 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         handleRoutedMsg(rmsg);
         
         
+    } else if (CMD_IS("sce", 1, 1)) {
+        REQ_PARAMS(2);
+        
+        Route croute(msg.params[0]);
+        
+        // 1) Push on their IP
+        Route ips(msg.params[1]);
+        if (!conn) return;
+        if (conn->outgoing &&
+            conn->outgh) {
+            ips.push_back(conn->outgh->c_str());
+        } else {
+            // try using getpeername
+            BinSeq peerip = "0.0.0.0";
+#if !__APPLE__ && !NESTEDVM
+            {
+                socklen_t peerip_len;
+                struct sockaddr peerip_sa;
+                
+                // turn the fd into a sockaddr
+                peerip_len = sizeof(struct sockaddr);
+                int gsnr = getpeername(conn->fd, &peerip_sa, &peerip_len);
+                if (gsnr == 0) {
+                    struct sockaddr_in *peerip_i = (struct sockaddr_in *) &peerip;
+                    peerip = inet_ntoa(peerip_i->sin_addr);
+                }
+            }
+#endif
+            ips.push_back(peerip);
+        }
+        
+        // 2) Do connections
+        while (ips.size() > croute.size() + 1) ips.pop_back();
+        if (ips.size() != 0 &&
+            ips.size() == croute.size() + 1) {
+            // connect to the next one
+            async_establishClient(ips[ips.size() - 1]);
+            ips.pop_back();
+        }
+        
+        // 3) Continue
+        msg.params[1] = ips.toBinSeq();
+        if (croute.size() != 0)
+            handleRoutedMsg(msg.params[1]);
+        
+        
     }
 }
 
@@ -788,6 +834,12 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(encExportKey());
     handleRoutedMsg(omsg);*/
+    
+    // send a sce (short-circuit establishment)
+    Message sce(2, "sce", 1, 1);
+    sce.params.push_back(route->toBinSeq());
+    sce.params.push_back(Route().toBinSeq());
+    handleRoutedMsg(sce);
     
     /* Send a dcr (direct connect request) (except on OSX where it doesn't work)
 #ifndef __APPLE__

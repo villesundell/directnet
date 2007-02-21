@@ -111,11 +111,6 @@ using namespace std;
 static int uiQuit = 0;
 ChatWindow *showcw = NULL;
 
-int flt1_ask(const char *msg, int t1)
-{
-    return fl_ask(msg);
-}
-
 //Here we make timestamps
 char* make_timestamp ()
 {
@@ -222,7 +217,7 @@ int main(int argc, char **argv, char **envp)
         }
         
         /* check for questions */
-        flt1_ask(NULL, 1);
+        fl_ask(NULL);
         
         dn_lock(&displayLock);
         Fl::wait(1);
@@ -483,6 +478,10 @@ void setName(Fl_Input *w, void *ignore)
     uiLoaded = 1;
 
     dn_goOnline();
+    
+    // if we have any autofind users, display the first DHT action
+    if (dn_af_list && dn_af_list->size() > 0)
+        dhtAction("Searching for buddies");
 }
 
 void mainWinClosed(Fl_Double_Window *w, void *ignore)
@@ -1120,6 +1119,14 @@ void uiNoRoute(const string &to)
     
     cw = getWindow(to);
     putError(cw, "You do not have a route to this user.\n");
+}
+
+/* Display the first-time question, block for a response
+ * Returns: True or false for yes or no */
+bool uiFirstTime()
+{
+    int yn = fl_ask(DN_FIRSTTIME);
+    return (yn != 0);
 }
 
 //Minimode function:

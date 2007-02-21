@@ -1,7 +1,7 @@
 This document is under heavy revision, since protocol v2 is under construction.
 
-THE CURRENT PROTOCOL VERSION IS 1.65003. This means that the 'dni' message will
-be sent with '1.65003' as the protocol number.
+THE CURRENT PROTOCOL VERSION IS 1.65004. This means that the 'dni' message will
+be sent with '1.65004' as the protocol number.
 
 A DirectNet node is an independently operating server and client, which must
 have two variables: a nickname and an encryption key (public and private),
@@ -168,6 +168,13 @@ por(1)(1) (pong-route) * (partial)
         type: routed
         parameters:
                 route
+
+sce(1)(1) (short circuit establish) *
+        purpose: establish short circuits - see docs/ASC
+        type: special
+        parameters:
+                route
+                current list of hostnames/IPs (in route format)
 
 
 Key:

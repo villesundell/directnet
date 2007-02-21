@@ -44,8 +44,10 @@ extern "C" {
 #include "connection.h"
 #include "dht.h"
 #include "directnet.h"
+#include "dn_event.h"
 #include "dnconfig.h"
 #include "globals.h"
+#include "ui.h"
 
 extern int errno;
 
@@ -84,6 +86,13 @@ void initConfig()
         cfgdir = homedir + ("/" + cfgdir);
     }
     
+    // check if it exists
+    bool firsttime = false;
+    if (access(cfgdir.c_str(), F_OK) != 0) {
+        // first time user!
+        firsttime = true;
+    }
+    
     // attempt to create it
 #ifndef __WIN32
     int mdr = mkdir(cfgdir.c_str(), 0777);
@@ -104,6 +113,16 @@ void initConfig()
     // find configuration files
     dn_ac_list_f = cfgdir + "/ac";
     dn_af_list_f = cfgdir + "/af";
+    
+    // perhaps do first-time actions
+    if (firsttime && uiFirstTime()) {
+        // generate an auto-connect list
+        acf = fopen(dn_ac_list_f.c_str(), "w");
+        if (acf) {
+            fprintf(acf, "%s", DN_FIRSTTIME_HUBS);
+            fclose(acf);
+        }
+    }
     
     // read configuration files
     acf = fopen(dn_ac_list_f.c_str(), "r");
@@ -157,17 +176,37 @@ void initConfig()
     }
 }
 
+/* autoConnecthost
+ * Input: the host to connect to
+ * Output: none
+ * Effect: A single connection is attempted
+ */
+void autoConnectHost(dn_event_timer *dte)
+{
+    string *hostname = (string *) dte->payload;
+    delete dte;
+    async_establishClient(*hostname);
+    delete hostname;
+}
+
 /* autoConnect
  * Input: none
  * Output: none
- * Effect: connections are attempted to all autoconnect hostnames
+ * Effect: connections are attempted to all autoconnect hostnames (one every 5 seconds)
  */
 void autoConnect()
 {
     set<string>::iterator aci;
     
+    int timeout = 0;
+    dn_event_timer *dte;
     for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
-        async_establishClient(*aci);
+        dte = new dn_event_timer(
+            timeout, 0,
+            autoConnectHost, new string(*aci)
+            );
+        dte->activate();
+        timeout += 5;
     }
     
 }

@@ -69,4 +69,8 @@ void uiLoseRoute(const string &from);
  * to: the user that the transmission was sent to */
 void uiNoRoute(const string &to);
 
+/* Display the first-time question, block for a response
+ * Returns: True or false for yes or no */
+bool uiFirstTime();
+
 #endif // DN_UI_H
