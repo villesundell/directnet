@@ -1,3 +1,8 @@
+2.0a5:
+        - Much improved UI.
+        - Proper renewing of chat room ownership.
+        - Fixed a few bugs which for some reason only appear on 64-bit systems.
+
 2.0a4:
         - When a node disconnects without leaving chat rooms, the host now
           properly removes the user.
