@@ -40,7 +40,6 @@ Information about the format of DHT keys is at the bottom of this document.
 [HTI = hash table identifier]
 [Keys as used by the DHT are SHA-256'd from the desired data to look up
 (whether an encryption key, name, or anything else)]
-[None of this is implemented yet]
 
 Had(1)(1) (hash add)
         purpose: add a value to a list of values currently assigned in the distributed hash

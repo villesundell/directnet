@@ -147,7 +147,7 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     
     // send our name into the hash
     BinSeq hname("\x08nm", 3);
-    hname += dn_name;
+    hname += genericName(dn_name);
     dhtSendAdd(hname, pukeyhash, &dhti);
     
     // set up the data aging timer
@@ -173,7 +173,7 @@ void dhtCreate(const BinSeq &key)
     newDHT.established = true;
     
     // add our own data with refresher loop et all
-    BinSeq nminfo = BinSeq("\x08nm", 3) + dn_name;
+    BinSeq nminfo = BinSeq("\x08nm", 3) + genericName(dn_name);
     dhtSendAdd(nminfo, pukeyhash, &newDHT);
     
     // set up the data aging timer
@@ -803,7 +803,8 @@ void sendFndCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
 void sendFnd(const string &toc, fndCallback callback, void *data)
 {
     // Find a user by name
-    BinSeq nmcode = "\x08nm" + toc;
+    BinSeq nmcode = "\x08nm";
+    nmcode += genericName(toc);
     
     if (callback) {
         // FIXME: this should expire

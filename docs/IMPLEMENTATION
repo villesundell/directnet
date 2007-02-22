@@ -11,7 +11,9 @@ receiving side is on any DHTs, it sends the list back in an 'Hir' command. If
 it isn't, it creates three (yes, three) DHTs with arbitrary HTIs and sends
 those back in an 'Hir' command. The unestablished connecting side will then
 send an 'Had' to add its name to the hash, and start establishing itself into
-the DHTs.
+the DHTs. The name added to the hash (and searched for when looking for users)
+is the generic form of the name. At the moment that merely means that it's
+lower-case.
 
 A node is established in the DHT when:
 * It knows its second predecessor, first predecessor, first successor and
@@ -19,7 +21,7 @@ A node is established in the DHT when:
 * It has enough binary divisions that the smallest one is self-referential.
 
 To accomplish establishment, the node sends an 'Hfn' command to find neighbors,
-and upon successfully finding neighbors, starts sending 'Hfn' command to find
+and upon successfully finding neighbors, starts sending 'Hfn' commands to find
 divisions.
 
 After that, all protocol commands can be sent and received by both parties.

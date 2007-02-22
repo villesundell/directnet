@@ -99,6 +99,20 @@ bool validateName()
     return true;
 }
 
+// get the generic form of the name (currently just means lowercase)
+BinSeq genericName(const BinSeq &name)
+{
+    BinSeq ret;
+    for (int i = 0; i < name.size(); i++) {
+        char c = name[i];
+        if (c >= 'A' && c <= 'Z') {
+            c += ('a' - 'A');
+        }
+        ret.push_back(c);
+    }
+    return ret;
+}
+
 void dn_init(int argc, char **argv) {
     int i;
     char *binloc, *binnm;

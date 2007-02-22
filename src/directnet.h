@@ -84,6 +84,9 @@ extern char *homedir, *bindir;
 // validate the chosen dn_name
 bool validateName();
 
+// get the generic form of the name (currently just means lowercase)
+BinSeq genericName(const BinSeq &name);
+
 void newTransKey(char *into);
 
 // see a route of users

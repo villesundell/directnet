@@ -115,7 +115,7 @@ char *pk_encdec(const char *name, const char *inp, int encrypt, int *len)
     
     /* Create context */
     ctx = init_pk_ctx();
-
+    
     if (name != NULL) {
         cur = cyf_key_head;
         while (cur) {
@@ -432,7 +432,7 @@ BinSeq genKey()
 BinSeq encCreateKey()
 {
     srand(time(NULL));
-    keyfile = cfgdir + "/key-" + dn_name;
+    keyfile = cfgdir + "/key-" + genericName(dn_name).c_str();
     
     if (access(keyfile.c_str(), R_OK) != 0) {
         // can't read the file
