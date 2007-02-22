@@ -59,7 +59,7 @@ struct outgc {
     int outgp;
 };
 
-static void connect_act(dn_event_fd *ev, int cond);
+void connect_act(dn_event_fd *ev, int cond);
 
 void async_establishClient(const string &destination)
 {
@@ -134,7 +134,7 @@ void async_establishClient(const string &destination)
     ev->activate();
 }
 
-static void connect_act(dn_event_fd *ev, int cond) {
+void connect_act(dn_event_fd *ev, int cond) {
     int fd = ev->getFD();
     outgc *ogc = (outgc *)ev->payload;
     delete ev;
@@ -153,6 +153,4 @@ static void connect_act(dn_event_fd *ev, int cond) {
     
     init_comms(fd, &ogc->outgh, ogc->outgp);
     delete ogc;
-    
-    return;
 }

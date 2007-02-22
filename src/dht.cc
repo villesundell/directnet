@@ -1318,7 +1318,8 @@ dataok:
             
             case '\x03':
             {
-                // search for neighbors
+                // search for neighbors - if we don't match exactly, failed search!
+                if (pukeyhash == msg.params[3]) return;
                 BinSeq neighbors[4];
                     
                 // set their keys
