@@ -729,10 +729,8 @@ bool handleRoutedMsg(const Message &msg)
     // see everyone in the route
     seeUsers((*route));
     
-    next = (*route)[0];
-    
     // find the /latest/ element we have a connection to
-    for (i = route->size() - 1; route >= 0; route--) {
+    for (i = route->size() - 1; i >= 0; i--) {
         next = (*route)[i];
         if (dn_kbh->find(next) == dn_kbh->end()) continue;
         next = (*dn_kbh)[next];
@@ -740,18 +738,20 @@ bool handleRoutedMsg(const Message &msg)
         break;
     }
     
-    if (route < 0) {
+    printf("Route element %d of %d\n", i, route->size());
+    
+    if (i < 0) {
         // couldn't find it :(
         return true;
     }
     
     // shrink the route
-    for (; i >= 0; i--) route->pop_front();
+    for (; i >= 0 && route->size(); i--) route->pop_front();
     
     // get the connection
     sendc = (conn_t *) (*dn_conn)[next];
     
-    // and send forward the message
+    // and send the message
     Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
     omsg.params.push_back(route->toBinSeq());
     s = msg.params.size();
