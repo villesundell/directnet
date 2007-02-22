@@ -82,6 +82,22 @@ char *homedir, *bindir;
 
 char *findHome(char **envp);
 
+bool validateName()
+{
+    // valid names: [a-zA-Z0-9_\-\[\]]
+    int i;
+    for (i = 0; dn_name[i]; i++) {
+        char c = dn_name[i];
+        if ((c < 'a' || c > 'z') &&
+            (c < 'A' || c > 'Z') &&
+            (c < '0' || c > '9') &&
+            (c != '_') && (c != '-') &&
+            (c != '[') && (c != ']'))
+            return false;
+    }
+    return true;
+}
+
 void dn_init(int argc, char **argv) {
     int i;
     char *binloc, *binnm;
@@ -157,6 +173,9 @@ void dn_init(int argc, char **argv) {
 }
     
 void dn_goOnline() {
+    // generate the key
+    encCreateKey();
+    
     // no server for NESTEDVM
 #ifndef NESTEDVM 
     establishServer();

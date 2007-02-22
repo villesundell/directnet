@@ -107,6 +107,13 @@ bool checkAutoConnect(const string &hostname);
  */
 bool checkAutoFind(const string &nick);
 
+/* saveNick
+ * Input: none
+ * Output: none
+ * Effect: the current nick is cached
+ */
+void saveNick();
+
 // our configuration files
 extern string dn_ac_list_f;
 extern set<string> *dn_ac_list;

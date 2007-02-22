@@ -432,7 +432,7 @@ BinSeq genKey()
 BinSeq encCreateKey()
 {
     srand(time(NULL));
-    keyfile = cfgdir + "/key";
+    keyfile = cfgdir + "/key-" + dn_name;
     
     if (access(keyfile.c_str(), R_OK) != 0) {
         // can't read the file

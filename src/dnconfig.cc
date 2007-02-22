@@ -55,6 +55,7 @@ string dn_ac_list_f;
 set<string> *dn_ac_list;
 string dn_af_list_f;
 set<string> *dn_af_list;
+string dn_nick_f;
 string cfgdir;
 
 /* initConfig
@@ -65,7 +66,7 @@ string cfgdir;
 void initConfig()
 {
     int i, osl;
-    FILE *acf, *aff;
+    FILE *acf, *aff, *nickf;
     
     // find configuration directory
     if (cfgdir == "") { // allow the UI to override
@@ -113,6 +114,7 @@ void initConfig()
     // find configuration files
     dn_ac_list_f = cfgdir + "/ac";
     dn_af_list_f = cfgdir + "/af";
+    dn_nick_f = cfgdir + "/nick";
     
     // perhaps do first-time actions
     if (firsttime && uiFirstTime()) {
@@ -173,6 +175,13 @@ void initConfig()
             }
         }
         fclose(aff);
+    }
+    
+    nickf = fopen(dn_nick_f.c_str(), "r");
+    if (nickf) {
+        fgets(dn_name, DN_NAME_LEN, nickf);
+    } else {
+        dn_name[0] = '\0';
     }
 }
 
@@ -350,4 +359,21 @@ bool checkAutoFind(const string &nick)
 {
     if (dn_af_list->find(nick) != dn_af_list->end()) return true;
     return false;
+}
+
+/* saveNick
+ * Input: none
+ * Output: none
+ * Effect: the current nick is cached
+ */
+void saveNick()
+{
+    FILE *outf;
+    outf = fopen(dn_nick_f.c_str(), "w");
+    if (!outf) {
+        return;
+    }
+    
+    fprintf(outf, "%s", dn_name);
+    fclose(outf);
 }

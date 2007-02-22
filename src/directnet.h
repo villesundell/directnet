@@ -81,6 +81,9 @@ extern char dn_localip[24];
 // stuff for relocatability
 extern char *homedir, *bindir;
 
+// validate the chosen dn_name
+bool validateName();
+
 void newTransKey(char *into);
 
 // see a route of users

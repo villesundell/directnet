@@ -193,12 +193,10 @@ int main(int argc, char **argv, char **envp)
 #endif
     authSetPW("", "");
     
-    /* And creating the key */
-    encCreateKey();
-    
     /* make the name window */
     nw = new NameWindow();
     nw->make_window();
+    nw->nameIn->value(dn_name);
     nw->nameWindow->show();
     if (cmd_nm) {
         // set the name 
@@ -433,6 +431,14 @@ void setName(Fl_Input *w, void *ignore)
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
     nw->nameWindow->hide();
+    
+    saveNick();
+    
+    // check the name
+    if (!validateName()) {
+        fl_message("Invalid name.");
+        exit(1);
+    }
     
     /* make the buddy window */
     bw = new BuddyWindow();

@@ -142,21 +142,38 @@ int main(int argc, char **argv, char **envp)
 #endif
         
         // Then asking for the nick
-        printf("What is your nick? ");
-        fgets(dn_name, DN_NAME_LEN, stdin);
-        dn_name[DN_NAME_LEN] = '\0';
+        char newname[DN_NAME_LEN + 1];
+        newname[DN_NAME_LEN] = '\0';
+        if (dn_name[0]) {
+            printf("What is your nick [%s]? ", dn_name);
+        } else {
+            printf("What is your nick? ");
+        }
+        fflush(stdout);
+        fgets(newname, DN_NAME_LEN, stdin);
+        
+        if (newname[0]) {
+            strcpy(dn_name, newname);
+        } else if (!dn_name[0]) {
+            exit(1);
+        }
         
         charin = strlen(dn_name);
         if (dn_name[charin-1] == '\n') {
             dn_name[charin-1] = '\0';
         }
+        
+        saveNick();
     } else { // hub mode
         authSetPW("", "");
         strcpy(dn_name, hubname);
     }
     
-    // And creating the key
-    encCreateKey();
+    // check the name
+    if (!validateName()) {
+        fprintf(stderr, "Invalid name.\n");
+        return 1;
+    }
     
     if (hub) {
         string away = "This is a hub, there is no human reading your messages.";
