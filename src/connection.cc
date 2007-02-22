@@ -36,6 +36,7 @@ extern "C" {
 #include <sys/socket.h>
 #else
 #include <winsock.h>
+typedef int socklen_t;
 #endif
 
 #ifdef NESTEDVM
