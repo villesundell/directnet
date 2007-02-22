@@ -1,3 +1,10 @@
+2.0a6:
+        - Fixed a bug causing nodes with many incomign connections
+          (particularly hubs) to hang.
+        - Implemented automatic short-circuiting.
+        - More UI improvements.
+        - Implemented nick caching.
+
 2.0a5:
         - Much improved UI.
         - Proper renewing of chat room ownership.
