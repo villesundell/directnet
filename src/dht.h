@@ -167,11 +167,12 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
 void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data);
 
 /* Send a properly-formed add message over the DHT, with a refresher loop */
-void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht);
+void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht = NULL);
 
 /* Send an atomic add/search */
 void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
-                      dhtSearchCallback callback, void *data);
+                      dhtSearchCallback callback, void *data,
+                      DHTInfo *dht = NULL);
 
 /* Send a properly-formed search message over the DHT
  * params same as dhtForMe */

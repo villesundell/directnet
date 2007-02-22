@@ -38,6 +38,7 @@ extern "C" {
 #include "enc.h"
 #include "message.h"
 #include "route.h"
+#include "ui.h"
 
 map<BinSeq, DHTInfo> in_dhts;
 
@@ -138,6 +139,28 @@ dhtdabb:
     }
 }
 
+void dhtJoinCallback(const BinSeq &key, const set<BinSeq> &values, void *data)
+{
+    // FIXME: This should be done in a better way
+    BinSeq enckey;
+    if (values.size() == 0) {
+        // bad :(
+        return;
+    }
+    
+    // get the encryption key
+    enckey = *(values.begin());
+    
+    // check it
+    if (enckey != pukeyhash) {
+        // FIXME: yukk
+        string msg = string("The name ") + dn_name + " has already been "
+            "registered. If it was registered by you, you do not have the "
+            "associated key file.";
+        uiDispMsg("DirectNet", msg, "", 1);
+    }
+}
+
 void dhtJoin(const BinSeq &ident, const BinSeq &rep)
 {
     in_dhts.erase(ident);
@@ -148,7 +171,7 @@ void dhtJoin(const BinSeq &ident, const BinSeq &rep)
     // send our name into the hash
     BinSeq hname("\x08nm", 3);
     hname += genericName(dn_name);
-    dhtSendAdd(hname, pukeyhash, &dhti);
+    dhtSendAddSearch(hname, pukeyhash, dhtJoinCallback, NULL, &dhti);
     
     // set up the data aging timer
     dn_event_timer *te = new dn_event_timer(
@@ -891,8 +914,19 @@ void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht)
 
 /* Send an atomic add/search */
 void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
-                      dhtSearchCallback callback, void *data)
+                      dhtSearchCallback callback, void *data,
+                      DHTInfo *dht)
 {
+    // if no DHT set, run for each
+    if (!dht) {
+        map<BinSeq, DHTInfo>::iterator di;
+        
+        for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
+            dhtSendAddSearch(key, value, callback, data, &(di->second));
+        }
+        return;
+    }
+    
     // store the search info
     DHTSearchInfo &dsi = dhtSearches[key];
     dsi.callback = callback;
@@ -901,7 +935,7 @@ void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
     // make the message
     Message msg(1, "Hag", 1, 1);
     msg.params.push_back("");
-    msg.params.push_back("");
+    msg.params.push_back(dht->HTI);
     msg.params.push_back(key);
     msg.params.push_back(value);
     msg.params.push_back("");
@@ -910,12 +944,7 @@ void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
     msg.params.push_back("");
     
     // send out the search
-    map<BinSeq, DHTInfo>::iterator di;
-    for (di = in_dhts.begin(); di != in_dhts.end(); di++) {
-        msg.params[1] = di->first;
-        msg.params[5] = "";
-        dhtSendMsg(msg, di->first, encHashKey(di->first + key), &(msg.params[5]));
-    }
+    dhtSendMsg(msg, dht->HTI, encHashKey(dht->HTI + key), &(msg.params[5]));
     
     // start the clock for 10 seconds
     dn_event_timer *dne =
