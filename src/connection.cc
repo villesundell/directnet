@@ -738,8 +738,6 @@ bool handleRoutedMsg(const Message &msg)
         break;
     }
     
-    printf("Route element %d of %d\n", i, route->size());
-    
     if (i < 0) {
         // couldn't find it :(
         return true;
