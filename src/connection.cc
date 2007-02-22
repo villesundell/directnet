@@ -703,7 +703,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // 3) Continue
         msg.params[1] = ips.toBinSeq();
         if (croute.size() != 0)
-            handleRoutedMsg(msg.params[1]);
+            handleRoutedMsg(msg);
         
         
     }
