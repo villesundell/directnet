@@ -196,8 +196,9 @@ int main(int argc, char **argv, char **envp)
     /* make the name window */
     nw = new NameWindow();
     nw->make_window();
-    nw->nameIn->value(dn_name);
     nw->nameWindow->show();
+    nw->nameIn->value(dn_name);
+    nw->nameIn->when(FL_WHEN_ENTER_KEY|FL_WHEN_NOT_CHANGED);
     if (cmd_nm) {
         // set the name 
         nw->nameIn->value(cmd_nm);

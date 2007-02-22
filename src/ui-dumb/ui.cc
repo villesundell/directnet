@@ -152,7 +152,9 @@ int main(int argc, char **argv, char **envp)
         fflush(stdout);
         fgets(newname, DN_NAME_LEN, stdin);
         
-        if (newname[0]) {
+        if (newname[0] &&
+            newname[0] != '\r' &&
+            newname[0] != '\n') {
             strcpy(dn_name, newname);
         } else if (!dn_name[0]) {
             exit(1);
@@ -162,8 +164,6 @@ int main(int argc, char **argv, char **envp)
         if (dn_name[charin-1] == '\n') {
             dn_name[charin-1] = '\0';
         }
-        
-        saveNick();
     } else { // hub mode
         authSetPW("", "");
         strcpy(dn_name, hubname);
@@ -174,6 +174,8 @@ int main(int argc, char **argv, char **envp)
         fprintf(stderr, "Invalid name.\n");
         return 1;
     }
+    
+    saveNick();
     
     if (hub) {
         string away = "This is a hub, there is no human reading your messages.";

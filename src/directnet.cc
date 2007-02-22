@@ -95,6 +95,7 @@ bool validateName()
             (c != '[') && (c != ']'))
             return false;
     }
+    if (i == 0) return false;
     return true;
 }
 

@@ -1,5 +1,5 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0106 
+version 1.0107 
 header_name {.h} 
 code_name {.cc}
 class NameWindow {open
@@ -8,7 +8,7 @@ class NameWindow {open
   } {
     Fl_Window nameWindow {
       label DirectNet
-      callback mainWinClosed open selected
+      callback mainWinClosed open
       xywh {344 209 255 90} type Double color 0 visible
     } {
       Fl_Input nameIn {
