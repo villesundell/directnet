@@ -72,7 +72,7 @@ void handleChatMessage(conn_t *conn, Message &msg)
         sendCon(ci);
         
         // inform the UI
-        uiDispChatMsg(msg.params[4], "DirectNet", msg.params[1] + " has joined the channel.");
+        uiDispChatJoin(msg.params[4], msg.params[1]);
         
     } else if (CMD_IS("Clv", 1, 1)) {
         REQ_PARAMS(4);
@@ -102,7 +102,7 @@ void handleChatMessage(conn_t *conn, Message &msg)
         sendCon(ci);
         
         // and tell the UI
-        uiDispChatMsg(msg.params[3], "DirectNet", msg.params[1] + " has left the channel.");
+        uiDispChatLeave(msg.params[3], msg.params[1]);
         
     } else if (CMD_IS("Cms", 1, 1)) {
         REQ_PARAMS(5);
@@ -124,11 +124,11 @@ void handleChatMessage(conn_t *conn, Message &msg)
             msg.params[1] = dn_name;
             map<BinSeq, ChatKeyNameAssoc>::iterator li;
             for (li = ci.list.begin(); li != ci.list.end(); li++) {
-                if (li->second.name == msg.params[3]) continue;
-                if (li->second.name == dn_name) continue;
+                if (li->first == msg.params[3]) continue;
+                if (li->first == dn_name) continue;
                 if (dn_routes->find(li->second.key) != dn_routes->end()) {
                     msg.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
-                    msg.params[4] = encTo(dn_name, li->second.name, unencmsg);
+                    msg.params[4] = encTo(dn_name, li->first, unencmsg);
                     handleRoutedMsg(msg);
                 }
             }
@@ -158,7 +158,7 @@ void handleChatMessage(conn_t *conn, Message &msg)
             if (!inlist) {
                 // tell the UI
                 // FIXME: better UI message would be nice
-                uiDispChatMsg(msg.params[3], "DirectNet", (*ri) + " has joined the channel.");
+                uiDispChatJoin(msg.params[3], *ri);
                 
                 // gain it
                 ci.list[*ri] = ChatKeyNameAssoc("", *ri);
@@ -169,11 +169,11 @@ void handleChatMessage(conn_t *conn, Message &msg)
 findparts:
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
             // if this user is not in the list, we lost one
-            bool inlist = rulist.find(li->second.name);
+            bool inlist = rulist.find(li->first);
             
             if (!inlist) {
                 // tell the UI
-                uiDispChatMsg(msg.params[3], "DirectNet", li->second.name + " has left the channel.");
+                uiDispChatLeave(msg.params[3], li->first);
                 
                 // lose it
                 ci.list.erase(li);
@@ -359,6 +359,7 @@ void chatJoinDataCallback(const BinSeq &key, const set<BinSeq> &values, void *da
         
         // FIXME: tell the UI in a better way
         uiDispChatMsg(*rname, "DirectNet", "Channel created.");
+        uiDispChatJoin(*rname, dn_name);
         
         // start the refresher (to make sure I keep it)
         
@@ -457,7 +458,7 @@ finddisconnects:
                 // If this user has disconnected, remove it
                 
                 // Inform the UI (FIXME)
-                uiDispChatMsg(ci.name, "DirectNet", li->first + " has left the channel.");
+                uiDispChatLeave(ci.name, li->first);
                 
                 // Then delete the user
                 changed = true;

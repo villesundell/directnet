@@ -246,21 +246,25 @@ void handleUInput(const string &inp)
                 setAway(NULL);
                 cout << "Away message unset." << endl;
             }
-            return;
         } else if (params[0] == "/connect" || params[0] == "/c") {
-            if (params.size() <= 1) {
+            if (params.size() < 2) {
                 return;
             }
             
             // Connect to a given hostname or user
             establishConnection(params[1]);
-            return;
         } else if (params[0] == "/find" || params[0] == "/f") {
-            if (params.size() <= 1) {
+            if (params.size() < 2) {
                 return;
             }
             
             sendFnd(params[1]);
+        } else if (params[0] == "/join" || params[0] == "/j") {
+            if (params.size() < 2 || params[1][0] != '#') {
+                return;
+            }
+            
+            chatJoin(params[1]);
         } else if (params[0] == "/key" || params[0] == "/k") {
             if (currentPartner == "") {
                 cout << "You haven't chosen a chat partner!  Type '/t <username>' to initiate a chat." << endl;
@@ -275,16 +279,13 @@ void handleUInput(const string &inp)
             }
             
             currentPartner = params[1];
-            
-            if (currentPartner[0] == '#') {
-                // Join the chat
-                // joinChat(currentPartner.substr(1)); FIXME
-            }
         } else if (params[0] == "/auto") {
             // auto*
             handleAuto(params);
         } else if (params[0] == "/quit" || params[0] == "/q") {
             exit(0);
+        } else {
+            cout << "Unrecognized command " << params[0] << endl;
         }
         
     } else {
@@ -450,7 +451,23 @@ void uiAskAuthImport2(const string &acpt)
 void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
     if (!hub) {
-        cout << endl << "#" << chat << ": " << from << ": " << msg << endl << currentPartner << "> ";
+        cout << endl << chat << ": " << from << ": " << msg << endl << currentPartner << "> ";
+        cout.flush();
+    }
+}
+
+void uiDispChatJoin(const string &chat, const string &user)
+{
+    if (!hub) {
+        cout << endl << user << " has joined " << chat << endl << currentPartner << "> ";
+        cout.flush();
+    }
+}
+
+void uiDispChatLeave(const string &chat, const string &user)
+{
+    if (!hub) {
+        cout << endl << user << " has left " << chat << endl << currentPartner << "> ";
         cout.flush();
     }
 }

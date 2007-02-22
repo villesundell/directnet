@@ -56,6 +56,7 @@ using namespace std;
 #include "AutoConnWindow.h"
 #include "AutoConnYNWindow.h"
 #include "BuddyWindow.h"
+#include "ChannelWindow.h"
 #include "ChatWindow.h"
 #include "DHTWindow.h"
 #include "NameWindow.h"
@@ -69,6 +70,7 @@ using namespace std;
 NameWindow *nw;
 BuddyWindow *bw;
 map<string, ChatWindow *> cws;
+map<string, ChannelWindow *> channelws;
 AutoConnWindow *acw;
 Fl_Window *miniwin, *notewin;
 string msgbuffer="";
@@ -259,15 +261,36 @@ ChatWindow *getWindow(const string &name, bool show = true)
     return cws[name];
 }
 
-void putOutput(ChatWindow *w, const string &txt)
+ChannelWindow *getChannelWindow(const string &name, bool show = true)
 {
-    //Fl_Text_Buffer *tb = w->textOut->buffer();
+    int i;
+    
+    if (channelws.find(name) != channelws.end()) {
+        if (!show && !channelws[name]->channelWindow->shown()) return NULL;
+        channelws[name]->channelWindow->show();
+        return channelws[name];
+    }
+    
+    if (!show) return NULL;
+    
+    channelws[name] = new ChannelWindow();
+    channelws[name]->make_window();
+    channelws[name]->channelWindow->label(strdup(name.c_str()));
+    
+    channelws[name]->channelWindow->show();
+    
+    return channelws[name];
+}
+
+void putOutput(Fl_Help_View *textOut, const string &txt)
+{
+    //Fl_Text_Buffer *tb = textOut->buffer();
     string strippedstr; //Place for stripped text
     char *msgtimestamp = ""; //Here is messages timestamp
     
-    if (w->textOut->value() == NULL)
+    if (textOut->value() == NULL)
     {
-    	w->textOut->value(" ");
+    	textOut->value(" ");
     }
     //Now we should stripout all nonpermitted html-tags
     //Here we rip all bad html tags off
@@ -352,13 +375,13 @@ void putOutput(ChatWindow *w, const string &txt)
     
     // get the output
     string htmloutput;
-    htmloutput = w->textOut->value();
+    htmloutput = textOut->value();
     htmloutput += "<br><font color=gray>";
     htmloutput += string(make_timestamp()) + "</font>" + strippedstr;
-    w->textOut->value(htmloutput.c_str());
-    ((Fl_Valuator*) &(w->textOut->scrollbar_))->value(
-        w->textOut->scrollbar_.maximum());
-    w->textOut->topline(w->textOut->scrollbar_.value());
+    textOut->value(htmloutput.c_str());
+    ((Fl_Valuator*) &(textOut->scrollbar_))->value(
+        textOut->scrollbar_.maximum());
+    textOut->topline(textOut->scrollbar_.value());
     
     //Adding one to counter (for minimode):
     mini_msg_count++;
@@ -367,10 +390,10 @@ void putOutput(ChatWindow *w, const string &txt)
     Fl::flush();
 }
 
-void putError (ChatWindow *w, const string &txt)
+void putError(ChatWindow *w, const string &txt)
 {
-	//Put error to screen
-	putOutput(w, "<b><#red>"+txt+"<#></b><br>");
+    //Put error to screen
+    putOutput(w->textOut, "<b><#red>"+txt+"<#></b><br>");
 }
 
 // Update the status bar
@@ -614,12 +637,7 @@ void estChat(Fl_Widget *w, void *data)
     // of course, join the chat
     chatJoin(joinC);
     dhtAction(string("Joining ") + joinC);
-    ChatWindow *cw = getWindow(joinC);
-    
-    // now hide the useless buttons
-    cw->bBan->hide();
-    cw->bSndKey->hide();
-    cw->bAutoFind->hide();
+    getChannelWindow(joinC);
     
     free(joinC);
 }
@@ -799,32 +817,47 @@ void talkTo(Fl_Button *b, void *ignore)
 
 void sendInput(Fl_Input *w, void *ignore)
 {
-    /* sad way to figure out what window we're in ... */
-    map<string, ChatWindow *>::iterator cwi;
+    Fl_Help_View *fhv = NULL; // to be set once it finds the window
+    string to, msg;
     
-    for (cwi = cws.begin(); cwi != cws.end(); cwi++) {
-        if (cwi->second->textIn == w) {
-            /* this is our window */
-            string dispmsg, to, msg;
-            
-            to = cwi->second->chatWindow->label();
-            
-            msg = cwi->second->textIn->value();
-            cwi->second->textIn->value("");
-            
-            dispmsg = string("<b>")+dn_name+ string("</b>") + string(": ") + msg + string("<br>");
-            
-            if (to[0] == '#') {
-                // Chat room
-                sendChat(to, msg);
-                putOutput(cwi->second, dispmsg);
-            } else {
-                if (sendMsg(to, msg)) {
-                    putOutput(cwi->second, dispmsg);
-                }
-            }
-            
-            return;
+    /* sad way to figure out what window we're in ... */
+    map<string, ChatWindow *>::iterator ctwi;
+    map<string, ChannelWindow *>::iterator clwi;
+    
+    for (ctwi = cws.begin(); ctwi != cws.end(); ctwi++) {
+        if (ctwi->second->textIn == w) {
+            to = ctwi->second->chatWindow->label();
+            msg = ctwi->second->textIn->value();
+            ctwi->second->textIn->value("");
+            fhv = ctwi->second->textOut;
+            break;
+        }
+    }
+    
+    for (clwi = channelws.begin(); clwi != channelws.end(); clwi++) {
+        if (clwi->second->textIn == w) {
+            to = clwi->second->channelWindow->label();
+            msg = clwi->second->textIn->value();
+            clwi->second->textIn->value("");
+            fhv = clwi->second->textOut;
+            break;
+        }
+    }
+    
+    if (!fhv) return;
+    
+    /* this is our window */
+    string dispmsg;
+    
+    dispmsg = string("<b>")+dn_name+ string("</b>") + string(": ") + msg + string("<br>");
+    
+    if (to[0] == '#') {
+        // Chat room
+        sendChat(to, msg);
+        putOutput(fhv, dispmsg);
+    } else {
+        if (sendMsg(to, msg)) {
+            putOutput(fhv, dispmsg);
         }
     }
 }
@@ -860,8 +893,21 @@ void flDispMsg(const string &window, const string &from, const string &msg, cons
     if (cw->bBan->color()!=FL_RED)
     {
     	//If we havent banned this user, we should display that message:
-    	putOutput(cw, dispmsg);
+    	putOutput(cw->textOut, dispmsg);
     }
+}
+
+void flDispChatMsg(const string &window, const string &from, const string &msg)
+{
+    ChannelWindow *cw;
+    string dispmsg;
+
+    assert(uiLoaded);
+    
+    dispmsg = "<b>" + from + "</b>" + ": " + msg + "<br>";
+    
+    cw = getChannelWindow(window);
+    putOutput(cw->textOut, dispmsg);
 }
 
 void flAddRemAutoFind(Fl_Button *btn, void *)
@@ -1000,7 +1046,42 @@ void uiAskAuthImport(const string &from, const string &msg, const string &sig)
 
 void uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
-    flDispMsg(chat, from, msg, "");
+    flDispChatMsg(chat, from, msg);
+}
+
+void uiDispChatJoin(const string &chat, const string &user)
+{
+    ChannelWindow *cw = getChannelWindow(chat, false);
+    if (!cw) return;
+    
+    // check if it's already there
+    int i;
+    for (i = 1; i <= cw->userList->size(); i++) {
+        if (cw->userList->text(i) == user) return;
+    }
+    
+    // add it
+    cw->userList->add(user.c_str());
+    
+    // and inform of the join
+    putOutput(cw->textOut, user + " has joined the channel.");
+}
+
+void uiDispChatLeave(const string &chat, const string &user)
+{
+    ChannelWindow *cw = getChannelWindow(chat, false);
+    if (!cw) return;
+    
+    // look for it
+    int i;
+    for (i = 1; i <= cw->userList->size(); i++) {
+        if (cw->userList->text(i) == user) {
+            // remove it
+            cw->userList->remove(i);
+            putOutput(cw->textOut, user + " has left the channel.");
+            return;
+        }
+    }
 }
 
 void uiEstConn(const string &from)

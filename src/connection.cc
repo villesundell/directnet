@@ -116,7 +116,7 @@ static void ping_timeout(dn_event_t *ev) {
 }
 #endif
  
-void init_comms(int fd, const string *outgh, int outgp) {
+conn_t *init_comms(int fd, const string *outgh, int outgp) {
     struct connection *cs;
     assert(fd >= 0);
     cs = new connection;
@@ -144,6 +144,7 @@ void init_comms(int fd, const string *outgh, int outgp) {
     }
     
     send_handshake(cs);
+    return cs;
 }
  
 void send_handshake(conn_t *cs) {
@@ -478,7 +479,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         }
             
         // Then, attempt the connection
-        async_establishClient(msg.params[2].c_str());
+        async_establishClient(msg.params[2].c_str(), false);
 #endif
 
     } else if (CMD_IS("dni", 1, 1)) {
@@ -525,7 +526,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         (*dn_kbh)[keyhash] = msg.params[0];
         
         // inform the UI
-        if (conn->outgh)
+        if (conn->outgh && conn->requested)
             uiEstConn(*(conn->outgh));
         
     } else if (CMD_IS("fnd", 1, 1)) {
@@ -694,7 +695,7 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         if (ips.size() != 0 &&
             ips.size() == croute.size() + 1) {
             // connect to the next one
-            async_establishClient(ips[ips.size() - 1]);
+            async_establishClient(ips[ips.size() - 1], false);
             ips.pop_back();
         }
         

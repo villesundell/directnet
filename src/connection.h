@@ -56,6 +56,8 @@ class connection {
     bool outgoing;
     string *outgh;
     int outgp;
+    
+    bool requested; // if the user requested this connection
         
     dn_event_fd fd_ev;
     dn_event_timer ping_ev;
@@ -73,7 +75,7 @@ void establishConnection(const string &to);
 /* Begin peer communication on an opened file handle
  * If the connection is outgoing, include outgh and outgp
  */
-void init_comms(int fd, const string *outgh, int outgp);
+conn_t *init_comms(int fd, const string *outgh, int outgp);
 
 /* Send a message (for use by the UI)
  * to: user to send to

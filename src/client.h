@@ -32,8 +32,9 @@ using namespace std;
 
 /* Connect in the background to a hostname or IP
  * destination: the hostname or IP
+ * requested: User has requested this connection
  */
-void async_establishClient(const string &destination);
+void async_establishClient(const string &destination, bool requested = true);
 
 /* Establish a client connection handler on an open fd. */
 void setupPeerConnection(int fd);

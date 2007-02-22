@@ -6,6 +6,7 @@ libui_a_SOURCES=AutoConnWindow.cc \
 AutoConnYNWindow.cc \
 BuddyWindow.cc \
 ChatWindow.cc \
+ChannelWindow.cc \
 DHTWindow.cc \
 NameWindow.cc \
 QWindow.cc \

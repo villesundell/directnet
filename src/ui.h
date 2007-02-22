@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2005  Gregor Richards
+ * Copyright 2004, 2005, 2007  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -47,6 +47,16 @@ void uiAskAuthImport(const string &from, const string &msg, const string &sig);
  * from: the person who sent the message
  * msg: the message */
 void uiDispChatMsg(const string &chat, const string &from, const string &msg);
+
+/* Display a chat join
+ * chat: then channel
+ * user: the user */
+void uiDispChatJoin(const string &chat, const string &user);
+
+/* Display a chat part
+ * chat: then channel
+ * user: the user */
+void uiDispChatLeave(const string &chat, const string &user);
 
 /* Display that a connection has been established
  * from: the IP or hostname of the connector */

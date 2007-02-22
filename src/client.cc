@@ -57,11 +57,12 @@ extern "C" {
 struct outgc {
     string outgh;
     int outgp;
+    bool requested;
 };
 
 void connect_act(dn_event_fd *ev, int cond);
 
-void async_establishClient(const string &destination)
+void async_establishClient(const string &destination, bool requested)
 {
     int flags, ret;
     struct hostent *he;
@@ -129,6 +130,7 @@ void async_establishClient(const string &destination)
     outgc *ogc = new outgc;
     ogc->outgh = hostname;
     ogc->outgp = port;
+    ogc->requested = requested;
     
     dn_event_fd *ev = new dn_event_fd(fd, DN_EV_READ | DN_EV_WRITE, connect_act, (void*)ogc);
     ev->activate();
@@ -151,6 +153,8 @@ void connect_act(dn_event_fd *ev, int cond) {
     }
 #endif
     
-    init_comms(fd, &ogc->outgh, ogc->outgp);
+    conn_t *cs = init_comms(fd, &ogc->outgh, ogc->outgp);
+    if (cs)
+        cs->requested = ogc->requested;
     delete ogc;
 }
