@@ -729,21 +729,28 @@ bool handleRoutedMsg(const Message &msg)
     seeUsers((*route));
     
     next = (*route)[0];
-    route->pop_front();
     
-    if (dn_kbh->find(next) == dn_kbh->end()) {
-        // failure
+    // find the /latest/ element we have a connection to
+    for (i = route->size() - 1; route >= 0; route--) {
+        next = (*route)[i];
+        if (dn_kbh->find(next) == dn_kbh->end()) continue;
+        next = (*dn_kbh)[next];
+        if (dn_conn->find(next) == dn_conn->end()) continue;
+        break;
+    }
+    
+    if (route < 0) {
+        // couldn't find it :(
         return true;
     }
-    next = (*dn_kbh)[next];
     
-    if (dn_conn->find(next) == dn_conn->end()) {
-        delete route;
-        return 0;
-    }
+    // shrink the route
+    for (; i >= 0; i--) route->pop_front();
     
+    // get the connection
     sendc = (conn_t *) (*dn_conn)[next];
     
+    // and send forward the message
     Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
     omsg.params.push_back(route->toBinSeq());
     s = msg.params.size();
