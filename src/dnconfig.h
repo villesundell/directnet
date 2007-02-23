@@ -36,82 +36,49 @@ extern string cfgdir;
 // configuration functions
 
 /* initConfig
- * Input: none
- * Output: none
- * Effect: configuration files are opened and read
- */
+ * effect: configuration files are opened and read */
 void initConfig();
 
 /* autoConnect
- * Input: none
- * Output: none
- * Effect: connections are attempted to all autoconnect hostnames
- */
+ * effect: connections are attempted to all autoconnect hostnames */
 void autoConnect();
 
-/* autoConnectThread
- * Input: none
- * Output: none
- * Effect: autoconnect in a thread
- */
-void *autoConnectThread(void *ignore);
-
 /* autoFind
- * Input: none
- * Output: none
- * Effect: finds are sent to all autofind nicks
- */
+ * effect: finds are sent to all autofind nicks */
 void autoFind();
 
 /* addAutoConnect
- * Input: a hostname to autoconnect to in the future
- * Output: none
- * Effect: the hostname is added to the list and the file
- */
+ * hostname: a hostname to autoconnect to in the future
+ * effect: the hostname is added to the list and the file */
 void addAutoConnect(const string &hostname);
 
 /* addAutoFind
- * Input: a nick to autofind in the future
- * Output: none
- * Effect: the nick is added to the list and the file
- */
+ * nick: a nick to autofind in the future
+ * effect: the nick is added to the list and the file */
 void addAutoFind(const string &nick);
 
 /* remAutoConnect
- * Input: a hostname to remove from the autoconnect list
- * Output: none
- * Effect: it is removed from the list and file
- */
+ * hostname: a hostname to remove from the autoconnect list
+ * effect: it is removed from the list and file */
 void remAutoConnect(const string &hostname);
 
 /* remAutoFind
- * Input: a nick to remove from the autofind list
- * Output: none
- * Effect: it is removed from the list and file
- */
+ * nick: a nick to remove from the autofind list
+ * effect: it is removed from the list and file */
 void remAutoFind(const string &nick);
 
 /* checkAutoConnect
- * Input: a hostname
- * Output: 1 if it is in the autoconnect list
- *         0 otherwise
- * Effect: none
- */
+ * hostname: a hostname
+ * returns 1 if it is in the autoconnect list, 0 otherwise */
 bool checkAutoConnect(const string &hostname);
 
 /* checkAutoFind
- * Input: a nick
- * Output: 1 if it is in the autofind list
- *         0 otherwise
- * Effect: none
- */
+ * nick: a nick
+ * returns 1 if it is in the autofind list, 0 otherwise */
 bool checkAutoFind(const string &nick);
 
 /* saveNick
- * Input: none
- * Output: none
- * Effect: the current nick is cached
- */
+ * effect: the current nick is cached */
 void saveNick();
 
 // our configuration files

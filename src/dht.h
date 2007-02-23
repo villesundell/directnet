@@ -163,13 +163,24 @@ BinSeq dhtNextHop(const BinSeq &ident, const BinSeq &key, bool closer = false);
  * return: true if for us */
 bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route, bool closer = false);
 
-/* Send a search for data, with a callback for when it comes */
+/* Send a search for data, with a callback for when it comes
+ * key: the key to search for
+ * callback: the function to call when it's found
+ * data: passed to callback */
 void dhtSendSearch(const BinSeq &key, dhtSearchCallback callback, void *data);
 
-/* Send a properly-formed add message over the DHT, with a refresher loop */
+/* Send a properly-formed add message over the DHT, with a refresher loop
+ * key: the key to add
+ * value: its value
+ * dht: the DHT to add it to (or NULL for all) */
 void dhtSendAdd(const BinSeq &key, const BinSeq &value, DHTInfo *dht = NULL);
 
-/* Send an atomic add/search */
+/* Send an atomic add/search
+ * key: the key to add and search for
+ * value: the value to attempt to add
+ * callback: the function to call when it's found
+ * data: passed to callback
+ * dht: the DHT to add it to and search for it on (or NULL for all) */
 void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
                       dhtSearchCallback callback, void *data,
                       DHTInfo *dht = NULL);

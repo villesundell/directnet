@@ -34,6 +34,7 @@ extern "C" {
 #include <string.h>
 }
 
+/* Like string, but more consistent */
 class BinSeq : public vector<char> {
     public:
     BinSeq();

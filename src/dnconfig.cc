@@ -1,5 +1,5 @@
 /*
- * Copyright 2006  Gregor Richards
+ * Copyright 2006, 2007  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -59,10 +59,7 @@ string dn_nick_f;
 string cfgdir;
 
 /* initConfig
- * Input: none
- * Output: none
- * Effect: configuration files are opened and read
- */
+ * effect: configuration files are opened and read */
 void initConfig()
 {
     int i, osl;
@@ -186,10 +183,7 @@ void initConfig()
 }
 
 /* autoConnecthost
- * Input: the host to connect to
- * Output: none
- * Effect: A single connection is attempted
- */
+ * effect: A single connection is attempted */
 void autoConnectHost(dn_event_timer *dte)
 {
     string *hostname = (string *) dte->payload;
@@ -199,10 +193,7 @@ void autoConnectHost(dn_event_timer *dte)
 }
 
 /* autoConnect
- * Input: none
- * Output: none
- * Effect: connections are attempted to all autoconnect hostnames (one every 5 seconds)
- */
+ * effect: connections are attempted to all autoconnect hostnames */
 void autoConnect()
 {
     set<string>::iterator aci;
@@ -220,22 +211,8 @@ void autoConnect()
     
 }
 
-/* autoConnectThread
- * Input: none
- * Output: none
- * Effect: autoconnect in a thread
- */
-void *autoConnectThread(void *ignore)
-{
-    autoConnect();
-    return NULL;
-}
-
 /* autoFind
- * Input: none
- * Output: none
- * Effect: finds are sent to all autofind nicks
- */
+ * effect: finds are sent to all autofind nicks */
 void autoFind()
 {
     set<string>::iterator afi;
@@ -246,10 +223,8 @@ void autoFind()
 }
 
 /* addAutoConnect
- * Input: a hostname to autoconnect to in the future
- * Output: none
- * Effect: the hostname is added to the list and the file
- */
+ * hostname: a hostname to autoconnect to in the future
+ * effect: the hostname is added to the list and the file */
 void addAutoConnect(const string &hostname)
 {
     FILE *outf;
@@ -267,10 +242,8 @@ void addAutoConnect(const string &hostname)
 }
 
 /* addAutoFind
- * Input: a nick to autofind in the future
- * Output: none
- * Effect: the nick is added to the list and the file
- */
+ * nick: a nick to autofind in the future
+ * effect: the nick is added to the list and the file */
 void addAutoFind(const string &nick)
 {
     FILE *outf;
@@ -288,10 +261,8 @@ void addAutoFind(const string &nick)
 }
 
 /* remAutoConnect
- * Input: a hostname to remove from the autoconnect list
- * Output: none
- * Effect: it is removed from the list and file
- */
+ * hostname: a hostname to remove from the autoconnect list
+ * effect: it is removed from the list and file */
 void remAutoConnect(const string &hostname)
 {
     FILE *outf;
@@ -313,10 +284,8 @@ void remAutoConnect(const string &hostname)
 }
 
 /* remAutoFind
- * Input: a nick to remove from the autofind list
- * Output: none
- * Effect: it is removed from the list and file
- */
+ * nick: a nick to remove from the autofind list
+ * effect: it is removed from the list and file */
 void remAutoFind(const string &nick)
 {
     FILE *outf;
@@ -338,11 +307,8 @@ void remAutoFind(const string &nick)
 }
 
 /* checkAutoConnect
- * Input: a hostname
- * Output: 1 if it is in the autoconnect list
- *         0 otherwise
- * Effect: none
- */
+ * hostname: a hostname
+ * returns 1 if it is in the autoconnect list, 0 otherwise */
 bool checkAutoConnect(const string &hostname)
 {
     if (dn_ac_list->find(hostname) != dn_ac_list->end()) return true;
@@ -350,11 +316,8 @@ bool checkAutoConnect(const string &hostname)
 }
 
 /* checkAutoFind
- * Input: a nick
- * Output: 1 if it is in the autofind list
- *         0 otherwise
- * Effect: none
- */
+ * nick: a nick
+ * returns 1 if it is in the autofind list, 0 otherwise */
 bool checkAutoFind(const string &nick)
 {
     if (dn_af_list->find(nick) != dn_af_list->end()) return true;
@@ -362,10 +325,7 @@ bool checkAutoFind(const string &nick)
 }
 
 /* saveNick
- * Input: none
- * Output: none
- * Effect: the current nick is cached
- */
+ * effect: the current nick is cached */
 void saveNick()
 {
     FILE *outf;

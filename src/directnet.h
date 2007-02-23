@@ -81,21 +81,33 @@ extern char dn_localip[24];
 // stuff for relocatability
 extern char *homedir, *bindir;
 
-// validate the chosen dn_name
+/* validate the chosen dn_name
+ * returns: true if it's valid */
 bool validateName();
 
-// get the generic form of the name (currently just means lowercase)
+/* get the generic form of the name (currently just means lowercase)
+ * name: the original name
+ * returns the generic name */
 BinSeq genericName(const BinSeq &name);
 
+/* make a transaction key (unused) */
 void newTransKey(char *into);
 
-// see a route of users
+/* see a route of users
+ * us: the route */
 void seeUsers(const Route &us);
 
+/* initialize DN
+ * takes same arguments as main() */
 void dn_init(int argc, char **argv);
+
+/* go online */
 void dn_goOnline();
 
-// add a route
+/* add a route
+ * to: the key of the target
+ * rt: the route to it
+ * effect: the route is added if it's the shortest available route */
 void dn_addRoute(const BinSeq &to, const Route &rt);
 
 //Release notes for this version (if this one is not defined, there is no startup message.

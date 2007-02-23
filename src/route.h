@@ -31,6 +31,7 @@ using namespace std;
 
 #include "binseq.h"
 
+/* A convenient class for routes */
 class Route : public vector<BinSeq> {
     public:
     Route();

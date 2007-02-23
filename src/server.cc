@@ -54,6 +54,7 @@ extern "C" {
 static void serverActivity(dn_event_fd *ev, int cond);
 static void serverAccept(int fd);
 
+/* Socket setup (just for Windows) */
 static void initSockets()
 {
 #ifdef WIN32
@@ -68,6 +69,8 @@ static void initSockets()
 #endif
 }
 
+/* Set up the server
+ * returns the event for the server or NULL if the server wasn't started */
 dn_event_fd *establishServer()
 {
     int server_sock;
@@ -123,6 +126,7 @@ dn_event_fd *establishServer()
     return listen_ev;
 }
 
+/* The receiver for activity on the server port */
 static void serverActivity(dn_event_fd *ev, int cond) {
     if (cond & DN_EV_EXCEPT) {
         /*fprintf(stderr, "Our server socket seems to have imploded. That sounds fun; I'll do it too.\n");
@@ -132,6 +136,7 @@ static void serverActivity(dn_event_fd *ev, int cond) {
     serverAccept(ev->getFD());
 }
 
+/* Accept a connection from the server */
 static void serverAccept(int server_sock) {
     int sin_size;
     int acceptfd;

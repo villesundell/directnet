@@ -31,6 +31,7 @@ using namespace std;
 
 #include "binseq.h"
 
+/* A convenient class for representing DirectNet messages */
 class Message {
     public:
     Message(char stype, const char *scmd, char vera, char verb);
@@ -45,6 +46,7 @@ class Message {
     vector<BinSeq> params;
 };
 
+/* Mildly connected things: convert a character array to an int and back */
 int charrayToInt(const char *c);
 void intToCharray(int i, char *c);
 

@@ -29,7 +29,8 @@
 
 #include "dn_event.h"
 
-/* Set up the server */
+/* Set up the server
+ * returns the event for the server or NULL if the server wasn't started */
 dn_event_fd *establishServer();
 
 #endif // DN_SERVER_H

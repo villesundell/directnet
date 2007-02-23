@@ -29,6 +29,10 @@ extern "C" {
 #include <unistd.h>
 }
 
+/* Separate a full path into a directory and file component (internal)
+ * full: Full path
+ * dir: Where to put the dir component
+ * fil: Where to put the file component */
 void dirAndFil(const char *full, char **dir, char **fil)
 {
     *dir = strdup(full);
@@ -47,6 +51,11 @@ void dirAndFil(const char *full, char **dir, char **fil)
     }
 }
 
+/* Figure out where a binary is installed
+ * argvz: argv[0]
+ * dir: Where to put the directory component
+ * fil: Where to put the filename component
+ * returns a pointer to dir or NULL for failure */
 char *whereAmI(const char *argvz, char **dir, char **fil)
 {
     char *workd, *path, *retname;

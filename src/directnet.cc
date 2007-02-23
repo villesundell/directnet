@@ -82,6 +82,8 @@ char *homedir, *bindir;
 
 char *findHome(char **envp);
 
+/* validate the chosen dn_name
+ * returns: true if it's valid */
 bool validateName()
 {
     // valid names: [a-zA-Z0-9_\-\[\]]
@@ -99,7 +101,9 @@ bool validateName()
     return true;
 }
 
-// get the generic form of the name (currently just means lowercase)
+/* get the generic form of the name (currently just means lowercase)
+ * name: the original name
+ * returns the generic name */
 BinSeq genericName(const BinSeq &name)
 {
     BinSeq ret;
@@ -113,6 +117,8 @@ BinSeq genericName(const BinSeq &name)
     return ret;
 }
 
+/* initialize DN
+ * takes same arguments as main() */
 void dn_init(int argc, char **argv) {
     int i;
     char *binloc, *binnm;
@@ -186,7 +192,8 @@ void dn_init(int argc, char **argv) {
     // initialize configuration
     initConfig();
 }
-    
+
+/* go online */
 void dn_goOnline() {
     // generate the key
     encCreateKey();
@@ -234,6 +241,8 @@ void newTransKey(char *into)
     currentTransKey++;
 }
 
+/* see a route of users
+ * us: the route */
 void seeUsers(const Route &us)
 {
     // get the current time
@@ -249,14 +258,19 @@ void seeUsers(const Route &us)
     
     // and flush out any users we haven't seen in 24 hours
     map<BinSeq, time_t>::iterator sui;
+flushusers:
     for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
         if (sui->second < day) {
             dn_seen_user->erase(sui);
-            sui--;
+            goto flushusers;
         }
     }
 }
 
+/* add a route
+ * to: the key of the target
+ * rt: the route to it
+ * effect: the route is added if it's the shortest available route */
 void dn_addRoute(const BinSeq &to, const Route &rt)
 {
     // add a route intelligently, "short-circuit" to the shortest known-possible route
