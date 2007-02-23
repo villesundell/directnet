@@ -1028,6 +1028,7 @@ void disNode(const BinSeq &key)
     
     // remove any routes leading to or through this user (complicated)
     map<BinSeq, Route *>::iterator dri;
+checkroutes:
     for (dri = dn_routes->begin(); dri != dn_routes->end(); dri++) {
         if (dri->second &&
             dri->second->find(hkey)) {
@@ -1037,7 +1038,7 @@ void disNode(const BinSeq &key)
             // bad route, delete it
             delete dri->second;
             dn_routes->erase(dri);
-            //dri--;
+            goto checkroutes;
         }
     }
     

@@ -1115,7 +1115,6 @@ dataok:
             rdmsg.params.push_back(msg.params[2]);
             rdmsg.params.push_back(msg.params[3]);
             rdmsg.params.push_back(intToBinSeq(tleft));
-            rdmsg.params.push_back("");
             
             if (toroute) {
                 handleRoutedMsg(rdmsg);
