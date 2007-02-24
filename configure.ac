@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.5)
-AC_INIT(directnet, [2.0a7], [cdgregorr@users.sourceforge.net])
+AC_INIT(directnet, [2.0a8], [cdgregorr@users.sourceforge.net])
 AC_CONFIG_AUX_DIR([scripts])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([src/ui.h])
