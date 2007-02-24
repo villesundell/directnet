@@ -53,6 +53,8 @@ extern int errno;
 
 string dn_ac_list_f;
 set<string> *dn_ac_list;
+string dn_ar_list_f;
+list<string> *dn_ar_list;
 string dn_af_list_f;
 set<string> *dn_af_list;
 string dn_nick_f;
@@ -63,7 +65,7 @@ string cfgdir;
 void initConfig()
 {
     int i, osl;
-    FILE *acf, *aff, *nickf;
+    FILE *acf, *arf, *aff, *nickf;
     
     // find configuration directory
     if (cfgdir == "") { // allow the UI to override
@@ -106,10 +108,12 @@ void initConfig()
     
     // start our sets
     dn_ac_list = new set<string>;
+    dn_ar_list = new list<string>;
     dn_af_list = new set<string>;
     
     // find configuration files
     dn_ac_list_f = cfgdir + "/ac";
+    dn_ar_list_f = cfgdir + "/ar";
     dn_af_list_f = cfgdir + "/af";
     dn_nick_f = cfgdir + "/nick";
     
@@ -147,6 +151,36 @@ void initConfig()
             }
         }
         fclose(acf);
+    }
+    
+    arf = fopen(dn_ar_list_f.c_str(), "r");
+    if (arf) {
+        char line[DN_NAME_LEN+1];
+        line[DN_NAME_LEN] = '\0';
+        
+        while (!feof(arf) && !ferror(arf)) {
+            if (fgets(line, DN_NAME_LEN, arf)) {
+                // cut off the end
+                osl = strlen(line) - 1;
+                while (line[osl] == '\n' ||
+                       line[osl] == '\r') {
+                    line[osl] = '\0';
+                    osl--;
+                }
+                
+                // make sure it's longer than 0
+                if (!line[0]) continue;
+                
+                // add to our list
+                dn_ar_list->push_back(line);
+            }
+        }
+        fclose(arf);
+        
+        // make sure the list is sane
+        while (dn_ar_list->size() > 5) {
+            dn_ar_list->pop_front();
+        }
     }
     
     aff = fopen(dn_af_list_f.c_str(), "r");
@@ -197,9 +231,12 @@ void autoConnectHost(dn_event_timer *dte)
 void autoConnect()
 {
     set<string>::iterator aci;
+    list<string>::iterator ari;
     
     int timeout = 0;
     dn_event_timer *dte;
+    
+    // first autoconnects
     for (aci = dn_ac_list->begin(); aci != dn_ac_list->end(); aci++) {
         dte = new dn_event_timer(
             timeout, 0,
@@ -209,6 +246,15 @@ void autoConnect()
         timeout += 5;
     }
     
+    // then autoreconnects
+    for (ari = dn_ar_list->begin(); ari != dn_ar_list->end(); ari++) {
+        dte = new dn_event_timer(
+            timeout, 0,
+            autoConnectHost, new string(*ari)
+            );
+        dte->activate();
+        timeout += 5;
+    }
 }
 
 /* autoFind
@@ -238,6 +284,33 @@ void addAutoConnect(const string &hostname)
         return;
     }
     fprintf(outf, "%s\n", hostname.c_str());
+    fclose(outf);
+}
+
+/* addAutoReconnect
+ * hostname: a hostname to reconnect to in the future
+ * effect: the hostname is added to the list and the file */
+void addAutoReconnect(const string &hostname)
+{
+    FILE *outf;
+    list<string>::iterator ari;
+    
+    // add it to the list,
+    dn_ar_list->push_back(hostname);
+    
+    // make sure the list isn't too long,
+    while (dn_ar_list->size() > 5) {
+        dn_ar_list->pop_front();
+    }
+    
+    // and update the file
+    outf = fopen(dn_ar_list_f.c_str(), "w");
+    if (!outf) {
+        return;
+    }
+    for (ari = dn_ar_list->begin(); ari != dn_ar_list->end(); ari++) {
+        fprintf(outf, "%s\n", ari->c_str());
+    }
     fclose(outf);
 }
 

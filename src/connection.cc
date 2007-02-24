@@ -63,6 +63,7 @@ typedef int socklen_t;
 #include "dht.h"
 #include "directnet.h"
 #include "dn_event.h"
+#include "dnconfig.h"
 #include "enc.h"
 #include "message.h"
 #include "ui.h"
@@ -529,6 +530,12 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         // inform the UI
         if (conn->outgh && conn->requested)
             uiEstConn(*(conn->outgh));
+        
+        /* and if it's outoing, add it to the automatic reconnection list (as
+         * it's likely to be a good host for the next time we run) */
+        if (conn && conn->outgoing && conn->outgh) {
+            addAutoReconnect(*(conn->outgh));
+        }
         
     } else if (CMD_IS("fnd", 1, 1)) {
         conn_t *remc;

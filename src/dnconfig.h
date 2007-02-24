@@ -1,5 +1,5 @@
 /*
- * Copyright 2006  Gregor Richards
+ * Copyright 2006, 2007  Gregor Richards
  *
  * This file is part of DirectNet.
  *
@@ -26,6 +26,7 @@
 #ifndef DN_DNCONFIG_H
 #define DN_DNCONFIG_H
 
+#include <list>
 #include <set>
 #include <string>
 using namespace std;
@@ -40,7 +41,8 @@ extern string cfgdir;
 void initConfig();
 
 /* autoConnect
- * effect: connections are attempted to all autoconnect hostnames */
+ * effect: connections are attempted to all autoconnect and autoreconnect
+ *         hostnames */
 void autoConnect();
 
 /* autoFind
@@ -51,6 +53,11 @@ void autoFind();
  * hostname: a hostname to autoconnect to in the future
  * effect: the hostname is added to the list and the file */
 void addAutoConnect(const string &hostname);
+
+/* addAutoReconnect
+ * hostname: a hostname to reconnect to in the future
+ * effect: the hostname is added to the list and the file */
+void addAutoReconnect(const string &hostname);
 
 /* addAutoFind
  * nick: a nick to autofind in the future
@@ -84,6 +91,8 @@ void saveNick();
 // our configuration files
 extern string dn_ac_list_f;
 extern set<string> *dn_ac_list;
+extern string dn_ar_list_f;
+extern list<string> *dn_ar_list;
 extern string dn_af_list_f;
 extern set<string> *dn_af_list;
 
