@@ -35,78 +35,94 @@
 
 class dn_event_private {
     public:
+    dn_event *parent;
     int handlec;
     int handle[2];
 };
 
-gboolean evReadCallback(dn_event *ev) {
-    ev->event_info.fd.trigger(DN_EV_READ, ev);
+gboolean evReadCallback(dn_event_fd *ev) {
+    ev->trigger(ev, DN_EV_READ);
     return FALSE;
 }
 
-gboolean evWriteCallback(dn_event *ev) {
-    ev->event_info.fd.trigger(DN_EV_WRITE, ev);
+gboolean evWriteCallback(dn_event_fd *ev) {
+    ev->trigger(ev, DN_EV_WRITE);
     return FALSE;
 }
 
-gboolean evTimeCallback(dn_event *ev) {
-    ev->event_info.timer.trigger(ev);
+gboolean evTimeCallback(dn_event_timer *ev) {
+    ev->trigger(ev);
     return FALSE;
 }
 
-void dn_event_activate(dn_event *ev) {
-    dn_event_private *dep = new dn_event_private();
-    ev->priv = dep;
-    dep->handlec = 0;
+void dn_event_fd::activate() {
+    assert(!is_active);
     
-    switch (ev->event_type) {
-        case DN_EV_FD:
-            {
-                if (ev->event_info.fd.watch_cond & DN_EV_READ) {
-                    dep->handle[dep->handlec] =
-                        gaim_input_add(ev->event_info.fd.fd, GAIM_INPUT_READ,
-                                       (GaimInputFunction) evReadCallback, ev);
-                    dep->handlec++;
-                }
-                
-                if (ev->event_info.fd.watch_cond & DN_EV_WRITE) {
-                    dep->handle[dep->handlec] =
-                        gaim_input_add(ev->event_info.fd.fd, GAIM_INPUT_WRITE,
-                                       (GaimInputFunction) evWriteCallback, ev);
-                    dep->handlec++;
-                }
-                return;
-            }
-        case DN_EV_TIMER:
-            {
-                struct timeval tv;
-                gettimeofday(&tv, NULL);
-                tv.tv_sec = ev->event_info.timer.t_sec - tv.tv_sec;
-                tv.tv_usec = ev->event_info.timer.t_usec - tv.tv_usec;
-                tv.tv_sec += tv.tv_usec / 1000000;
-                tv.tv_usec %= 1000000;
-                
-                dep->handlec = 1;
-                dep->handle[0] =
-                    gaim_timeout_add((tv.tv_sec * 1000) + (tv.tv_usec / 1000),
-                                     (GSourceFunc) evTimeCallback, ev);
-                return;
-            }
+    priv = new dn_event_private();
+    priv->parent = this;
+    
+    priv->handlec = 0;
+    
+    if (cond & DN_EV_READ) {
+        priv->handle[priv->handlec] =
+            gaim_input_add(fd, GAIM_INPUT_READ,
+                           (GaimInputFunction) evReadCallback, this);
+        priv->handlec++;
     }
+                
+    if (cond & DN_EV_WRITE) {
+        priv->handle[priv->handlec] =
+            gaim_input_add(fd, GAIM_INPUT_WRITE,
+                           (GaimInputFunction) evWriteCallback, this);
+        priv->handlec++;
+    }
+    return;
+    
+    is_active = true;
 }
 
-void dn_event_deactivate(dn_event *ev) {
-    if (ev->priv == NULL) return;
+void dn_event_timer::activate() {
+    assert(!is_active);
+
+    priv = new dn_event_private();
+    priv->parent = this;
     
-    if (ev->event_type == DN_EV_FD) {
-        int i;
-        for (i = 0; i < ev->priv->handlec; i++) {
-            gaim_input_remove(ev->priv->handle[i]);
-        }
-    } else if (ev->event_type = DN_EV_TIMER) {
-        gaim_timeout_remove(ev->priv->handle[0]);
+    struct timeval tv2;
+    gettimeofday(&tv2, NULL);
+    tv2.tv_sec = tv.tv_sec - tv2.tv_sec;
+    tv2.tv_usec = tv.tv_usec - tv2.tv_usec;
+    tv2.tv_sec += tv2.tv_usec / 1000000;
+    tv2.tv_usec %= 1000000;
+    
+    priv->handlec = 1;
+    priv->handle[0] =
+        gaim_timeout_add((tv2.tv_sec * 1000) + (tv2.tv_usec / 1000),
+                         (GSourceFunc) evTimeCallback, this);
+    
+    is_active = true;
+}
+
+void dn_event_fd::deactivate() {
+    assert(is_active);
+    is_active = false;
+    if (priv == NULL) return;
+    
+    int i;
+    for (i = 0; i < priv->handlec; i++) {
+        gaim_input_remove(priv->handle[i]);
     }
     
-    delete ev->priv;
-    ev->priv = NULL;
+    delete priv;
+    priv = NULL;
+}
+
+void dn_event_timer::deactivate() {
+    assert(is_active);
+    is_active = false;
+    if (priv == NULL) return;
+    
+    gaim_timeout_remove(priv->handle[0]);
+    
+    delete priv;
+    priv = NULL;
 }

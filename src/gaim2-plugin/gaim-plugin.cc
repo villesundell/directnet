@@ -53,6 +53,7 @@ extern "C" {
 extern char **environ;
 
 #include "auth.h"
+#include "chat.h"
 #include "client.h"
 // Make sure we get DN connection.h, not Gaim connection.h
 #include "../connection.h"
@@ -64,6 +65,13 @@ extern char **environ;
 // Make sure we get DN server.h, not Gaim server.h
 #include "../server.h"
 #include "ui.h"
+
+#ifndef _
+#define _(x) x
+#endif
+#ifndef N_
+#define N_(x) x
+#endif
 
 static GaimPlugin *my_protocol = NULL;
 static GaimAccount *my_account = NULL; /* only allow one login - icky :-P */
@@ -284,28 +292,6 @@ gboolean dnsndkey(GaimConversation *gc, gchar *cmd, gchar **args, gchar **error,
     sendAuthKey(gc->name);
     return FALSE;
 }
-
-void dnsndkey_vptr(GtkButton *butotn, void *name)
-{
-    sendAuthKey((char *) name);
-}
-
-/*void dn_crcon_button(GaimConversation *gc, gpointer data)
-{
-    GaimGtkConversation *gtkconv;
-    gulong handle;
-    GtkWidget *button = NULL;
-    
-    if((gtkconv = GAIM_GTK_CONVERSATION(gc)) == NULL)
-        return;
-    
-    button = gaim_gtkconv_button_new("DNKey", "DN Key", "Send DirectNet Authentication Key",
-                                     NULL, dnsndkey_vptr, gc->name);
-    g_object_set_data(G_OBJECT(button), "conv", gc);
-    gtk_box_pack_end(GTK_BOX(gtkconv->bbox), button, TRUE, TRUE, 0);
-    gtk_widget_show(button);
-    gtk_size_group_add_widget(gtkconv->sg, button);
-}*/
 
 extern "C" void regGaimCmd();
 
@@ -737,12 +723,12 @@ static void gp_joinchat(GaimConnection *gc, GHashTable *data)
 
     char *name = g_hash_table_lookup(data, "room");
     if (name[0] == '#') {
-        joinChat(name + 1);
+        chatJoin(name);
         chat_join(regChat(name), name);
     } else {
         char *fullname = (char *) malloc(strlen(name) + 2);
-        joinChat(name);
         sprintf(fullname, "#%s", name);
+        chatJoin(fullname);
         chat_join(regChat(fullname), fullname);
         free(fullname);
     }
@@ -755,7 +741,7 @@ static void gp_simplechatinvite() {}
 static void gp_leavechat(GaimConnection *gc, int id)
 {
     GaimConversation *gconv = gaim_find_chat(gc, id);
-    leaveChat(gconv->name + 1);
+    chatLeave(gconv->name);
     id = chatByName(gconv->name);
 
     free(chat_ids[id]);
@@ -769,7 +755,7 @@ static int gp_saychat(GaimConnection *gc, int id, const char *msg, GaimMessageFl
     GaimConversation *gconv = gaim_find_chat(gc, id);
     char *omsg = strdup(msg);
 
-    sendChat(gconv->name + 1, omsg);
+    sendChat(gconv->name, omsg);
     chat_msg(id, dn_name, gconv->name, omsg);
     
     free(omsg);
