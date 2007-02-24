@@ -381,7 +381,7 @@ void chatJoin(const BinSeq &channel)
         channel[0] == '#') {
         // channel is encoded as an owned channel
         BinSeq chankey("\x01oc", 3);
-        chankey += channel.substr(1);
+        chankey += genericName(channel.substr(1));
         
         dhtSendAddSearch(chankey, pukeyhash, chatJoinDataCallback, new BinSeq(channel));
         
