@@ -999,16 +999,10 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         
                 // and perhaps reassign some data
                 dhtData_t::iterator di;
-                bool direstart = false;
+reassignloop:
                 for (di = indht.data.begin(); di != indht.data.end(); di++) {
-                    if (direstart) {
-                        // we need to start over
-                        di = indht.data.begin();
-                        direstart = false;
-                    }
-                            
                     BinSeq dataHash = encHashKey(indht.HTI + di->first);
-                    if (encCmp(dataHash, hashedKey) > 0) {
+                    if (encCmp(dataHash, hashedKey) >= 0) {
                         // this data belongs with this user
                         Message drmsg(1, "Had", 1, 1);
                         drmsg.params.push_back(rroute.toBinSeq());
@@ -1029,7 +1023,7 @@ void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int
                         // then demote our data
                         indht.rdata[di->first] = di->second;
                         indht.data.erase(di);
-                        direstart = true;
+                        goto reassignloop;
                     }
                 }
                         
