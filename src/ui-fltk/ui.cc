@@ -426,8 +426,10 @@ void setName(Fl_Input *w, void *ignore)
     set<string>::iterator afi, aci;
     
     // we no longer need the release-notes window
-    if (notewin)
+    if (notewin) {
         notewin->hide();
+        delete notewin;
+    }
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
     dn_name[DN_NAME_LEN] = '\0';
@@ -524,6 +526,15 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
     
     if (bw && bw->buddyWindow) {
         bw->buddyWindow->hide();
+    }
+    
+    if (nw && nw->nameWindow) {
+        nw->nameWindow->hide();
+    }
+    
+    if (notewin) {
+        notewin->hide();
+        delete notewin;
     }
     
     uiQuit = 1;
