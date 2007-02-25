@@ -702,8 +702,27 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         while (ips.size() > croute.size() + 1) ips.pop_back();
         if (ips.size() != 0 &&
             ips.size() == croute.size() + 1) {
+            
+            string host = ips[ips.size() - 1].c_str();
+            
+            // make sure we don't already have a connection to this person
+            bool havec = false;
+            set<conn_t *>::iterator aci;
+            for (aci = active_connections.begin();
+                 aci != active_connections.end();
+                 aci++) {
+                if ((*aci)->outgoing &&
+                    (*aci)->outgh &&
+                    *((*aci)->outgh) == host) {
+                    havec = true;
+                }
+            }
+            
             // connect to the next one
-            async_establishClient(ips[ips.size() - 1], false);
+            if (!havec) {
+                async_establishClient(host, false);
+            }
+            
             ips.pop_back();
         }
         
