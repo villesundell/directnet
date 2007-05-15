@@ -1,0 +1,21 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0107 
+header_name {.h} 
+code_name {.cc}
+class NameWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window nameWindow {
+      label DirectNet
+      callback mainWinClosed open
+      xywh {344 209 255 90} type Double color 0 visible
+    } {
+      Fl_Input nameIn {
+        label {  Nickname:}
+        callback setName
+        image {dn-toplogo.ppm} xywh {0 65 255 25} labelcolor 7 align 5 when 8
+      }
+    }
+  }
+} 

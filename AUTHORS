@@ -1,0 +1,33 @@
+The DirectNet core, the dumb UI, the FLTK UI, the hub pseudo-UI, the gaim plugin pseudo-UI, the
+fake encryption module and the Cyfer encryption module were written by Gregor Richards.
+Some parts of the core were contributed by Bryan Donlan.
+Some parts of the gaim plugin and FLTK UI were contributed by "Solarius".
+
+Gregor Richards is a stickler for copyright lines in source files, so grepping
+for 'Copyright' should give you a fairly accurate complete list.
+
+Cyfer is used by DirectNet, but is not Gregor's code.  Please see
+src/enc-cyfer/cyfer for more information Cyfer.
+
+
+DirectNet has a modular design.  If you would like to submit a new UI or encryption module, the
+easiest way is to modify the dumb UI or fake encryption module and the Makefile in that directory,
+and make it compile that way.  When you have it working, you can submit the entire modified
+directory to the patch tracker on the SourceForge page
+( http://www.sourceforge.net/projects/directnet/ ), and I (Gregor) will integrate it properly.
+
+---
+
+In case you have no patience,
+
+$ find . -type f | grep -v '\.svn' | xargs grep -h 'Copyright' |
+  sed 's/.*Copyright ...[^A-Za-z"]*// ; s/  .*//' | sort | uniq
+Bryan Donlan
+Easy Software Products.
+Massachusetts Institute of Technology
+Free Software Foundation, Inc.
+Gregor Richards
+Scott James Remnant <scott@netsplit.com>
+Senko Rasic
+"Solarius"
+X Consortium

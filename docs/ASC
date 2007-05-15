@@ -1,0 +1,24 @@
+The 'sce' command generates short-circuits on a route. The concept of short-
+circuiting is that, given a route in a routed message, the node will forward it
+to the /latest/ node on the route it has a connection to. 'sce' attempts to
+establish these short circuits.
+
+Basically, a 'sce' command is sent after a route has been established by Hfn or
+Hfr. The algorithm is too convoluted to explain in pure English, so the
+pseudocode is included here.
+
+receiveSce(msg, iconnection):
+        # 1) Steps regarding the connection it was sent over
+        msg.ips.push_back iconnection.remoteIp
+        # (This side should always have a better perspective on the remote IP)
+        
+        # 2) Steps regarding this node
+        while msg.ips.length > msg.route.length + 1:
+                msg.ips.pop_back
+        if msg.ips.length == msg.route.length + 1:
+                connect msg.ips.pop_back
+
+        # 3) Continuation
+        if route.length > 0:
+                oconnection = connection(msg.route.pop_front)
+                oconnection.send(msg)

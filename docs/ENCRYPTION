@@ -1,0 +1,9 @@
+The encryption used for all encrypted messages in DirectNet is RSA with 1024
+bit keys, over AES with 128-bit keys and block size, using CBC. SHA-256 is used
+for all encryption.
+
+An encrypted message consists of the following:
+* the AES symmetric key, encrypted and signed with RSA
+* a 2-byte big endian modulo for the encrypted message. This is the number of
+  bytes into the last block that are actually used
+* the message, encrypted with the AES key

@@ -1,0 +1,55 @@
+In the present incarnation, the only type of chat room supported is owned chat
+rooms. These chat rooms are given names prefixed with '#'.
+
+To find an owned chat room, it is searched for on the DHT. The key is:
+\x01oc<name>
+Where <name> is the name except for the '#' prefix. A Hag command is sent, so
+that the room is claimed by the searcher if it does not already exist. Upon
+receiving the corresponding Hgr command, a Cjo is sent to join the chat room.
+If it did not already exist, it is simply created by the node with themselves
+as the only member.
+
+Unowned chats have not yet been implemented. When they are:
+1) They will likely be prefixed with '$'
+2) The key will probably be: \x11uc<name>
+3) Propogation will likely involve choosing an arbitrary set of
+   "representatives."
+
+This document lists the chat protocol commands.
+
+Cjo (request to join a chat channel)
+        type: routed
+        parameters:
+                route
+                local name
+                reverse route
+                encryption key
+                channel name
+
+Clv (chat leave)
+        type: routed
+        parameters:
+                route
+                local name
+                encryption key
+                channel name
+
+Cms (chat message)
+        type: routed
+        parameters:
+                route
+                local name
+                channel
+                sender name
+                encrypted message (encrypted by the intermediary, not the
+                        initial sender)
+
+Con (inform a user that they are on a channel, and list everyone on the channel
+     if applicable)
+        type: routed
+        parameters:
+                route
+                owner's name
+                owner's encryption key
+                channel name
+                list of users (in route format)

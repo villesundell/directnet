@@ -1,0 +1,193 @@
+This document is under heavy revision, since protocol v2 is under construction.
+
+THE CURRENT PROTOCOL VERSION IS 1.65005. This means that the 'dni' message will
+be sent with '1.65005' as the protocol number.
+
+A DirectNet node is an independently operating server and client, which must
+have two variables: a nickname and an encryption key (public and private),
+using RSA. The server listens to TCP port 3447 by default, though any port is
+acceptable.
+
+For information on how to actually use these protocol commands (that is, the
+life of a DirectNet node), read the document IMPLEMENTATION.
+
+The protocol header is as follows:
+
+     Information | Size | Description
+-----------------+------+-------------
+            type |    1 | The type of the message:
+                 |      |   0 for direct messages
+                 |      |   1 for routed messages
+                 |      |   2 for special messages (generally routed but needs
+                 |      |     special functionality)
+         command |    3 | A three-character string name of the command.
+         version |    2 | The version of the command.
+ parameter sizes |  Var | Two bigendian bytes for each parameter, with the value of
+                 |      | the size of that parameter.  Terminated with \xFF\xFF
+
+After that, the parameters are appended. They must be of the sizes described in
+the header.
+
+The type of command dictates how it is to propogate through the network.
+
+Direct commands are sent directly over a connection and are not continued.
+
+Routed commands have a set route as the first parameter, and all of the nodes
+along that route strip off the next key then continue the transfer until the
+data is sent to the last node on the list (at which point it will have an empty
+route). The sending user as the second parameter. The last node will receive
+and interpret the command.
+
+Special commands propogate but the propogation is not simply routed, therefore
+more program logic is requird to parse them.
+
+All routed commands and some special commands have a route as the first
+parameter. This route takes the form of any number of one-byte element-lengths,
+followed by a byte with the value \xFF, follwed by each of the route elements,
+which must be of the lenghts described. Route elements are SHA-256 hashes of
+encryption keys.
+
+This document describes the basic DirectNet mesh commands. The DHT, which is
+used for route detection and robust distributed data storage, is described in
+the document 'DHT'.
+
+The protocol commands are documented in alphabetical order in this format:
+command(first version char)(second version char) (brief summary)
+        purpose: The purpose of the command
+        type: The type
+        parameters:
+                A list of the parameters that are sent with this command
+        [notes:
+                Additional info]
+
+
+PROTOCOL COMMANDS:
+
+dis(1)(1) (disconnect) *
+        purpose: Inform of a node's disconnection
+        type: direct
+        parameters:
+                disconnected encryption key
+        notes:
+                Upon receival, the node should check if it has ever seen this
+                key. If it has, it will remove it from anywhere it may be (DHT,
+                routes, etc), and try to reestablish broken routes, etc, then
+                send it to ALL connected nodes. If it has not seen the user,
+                this message is ignored.
+
+dcr(1)(1) (direct connect request) (scheduled for removal before 2.0.0)
+        purpose: Attempt to directly connect to a remote user (also causes a dce)
+        type: routed
+        parameters:
+                route
+                local name
+                local IP/hostname
+        note: This will soon be subsumed by the (yet undocumented) scr (short
+              circuit request)
+
+dce(1)(1) (direct connect request echo) (scheduled for removal before 2.0.0)
+        purpose: Same as dcr, but is an echo to dcr (in case connection is only possible one way)
+        type: routed
+        parameters:
+                route
+                local name
+                local IP/hostname
+
+dni(1)(1) (DirectNet identity)
+        purpose: Identify yourself to a new connection. Receiving this will
+        cause a dnv to be sent.
+        type: direct
+        parameters:
+                public key
+                protocol version
+                        2 byte big-endian major
+                        2 byte big-endian minor
+
+
+fnd(1)(1) (find) (scheduled for removal before 2.0.0)
+        purpose: Find a user by name
+        type: special - nonlooping unrouted
+        parameters:
+                current route
+                local name
+                remote name
+                public key
+
+
+fnr(1)(1) (find response) (scheduled for removal before 2.0.0)
+        purpose: Respond to a find by sending back the received route
+        type: special - routed but with intermediate handling
+        parameters:
+                route
+                local name
+                route back
+                public key
+
+lst(1)(1) (lost route) (scheduled for removal before 2.0.0) *
+        purpose: Identify when a route has been lost (sent to the sender of msg, etc)
+        type: routed
+        parameters:
+                route
+                end user
+
+
+msa(1)(1) (message away)
+        purpose: Away response to a message
+        type: routed
+        parameters:
+                route
+                local name
+                encrypted message
+
+
+msg(1)(1) (message)
+        purpose: Send a message
+        type: routed
+        parameters:
+                route
+                local name
+                encrypted message
+
+
+pin(1)(1) (ping)
+        purpose: Ping a connection for keepalive (no pong yet)
+        type: direct
+        parameters: none
+
+
+pir(1)(1) (ping-route) * (partial)
+        purpose: keep ARLD tables up to date - just pongs at end node
+        type: routed
+        parameters:
+                route
+                return route
+
+
+por(1)(1) (pong-route) * (partial)
+        purpose: keep ARLD tables up to date - nothing at end node
+        type: routed
+        parameters:
+                route
+
+sce(1)(1) (short circuit establish) *
+        purpose: establish short circuits - see docs/ASC
+        type: special
+        parameters:
+                route
+                current list of hostnames/IPs (in route format)
+
+
+Key:
+*: Not yet implemented
+
+
+Many of these are scheduled for removal before 2.0.0.  Most notably:
+
+fnr/fne: Route detection is no longer a flooding command, but is done through the
+DHT.
+
+dcr/dce: To be replaced with the much-more-powerful short-circuiting system
+(scr/sce).
+
+lst: Lost-route detection will be replaced with the much-more-powerful ARLD
+(Active Route Loss Detection) method. See dis.

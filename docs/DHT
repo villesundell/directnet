@@ -1,0 +1,196 @@
+The DirectNet distributed hash table is very similar to Chord. You probably
+will not understand this document if you do not already have a strong
+understanding of how Chord works. However, a brief description is provided here
+for the impatient.
+
+This layout is best described in two variants, the first being more simple, and
+the second being more efficient (and what DirectNet actually uses):
+
+Linear DHTs: All of the nodes on a network form a ring, sorted by the hash of
+their encryption keys. When node A connects to node B, and node B is in at
+least one DHT that node A is not, node A joins it by:
+        1) Sending an 'Hfn' to search for neighbors (this is how the ring is
+           formed)
+        2) Sending an 'Had' to add its name to the hash
+The Hfn finds its way to the appropriate location simply because each node
+along the way compares the key being searched to their own key. Since they're
+sorted, they know exactly where to propogate it.
+
+Binary DHTs: Binary DHTs are an extension to linear DHTs. Basically, a node
+connecting to a DHT will look for a key offset from its own key by 1/2 of the
+valid range for keys, then by 1/4th, then 1/8th, etc, until a search yields
+itself (that is, a division that small is smaller than the distance to the
+node's successor). It then uses these divisions to forward searches and other
+DHT requests. By dividing it like this, every node can guarantee that it will
+at least half the number of nodes yet to search through, reducing the problem
+to O(logn).
+
+Hash commands are sent along the hash table identified by the third parameter
+to the node with the nearest encryption to the encryption key in the fourth
+parameter. They are routed messages.
+
+Returnable hash commands have the route taken thusfar in the a parameter. They
+are also routed messages.
+
+Hash return commands have a route, like other routed messages, but have the
+hash table identifier.
+
+IMPORTANT: Lookup and add commands will propogate a key->value combo to the
+appropriate node. The key is hashed to find this out. The hash used is
+SHA-256(HTI + key) .
+
+Information about the format of DHT keys is at the bottom of this document.
+
+[HTI = hash table identifier]
+[Keys as used by the DHT are SHA-256'd from the desired data to look up
+(whether an encryption key, name, or anything else)]
+
+Had(1)(1) (hash add)
+        purpose: add a value to a list of values currently assigned in the distributed hash
+        type: hash
+        parameters:
+                immediate route
+                HTI
+                DHT key
+                value
+                minutes remaining (4 byte big-endian)
+                ttl [not currently used]
+
+Hag(1)(1) (hash add and get)
+        purpose: atomic Had and Hga
+        type: hash
+        parameters:
+                immediate route
+                HTI
+                DHT key
+                value
+                minutes remaining (4 byte big-endian)
+                current route
+                hash of encryption key
+                ttl [not currently used]
+
+Hen(1)(1) (hash encapsulate) *
+        purpose: encapsulate a routed message in a hash message
+        type: hash
+        parameters:
+                immediate route
+                HTI
+                DHT hashed key
+                encapsulated message
+                ttl [not currently used]
+
+Hfn(1)(1) (hash find)
+        purpose: find a route to the user with the given encryption key
+        type: returnable hash
+        parameters:
+                immediate route
+                local name
+                HTI
+                DHT hashed key
+                current route
+                encryption key
+                type
+                        first byte: 0 for regular search, 1 for positive
+                        division, 2 for negative division, 3 for search for
+                        successors and predecessors
+                        second byte (for divisions): the level of division (0-
+                        255)
+
+Hfr(1)(1) (hash find response)
+        purpose: reply to Hfn
+        type: hash return
+        parameters:
+                route
+                local name
+                HTI
+                route to found user
+                encryption key
+                type
+                        first byte: 0 for regular search response, 1 for
+                        positive division response, 2 for negative division
+                        response, 3 for second predecessor, 4 for first
+                        predecessor, 5 for first successor, 6 for second
+                        successor, 7 for the special case of telling a now-
+                        distant /third/ successor who their second predecessor
+                        is, which is sent to the second successor and then
+                        forwarded as a 3
+                        second byte (for divisions): the level of division (0-
+                        255)
+
+Hga(1)(1) (hash get all)
+        purpose: get all values for a key
+        type: returnable hash
+        parameters:
+                immediate route
+                HTI
+                DHT key
+                current route
+                hash of encryption key
+
+Hin(1)(1) (hash table info)
+        purpose: tell the remote node what hash table(s) this node is on
+        type: direct
+        parameters:
+                list of HTIs (in the same form as routes)
+
+Hir(1)(1) (hash table info response)
+        purpose: equal response to Hin
+        type: direct
+        parameters:
+                list of HTIs (in the same form as routes)
+
+Hra(1)(1) (hash return all)
+        purpose: response to Hga
+        type: hash return
+        parameters:
+                route
+                HTI
+                DHT key
+                values (in the same form as routes)
+
+Hrd(1)(1) (hash redundant data)
+        purpose: tell a predecessor to redundantly store information
+        type: routed
+        parameters:
+                route
+                HTI
+                DHT key
+                value
+                minutes remaining (4 byte big-endian)
+
+Key:
+*: Not yet implemented
+
+
+MORE ABOUT DHT KEYS
+-------------------
+
+Keys in the distributed hash table have a special format:
+* first four bits
+  * a bitfield signifying the type of data. The least significant bit specifies
+    one value (0) or many (1), the second specifies that values are hashes of
+    encryption keys (0) or arbitrary data (1). The other two are not yet used.
+  * anyone may add any data to an unset key. A single-value key can only be set
+    to the same value (which will update its timeout), otherwise the request
+    will be silently ignored. A multi-value can have any value added by anyone
+    at any time. UNIMPLEMENTED: Keys with hashes of encryption keys as values
+    can only be unset by the owner of the encryption key.
+  * the remaining bits are reserved
+* second four bits
+  * 2^n = number of hours maximum lifespan for the data
+* second two bytes
+  * signifies the type of key
+The rest is the actual key.
+
+Currently used keys:
+
+nm (name)
+        type: 00
+        longevity: 256 (2^8) hours
+                associates a nickname with the hash of an encryption key
+
+oc (owned chat)
+        type: 00
+        longevity: 2 (2^1) hour
+                associates a channel name (without the # which signifies an
+                owned chat room) with the owner's key

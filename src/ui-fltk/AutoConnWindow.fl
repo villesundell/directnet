@@ -1,0 +1,20 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cc}
+class AutoConnWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window autoConnWindow {
+      label {New Autoconnection} open
+      xywh {320 253 310 40} type Double color 0 visible
+    } {
+      Fl_Input hostname {
+        label {  Hostname:}
+        callback flAddAC
+        xywh {0 15 310 25} labelcolor 7 align 5 when 8
+      }
+    }
+  }
+} 

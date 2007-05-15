@@ -1,0 +1,42 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cc}
+decl {class AutoConnYNWindow;} {public
+} 
+
+decl {\#include <string>} {} 
+
+class AutoConnYNWindow {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window autoConnYNWindow {
+      label Autoconnection
+      user_data this user_data_type {AutoConnYNWindow *}
+      callback flACYNClose open
+      xywh {320 253 310 80} type Double color 0 visible
+    } {
+      Fl_Button btnYes {
+        label Yes
+        user_data this user_data_type {AutoConnYNWindow *}
+        callback flACYNYes
+        xywh {0 55 155 25}
+      }
+      Fl_Button btnNo {
+        label No
+        user_data this user_data_type {AutoConnYNWindow *}
+        callback flACYNNo
+        xywh {155 55 155 25}
+      }
+      Fl_Output {} {
+        private xywh {0 0 310 50} type Multiline box NO_BOX textcolor 7
+        code0 {o->wrap(1);}
+        code1 {std::string val = std::string("Would you like to automatically connect to ") + std::string(hostname) + std::string(" in the future?");}
+        code2 {o->value(val.c_str());}
+      }
+    }
+  }
+  decl {char *hostname;} {public
+  }
+} 
