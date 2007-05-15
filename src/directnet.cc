@@ -252,7 +252,7 @@ void seeUsers(const Route &us)
     int day = tv.tv_sec - (60 * 60 * 24);
     
     // see the users
-    for (int i = 0; i < us.size(); i++) {\
+    for (int i = 0; i < us.size(); i++) {
         (*dn_seen_user)[us[i]] = tv.tv_sec;
     }
     
