@@ -141,6 +141,7 @@ int main(int argc, char **argv, char **envp)
     
 
     //Here we show release notes
+    notewin = NULL;
     #ifdef DN_RELEASENOTES
     notewin = new Fl_Window (300, 400, "Release notes");
     Fl_Group::current()->resizable(notewin);
@@ -429,6 +430,7 @@ void setName(Fl_Input *w, void *ignore)
     if (notewin) {
         notewin->hide();
         delete notewin;
+        notewin = NULL;
     }
     
     strncpy(dn_name, w->value(), DN_NAME_LEN);
@@ -535,6 +537,7 @@ void mainWinClosed(Fl_Double_Window *w, void *ignore)
     if (notewin) {
         notewin->hide();
         delete notewin;
+        notewin = NULL;
     }
     
     uiQuit = 1;
