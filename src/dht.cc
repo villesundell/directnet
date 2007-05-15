@@ -285,9 +285,7 @@ void dhtEstablish(const BinSeq &ident, int step)
                 if (di.neighbors[1]) {
                     // ask our predecessor who their predecessor is
                     if (*(di.neighbors[1]) == pukeyhash) {
-                        // it's me, we know who our predecessor is
-                        di.neighbors[0] = di.neighbors[1];
-                        di.nbors_keys[0] = di.nbors_keys[1];
+                        // allow it to remain undefined
                         
                     } else {
                         Message msg(1, "Hgn", 1, 1);
@@ -346,9 +344,7 @@ void dhtEstablish(const BinSeq &ident, int step)
                 if (di.neighbors[2]) {
                     // ask our successor who their successor is
                     if (*(di.neighbors[2]) == pukeyhash) {
-                        // it's me, we know who our successor is
-                        di.neighbors[3] = di.neighbors[2];
-                        di.nbors_keys[3] = di.nbors_keys[2];
+                        // allow it to remain undefined
                         
                     } else {
                         Message msg(1, "Hgn", 1, 1);
