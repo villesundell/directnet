@@ -112,7 +112,7 @@ void dn_addRoute(const BinSeq &to, const Route &rt);
 
 //Release notes for this version (if this one is not defined, there is no startup message.
 #define DN_RELEASENOTES "<h1>DirectNet</h1>\
-<h2>&nbsp;2.0a8</h2>\
+<h2>&nbsp;2.0a9</h2>\
 <h1>Release Notes</h1>\
 This is an alpha version of DirectNet, which means it is <u>only for testing \
 purposes</u>, and is not stable enough for daily use. If you find any bugs, \
@@ -120,7 +120,7 @@ please contact the developers. You can find contact information at DirectNet's \
 homepage, <b>directnet.sf.net</b><br>\
 DirectNet is distributed under the GNU General Public License\
 "
-#define DN_RELEASENOTES_NOHTML "DirectNet 2.0a8\n\
+#define DN_RELEASENOTES_NOHTML "DirectNet 2.0a9\n\
 Release Notes\n\
 This is an alpha version of DirectNet, which means it is only for testing\n\
 purposes, and is not stable enough for daily use. If you find any bugs, please\n\
@@ -135,7 +135,7 @@ This appears to be the first time you've used DirectNet. Would you like to\n\
 connect to the primary DirectNet network? (via hub.imdirect.net)\
 "
 #define DN_FIRSTTIME_HUB "hub.imdirect.net" "<h1>DirectNet</h1>\
-<h2>&nbsp;2.0a5</h2>\
+<h2>&nbsp;2.0a9</h2>\
 <h1>Release Notes</h1>\
 This is an alpha version of DirectNet, which means it is <u>only for testing \
 purposes</u>, and is not stable enough for daily use. If you find any bugs, \
