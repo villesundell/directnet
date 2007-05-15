@@ -527,9 +527,23 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         (*dn_kbh)[keyhash] = msg.params[0];
         
-        // inform the UI
-        if (conn->outgh && conn->requested)
-            uiEstConn(*(conn->outgh));
+        /* inform the UI unless we already have an active connection with the
+         * same outgoing host */
+        if (conn->outgh && conn->requested) {
+            bool alreadyExists = false;
+            for (std::set<conn_t *>::iterator aci = active_connections.begin();
+                 aci != active_connections.end();
+                 aci++) {
+                if ((*aci) != conn &&
+                    (*aci)->outgh &&
+                    *((*aci)->outgh) == *(conn->outgh))
+                    alreadyExists = true;
+            }
+            
+            // If we don't already have this connection, tell the UI
+            if (!alreadyExists)
+                uiEstConn(*(conn->outgh));
+        }
         
         /* and if it's outoing, add it to the automatic reconnection list (as
          * it's likely to be a good host for the next time we run) */
