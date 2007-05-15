@@ -1,7 +1,7 @@
 This document is under heavy revision, since protocol v2 is under construction.
 
-THE CURRENT PROTOCOL VERSION IS 1.65005. This means that the 'dni' message will
-be sent with '1.65005' as the protocol number.
+THE CURRENT PROTOCOL VERSION IS 1.65010. This means that the 'dni' message will
+be sent with '1.65010' as the protocol number.
 
 A DirectNet node is an independently operating server and client, which must
 have two variables: a nickname and an encryption key (public and private),

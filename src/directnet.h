@@ -42,8 +42,8 @@ extern "C" {
 // protocol version
 #define PROTO_MAJOR 1
 #define PROTO_MAJOR_STR "\x00\x01"
-#define PROTO_MINOR 65008
-#define PROTO_MINOR_STR "\xFD\xF0"
+#define PROTO_MINOR 65010
+#define PROTO_MINOR_STR "\xFD\xF2"
 
 extern int serv_port;
 

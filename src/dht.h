@@ -185,6 +185,13 @@ void dhtSendAddSearch(const BinSeq &key, const BinSeq &value,
                       dhtSearchCallback callback, void *data,
                       DHTInfo *dht = NULL);
 
+/* We just changed neighbors, update data
+ * indht: The DHT being updated
+ * rroute: The route to the updated neighbor
+ * hashedKey: of the updated neighbor
+ * nnum: of the updated neighbor */
+void dhtNeighborUpdateData(DHTInfo &indht, Route &rroute, BinSeq &hashedKey, int nnum);
+
 /* Send a properly-formed search message over the DHT
  * params same as dhtForMe */
 void dhtSendMsg(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *route);

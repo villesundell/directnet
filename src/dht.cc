@@ -272,6 +272,13 @@ void dhtEstablish(const BinSeq &ident, int step)
                 di.neighbors[0] = NULL;
                 di.nbors_keys[1] = di.nbors_keys[0];
                 di.nbors_keys[0] = NULL;
+                
+                // and update the data storage
+                if (di.nbors_keys[1] &&
+                    dn_routes->find(*(di.nbors_keys[1])) != dn_routes->end())
+                    dhtNeighborUpdateData(di, *((*dn_routes)[*(di.nbors_keys[1])]),
+                                          *(di.neighbors[1]), 1);
+                
             }
             if (!di.neighbors[0]) {
                 if (di.nbors_keys[0]) {
@@ -321,7 +328,7 @@ void dhtEstablish(const BinSeq &ident, int step)
             
             // FIXME: duplication
             if (!di.neighbors[2]) {
-                // missing our immediate predecessor, pull in the second
+                // missing our immediate successor, pull in the second
                 if (di.nbors_keys[2]) {
                     lost = *(di.nbors_keys[2]);
                     delete di.nbors_keys[2];
@@ -330,6 +337,13 @@ void dhtEstablish(const BinSeq &ident, int step)
                 di.neighbors[3] = NULL;
                 di.nbors_keys[2] = di.nbors_keys[3];
                 di.nbors_keys[3] = NULL;
+                
+                // and update the data storage
+                if (di.nbors_keys[2] &&
+                    dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end())
+                    dhtNeighborUpdateData(di, *((*dn_routes)[*(di.nbors_keys[2])]),
+                                          *(di.neighbors[2]), 2);
+                
             }
             if (!di.neighbors[3]) {
                 if (di.nbors_keys[3]) {
