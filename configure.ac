@@ -5,7 +5,7 @@ AC_PREREQ(2.5)
 AC_INIT(directnet, [2.0a9], [cdgregorr@users.sourceforge.net])
 AC_CONFIG_AUX_DIR([scripts])
 AM_INIT_AUTOMAKE()
-AC_CONFIG_SRCDIR([src/directnet.cc])
+AC_CONFIG_SRCDIR([src/libdirectnet/directnet.cc])
 AC_CONFIG_HEADER([config.h])
 
 AC_CONFIG_FILES(
@@ -13,9 +13,9 @@ AC_CONFIG_FILES(
 Makefile
 docs/Makefile
 src/Makefile
-src/auth-gpg/Makefile
-src/auth-none/Makefile
-src/enc-cyfer/Makefile
+src/libdirectnet/Makefile
+src/libdirectnet/auth-gpg/Makefile
+src/libdirectnet/enc-cyfer/Makefile
 src/gaim2-plugin/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
@@ -23,7 +23,7 @@ src/ui-java/Makefile
 src/ui-slang/Makefile
 ])
 
-if test ! -e ${srcdir}/src/enc-cyfer/cyfer
+if test ! -e ${srcdir}/src/libdirectnet/enc-cyfer/cyfer
 then
         AC_MSG_ERROR([ERROR: You must download cyfer before configuring!  Run getcyfer.sh])
 fi
@@ -251,12 +251,12 @@ found_enc=no
 if test "x$enc" = "xcyfer" || test "x$enc" = "xdetermine"
 then
         AC_CHECK_LIB([gmp], [__gmpz_export],[
-        ENC_CFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib -I`pwd`/$srcdir/src/enc-cyfer/cyfer/include"
+        ENC_CFLAGS="-L`pwd`/$srcdir/src/libdirectnet/enc-cyfer/cyfer/lib -I`pwd`/$srcdir/src/libdirectnet/enc-cyfer/cyfer/include"
         ENC_CPPFLAGS=
         ENC_CXXFLAGS=
         ENC_CXX=false
-        ENC_LIBS="`pwd`/$srcdir/src/enc-cyfer/cyfer/lib/.libs/libcyfer.a -lgmp"
-        ENC_LDFLAGS="-L`pwd`/$srcdir/src/enc-cyfer/cyfer/lib"
+        ENC_LIBS="-lgmp"
+        ENC_LDFLAGS="-L`pwd`/$srcdir/src/libdirectnet/enc-cyfer/cyfer/lib"
         ENC_DIR=enc-cyfer
         found_enc=yes
         enc=cyfer
@@ -264,7 +264,7 @@ then
         
         ORIGDIR=`pwd`
         export ORIGDIR
-        cd $ORIGDIR/$srcdir/src/enc-cyfer/cyfer
+        cd $ORIGDIR/$srcdir/src/libdirectnet/enc-cyfer/cyfer
         CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure --enable-static \
                 --disable-shared --host=$host_alias --build=$build_alias || exit 1
         cd $ORIGDIR

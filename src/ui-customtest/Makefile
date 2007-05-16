@@ -16,7 +16,7 @@ libui.a: $(OBJS)
 .SUFFIXES: .cc .o
 
 .cc.o:
-	$(CXX) -I.. -I../.. $(CXXFLAGS) -c $< -o $@
+	$(CXX) -I../libdirectnet -I../.. $(CXXFLAGS) -c $< -o $@
 
 
 clean:

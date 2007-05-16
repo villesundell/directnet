@@ -1,4 +1,4 @@
-AM_CFLAGS=@UI_CFLAGS@ -I..
+AM_CFLAGS=@UI_CFLAGS@ -I../libdirectnet
 AM_LDFLAGS=@UI_LDFLAGS@
 
 noinst_LIBRARIES=libui.a

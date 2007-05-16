@@ -1,6 +1,6 @@
 #!/bin/sh
 cd "`dirname $0`"
-cd src/enc-cyfer
+cd src/libdirectnet/enc-cyfer
 
 wget --passive-ftp http://software.senko.net/projects/cyfer/sources/cyfer-0.6.0.tar.gz || exit 1
 gunzip -c cyfer-0.6.0.tar.gz | tar -xf - || exit 1
