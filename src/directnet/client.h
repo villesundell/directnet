@@ -1,5 +1,6 @@
 /*
- * Copyright 2006  Gregor Richards
+ * Copyright 2004, 2005, 2006  Gregor Richards
+ * Copyright 2006  Bryan Donlan
  *
  * This file is part of DirectNet.
  *
@@ -23,31 +24,20 @@
  *    the Apache Software Foundation.
  */
 
-#ifndef DN_MESSAGE_H
-#define DN_MESSAGE_H
+#ifndef DN_CLIENT_H
+#define DN_CLIENT_H
 
-#include <vector>
-using namespace std;
+#include <string>
 
-#include "binseq.h"
+namespace DirectNet {
+    /* Connect in the background to a hostname or IP
+     * destination: the hostname or IP
+     * requested: User has requested this connection
+     */
+    void async_establishClient(const std::string &destination, bool requested = true);
 
-/* A convenient class for representing DirectNet messages */
-class Message {
-    public:
-    Message(char stype, const char *scmd, char vera, char verb);
-    Message(const BinSeq &buf);
-    
-    BinSeq toBinSeq();
-    void debug(string start);
-    
-    char type;
-    BinSeq cmd;
-    char ver[2];
-    vector<BinSeq> params;
-};
+    /* Establish a client connection handler on an open fd. */
+    void setupPeerConnection(int fd);
+}
 
-/* Mildly connected things: convert a character array to an int and back */
-int charrayToInt(const char *c);
-void intToCharray(int i, char *c);
-
-#endif
+#endif // DN_CLIENT_H

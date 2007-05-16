@@ -27,30 +27,31 @@
 #define ROUTE_H
 
 #include <vector>
-using namespace std;
 
-#include "binseq.h"
+#include "directnet/binseq.h"
 
-/* A convenient class for routes */
-class Route : public vector<BinSeq> {
-    public:
-    Route();
-    Route(const Route &copy);
-    Route(const BinSeq &textform);
+namespace DirectNet {
+    /* A convenient class for routes */
+    class Route : public std::vector<BinSeq> {
+        public:
+        Route();
+        Route(const Route &copy);
+        Route(const BinSeq &textform);
     
-    BinSeq toBinSeq();
-    void reverse();
+        BinSeq toBinSeq();
+        void reverse();
     
-    void push_front(const BinSeq &a);
-    void pop_front();
+        void push_front(const BinSeq &a);
+        void pop_front();
     
-    void append(const Route &a);
+        void append(const Route &a);
     
-    bool find(const BinSeq &a) const;
+        bool find(const BinSeq &a) const;
     
-    void debug();
+        void debug();
     
-    Route &operator+=(const string &node) { push_back(node); return *this; }
-};
+        Route &operator+=(const std::string &node) { push_back(node); return *this; }
+    };
+}
 
 #endif

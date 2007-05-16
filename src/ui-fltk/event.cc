@@ -24,7 +24,7 @@
  */
 
 
-#include "dn_event.h"
+#include "directnet/dn_event.h"
 
 #include <cstdlib>
 #include <FL/Fl.H>
@@ -37,17 +37,18 @@
 #include <cerrno>
 using namespace std;
 
-struct dn_event_private {
-    dn_event *ev;
-    multiset<dn_event_private *>::iterator it;
-};
+namespace DirectNet {
+    struct dn_event_private {
+        dn_event *ev;
+        multiset<dn_event_private *>::iterator it;
+    };
 
-static map<int, multiset<dn_event_private *> > fd_map;
+    static map<int, multiset<dn_event_private *> > fd_map;
 
-static set<dn_event *> active;
+    static set<dn_event *> active;
 
-class dn_event_access {
-    public:
+    class dn_event_access {
+        public:
         static void timer_callback(void *p) {
             dn_event_private *priv = (dn_event_private *)p;
             if (priv->ev) {
@@ -111,7 +112,7 @@ class dn_event_access {
                     dn_event_fd *ev = dynamic_cast<dn_event_fd *>((*it)->ev);
                     assert(ev);
                     assert(ev->getFD() == fd);
-        //            assert(ev->priv == (*it));
+                    //            assert(ev->priv == (*it));
                     interest |= ev->cond;
                     if (ev->getCond() & cond)
                         ev->trigger(ev, cond);
@@ -131,63 +132,64 @@ class dn_event_access {
             if (l.size() && new_watch)
                 Fl::add_fd(fd, new_watch, fd_callback, NULL);
         }
-};
+    };
 
-void dn_event_fd::activate() {
-    assert(!is_active);
+    void dn_event_fd::activate() {
+        assert(!is_active);
     
-    multiset<dn_event_private *> &l = fd_map[fd];
-    dn_event_private *p = new dn_event_private;
-//    std::cerr << "dn_ev_fd act this=" << (void *)this << " p=" << (void *)p << std::endl;
-    p->ev = this;
-    priv = p;
-    p->it = l.insert(l.begin(), p);
-    Fl::add_fd(
+        multiset<dn_event_private *> &l = fd_map[fd];
+        dn_event_private *p = new dn_event_private;
+        //    std::cerr << "dn_ev_fd act this=" << (void *)this << " p=" << (void *)p << std::endl;
+        p->ev = this;
+        priv = p;
+        p->it = l.insert(l.begin(), p);
+        Fl::add_fd(
             fd,
             FL_READ | FL_WRITE | FL_EXCEPT,
             dn_event_access::fd_callback,
             NULL);
-    is_active = true;
-}
-
-void dn_event_timer::activate() {
-    assert(!is_active);
-    priv = new dn_event_private;
-//    std::cerr << "dn_ev_timer act this=" << (void *)this << " p=" << (void *)priv << std::endl;
-    struct timeval now;
-    gettimeofday(&now, NULL);
-                
-    double time_until = 0;
-                
-    time_until = (double)tv.tv_sec - (double)now.tv_sec;
-    time_until += ((double)tv.tv_usec - (double)now.tv_usec) / (double)1000000;
-                
-    priv->ev = this;
-                
-    Fl::add_timeout(time_until, dn_event_access::timer_callback, (void *)priv);
-    is_active = true;
-}
-
-void dn_event_timer::deactivate() {
-    if (!is_active)
-        return;
-//    std::cerr << "timer deact " << (void *)this << std::endl;
-    if (priv)
-        priv->ev = NULL;
-    priv = NULL;
-    is_active = false;
-}
-
-void dn_event_fd::deactivate() {
-    if (!is_active) return;
-    multiset<dn_event_private *> &l = fd_map[fd];
-//    std::cerr << "fd deact " << (void *)this << std::endl;
-    l.erase(priv->it);
-    assert(l.find(priv) == l.end());
-    if (l.size() == 0) {
-        Fl::remove_fd(fd);
+        is_active = true;
     }
-    delete priv;
-    priv = NULL;
-    is_active = false;
+
+    void dn_event_timer::activate() {
+        assert(!is_active);
+        priv = new dn_event_private;
+        //    std::cerr << "dn_ev_timer act this=" << (void *)this << " p=" << (void *)priv << std::endl;
+        struct timeval now;
+        gettimeofday(&now, NULL);
+                
+        double time_until = 0;
+                
+        time_until = (double)tv.tv_sec - (double)now.tv_sec;
+        time_until += ((double)tv.tv_usec - (double)now.tv_usec) / (double)1000000;
+                
+        priv->ev = this;
+                
+        Fl::add_timeout(time_until, dn_event_access::timer_callback, (void *)priv);
+        is_active = true;
+    }
+
+    void dn_event_timer::deactivate() {
+        if (!is_active)
+            return;
+        //    std::cerr << "timer deact " << (void *)this << std::endl;
+        if (priv)
+            priv->ev = NULL;
+        priv = NULL;
+        is_active = false;
+    }
+
+    void dn_event_fd::deactivate() {
+        if (!is_active) return;
+        multiset<dn_event_private *> &l = fd_map[fd];
+        //    std::cerr << "fd deact " << (void *)this << std::endl;
+        l.erase(priv->it);
+        assert(l.find(priv) == l.end());
+        if (l.size() == 0) {
+            Fl::remove_fd(fd);
+        }
+        delete priv;
+        priv = NULL;
+        is_active = false;
+    }
 }

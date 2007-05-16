@@ -732,7 +732,7 @@ PACKAGE_VERSION='2.0a9'
 PACKAGE_STRING='directnet 2.0a9'
 PACKAGE_BUGREPORT='cdgregorr@users.sourceforge.net'
 
-ac_unique_file="src/ui.h"
+ac_unique_file="src/directnet.cc"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

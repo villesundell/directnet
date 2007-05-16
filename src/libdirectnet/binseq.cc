@@ -23,7 +23,9 @@
  *    the Apache Software Foundation.
  */
 
-#include "binseq.h"
+#include "directnet/binseq.h"
+using namespace DirectNet;
+using namespace std;
 
 BinSeq::BinSeq()
 {

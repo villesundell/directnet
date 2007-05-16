@@ -27,10 +27,12 @@
 #ifndef DN_SERVER_H
 #define DN_SERVER_H
 
-#include "dn_event.h"
+#include "directnet/dn_event.h"
 
-/* Set up the server
- * returns the event for the server or NULL if the server wasn't started */
-dn_event_fd *establishServer();
+namespace DirectNet {
+    /* Set up the server
+     * returns the event for the server or NULL if the server wasn't started */
+    dn_event_fd *establishServer();
+}
 
 #endif // DN_SERVER_H

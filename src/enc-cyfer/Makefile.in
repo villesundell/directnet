@@ -207,8 +207,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = cyfer
-AM_CXXFLAGS = @ENC_CFLAGS@ -I.. -Lcyfer/lib -Icyfer/include -Lgmp -Igmp
-AM_LDFLAGS = @ENC_LDFLAGS@ -Lcyfer/lib -Lgmp
+AM_CXXFLAGS = @ENC_CFLAGS@ -I.. -Lcyfer/lib -Icyfer/include
+AM_LDFLAGS = @ENC_LDFLAGS@ -Lcyfer/lib
 noinst_LIBRARIES = libenc.a
 libenc_a_SOURCES = cyfer.cc
 all: all-recursive
@@ -467,7 +467,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(LIBRARIES) all-local
 installdirs: installdirs-recursive
 installdirs-am:
 uninstall: uninstall-recursive
@@ -493,8 +493,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool clean-local \
+	clean-noinstLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -544,20 +544,27 @@ uninstall-am: uninstall-info-am
 
 uninstall-info: uninstall-info-recursive
 
-.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-generic clean-libtool clean-noinstLIBRARIES \
-	clean-recursive ctags ctags-recursive distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-recursive distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am uninstall-info-am
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am all-local check \
+	check-am clean clean-generic clean-libtool clean-local \
+	clean-noinstLIBRARIES clean-recursive ctags ctags-recursive \
+	distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-recursive distclean-tags distdir \
+	dvi dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-info-am
 
+
+all-local:
+	$(AR) x cyfer/lib/.libs/libcyfer.a
+
+clean-local:
+	-rm -f *.o
 
 install:
 	$(MAKE) install-recursive SUBDIRS=""

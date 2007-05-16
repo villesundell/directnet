@@ -29,15 +29,14 @@
 
 #include <map>
 #include <string>
-using namespace std;
 
 extern "C" {
 #include <sys/time.h>
 }
 
-#include "binseq.h"
-#include "globals.h"
-#include "route.h"
+#include "directnet/binseq.h"
+#include "directnet/globals.h"
+#include "directnet/route.h"
 
 // protocol version
 #define PROTO_MAJOR 1
@@ -45,70 +44,72 @@ extern "C" {
 #define PROTO_MINOR 65010
 #define PROTO_MINOR_STR "\xFD\xF2"
 
-extern int serv_port;
+namespace DirectNet {
+    extern int serv_port;
 
-// our name
-extern char dn_name[DN_NAME_LEN+1];
+    // our name
+    extern char dn_name[DN_NAME_LEN+1];
 
-// connections by encryption key
-extern map<BinSeq, void *> dn_conn;
+    // connections by encryption key
+    extern std::map<BinSeq, void *> dn_conn;
 
-// encryption keys by hashes
-extern map<BinSeq, BinSeq> dn_kbh;
+    // encryption keys by hashes
+    extern std::map<BinSeq, BinSeq> dn_kbh;
 
-// names by encryption keys and vice-versa
-extern map<BinSeq, BinSeq> dn_names;
-extern map<BinSeq, BinSeq> dn_keys;
+    // names by encryption keys and vice-versa
+    extern std::map<BinSeq, BinSeq> dn_names;
+    extern std::map<BinSeq, BinSeq> dn_keys;
   
-// route by encryption key
-extern map<BinSeq, Route *> dn_routes;
+    // route by encryption key
+    extern std::map<BinSeq, Route *> dn_routes;
 
-// has a key been used yet?
-extern map<string, int> dn_trans_keys;
+    // has a key been used yet?
+    extern std::map<std::string, int> dn_trans_keys;
 
-// have we seen this user?  When? (by hashed enc key)
-extern map<BinSeq, time_t> dn_seen_user;
+    // have we seen this user?  When? (by hashed enc key)
+    extern std::map<BinSeq, time_t> dn_seen_user;
 
-// our position in the transkey list
-extern int currentTransKey;
+    // our position in the transkey list
+    extern int currentTransKey;
 
-// is the ui loaded?
-extern char uiLoaded;
+    // is the ui loaded?
+    extern char uiLoaded;
 
-// our IP
-extern char dn_localip[24];
+    // our IP
+    extern char dn_localip[24];
 
-// stuff for relocatability
-extern char *homedir, *bindir;
+    // stuff for relocatability
+    extern char *homedir, *bindir;
 
-/* validate the chosen dn_name
- * returns: true if it's valid */
-bool validateName();
+    /* validate the chosen dn_name
+     * returns: true if it's valid */
+    bool validateName();
 
-/* get the generic form of the name (currently just means lowercase)
- * name: the original name
- * returns the generic name */
-BinSeq genericName(const BinSeq &name);
+    /* get the generic form of the name (currently just means lowercase)
+     * name: the original name
+     * returns the generic name */
+    BinSeq genericName(const BinSeq &name);
 
-/* make a transaction key (unused) */
-void newTransKey(char *into);
+    /* make a transaction key (unused) */
+    void newTransKey(char *into);
 
-/* see a route of users
- * us: the route */
-void seeUsers(const Route &us);
+    /* see a route of users
+     * us: the route */
+    void seeUsers(const Route &us);
 
-/* initialize DN
- * takes same arguments as main() */
-void dn_init(int argc, char **argv);
+    /* initialize DN
+     * takes same arguments as main() */
+    void dn_init(int argc, char **argv);
 
-/* go online */
-void dn_goOnline();
+    /* go online */
+    void dn_goOnline();
 
-/* add a route
- * to: the key of the target
- * rt: the route to it
- * effect: the route is added if it's the shortest available route */
-void dn_addRoute(const BinSeq &to, const Route &rt);
+    /* add a route
+     * to: the key of the target
+     * rt: the route to it
+     * effect: the route is added if it's the shortest available route */
+    void dn_addRoute(const BinSeq &to, const Route &rt);
+}
 
 //Release notes for this version (if this one is not defined, there is no startup message.
 #define DN_RELEASENOTES "<h1>DirectNet</h1>\

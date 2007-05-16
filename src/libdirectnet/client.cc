@@ -46,13 +46,14 @@ extern "C" {
 #include <string.h>
 }
 
-#include "connection.h"
-#include "directnet.h"
-#include "client.h"
-#include "dn_event.h"
+#include "directnet/connection.h"
+#include "directnet/directnet.h"
+#include "directnet/client.h"
+#include "directnet/dn_event.h"
 extern "C" {
 #include <errno.h>
 }
+using namespace DirectNet;
 
 struct outgc {
     string outgh;

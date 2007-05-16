@@ -28,7 +28,8 @@
 #include <vector>
 using namespace std;
 
-#include "route.h"
+#include "directnet/route.h"
+using namespace DirectNet;
 
 Route::Route() : vector<BinSeq>() {}
 

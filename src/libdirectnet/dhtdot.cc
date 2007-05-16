@@ -10,8 +10,9 @@ using namespace std;
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include "binseq.h"
-#include "route.h"
+#include "directnet/binseq.h"
+#include "directnet/route.h"
+using namespace DirectNet;
 
 map<BinSeq, vector<BinSeq> > conns;
 

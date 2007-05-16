@@ -33,15 +33,16 @@ using namespace std;
 #include <unistd.h>
 #include <time.h>//We need this for timestamp(s)
 
-#include "auth.h"
-#include "chat.h"
-#include "connection.h"
-#include "dht.h"
-#include "directnet.h"
-#include "dnconfig.h"
-#include "globals.h"
-#include "enc.h"
-#include "ui.h"
+#include "directnet/auth.h"
+#include "directnet/chat.h"
+#include "directnet/connection.h"
+#include "directnet/dht.h"
+#include "directnet/directnet.h"
+#include "directnet/dnconfig.h"
+#include "directnet/globals.h"
+#include "directnet/enc.h"
+#include "directnet/ui.h"
+using namespace DirectNet;
 
 #include <iostream>
 #include <map>
@@ -1043,13 +1044,13 @@ void flACYNNo(Fl_Button *w, AutoConnYNWindow *acynw)
     delete acynw;
 }
 
-void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
+void DirectNet::uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
 {
     // for the moment, away messages are undistinguished
     flDispMsg(from, from, msg, authmsg);
 }
 
-void uiAskAuthImport(const string &from, const string &msg, const string &sig)
+void DirectNet::uiAskAuthImport(const string &from, const string &msg, const string &sig)
 {
     int i;
     
@@ -1070,12 +1071,12 @@ void uiAskAuthImport(const string &from, const string &msg, const string &sig)
     }
 }
 
-void uiDispChatMsg(const string &chat, const string &from, const string &msg)
+void DirectNet::uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
     flDispChatMsg(chat, from, msg);
 }
 
-void uiDispChatJoin(const string &chat, const string &user)
+void DirectNet::uiDispChatJoin(const string &chat, const string &user)
 {
     ChannelWindow *cw = getChannelWindow(chat, false);
     if (!cw) return;
@@ -1093,7 +1094,7 @@ void uiDispChatJoin(const string &chat, const string &user)
     putOutput(cw->textOut, user + " has joined the channel.");
 }
 
-void uiDispChatLeave(const string &chat, const string &user)
+void DirectNet::uiDispChatLeave(const string &chat, const string &user)
 {
     ChannelWindow *cw = getChannelWindow(chat, false);
     if (!cw) return;
@@ -1110,7 +1111,7 @@ void uiDispChatLeave(const string &chat, const string &user)
     }
 }
 
-void uiEstConn(const string &from)
+void DirectNet::uiEstConn(const string &from)
 {
     // FIXME: this desperately needs to change
     string cemsg = "Connection to " + from + " established.";
@@ -1118,7 +1119,7 @@ void uiEstConn(const string &from)
     updateStatus();
 }
 
-void uiEstRoute(const string &from)
+void DirectNet::uiEstRoute(const string &from)
 {
     int i, mustadd, addbefore;
     ChatWindow *cw;
@@ -1188,7 +1189,7 @@ void removeFromList(const string &name)
     }
 }
 
-void uiLoseConn(const string &from)
+void DirectNet::uiLoseConn(const string &from)
 {
     ChatWindow *cw;
     
@@ -1203,7 +1204,7 @@ void uiLoseConn(const string &from)
     updateStatus();
 }
 
-void uiLoseRoute(const string &from)
+void DirectNet::uiLoseRoute(const string &from)
 {
     ChatWindow *cw;
     
@@ -1218,7 +1219,7 @@ void uiLoseRoute(const string &from)
     updateStatus();
 }
 
-void uiNoRoute(const string &to)
+void DirectNet::uiNoRoute(const string &to)
 {
     ChatWindow *cw;
     
@@ -1230,7 +1231,7 @@ void uiNoRoute(const string &to)
 
 /* Display the first-time question, block for a response
  * Returns: True or false for yes or no */
-bool uiFirstTime()
+bool DirectNet::uiFirstTime()
 {
     int yn = fl_ask(DN_FIRSTTIME);
     return (yn != 0);

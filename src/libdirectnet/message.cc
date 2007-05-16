@@ -27,7 +27,8 @@
 #include <string>
 using namespace std;
 
-#include "message.h"
+#include "directnet/message.h"
+using namespace DirectNet;
 
 Message::Message(char stype, const char *scmd, char vera, char verb)
 {

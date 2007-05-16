@@ -35,10 +35,11 @@ using namespace std;
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "directnet.h"
-#include "dnconfig.h"
-#include "enc.h"
-#include "message.h"
+#include "directnet/directnet.h"
+#include "directnet/dnconfig.h"
+#include "directnet/enc.h"
+#include "directnet/message.h"
+using namespace DirectNet;
 
 #define bool BOOL
 
@@ -65,7 +66,7 @@ struct cyf_key *cyf_key_head = NULL;
 
 char *mypukey, *myprkey;
 size_t mypukeylen, myprkeylen;
-BinSeq pukeyhash;
+BinSeq DirectNet::pukeyhash;
 
 /* Helper function for creating public-key context. */
 static CYFER_PK_CTX *init_pk_ctx()
@@ -286,7 +287,7 @@ int findEnc(char **envp)
     return 0;
 }
 
-BinSeq encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
+BinSeq DirectNet::encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
 {
     int len, emlen;
     char *encmsg, *enckey, *enckey2;
@@ -328,7 +329,7 @@ BinSeq encTo(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
     return ret;
 }
 
-BinSeq encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
+BinSeq DirectNet::encFrom(const BinSeq &from, const BinSeq &to, const BinSeq &msg)
 {
     int len, enckeylen;
     char *encmsg, *enckey, *enckey2;
@@ -429,7 +430,7 @@ BinSeq genKey()
     return BinSeq(mypukey, mypukeylen);
 }
 
-BinSeq encCreateKey()
+BinSeq DirectNet::encCreateKey()
 {
     srand(time(NULL));
     keyfile = cfgdir + "/key-" + genericName(dn_name).c_str();
@@ -469,11 +470,11 @@ BinSeq encCreateKey()
     return BinSeq(mypukey, mypukeylen);
 }
 
-BinSeq encExportKey() {
+BinSeq DirectNet::encExportKey() {
     return BinSeq(mypukey, mypukeylen);
 }
 
-BinSeq encHashKey(const BinSeq &key)
+BinSeq DirectNet::encHashKey(const BinSeq &key)
 {
     BinSeq tr("                                ");
     CYFER_Hash(CYFER_HASH_SHA256, (unsigned char *) key.c_str(), key.size(),
@@ -481,7 +482,7 @@ BinSeq encHashKey(const BinSeq &key)
     return tr;
 }
 
-BinSeq encImportKey(const BinSeq &name, const BinSeq &key)
+BinSeq DirectNet::encImportKey(const BinSeq &name, const BinSeq &key)
 {
     if (cyf_key_head) {
         struct cyf_key *cur = cyf_key_head;
@@ -537,7 +538,7 @@ BinSeq encImportKey(const BinSeq &name, const BinSeq &key)
     return BinSeq();
 }
 
-BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder)
+BinSeq DirectNet::encSub(const BinSeq &a, const BinSeq &b, int *remainder)
 {
     BinSeq r, rrev;
     if (a.size() != b.size()) return r;
@@ -566,7 +567,7 @@ BinSeq encSub(const BinSeq &a, const BinSeq &b, int *remainder)
     return r;
 }
 
-BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
+BinSeq DirectNet::encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
 {
     BinSeq r, rrev;
     if (a.size() != b.size()) return r;
@@ -594,7 +595,7 @@ BinSeq encAdd(const BinSeq &a, const BinSeq &b, int *remainder)
     return r;
 }
 
-int encCmp(const BinSeq &a, const BinSeq &b)
+int DirectNet::encCmp(const BinSeq &a, const BinSeq &b)
 {
     BinSeq ra, rb, rs;
     ra = encSub(a, pukeyhash);
@@ -616,7 +617,7 @@ int encCmp(const BinSeq &a, const BinSeq &b)
 
 #undef bool
 
-bool encCloser(const BinSeq &a, const BinSeq &b)
+bool DirectNet::encCloser(const BinSeq &a, const BinSeq &b)
 {
     BinSeq meb;
     meb = encSub(b, pukeyhash);
@@ -642,7 +643,7 @@ bool encCloser(const BinSeq &a, const BinSeq &b)
     return true;
 }
 
-BinSeq encOffset(int by, bool reverse)
+BinSeq DirectNet::encOffset(int by, bool reverse)
 {
     BinSeq a;
     int hi, lo;

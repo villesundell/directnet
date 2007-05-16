@@ -31,8 +31,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "auth.h"
-#include "directnet.h"
+#include "directnet/auth.h"
+#include "directnet/directnet.h"
+using namespace DirectNet;
 
 /* MingW32 pipe &c: */
 #ifdef _WIN32
@@ -53,8 +54,8 @@ char *GPG_name = NULL;
 char *GPG_pass = NULL;
 
 /* Username and pass strings */
-char authUsername[] = "GPG Username (blank for none)";
-char authPW[] = "GPG Password";
+char DirectNet::authUsername[] = "GPG Username (blank for none)";
+char DirectNet::authPW[] = "GPG Password";
 
 #define CPASS if (!GPG_name || !GPG_pass || !GPG_have) 
 
@@ -139,7 +140,7 @@ BinSeq *gpgWrap(const BinSeq &inp, const BinSeq &args, int pass)
 #endif
 }
 
-int authInit()
+int DirectNet::authInit()
 {
     BinSeq *ret;
     int i;
@@ -189,12 +190,12 @@ int authInit()
     return 1;
 }
 
-int authNeedPW()
+int DirectNet::authNeedPW()
 {
     return 1;
 }
 
-void authSetPW(const char *nm, const char *pswd)
+void DirectNet::authSetPW(const char *nm, const char *pswd)
 {
     if (nm[0]) {
         GPG_name = strdup(nm);
@@ -358,7 +359,7 @@ BinSeq *authVerify(const BinSeq &msg, char **who, int *status)
     return new BinSeq(msg);
 }
 
-int authImport(const BinSeq &msg)
+int DirectNet::authImport(const BinSeq &msg)
 {
     /* all we can do is try, so do so */
     BinSeq *attempt = gpgWrap(msg, "--import", 0);
@@ -370,7 +371,7 @@ int authImport(const BinSeq &msg)
     }
 }
 
-BinSeq *authExport()
+BinSeq *DirectNet::authExport()
 {
     char *cmd;
     BinSeq *ret;

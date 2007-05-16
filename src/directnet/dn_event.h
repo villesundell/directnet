@@ -47,45 +47,46 @@ extern "C" {
 
 #include <cassert>
 
-#include "compat.h"
+#include "directnet/compat.h"
 
-/*
- * A simple event primitive interface.
- *
- * This is designed to be easy for UIs to implement.
- */
+namespace DirectNet {
+    /*
+     * A simple event primitive interface.
+     *
+     * This is designed to be easy for UIs to implement.
+     */
 
-class dn_event;
+    class dn_event;
 
-class dn_event_access; // for UI access to private members
+    class dn_event_access; // for UI access to private members
 
-class dn_event {
-    protected:
+    class dn_event {
+        protected:
         friend class dn_event_access;
         bool is_active;
         class dn_event_private *priv;
         dn_event() {
             is_active = false;
         }
-    public:
+        public:
         virtual void activate() = 0;
         virtual void deactivate() = 0;
         virtual ~dn_event() {};
         bool isActive() const { return is_active; }
         void *payload;
-};
+    };
 
-/* Timer event
- *
- * Triggers after the specified time (secs/usecs) from the epoch. Though
- * it only triggers once, it must be removed before free-ing.
- */
+    /* Timer event
+     *
+     * Triggers after the specified time (secs/usecs) from the epoch. Though
+     * it only triggers once, it must be removed before free-ing.
+     */
 
-class dn_event_timer : public dn_event {
-    protected:
+    class dn_event_timer : public dn_event {
+        protected:
         friend class dn_event_access;
         struct timeval tv;
-    public:
+        public:
         void (*trigger)(dn_event_timer *ev);
         struct timeval getTime() const {
             return tv;
@@ -114,18 +115,18 @@ class dn_event_timer : public dn_event {
         dn_event_timer() : dn_event() { }
         
         dn_event_timer(
-                const struct timeval &abstm,
-                void (*trigger_)(dn_event_timer *ev),
-                void *payload_ = NULL
-                )
-            : dn_event(), tv(abstm), trigger(trigger_)
+            const struct timeval &abstm,
+            void (*trigger_)(dn_event_timer *ev),
+            void *payload_ = NULL
+            )
+        : dn_event(), tv(abstm), trigger(trigger_)
         { payload = payload_; }
         
         dn_event_timer(
-                int sdelta, int usdelta,
-                void (*trigger_)(dn_event_timer *ev),
-                void *payload_ = NULL
-                )
+            int sdelta, int usdelta,
+            void (*trigger_)(dn_event_timer *ev),
+            void *payload_ = NULL
+            )
         : dn_event(), trigger(trigger_) {
             setTimeDelta(sdelta, usdelta);
             payload = payload_;
@@ -135,36 +136,36 @@ class dn_event_timer : public dn_event {
             if (is_active)
                 deactivate();
         }
-};
+    };
 
-/* fd event notification
- *
- * Triggers until removed.
- *
- * watch_cond = bitwise or of DN_EV_READ, DN_EV_WRITE, DN_EV_EXCEPT
- * cond = whichever watch_cond matched
- */
+    /* fd event notification
+     *
+     * Triggers until removed.
+     *
+     * watch_cond = bitwise or of DN_EV_READ, DN_EV_WRITE, DN_EV_EXCEPT
+     * cond = whichever watch_cond matched
+     */
 #define DN_EV_READ   1
 #define DN_EV_WRITE  2
 #define DN_EV_EXCEPT 4
 
-class dn_event_fd : public dn_event {
-    protected:
+    class dn_event_fd : public dn_event {
+        protected:
         friend class dn_event_access;
         int fd;
         int cond;
-    public:
+        public:
         void (*trigger)(dn_event_fd *ev, int cond);
         
         dn_event_fd() : dn_event() {}
         dn_event_fd(
-                int fd_,
-                int cond_,
-                void (*trigger_)(dn_event_fd *, int),
-                void *payload_ = NULL
-                )
-            : dn_event(), fd(fd_), cond(cond_), trigger(trigger_)
-            { payload = payload_; }
+            int fd_,
+            int cond_,
+            void (*trigger_)(dn_event_fd *, int),
+            void *payload_ = NULL
+            )
+        : dn_event(), fd(fd_), cond(cond_), trigger(trigger_)
+        { payload = payload_; }
         
 
         virtual void activate();
@@ -195,6 +196,7 @@ class dn_event_fd : public dn_event {
                 deactivate();
         }
            
-};
+    };
+}
 
 #endif

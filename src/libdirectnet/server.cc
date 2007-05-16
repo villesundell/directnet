@@ -43,12 +43,13 @@ extern "C" {
 #include <unistd.h>
 }
 
-#include "client.h"
-#include "connection.h"
-#include "directnet.h"
-#include "server.h"
-#include "ui.h"
-#include "dn_event.h"
+#include "directnet/client.h"
+#include "directnet/connection.h"
+#include "directnet/directnet.h"
+#include "directnet/server.h"
+#include "directnet/ui.h"
+#include "directnet/dn_event.h"
+using namespace DirectNet;
 
 //void *serverAcceptLoop(void *ignore);
 static void serverActivity(dn_event_fd *ev, int cond);

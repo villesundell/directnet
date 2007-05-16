@@ -5,7 +5,7 @@ AC_PREREQ(2.5)
 AC_INIT(directnet, [2.0a9], [cdgregorr@users.sourceforge.net])
 AC_CONFIG_AUX_DIR([scripts])
 AM_INIT_AUTOMAKE()
-AC_CONFIG_SRCDIR([src/ui.h])
+AC_CONFIG_SRCDIR([src/directnet.cc])
 AC_CONFIG_HEADER([config.h])
 
 AC_CONFIG_FILES(
