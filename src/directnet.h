@@ -51,23 +51,23 @@ extern int serv_port;
 extern char dn_name[DN_NAME_LEN+1];
 
 // connections by encryption key
-extern map<BinSeq, void *> *dn_conn;
+extern map<BinSeq, void *> dn_conn;
 
 // encryption keys by hashes
-extern map<BinSeq, BinSeq> *dn_kbh;
+extern map<BinSeq, BinSeq> dn_kbh;
 
 // names by encryption keys and vice-versa
-extern map<BinSeq, BinSeq> *dn_names;
-extern map<BinSeq, BinSeq> *dn_keys;
+extern map<BinSeq, BinSeq> dn_names;
+extern map<BinSeq, BinSeq> dn_keys;
   
 // route by encryption key
-extern map<BinSeq, Route *> *dn_routes;
+extern map<BinSeq, Route *> dn_routes;
 
 // has a key been used yet?
-extern map<string, int> *dn_trans_keys;
+extern map<string, int> dn_trans_keys;
 
 // have we seen this user?  When? (by hashed enc key)
-extern map<BinSeq, time_t> *dn_seen_user;
+extern map<BinSeq, time_t> dn_seen_user;
 
 // our position in the transkey list
 extern int currentTransKey;

@@ -239,8 +239,9 @@ void dhtEstablish(const BinSeq &ident, int step)
             Message msg(1, "Hfn", 1, 1);
             BinSeq rt;
             
-            if (dn_routes->find(*di.rep) != dn_routes->end()) {
-                rt = (*dn_routes)[*di.rep]->toBinSeq();
+            if (dn_routes.find(*di.rep) != dn_routes.end()) {
+                rt = dn_routes[*di.rep]->toBinSeq();
+                
             } else {
                 // the only reasonable thing to do here is assume an empty DHT
                 for (int i = 0; i < 4; i++) {
@@ -290,8 +291,8 @@ void dhtEstablish(const BinSeq &ident, int step)
                     } else {
                         Message msg(1, "Hgn", 1, 1);
                         Route *toroute, rroute;
-                        if (dn_routes->find(*(di.nbors_keys[1])) != dn_routes->end()) {
-                            toroute = (*dn_routes)[*(di.nbors_keys[1])];
+                        if (dn_routes.find(*(di.nbors_keys[1])) != dn_routes.end()) {
+                            toroute = dn_routes[*(di.nbors_keys[1])];
                             msg.params.push_back(toroute->toBinSeq());
                             rroute = *toroute;
                         } else {
@@ -349,8 +350,8 @@ void dhtEstablish(const BinSeq &ident, int step)
                     } else {
                         Message msg(1, "Hgn", 1, 1);
                         Route *toroute, rroute;
-                        if (dn_routes->find(*(di.nbors_keys[2])) != dn_routes->end()) {
-                            toroute = (*dn_routes)[*(di.nbors_keys[2])];
+                        if (dn_routes.find(*(di.nbors_keys[2])) != dn_routes.end()) {
+                            toroute = dn_routes[*(di.nbors_keys[2])];
                             msg.params.push_back(toroute->toBinSeq());
                             rroute = *toroute;
                         } else {
@@ -590,7 +591,7 @@ void dhtCheck()
         for (int i = 0; i < 4; i++) {
             if (indht.neighbors[i]) {
                 if (*(indht.neighbors[i]) != pukeyhash &&
-                    dn_routes->find(*(indht.nbors_keys[i])) == dn_routes->end()) {
+                    dn_routes.find(*(indht.nbors_keys[i])) == dn_routes.end()) {
                     // uh oh!
                     indht.established = false;
                     
@@ -609,12 +610,12 @@ void dhtCheck()
                                 *(indht.neighbors[replacement]),
                                 i);
                             
-                        } else if (dn_routes->find(*(indht.nbors_keys[replacement]))
-                                   != dn_routes->end()) {
+                        } else if (dn_routes.find(*(indht.nbors_keys[replacement]))
+                                   != dn_routes.end()) {
                             // Not me, so I have a route
                             dhtNeighborUpdateData(
                                 indht,
-                                *((*dn_routes)[*(indht.nbors_keys[replacement])]),
+                                *(dn_routes[*(indht.nbors_keys[replacement])]),
                                 *(indht.neighbors[replacement]),
                                 i);
                             
@@ -642,7 +643,7 @@ void dhtCheck()
         // check divisions...
         for (int i = 0; i < indht.real_divisions.size(); i++) {
             if (indht.real_divisions[i]) {
-                if (dn_routes->find(*(indht.real_divs_keys[i])) == dn_routes->end()) {
+                if (dn_routes.find(*(indht.real_divs_keys[i])) == dn_routes.end()) {
                     // uh oh!
                     indht.established = false;
                     
@@ -719,12 +720,12 @@ bool dhtForMe(Message &msg, const BinSeq &ident, const BinSeq &key, BinSeq *rout
     BinSeq nextHop = dhtNextHop(ident, key, closer);
     
     if (nextHop.size()) {
-        if (dn_routes->find(nextHop) != dn_routes->end()) {
-            msg.params[0] = (*dn_routes)[nextHop]->toBinSeq();
+        if (dn_routes.find(nextHop) != dn_routes.end()) {
+            msg.params[0] = dn_routes[nextHop]->toBinSeq();
             
             // append it to the current route
             if (route) {
-                Route *nhop = (*dn_routes)[nextHop];
+                Route *nhop = dn_routes[nextHop];
                 Route rroute(*route);
                 rroute.append(*nhop);
                 
@@ -1071,8 +1072,8 @@ reassignloop:
                 
                 // update our immediate predecessor with all of our redundant data
                 if (indht.neighbors[1] &&
-                    dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
-                    dhtNeighborUpdateData(indht, *((*dn_routes)[*(indht.nbors_keys[1])]),
+                    dn_routes.find(*(indht.nbors_keys[1])) != dn_routes.end()) {
+                    dhtNeighborUpdateData(indht, *(dn_routes[*(indht.nbors_keys[1])]),
                                           *(indht.neighbors[1]), 1);
                 }
             }
@@ -1139,8 +1140,8 @@ dataok:
             Route *toroute;
             if (*(indht.neighbors[1]) == pukeyhash) {
                 toroute = NULL;
-            } else if (dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
-                toroute = (*dn_routes)[*(indht.nbors_keys[1])];
+            } else if (dn_routes.find(*(indht.nbors_keys[1])) != dn_routes.end()) {
+                toroute = dn_routes[*(indht.nbors_keys[1])];
             } else {
                 return;
             }
@@ -1272,8 +1273,8 @@ dataok:
             msgb.params.push_back(froute.toBinSeq());
             msgb.params.push_back(encExportKey());
         } else {
-            if (dn_routes->find(*(indht.nbors_keys[neighbor])) != dn_routes->end()) {
-                froute.append(*((*dn_routes)[*(indht.nbors_keys[neighbor])]));
+            if (dn_routes.find(*(indht.nbors_keys[neighbor])) != dn_routes.end()) {
+                froute.append(*(dn_routes[*(indht.nbors_keys[neighbor])]));
             }
             msgb.params.push_back(froute.toBinSeq());
             msgb.params.push_back(*(indht.nbors_keys[neighbor]));
@@ -1436,9 +1437,9 @@ dataok:
                 if (neighbors[0] == encExportKey()) {
                     // route back to me
                     msgb.params.push_back(toroute.toBinSeq());
-                } else if (dn_routes->find(neighbors[0]) != dn_routes->end()) {
+                } else if (dn_routes.find(neighbors[0]) != dn_routes.end()) {
                     subRoute = new Route(toroute);
-                    subRoute->append(*((*dn_routes)[neighbors[0]]));
+                    subRoute->append(*(dn_routes[neighbors[0]]));
                     msgb.params.push_back(subRoute->toBinSeq());
                     delete subRoute;
                 } else {
@@ -1455,9 +1456,9 @@ dataok:
                     if (neighbors[i] == encExportKey()) {
                         // route back to me
                         msgb.params[3] = toroute.toBinSeq();
-                    } else if (dn_routes->find(neighbors[i]) != dn_routes->end()) {
+                    } else if (dn_routes.find(neighbors[i]) != dn_routes.end()) {
                         subRoute = new Route(toroute);
-                        subRoute->append(*((*dn_routes)[neighbors[i]]));
+                        subRoute->append(*(dn_routes[neighbors[i]]));
                         msgb.params[3] = subRoute->toBinSeq();
                         delete subRoute;
                     } else {
@@ -1483,8 +1484,8 @@ dataok:
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x04';
                         handleDHTDupMessage(conn, msgb);
-                    } else if (dn_routes->find(*(indht.nbors_keys[3])) != dn_routes->end()) {
-                        Route rt(*((*dn_routes)[*(indht.nbors_keys[3])]));
+                    } else if (dn_routes.find(*(indht.nbors_keys[3])) != dn_routes.end()) {
+                        Route rt(*(dn_routes[*(indht.nbors_keys[3])]));
                         BinSeq nroute = rt.toBinSeq(); // route to them
                             
                         // return route
@@ -1517,8 +1518,8 @@ dataok:
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x06';
                         handleDHTDupMessage(conn, msgb);
-                    } else if (dn_routes->find(*(indht.nbors_keys[1])) != dn_routes->end()) {
-                        Route rt(*((*dn_routes)[*(indht.nbors_keys[1])]));
+                    } else if (dn_routes.find(*(indht.nbors_keys[1])) != dn_routes.end()) {
+                        Route rt(*(dn_routes[*(indht.nbors_keys[1])]));
                         BinSeq nroute = rt.toBinSeq(); // route to them
                             
                         // return route
@@ -1544,8 +1545,8 @@ dataok:
                         msgb.params[4] = *(indht.nbors_keys[2]);
                         msgb.params[5][0] = '\x07';
                         handleDHTDupMessage(conn, msgb);
-                    } else if (dn_routes->find(*(indht.nbors_keys[3])) != dn_routes->end()) {
-                        Route rt(*((*dn_routes)[*(indht.nbors_keys[3])]));
+                    } else if (dn_routes.find(*(indht.nbors_keys[3])) != dn_routes.end()) {
+                        Route rt(*(dn_routes[*(indht.nbors_keys[3])]));
                         BinSeq nroute = rt.toBinSeq(); // route to them
                             
                         // return route
@@ -1649,15 +1650,15 @@ dataok:
                     // gee, this is us!
                     msg.params[5][0] = '\x03';
                     handleDHTDupMessage(conn, msg);
-                } else if (dn_routes->find(*(indht.nbors_keys[2])) != dn_routes->end()) {
+                } else if (dn_routes.find(*(indht.nbors_keys[2])) != dn_routes.end()) {
                     // continued route
-                    Route croute(*((*dn_routes)[*(indht.nbors_keys[2])]));
+                    Route croute(*(dn_routes[*(indht.nbors_keys[2])]));
                     if (croute.size()) croute.pop_back();
                     croute.reverse();
                     croute.push_back(pukeyhash);
                     croute.append(Route(msg.params[3]));
                 
-                    msg.params[0] = (*dn_routes)[*(indht.nbors_keys[2])]->toBinSeq();
+                    msg.params[0] = dn_routes[*(indht.nbors_keys[2])]->toBinSeq();
                     msg.params[3] = croute.toBinSeq();
                     msg.params[5][0] = '\x03';
                     handleRoutedMsg(msg);

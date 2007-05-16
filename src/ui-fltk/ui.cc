@@ -521,9 +521,14 @@ void setName(Fl_Input *w, void *ignore)
 void mainWinClosed(Fl_Double_Window *w, void *ignore)
 {
     map<string, ChatWindow *>::iterator cwi;
+    map<string, ChannelWindow *>::iterator channelwi;
     
     for (cwi = cws.begin(); cwi != cws.end(); cwi++) {
         cwi->second->chatWindow->hide();
+    }
+    
+    for (channelwi = channelws.begin(); channelwi != channelws.end(); channelwi++) {
+        channelwi->second->channelWindow->hide();
     }
     
     if (bw && bw->buddyWindow) {

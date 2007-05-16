@@ -62,17 +62,17 @@ int serv_port = 3447;
 
 char dn_name[DN_NAME_LEN+1];
 
-map<BinSeq, void *> *dn_conn;
-map<BinSeq, BinSeq> *dn_kbh;
-map<BinSeq, BinSeq> *dn_names;
-map<BinSeq, BinSeq> *dn_keys;
+map<BinSeq, void *> dn_conn;
+map<BinSeq, BinSeq> dn_kbh;
+map<BinSeq, BinSeq> dn_names;
+map<BinSeq, BinSeq> dn_keys;
 
-map<BinSeq, Route *> *dn_routes;
+map<BinSeq, Route *> dn_routes;
 
-map<string, int> *dn_trans_keys;
+map<string, int> dn_trans_keys;
 int currentTransKey;
 
-map<BinSeq, time_t> *dn_seen_user;
+map<BinSeq, time_t> dn_seen_user;
 
 char uiLoaded;
 
@@ -163,25 +163,8 @@ void dn_init(int argc, char **argv) {
         
     }
     
-    // This stores connections by encryption keys
-    dn_conn = new map<BinSeq, void *>;
-    
-    // This stores keys by their hashes
-    dn_kbh = new map<BinSeq, BinSeq>;
-    
-    // This stores names by encryption keys and vice-versa
-    dn_names = new map<BinSeq, BinSeq>;
-    dn_keys = new map<BinSeq, BinSeq>;
-      
-    // This stores routes by encryption keys
-    dn_routes = new map<BinSeq, Route *>;
-    
-    // This hash stores the state of all nonrepeating unrouted messages
-    dn_trans_keys = new map<string, int>;
+    // Start with transkey 0
     currentTransKey = 0;
-    
-    // This hash stores the last time we saw any given user
-    dn_seen_user = new map<BinSeq, time_t>;
     
     // We don't yet know our local IP
     dn_localip[0] = '\0';
@@ -237,7 +220,7 @@ char *findHome(char **envp)
 void newTransKey(char *into)
 {
     sprintf(into, "%s%d", dn_name, currentTransKey);
-    (*dn_trans_keys)[string(into)] = 1;
+    dn_trans_keys[string(into)] = 1;
     currentTransKey++;
 }
 
@@ -253,15 +236,15 @@ void seeUsers(const Route &us)
     
     // see the users
     for (int i = 0; i < us.size(); i++) {
-        (*dn_seen_user)[us[i]] = tv.tv_sec;
+        dn_seen_user[us[i]] = tv.tv_sec;
     }
     
     // and flush out any users we haven't seen in 24 hours
     map<BinSeq, time_t>::iterator sui;
 flushusers:
-    for (sui = dn_seen_user->begin(); sui != dn_seen_user->end(); sui++) {
+    for (sui = dn_seen_user.begin(); sui != dn_seen_user.end(); sui++) {
         if (sui->second < day) {
-            dn_seen_user->erase(sui);
+            dn_seen_user.erase(sui);
             goto flushusers;
         }
     }
@@ -276,11 +259,11 @@ void dn_addRoute(const BinSeq &to, const Route &rt)
     // add a route intelligently, "short-circuit" to the shortest known-possible route
     Route *nroute = new Route(rt);
     for (int i = nroute->size() - 1; i > 0; i--) {
-        if (dn_kbh->find((*nroute)[i]) != dn_kbh->end()) {
-            BinSeq &key = (*dn_kbh)[(*nroute)[i]];
+        if (dn_kbh.find((*nroute)[i]) != dn_kbh.end()) {
+            BinSeq &key = dn_kbh[(*nroute)[i]];
             
             // we have their key, do we have a connection?
-            if (dn_conn->find(key) != dn_conn->end()) {
+            if (dn_conn.find(key) != dn_conn.end()) {
                 // yes!  Cut down the route
                 for (; i > 0; i--) nroute->pop_front();
             }
@@ -288,8 +271,8 @@ void dn_addRoute(const BinSeq &to, const Route &rt)
     }
     
     // now that we have an efficient route, is it more efficient than the alternative?
-    if (dn_routes->find(to) != dn_routes->end()) {
-        Route *oroute = (*dn_routes)[to];
+    if (dn_routes.find(to) != dn_routes.end()) {
+        Route *oroute = dn_routes[to];
         if (oroute->size() > nroute->size()) {
             // old route is longer, drop it
             delete oroute;
@@ -300,7 +283,7 @@ void dn_addRoute(const BinSeq &to, const Route &rt)
         }
     }
     
-    (*dn_routes)[to] = nroute;
+    dn_routes[to] = nroute;
     
     // send a pir
     Message msg(1, "pir", 1, 1);

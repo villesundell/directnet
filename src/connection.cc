@@ -311,18 +311,18 @@ connection::~connection() {
         fd_ev.deactivate();
     close(fd);
     if (enckey) {
-        if (dn_names->find(*enckey) != dn_names->end()) {
-            uiLoseConn((*dn_names)[*enckey]);
-            dn_keys->erase((*dn_names)[*enckey]);
-            dn_names->erase(*enckey);
+        if (dn_names.find(*enckey) != dn_names.end()) {
+            uiLoseConn(dn_names[*enckey]);
+            dn_keys.erase(dn_names[*enckey]);
+            dn_names.erase(*enckey);
         }
         
-        if (dn_routes->find(*enckey) != dn_routes->end()) {
-            delete (*dn_routes)[*enckey];
-            dn_routes->erase(*enckey);
+        if (dn_routes.find(*enckey) != dn_routes.end()) {
+            delete dn_routes[*enckey];
+            dn_routes.erase(*enckey);
         }
         
-        dn_conn->erase(*enckey);
+        dn_conn.erase(*enckey);
         delete enckey;
     }
     
@@ -442,8 +442,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             struct sockaddr_in *locip_i;
                 
             // First, echo, then try to connect
-            if (dn_routes->find(msg.params[1]) == dn_routes->end()) return;
-            route = (*dn_routes)[msg.params[1]];
+            if (dn_routes.find(msg.params[1]) == dn_routes.end()) return;
+            route = dn_routes[msg.params[1]];
             nmsg.params.push_back(route->toBinSeq());
             nmsg.params.push_back(dn_name);
                 
@@ -451,9 +451,9 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             first = (*route)[0];
                 
             // then get the fd
-            if (dn_conn->find(first) == dn_conn->end()) goto try_connect;
+            if (dn_conn.find(first) == dn_conn.end()) goto try_connect;
             
-            firc = (conn_t *) (*dn_conn)[first];
+            firc = (conn_t *) dn_conn[first];
             
             firfd = firc->fd;
                 
@@ -518,14 +518,14 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         
         // now accept the new FD
         conn->enckey = new BinSeq(msg.params[0]);
-        (*dn_conn)[msg.params[0]] = conn;
+        dn_conn[msg.params[0]] = conn;
         
         // and the new route
         route = new Route();
         route->push_back(keyhash);
         dn_addRoute(msg.params[0], *route);
         
-        (*dn_kbh)[keyhash] = msg.params[0];
+        dn_kbh[keyhash] = msg.params[0];
         
         /* inform the UI unless we already have an active connection with the
          * same outgoing host */
@@ -581,8 +581,8 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
         delete nroute;
         
         // Do I have a connection to this person?
-        /*if (dn_conn->find(msg.params[2]) != dn_conn->end()) {
-            remc = (conn_t *) (*dn_conn)[msg.params[2]];
+        /*if (dn_conn.find(msg.params[2]) != dn_conn.end()) {
+            remc = (conn_t *) dn_conn[msg.params[2]];
             sendCmd(remc, omsg);
             return;
         }*/
@@ -603,13 +603,13 @@ void handleMsg(conn_t *conn, const BinSeq &rdbuf)
             // 1) Route/name
             Route *route = new Route(msg.params[2]);
             route->push_back(encHashKey(msg.params[3]));
-            if (dn_routes->find(msg.params[3]) != dn_routes->end())
-                delete (*dn_routes)[msg.params[3]];
-            (*dn_routes)[msg.params[3]] = route;
+            if (dn_routes.find(msg.params[3]) != dn_routes.end())
+                delete dn_routes[msg.params[3]];
+            dn_routes[msg.params[3]] = route;
             
-            (*dn_names)[msg.params[3]] = msg.params[1];
-            (*dn_keys)[msg.params[1]] = msg.params[3];
-            (*dn_kbh)[encHashKey(msg.params[3])] = msg.params[3];
+            dn_names[msg.params[3]] = msg.params[1];
+            dn_keys[msg.params[1]] = msg.params[3];
+            dn_kbh[encHashKey(msg.params[3])] = msg.params[3];
             
             // 2) Key
             encImportKey(msg.params[1], msg.params[3]);
@@ -772,9 +772,9 @@ bool handleRoutedMsg(const Message &msg)
     // find the /latest/ element we have a connection to
     for (i = route->size() - 1; i >= 0; i--) {
         next = (*route)[i];
-        if (dn_kbh->find(next) == dn_kbh->end()) continue;
-        next = (*dn_kbh)[next];
-        if (dn_conn->find(next) == dn_conn->end()) continue;
+        if (dn_kbh.find(next) == dn_kbh.end()) continue;
+        next = dn_kbh[next];
+        if (dn_conn.find(next) == dn_conn.end()) continue;
         break;
     }
     
@@ -787,7 +787,7 @@ bool handleRoutedMsg(const Message &msg)
     for (; i >= 0 && route->size(); i--) route->pop_front();
     
     // get the connection
-    sendc = (conn_t *) (*dn_conn)[next];
+    sendc = (conn_t *) dn_conn[next];
     
     // and send the message
     Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
@@ -820,10 +820,10 @@ bool handleNLUnroutedMsg(const Message &msg)
 
 bool handleNRUnroutedMsg(conn_t *from, const Message &msg) {
     // This part of handleUnroutedMsg decides whether to just delete it
-    if (dn_trans_keys->find(msg.params[0].c_str()) == dn_trans_keys->end()) {
+    if (dn_trans_keys.find(msg.params[0].c_str()) == dn_trans_keys.end()) {
         int i, s;
         
-        (*dn_trans_keys)[msg.params[0].c_str()] = 1;
+        dn_trans_keys[msg.params[0].c_str()] = 1;
         
         // Continue the transmission
         Message omsg(msg.type, msg.cmd.c_str(), msg.ver[0], msg.ver[1]);
@@ -855,17 +855,17 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
     BinSeq keyhash = encHashKey(key);
     
     // If we aren't fully established already
-    if (dn_names->find(key) == dn_names->end()) {
+    if (dn_names.find(key) == dn_names.end()) {
         // Add the route,
-        if (dn_routes->find(key) != dn_routes->end()) {
-            delete (*dn_routes)[key];
-            dn_routes->erase(key);
+        if (dn_routes.find(key) != dn_routes.end()) {
+            delete dn_routes[key];
+            dn_routes.erase(key);
         }
-        (*dn_routes)[key] = new Route(*route);
+        dn_routes[key] = new Route(*route);
         
-        (*dn_names)[key] = name;
-        (*dn_keys)[name] = key;
-        (*dn_kbh)[keyhash] = key;
+        dn_names[key] = name;
+        dn_keys[name] = key;
+        dn_kbh[keyhash] = key;
         
         // and public key
         encImportKey(name, key);
@@ -942,9 +942,9 @@ void recvFnd(Route *route, const BinSeq &name, const BinSeq &key)
 /* Commands used by the UI */
 void establishConnection(const string &to)
 {
-    if (dn_keys->find(to) != dn_keys->end() &&
-        dn_routes->find((*dn_keys)[to]) != dn_routes->end()) {
-        Route *route = (*dn_routes)[(*dn_keys)[to]];
+    if (dn_keys.find(to) != dn_keys.end() &&
+        dn_routes.find(dn_keys[to]) != dn_routes.end()) {
+        Route *route = dn_routes[dn_keys[to]];
         char hostbuf[128], *ip;
         struct hostent *he;
         stringstream ss;
@@ -978,12 +978,12 @@ int sendMsgB(const BinSeq &to, const BinSeq &msg, bool away, bool sign)
     Route *route;
     BinSeq encdmsg, *signedmsg;
     
-    if (dn_keys->find(to) == dn_keys->end() ||
-        dn_routes->find((*dn_keys)[to]) == dn_routes->end()) {
+    if (dn_keys.find(to) == dn_keys.end() ||
+        dn_routes.find(dn_keys[to]) == dn_routes.end()) {
         uiNoRoute(to);
         return 0;
     }
-    route = (*dn_routes)[(*dn_keys)[to]];
+    route = dn_routes[dn_keys[to]];
     
     omsg.params.push_back(route->toBinSeq());
     omsg.params.push_back(dn_name);
@@ -1052,24 +1052,24 @@ void disNode(const BinSeq &key)
 {
     BinSeq hkey = encHashKey(key);
     
-    if (dn_seen_user->find(hkey) == dn_seen_user->end()) {
+    if (dn_seen_user.find(hkey) == dn_seen_user.end()) {
         // I don't know this user, so I don't care
         return;
     }
     
     // inform the UI
-    if (dn_names->find(key) != dn_names->end()) {
-        uiLoseRoute((*dn_names)[key]);
-        dn_names->erase(key);
+    if (dn_names.find(key) != dn_names.end()) {
+        uiLoseRoute(dn_names[key]);
+        dn_names.erase(key);
     }
     
     // remove from the seen_user list
-    dn_seen_user->erase(hkey);
+    dn_seen_user.erase(hkey);
     
     // remove any routes leading to or through this user (complicated)
     map<BinSeq, Route *>::iterator dri;
 checkroutes:
-    for (dri = dn_routes->begin(); dri != dn_routes->end(); dri++) {
+    for (dri = dn_routes.begin(); dri != dn_routes.end(); dri++) {
         if (dri->second &&
             dri->second->find(hkey)) {
             // try to get a new one
@@ -1077,7 +1077,7 @@ checkroutes:
             
             // bad route, delete it
             delete dri->second;
-            dn_routes->erase(dri);
+            dn_routes.erase(dri);
             goto checkroutes;
         }
     }

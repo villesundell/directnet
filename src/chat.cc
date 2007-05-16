@@ -126,8 +126,8 @@ void handleChatMessage(conn_t *conn, Message &msg)
             for (li = ci.list.begin(); li != ci.list.end(); li++) {
                 if (li->first == msg.params[3]) continue;
                 if (li->first == dn_name) continue;
-                if (dn_routes->find(li->second.key) != dn_routes->end()) {
-                    msg.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
+                if (dn_routes.find(li->second.key) != dn_routes.end()) {
+                    msg.params[0] = dn_routes[li->second.key]->toBinSeq();
                     msg.params[4] = encTo(dn_name, li->first, unencmsg);
                     handleRoutedMsg(msg);
                 }
@@ -206,8 +206,8 @@ void sendCon(ChatInfo &ci)
     // send it to each user
     for (li = ci.list.begin(); li != ci.list.end(); li++) {
         if (li->first == dn_name) continue;
-        if (dn_routes->find(li->second.key) != dn_routes->end()) {
-            rmsg.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
+        if (dn_routes.find(li->second.key) != dn_routes.end()) {
+            rmsg.params[0] = dn_routes[li->second.key]->toBinSeq();
             handleRoutedMsg(rmsg);
         }
     }
@@ -238,8 +238,8 @@ void sendChat(const BinSeq &to, const BinSeq &msg)
         map<BinSeq, ChatKeyNameAssoc>::iterator li;
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
             if (li->first == dn_name) continue;
-            if (dn_routes->find(li->second.key) != dn_routes->end()) {
-                cms.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
+            if (dn_routes.find(li->second.key) != dn_routes.end()) {
+                cms.params[0] = dn_routes[li->second.key]->toBinSeq();
                 cms.params[4] = encTo(dn_name, li->first, msg);
                 handleRoutedMsg(cms);
             }
@@ -247,8 +247,8 @@ void sendChat(const BinSeq &to, const BinSeq &msg)
         
     } else {
         // we're not the owner, so just send it to the owner
-        if (dn_routes->find(ci.repkey) != dn_routes->end()) {
-            cms.params[0] = (*dn_routes)[ci.repkey]->toBinSeq();
+        if (dn_routes.find(ci.repkey) != dn_routes.end()) {
+            cms.params[0] = dn_routes[ci.repkey]->toBinSeq();
             cms.params[4] = encTo(dn_name, ci.repname, msg);
             handleRoutedMsg(cms);
         }
@@ -309,8 +309,8 @@ void chatJoinOwnerCallback(const BinSeq &key, const BinSeq &name, void *data)
     
     Route toroute, rroute;
     
-    if (dn_routes->find(key) != dn_routes->end()) {
-        toroute = *((*dn_routes)[key]);
+    if (dn_routes.find(key) != dn_routes.end()) {
+        toroute = *(dn_routes[key]);
     }
     
     rroute = toroute;
@@ -417,17 +417,17 @@ void chatLeave(const BinSeq &channel)
         map<BinSeq, ChatKeyNameAssoc>::iterator li;
         for (li = ci.list.begin(); li != ci.list.end(); li++) {
             if (li->first == dn_name) continue;
-            if (dn_routes->find(li->second.key) != dn_routes->end()) {
-                con.params[0] = (*dn_routes)[li->second.key]->toBinSeq();
+            if (dn_routes.find(li->second.key) != dn_routes.end()) {
+                con.params[0] = dn_routes[li->second.key]->toBinSeq();
                 handleRoutedMsg(con);
             }
         }
         
     } else {
         // Send a Clv to the owner
-        if (dn_routes->find(ci.repkey) != dn_routes->end()) {
+        if (dn_routes.find(ci.repkey) != dn_routes.end()) {
             Message clv(1, "Clv", 1, 1);
-            clv.params.push_back((*dn_routes)[ci.repkey]->toBinSeq());
+            clv.params.push_back(dn_routes[ci.repkey]->toBinSeq());
             clv.params.push_back(dn_name);
             clv.params.push_back(encExportKey());
             clv.params.push_back(channel);

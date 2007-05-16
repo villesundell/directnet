@@ -1,3 +1,7 @@
+SVN:
+        - FLTK: Fixed a bug which caused DirectNet not to close when the main
+          window was closed if there were any channel windows open.
+
 2.0a9:
         - Only establish short-circuiting connections once.
         - Fixed a fairly major data-loss bug.
