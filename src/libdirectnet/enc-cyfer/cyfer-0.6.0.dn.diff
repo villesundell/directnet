@@ -1,6 +1,6 @@
-diff -ru cyfer-0.6.0/configure cyfer/configure
+diff -ruN cyfer-0.6.0/configure cyfer/configure
 --- cyfer-0.6.0/configure	2004-09-25 18:43:58.000000000 -0700
-+++ cyfer/configure	2006-12-11 23:23:40.000000000 -0800
++++ cyfer/configure	2007-05-16 15:09:37.000000000 -0700
 @@ -1,38 +1,102 @@
  #! /bin/sh
  # Guess values for system-dependent variables and create Makefiles.
@@ -9277,9 +9277,9 @@ diff -ru cyfer-0.6.0/configure cyfer/configure
  
  { (exit 0); exit 0; }
  _ACEOF
-diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
+diff -ruN cyfer-0.6.0/configure.in cyfer/configure.in
 --- cyfer-0.6.0/configure.in	2004-09-25 18:43:03.000000000 -0700
-+++ cyfer/configure.in	2006-12-11 23:23:11.000000000 -0800
++++ cyfer/configure.in	2007-05-15 13:01:55.000000000 -0700
 @@ -26,7 +26,6 @@
  AC_TYPE_SIZE_T
  
@@ -9288,21 +9288,24 @@ diff -ru cyfer-0.6.0/configure.in cyfer/configure.in
  AC_FUNC_MEMCMP
  AC_CHECK_FUNCS([memmove memset])
  
-diff -ru cyfer-0.6.0/examples/Makefile.in cyfer/examples/Makefile.in
+diff -ruN cyfer-0.6.0/examples/Makefile.in cyfer/examples/Makefile.in
 --- cyfer-0.6.0/examples/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/examples/Makefile.in	2006-12-11 18:58:01.000000000 -0800
-@@ -2,7 +2,7 @@
++++ cyfer/examples/Makefile.in	2007-05-16 14:19:03.000000000 -0700
+@@ -2,9 +2,9 @@
  LIBTOOL = @LIBTOOL@
  CC = @CC@
  INSTALL=@INSTALL@
 -WARN = -Wall -Wmissing-declarations -Wmissing-prototypes -Werror
 +WARN = -Wall -Wmissing-declarations -Wmissing-prototypes 
  CFLAGS = $(WARN) -I. -I../include @CFLAGS@
- LDFLAGS = -L../lib -lcyfer @LDFLAGS@ @LIBS@
+-LDFLAGS = -L../lib -lcyfer @LDFLAGS@ @LIBS@
++LDFLAGS = -L../lib -ldirectnet_cyfer @LDFLAGS@ @LIBS@
  
-diff -ru cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.installed
+ PROGS = hash bcipher scipher pk
+ 
+diff -ruN cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.installed
 --- cyfer-0.6.0/examples/Makefile.installed	2004-09-25 07:36:14.000000000 -0700
-+++ cyfer/examples/Makefile.installed	2006-12-11 18:58:01.000000000 -0800
++++ cyfer/examples/Makefile.installed	2007-05-15 13:01:55.000000000 -0700
 @@ -1,5 +1,5 @@
  CC = gcc
 -WARN = -Wall -Wmissing-declarations -Wmissing-prototypes -Werror
@@ -9310,9 +9313,9 @@ diff -ru cyfer-0.6.0/examples/Makefile.installed cyfer/examples/Makefile.install
  CFLAGS = $(WARN) -I/usr/local/include -g -O2
  LDFLAGS = -L/usr/local/include -lcyfer
  
-diff -ru cyfer-0.6.0/include/config.h.in cyfer/include/config.h.in
+diff -ruN cyfer-0.6.0/include/config.h.in cyfer/include/config.h.in
 --- cyfer-0.6.0/include/config.h.in	2004-09-25 18:45:14.000000000 -0700
-+++ cyfer/include/config.h.in	2006-12-11 23:17:42.000000000 -0800
++++ cyfer/include/config.h.in	2007-05-15 13:01:55.000000000 -0700
 @@ -1,4 +1,4 @@
 -/* config.h.in.  Generated from configure.in by autoheader.  */
 +/* include/config.h.in.  Generated from configure.in by autoheader.  */
@@ -9349,10 +9352,9 @@ diff -ru cyfer-0.6.0/include/config.h.in cyfer/include/config.h.in
 +/* Define to `unsigned int' if <sys/types.h> does not define. */
  #undef size_t
 -
-Only in cyfer/include: config.h.in~
-diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
+diff -ruN cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
 --- cyfer-0.6.0/include/cyfer/cyfer.h	2004-09-25 08:12:43.000000000 -0700
-+++ cyfer/include/cyfer/cyfer.h	2006-12-11 18:58:01.000000000 -0800
++++ cyfer/include/cyfer/cyfer.h	2007-05-15 13:01:55.000000000 -0700
 @@ -59,7 +59,8 @@
  #include <stdlib.h>
  
@@ -9363,9 +9365,9 @@ diff -ru cyfer-0.6.0/include/cyfer/cyfer.h cyfer/include/cyfer/cyfer.h
  typedef unsigned int bool;
  #define false 0
  #define true (!0)
-diff -ru cyfer-0.6.0/include/util.h cyfer/include/util.h
+diff -ruN cyfer-0.6.0/include/util.h cyfer/include/util.h
 --- cyfer-0.6.0/include/util.h	2004-09-25 18:44:52.000000000 -0700
-+++ cyfer/include/util.h	2006-12-11 23:23:46.000000000 -0800
++++ cyfer/include/util.h	2007-05-15 13:01:55.000000000 -0700
 @@ -11,9 +11,9 @@
  typedef unsigned __int32 uint32_t;
  #define CYFER_API __declspec(dllexport)
@@ -9378,9 +9380,9 @@ diff -ru cyfer-0.6.0/include/util.h cyfer/include/util.h
  
  #else /* _WIN32 */
  
-diff -ru cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
+diff -ruN cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
 --- cyfer-0.6.0/lib/asym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/asym/Makefile.in	2006-12-11 18:58:01.000000000 -0800
++++ cyfer/lib/asym/Makefile.in	2007-05-15 13:01:55.000000000 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -9390,9 +9392,9 @@ diff -ru cyfer-0.6.0/lib/asym/Makefile.in cyfer/lib/asym/Makefile.in
  CFLAGS = $(WARN) -I../../ -I../../include -D_REENTRANT @CFLAGS@
  
  OBJS = rsa.o elgamal.o luc.o dh.o pkiutil.o pk.o keyex.o
-diff -ru cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
+diff -ruN cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
 --- cyfer-0.6.0/lib/hash/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/hash/Makefile.in	2006-12-11 18:58:01.000000000 -0800
++++ cyfer/lib/hash/Makefile.in	2007-05-15 13:01:55.000000000 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -9402,18 +9404,24 @@ diff -ru cyfer-0.6.0/lib/hash/Makefile.in cyfer/lib/hash/Makefile.in
  CFLAGS = $(WARN) -I../.. -I../../include -D_REENTRANT @CFLAGS@
  
  OBJS = md4.o md5.o sha1.o rmd160.o adler32.o snefru.o crc32.o md2.o sha256.o hash.o 
-diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
+diff -ruN cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
 --- cyfer-0.6.0/lib/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/Makefile.in	2006-12-11 18:58:01.000000000 -0800
-@@ -13,10 +13,14 @@
- all:	libcyfer.la
++++ cyfer/lib/Makefile.in	2007-05-16 14:24:44.000000000 -0700
+@@ -10,13 +10,17 @@
  
- libcyfer.la: 
+ .PHONY: all clean
+ 
+-all:	libcyfer.la
++all:	libdirectnet_cyfer.la
+ 
+-libcyfer.la: 
 -	@for i in $(SUBDIRS); do $(MAKE) -C $$i all || break; done
+-	$(LIBTOOL) --mode=link $(CC) -module -release $(VERSION) $(OBJS) -rpath $(LIBDIR) $(LDFLAGS) -o $@
++libdirectnet_cyfer.la: 
 +	cd hash ; $(MAKE) all
 +	cd sym ; $(MAKE) all
 +	cd asym ; $(MAKE) all
- 	$(LIBTOOL) --mode=link $(CC) -module -release $(VERSION) $(OBJS) -rpath $(LIBDIR) $(LDFLAGS) -o $@
++	$(LIBTOOL) --mode=link $(CC) -static -module -release $(VERSION) $(OBJS) -rpath $(LIBDIR) $(LDFLAGS) -o $@
  
  clean:
 -	@for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
@@ -9422,9 +9430,9 @@ diff -ru cyfer-0.6.0/lib/Makefile.in cyfer/lib/Makefile.in
 +	cd asym ; $(MAKE) clean
  	rm -rf *.a *.la *~ .libs
  
-diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
+diff -ruN cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
 --- cyfer-0.6.0/lib/sym/Makefile.in	2004-09-06 07:23:34.000000000 -0700
-+++ cyfer/lib/sym/Makefile.in	2006-12-11 18:58:01.000000000 -0800
++++ cyfer/lib/sym/Makefile.in	2007-05-15 13:01:55.000000000 -0700
 @@ -2,7 +2,7 @@
  CC = @CC@
  LIBTOOL = @LIBTOOL@
@@ -9434,9 +9442,9 @@ diff -ru cyfer-0.6.0/lib/sym/Makefile.in cyfer/lib/sym/Makefile.in
  CFLAGS = $(WARN) -I../.. -I../../include -D_REENTRANT @CFLAGS@
  
  BCIPHERS = blowfish.o des.o desx.o rc2.o rc5.o rc6.o tripledes.o idea.o aes.o deal.o threeway.o 
-diff -ru cyfer-0.6.0/Makefile.in cyfer/Makefile.in
+diff -ruN cyfer-0.6.0/Makefile.in cyfer/Makefile.in
 --- cyfer-0.6.0/Makefile.in	2004-09-25 19:11:27.000000000 -0700
-+++ cyfer/Makefile.in	2006-12-11 18:58:01.000000000 -0800
++++ cyfer/Makefile.in	2007-05-16 15:09:20.000000000 -0700
 @@ -8,7 +8,7 @@
  
  CC = @CC@
@@ -9446,15 +9454,38 @@ diff -ru cyfer-0.6.0/Makefile.in cyfer/Makefile.in
  CFLAGS = $(WARN) -I../include -I../../include @M64@ @CFLAGS@
  
  INSTALL_INCLUDES = include/cyfer/*.h
-diff -ru cyfer-0.6.0/test/Makefile.in cyfer/test/Makefile.in
+@@ -24,12 +24,13 @@
+ 	test/test
+ 
+ install: all
+-	$(INSTALL) -d $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(DOCDIR)/examples
+-	./libtool --mode=install $(INSTALL) -s -m 644 lib/libcyfer.la $(DESTDIR)$(LIBDIR)
+-	$(INSTALL) -m 644 $(INSTALL_INCLUDES) $(DESTDIR)$(INCDIR)
+-	$(INSTALL) -m 644 examples/*.c $(DESTDIR)$(DOCDIR)/examples
+-	$(INSTALL) -m 644 examples/Makefile.installed $(DESTDIR)$(DOCDIR)/examples/Makefile
+-	cp -R doc/* $(DESTDIR)$(DOCDIR)
++	#$(INSTALL) -d $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(DOCDIR)/examples
++	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
++	./libtool --mode=install $(INSTALL) -s -m 644 lib/libdirectnet_cyfer.la $(DESTDIR)$(LIBDIR)
++	#$(INSTALL) -m 644 $(INSTALL_INCLUDES) $(DESTDIR)$(INCDIR)
++	#$(INSTALL) -m 644 examples/*.c $(DESTDIR)$(DOCDIR)/examples
++	#$(INSTALL) -m 644 examples/Makefile.installed $(DESTDIR)$(DOCDIR)/examples/Makefile
++	#cp -R doc/* $(DESTDIR)$(DOCDIR)
+ 
+ docs:
+ 	rm -rf doc/html
+diff -ruN cyfer-0.6.0/test/Makefile.in cyfer/test/Makefile.in
 --- cyfer-0.6.0/test/Makefile.in	2004-09-25 07:49:44.000000000 -0700
-+++ cyfer/test/Makefile.in	2006-12-11 18:58:01.000000000 -0800
-@@ -2,7 +2,7 @@
++++ cyfer/test/Makefile.in	2007-05-16 14:19:07.000000000 -0700
+@@ -2,9 +2,9 @@
  LIBTOOL = @LIBTOOL@
  CC = @CC@
  INSTALL=@INSTALL@
 -WARN = -Wall -Wmissing-declarations -Wmissing-prototypes -Werror
 +WARN = -Wall -Wmissing-declarations -Wmissing-prototypes 
  CFLAGS = $(WARN) -I. -I../include @CFLAGS@
- LDFLAGS = -L../lib -lcyfer @LDFLAGS@
+-LDFLAGS = -L../lib -lcyfer @LDFLAGS@
++LDFLAGS = -L../lib -ldirectnet_cyfer @LDFLAGS@
+ 
+ OBJS = hashtest.o symtest.o asymtest.o test.o
  

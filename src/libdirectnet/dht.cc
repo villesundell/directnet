@@ -39,7 +39,6 @@ extern "C" {
 #include "directnet/message.h"
 #include "directnet/route.h"
 #include "directnet/ui.h"
-using namespace DirectNet;
 
 namespace DirectNet {
     map<BinSeq, DHTInfo> in_dhts;

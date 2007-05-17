@@ -874,18 +874,14 @@ NO_GETTIMEOFDAY_FALSE
 FLTK_CONFIG
 FLTK_CFLAGS
 FLTK_LIBS
+ENABLE_UI_TRUE
+ENABLE_UI_FALSE
 UI_CFLAGS
 UI_CPPFLAGS
 UI_CXXFLAGS
 UI_LIBS
 UI_LDFLAGS
 UI_DIR
-PKG_CONFIG
-GAIM_CFLAGS
-GAIM_LIBS
-GAIM_PLUGIN_DIR
-GAIM_PLUGIN_TRUE
-GAIM_PLUGIN_FALSE
 ENC_CFLAGS
 ENC_CPPFLAGS
 ENC_CXXFLAGS
@@ -915,10 +911,7 @@ CXXFLAGS
 CCC
 CXXCPP
 F77
-FFLAGS
-PKG_CONFIG
-GAIM_CFLAGS
-GAIM_LIBS'
+FFLAGS'
 
 
 # Initialize some variables set by options.
@@ -1511,8 +1504,6 @@ Optional Features:
   --enable-custom-ui-libs=<libs>
                           add <libs> to the linker line. Any necessary CFLAGS
                           are assumed to be in \$CFLAGS
-  --enable-gaim2-plugin   enable the Gaim2 Plugin - must have Gaim 2.0.0beta1
-                          or higher development libraries
   --enable-enc=cyfer      set the encryption (only cyfer works)
   --enable-auth=gpg|none  set the encryption (gpg or none)
 
@@ -1540,9 +1531,6 @@ Some influential environment variables:
   CXXCPP      C++ preprocessor
   F77         Fortran 77 compiler command
   FFLAGS      Fortran 77 compiler flags
-  PKG_CONFIG  path to pkg-config utility
-  GAIM_CFLAGS C compiler flags for GAIM, overriding pkg-config
-  GAIM_LIBS   linker flags for GAIM, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2442,7 +2430,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 ac_config_headers="$ac_config_headers config.h"
 
 
-ac_config_files="$ac_config_files Makefile docs/Makefile src/Makefile src/libdirectnet/Makefile src/libdirectnet/auth-gpg/Makefile src/libdirectnet/enc-cyfer/Makefile src/gaim2-plugin/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-java/Makefile src/ui-slang/Makefile"
+ac_config_files="$ac_config_files Makefile docs/Makefile src/Makefile src/libdirectnet/Makefile src/libdirectnet/auth-gpg/Makefile src/libdirectnet/enc-cyfer/Makefile src/ui-dumb/Makefile src/ui-fltk/Makefile src/ui-java/Makefile"
 
 
 if test ! -e ${srcdir}/src/libdirectnet/enc-cyfer/cyfer
@@ -5045,7 +5033,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5048 "configure"' > conftest.$ac_ext
+  echo '#line 5036 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7074,11 +7062,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7077: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7065: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7081: \$? = $ac_status" >&5
+   echo "$as_me:7069: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7342,11 +7330,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7345: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7333: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7349: \$? = $ac_status" >&5
+   echo "$as_me:7337: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7446,11 +7434,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7449: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7437: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7453: \$? = $ac_status" >&5
+   echo "$as_me:7441: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9754,7 +9742,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9757 "configure"
+#line 9745 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9854,7 +9842,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9857 "configure"
+#line 9845 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12190,11 +12178,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12193: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12181: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12197: \$? = $ac_status" >&5
+   echo "$as_me:12185: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12294,11 +12282,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12297: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12285: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12301: \$? = $ac_status" >&5
+   echo "$as_me:12289: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13864,11 +13852,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13867: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13855: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13871: \$? = $ac_status" >&5
+   echo "$as_me:13859: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13968,11 +13956,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13971: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13959: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13975: \$? = $ac_status" >&5
+   echo "$as_me:13963: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16166,11 +16154,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16169: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16157: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16173: \$? = $ac_status" >&5
+   echo "$as_me:16161: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16434,11 +16422,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16437: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16425: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16441: \$? = $ac_status" >&5
+   echo "$as_me:16429: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16538,11 +16526,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16541: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16529: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16545: \$? = $ac_status" >&5
+   echo "$as_me:16533: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19850,17 +19838,18 @@ fi
 # Figure out what UI to use
 # Check whether --enable-ui was given.
 if test "${enable_ui+set}" = set; then
-  enableval=$enable_ui; case "$enableval" in
+  enableval=$enable_ui; ENABLE_UI=yes
+ case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
         java) ui=java ;;
-        slang) ui=slang ;;
+        no) ENABLE_UI=no; ui=none ;;
         *) { { echo "$as_me:$LINENO: error: Invalid UI chosen." >&5
 echo "$as_me: error: Invalid UI chosen." >&2;}
    { (exit 1); exit 1; }; } ;;
 esac
 else
-  ui=determine
+  ENABLE_UI=yes; ui=determine
 fi
 
 
@@ -20275,236 +20264,6 @@ done
 fi
 
 
-if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
-then
-	slang_ui=ok
-	if test "${ac_cv_header_slang_slang_h+set}" = set; then
-  { echo "$as_me:$LINENO: checking for slang/slang.h" >&5
-echo $ECHO_N "checking for slang/slang.h... $ECHO_C" >&6; }
-if test "${ac_cv_header_slang_slang_h+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_header_slang_slang_h" >&5
-echo "${ECHO_T}$ac_cv_header_slang_slang_h" >&6; }
-else
-  # Is the header compilable?
-{ echo "$as_me:$LINENO: checking slang/slang.h usability" >&5
-echo $ECHO_N "checking slang/slang.h usability... $ECHO_C" >&6; }
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$ac_includes_default
-#include <slang/slang.h>
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  ac_header_compiler=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_header_compiler=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-{ echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
-echo "${ECHO_T}$ac_header_compiler" >&6; }
-
-# Is the header present?
-{ echo "$as_me:$LINENO: checking slang/slang.h presence" >&5
-echo $ECHO_N "checking slang/slang.h presence... $ECHO_C" >&6; }
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <slang/slang.h>
-_ACEOF
-if { (ac_try="$ac_cpp conftest.$ac_ext"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_cpp conftest.$ac_ext") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null && {
-	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       }; then
-  ac_header_preproc=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  ac_header_preproc=no
-fi
-
-rm -f conftest.err conftest.$ac_ext
-{ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
-echo "${ECHO_T}$ac_header_preproc" >&6; }
-
-# So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
-  yes:no: )
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h: accepted by the compiler, rejected by the preprocessor!" >&5
-echo "$as_me: WARNING: slang/slang.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h: proceeding with the compiler's result" >&5
-echo "$as_me: WARNING: slang/slang.h: proceeding with the compiler's result" >&2;}
-    ac_header_preproc=yes
-    ;;
-  no:yes:* )
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h: present but cannot be compiled" >&5
-echo "$as_me: WARNING: slang/slang.h: present but cannot be compiled" >&2;}
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h:     check for missing prerequisite headers?" >&5
-echo "$as_me: WARNING: slang/slang.h:     check for missing prerequisite headers?" >&2;}
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h: see the Autoconf documentation" >&5
-echo "$as_me: WARNING: slang/slang.h: see the Autoconf documentation" >&2;}
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h:     section \"Present But Cannot Be Compiled\"" >&5
-echo "$as_me: WARNING: slang/slang.h:     section \"Present But Cannot Be Compiled\"" >&2;}
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h: proceeding with the preprocessor's result" >&5
-echo "$as_me: WARNING: slang/slang.h: proceeding with the preprocessor's result" >&2;}
-    { echo "$as_me:$LINENO: WARNING: slang/slang.h: in the future, the compiler will take precedence" >&5
-echo "$as_me: WARNING: slang/slang.h: in the future, the compiler will take precedence" >&2;}
-    ( cat <<\_ASBOX
-## ---------------------------------------------- ##
-## Report this to cdgregorr@users.sourceforge.net ##
-## ---------------------------------------------- ##
-_ASBOX
-     ) | sed "s/^/$as_me: WARNING:     /" >&2
-    ;;
-esac
-{ echo "$as_me:$LINENO: checking for slang/slang.h" >&5
-echo $ECHO_N "checking for slang/slang.h... $ECHO_C" >&6; }
-if test "${ac_cv_header_slang_slang_h+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_cv_header_slang_slang_h=$ac_header_preproc
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_header_slang_slang_h" >&5
-echo "${ECHO_T}$ac_cv_header_slang_slang_h" >&6; }
-
-fi
-if test $ac_cv_header_slang_slang_h = yes; then
-  :
-else
-  slang_ui=notok
-fi
-
-
-
-{ echo "$as_me:$LINENO: checking for SLtt_cls in -lslang" >&5
-echo $ECHO_N "checking for SLtt_cls in -lslang... $ECHO_C" >&6; }
-if test "${ac_cv_lib_slang_SLtt_cls+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lslang  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char SLtt_cls ();
-int
-main ()
-{
-return SLtt_cls ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_slang_SLtt_cls=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_lib_slang_SLtt_cls=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_slang_SLtt_cls" >&5
-echo "${ECHO_T}$ac_cv_lib_slang_SLtt_cls" >&6; }
-if test $ac_cv_lib_slang_SLtt_cls = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBSLANG 1
-_ACEOF
-
-  LIBS="-lslang $LIBS"
-
-else
-  slang_ui=notok
-fi
-
-
-	if test "x$slang_ui" = "xok"
-	then
-	        UI_CFLAGS=
-	        UI_CPPFLAGS=
-	        UI_CXXFLAGS=
-	        UI_LIBS=-lslang
-	        UI_LDFLAGS=
-	        UI_DIR=ui-slang
-	        found_ui=yes
-	        ui=slang
-	        { echo "$as_me:$LINENO: Using slang UI" >&5
-echo "$as_me: Using slang UI" >&6;}
-	fi
-fi
-
-
 if test "x$ui" = "xjava"
 then
         UI_CFLAGS=
@@ -20744,235 +20503,35 @@ done
 fi
 
 
-if test "x$found_ui" = "xno"
+if test "x$ui" = "xnone"
 then
-        { { echo "$as_me:$LINENO: error: Couldn't find a working UI." >&5
-echo "$as_me: error: Couldn't find a working UI." >&2;}
-   { (exit 1); exit 1; }; }
+        { echo "$as_me:$LINENO: Using no UI" >&5
+echo "$as_me: Using no UI" >&6;}
 fi
 
 
-
-
-
-
-
-
-
-# Check if we should enable the Gaim2 plugin
-
-
-if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-	if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
-set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
-{ echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-if test -n "$PKG_CONFIG"; then
-  { echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6; }
-else
-  { echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_path_PKG_CONFIG"; then
-  ac_pt_PKG_CONFIG=$PKG_CONFIG
-  # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-{ echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
-if test "${ac_cv_path_ac_pt_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $ac_pt_PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
-if test -n "$ac_pt_PKG_CONFIG"; then
-  { echo "$as_me:$LINENO: result: $ac_pt_PKG_CONFIG" >&5
-echo "${ECHO_T}$ac_pt_PKG_CONFIG" >&6; }
-else
-  { echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-fi
-
-  if test "x$ac_pt_PKG_CONFIG" = x; then
-    PKG_CONFIG=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
-whose name does not start with the host triplet.  If you think this
-configuration is useful to you, please write to autoconf@gnu.org." >&5
-echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
-whose name does not start with the host triplet.  If you think this
-configuration is useful to you, please write to autoconf@gnu.org." >&2;}
-ac_tool_warned=yes ;;
-esac
-    PKG_CONFIG=$ac_pt_PKG_CONFIG
-  fi
-else
-  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
-fi
-
-fi
-if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=0.9.0
-	{ echo "$as_me:$LINENO: checking pkg-config is at least version $_pkg_min_version" >&5
-echo $ECHO_N "checking pkg-config is at least version $_pkg_min_version... $ECHO_C" >&6; }
-	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-		{ echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-	else
-		{ echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-		PKG_CONFIG=""
-	fi
-
-fi
-# Check whether --enable-gaim2-plugin was given.
-if test "${enable_gaim2_plugin+set}" = set; then
-  enableval=$enable_gaim2_plugin;
-
-GAIM2_PLUGIN=yes
-
-# Check for Gaim
-
-pkg_failed=no
-{ echo "$as_me:$LINENO: checking for GAIM" >&5
-echo $ECHO_N "checking for GAIM... $ECHO_C" >&6; }
-
-if test -n "$PKG_CONFIG"; then
-        if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gaim >= 2.0.0beta1 gtk+-2.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gaim >= 2.0.0beta1 gtk+-2.0") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  pkg_cv_GAIM_CFLAGS=`$PKG_CONFIG --cflags "gaim >= 2.0.0beta1 gtk+-2.0" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
-	pkg_failed=untried
-fi
-if test -n "$PKG_CONFIG"; then
-        if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gaim >= 2.0.0beta1 gtk+-2.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gaim >= 2.0.0beta1 gtk+-2.0") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  pkg_cv_GAIM_LIBS=`$PKG_CONFIG --libs "gaim >= 2.0.0beta1 gtk+-2.0" 2>/dev/null`
-else
-  pkg_failed=yes
-fi
-	pkg_failed=untried
-fi
-
-if test $pkg_failed = yes; then
-	GAIM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gaim >= 2.0.0beta1 gtk+-2.0"`
-	# Put the nasty error message in config.log where it belongs
-	echo "$GAIM_PKG_ERRORS" 1>&5
-
-
-{ { echo "$as_me:$LINENO: error: Gaim development libraries not found." >&5
-echo "$as_me: error: Gaim development libraries not found." >&2;}
-   { (exit 1); exit 1; }; }
-
-elif test $pkg_failed = untried; then
-
-{ { echo "$as_me:$LINENO: error: Gaim development libraries not found." >&5
-echo "$as_me: error: Gaim development libraries not found." >&2;}
-   { (exit 1); exit 1; }; }
-
-else
-	GAIM_CFLAGS=$pkg_cv_GAIM_CFLAGS
-	GAIM_LIBS=$pkg_cv_GAIM_LIBS
-
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_GAIM 1
-_ACEOF
-
-
-fi
-
-
-
-
-
-else
-  GAIM2_PLUGIN=no
-fi
-
-
-if test "x$GAIM2_PLUGIN" = "xyes"
+if test "x$ENABLE_UI" = "xyes" && "x$found_ui" = "xno"
 then
-        GAIM_PLUGIN_DIR=gaim2-plugin
+        { { echo "$as_me:$LINENO: error: Couldn't find a working UI. If you do not wish to build a UI, use --disable-ui." >&5
+echo "$as_me: error: Couldn't find a working UI. If you do not wish to build a UI, use --disable-ui." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+
+if test "x$ENABLE_UI" = "xyes"; then
+  ENABLE_UI_TRUE=
+  ENABLE_UI_FALSE='#'
 else
-        GAIM_PLUGIN_DIR=
+  ENABLE_UI_TRUE='#'
+  ENABLE_UI_FALSE=
 fi
 
 
 
 
-if test "x$GAIM2_PLUGIN" = "xyes"; then
-  GAIM_PLUGIN_TRUE=
-  GAIM_PLUGIN_FALSE='#'
-else
-  GAIM_PLUGIN_TRUE='#'
-  GAIM_PLUGIN_FALSE=
-fi
+
+
 
 
 
@@ -21065,7 +20624,7 @@ if test $ac_cv_lib_gmp___gmpz_export = yes; then
         ENC_CXXFLAGS=
         ENC_CXX=false
         ENC_LIBS="-lgmp"
-        ENC_LDFLAGS="-L`pwd`/$srcdir/src/libdirectnet/enc-cyfer/cyfer/lib"
+        ENC_LDFLAGS=
         ENC_DIR=enc-cyfer
         found_enc=yes
         enc=cyfer
@@ -21075,8 +20634,8 @@ echo "$as_me: Using cyfer encryption" >&6;}
         ORIGDIR=`pwd`
         export ORIGDIR
         cd $ORIGDIR/$srcdir/src/libdirectnet/enc-cyfer/cyfer
-        CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure --enable-static \
-                --disable-shared --host=$host_alias --build=$build_alias || exit 1
+        CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure \
+                --prefix=${prefix} --host=$host_alias --build=$build_alias || exit 1
         cd $ORIGDIR
 
 else
@@ -22871,10 +22430,10 @@ echo "$as_me: error: conditional \"NO_GETTIMEOFDAY\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${GAIM_PLUGIN_TRUE}" && test -z "${GAIM_PLUGIN_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"GAIM_PLUGIN\" was never defined.
+if test -z "${ENABLE_UI_TRUE}" && test -z "${ENABLE_UI_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ENABLE_UI\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"GAIM_PLUGIN\" was never defined.
+echo "$as_me: error: conditional \"ENABLE_UI\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23351,11 +22910,9 @@ do
     "src/libdirectnet/Makefile") CONFIG_FILES="$CONFIG_FILES src/libdirectnet/Makefile" ;;
     "src/libdirectnet/auth-gpg/Makefile") CONFIG_FILES="$CONFIG_FILES src/libdirectnet/auth-gpg/Makefile" ;;
     "src/libdirectnet/enc-cyfer/Makefile") CONFIG_FILES="$CONFIG_FILES src/libdirectnet/enc-cyfer/Makefile" ;;
-    "src/gaim2-plugin/Makefile") CONFIG_FILES="$CONFIG_FILES src/gaim2-plugin/Makefile" ;;
     "src/ui-dumb/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-dumb/Makefile" ;;
     "src/ui-fltk/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-fltk/Makefile" ;;
     "src/ui-java/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-java/Makefile" ;;
-    "src/ui-slang/Makefile") CONFIG_FILES="$CONFIG_FILES src/ui-slang/Makefile" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -23565,18 +23122,14 @@ NO_GETTIMEOFDAY_FALSE!$NO_GETTIMEOFDAY_FALSE$ac_delim
 FLTK_CONFIG!$FLTK_CONFIG$ac_delim
 FLTK_CFLAGS!$FLTK_CFLAGS$ac_delim
 FLTK_LIBS!$FLTK_LIBS$ac_delim
+ENABLE_UI_TRUE!$ENABLE_UI_TRUE$ac_delim
+ENABLE_UI_FALSE!$ENABLE_UI_FALSE$ac_delim
 UI_CFLAGS!$UI_CFLAGS$ac_delim
 UI_CPPFLAGS!$UI_CPPFLAGS$ac_delim
 UI_CXXFLAGS!$UI_CXXFLAGS$ac_delim
 UI_LIBS!$UI_LIBS$ac_delim
 UI_LDFLAGS!$UI_LDFLAGS$ac_delim
 UI_DIR!$UI_DIR$ac_delim
-PKG_CONFIG!$PKG_CONFIG$ac_delim
-GAIM_CFLAGS!$GAIM_CFLAGS$ac_delim
-GAIM_LIBS!$GAIM_LIBS$ac_delim
-GAIM_PLUGIN_DIR!$GAIM_PLUGIN_DIR$ac_delim
-GAIM_PLUGIN_TRUE!$GAIM_PLUGIN_TRUE$ac_delim
-GAIM_PLUGIN_FALSE!$GAIM_PLUGIN_FALSE$ac_delim
 ENC_CFLAGS!$ENC_CFLAGS$ac_delim
 ENC_CPPFLAGS!$ENC_CPPFLAGS$ac_delim
 ENC_CXXFLAGS!$ENC_CXXFLAGS$ac_delim
@@ -23593,7 +23146,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 34; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 30; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

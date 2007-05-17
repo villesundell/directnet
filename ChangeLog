@@ -1,6 +1,14 @@
 SVN:
         - FLTK: Fixed a bug which caused DirectNet not to close when the main
           window was closed if there were any channel windows open.
+        - All of the C++ code has been moved into the namespace "DirectNet."
+        - DirectNet is now built as a set of libraries along with the binary.
+          The libraries are:
+          libdirectnet.la:      The DirectNet core
+          libdirectnet_enc.la:  The encryption component of DirectNet (can be
+                                swapped out).
+          libdirectnet_auth.la: The authentication component of DirectNet (can
+                                be swapped out).
 
 2.0a9:
         - Only establish short-circuiting connections once.

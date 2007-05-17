@@ -282,7 +282,7 @@ char *sym_encdec(const char *inp, int encrypt, int *len, unsigned char *keybuf)
     return out;
 }
 
-int findEnc(char **envp)
+int DirectNet::findEnc(char **envp)
 {
     return 0;
 }

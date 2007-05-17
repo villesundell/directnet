@@ -16,11 +16,9 @@ src/Makefile
 src/libdirectnet/Makefile
 src/libdirectnet/auth-gpg/Makefile
 src/libdirectnet/enc-cyfer/Makefile
-src/gaim2-plugin/Makefile
 src/ui-dumb/Makefile
 src/ui-fltk/Makefile
 src/ui-java/Makefile
-src/ui-slang/Makefile
 ])
 
 if test ! -e ${srcdir}/src/libdirectnet/enc-cyfer/cyfer
@@ -62,13 +60,14 @@ AM_CONDITIONAL(NO_GETTIMEOFDAY, test "x$HAVE_GETTIMEOFDAY" = "xfalse")
 # Figure out what UI to use
 AC_ARG_ENABLE(ui,
 AS_HELP_STRING([--enable-ui[[=fltk|dumb]]], [set the UI]),
-[case "$enableval" in
+[ENABLE_UI=yes
+ case "$enableval" in
         dumb) ui=dumb ;;
         fltk) ui=fltk ;;
         java) ui=java ;;
-        slang) ui=slang ;;
+        no) ENABLE_UI=no; ui=none ;;
         *) AC_MSG_ERROR([Invalid UI chosen.]) ;;
-esac], [ui=determine])
+esac], [ENABLE_UI=yes; ui=determine])
 
 AS_MESSAGE([checking which UI to use...])
 
@@ -148,29 +147,6 @@ then
 fi
 
 
-if test "x$ui" = "xslang" || ( test "x$ui" = "xdetermine" && test "x$found_ui" = "xno" )
-then
-	slang_ui=ok
-	AC_CHECK_HEADER([slang/slang.h], [],
-          [slang_ui=notok])
-        AC_CHECK_LIB([slang], [SLtt_cls], [],
-          [slang_ui=notok])
-
-	if test "x$slang_ui" = "xok"
-	then
-	        UI_CFLAGS=
-	        UI_CPPFLAGS=
-	        UI_CXXFLAGS=
-	        UI_LIBS=-lslang
-	        UI_LDFLAGS=
-	        UI_DIR=ui-slang
-	        found_ui=yes
-	        ui=slang
-	        AS_MESSAGE([Using slang UI])
-	fi
-fi
-
-
 if test "x$ui" = "xjava"
 then
         UI_CFLAGS=
@@ -189,51 +165,24 @@ then
 fi
 
 
-if test "x$found_ui" = "xno"
+if test "x$ui" = "xnone"
 then
-        AC_MSG_ERROR([Couldn't find a working UI.])
+        AS_MESSAGE([Using no UI])
 fi
 
+
+if test "x$ENABLE_UI" = "xyes" && "x$found_ui" = "xno"
+then
+        AC_MSG_ERROR([Couldn't find a working UI. If you do not wish to build a UI, use --disable-ui.])
+fi
+
+AM_CONDITIONAL(ENABLE_UI, test "x$ENABLE_UI" = "xyes")
 AC_SUBST(UI_CFLAGS)
 AC_SUBST(UI_CPPFLAGS)
 AC_SUBST(UI_CXXFLAGS)
 AC_SUBST(UI_LIBS)
 AC_SUBST(UI_LDFLAGS)
 AC_SUBST(UI_DIR)
-
-
-# Check if we should enable the Gaim2 plugin
-AC_ARG_ENABLE(gaim2-plugin,
-AS_HELP_STRING([--enable-gaim2-plugin],
-[enable the Gaim2 Plugin - must have Gaim 2.0.0beta1 or higher development libraries]),
-[
-
-GAIM2_PLUGIN=yes
-
-# Check for Gaim
-PKG_CHECK_MODULES(GAIM,
-[gaim >= 2.0.0beta1 gtk+-2.0],
-[
-        AC_DEFINE(HAVE_GAIM, 1, [Define if gaim-devel is available.])
-],
-[
-AC_MSG_ERROR([Gaim development libraries not found.])
-])
-
-AC_SUBST(GAIM_CFLAGS)
-AC_SUBST(GAIM_LIBS)
-
-], [GAIM2_PLUGIN=no], [GAIM2_PLUGIN=no])
-
-if test "x$GAIM2_PLUGIN" = "xyes"
-then
-        GAIM_PLUGIN_DIR=gaim2-plugin
-else
-        GAIM_PLUGIN_DIR=
-fi
-
-AC_SUBST(GAIM_PLUGIN_DIR)
-AM_CONDITIONAL(GAIM_PLUGIN, test "x$GAIM2_PLUGIN" = "xyes")
 
 
 # Check for encryption to use
@@ -256,7 +205,7 @@ then
         ENC_CXXFLAGS=
         ENC_CXX=false
         ENC_LIBS="-lgmp"
-        ENC_LDFLAGS="-L`pwd`/$srcdir/src/libdirectnet/enc-cyfer/cyfer/lib"
+        ENC_LDFLAGS=
         ENC_DIR=enc-cyfer
         found_enc=yes
         enc=cyfer
@@ -265,8 +214,8 @@ then
         ORIGDIR=`pwd`
         export ORIGDIR
         cd $ORIGDIR/$srcdir/src/libdirectnet/enc-cyfer/cyfer
-        CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure --enable-static \
-                --disable-shared --host=$host_alias --build=$build_alias || exit 1
+        CC="$CC" CFLAGS="$CFLAGS -Dbool=int -Dtrue=1 -Dfalse=0" ./configure \
+                --prefix=${prefix} --host=$host_alias --build=$build_alias || exit 1
         cd $ORIGDIR
         ], [AC_MSG_ERROR([You need GMP to support Cyfer encryption.])])
 fi

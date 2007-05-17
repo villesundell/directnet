@@ -56,7 +56,6 @@ extern "C" {
 #include "directnet/server.h"
 #include "directnet/ui.h"
 #include "directnet/whereami.h"
-using namespace DirectNet;
 
 extern char **environ; // XXX: should use getenv
 

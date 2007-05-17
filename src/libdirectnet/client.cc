@@ -53,109 +53,110 @@ extern "C" {
 extern "C" {
 #include <errno.h>
 }
-using namespace DirectNet;
 
-struct outgc {
-    string outgh;
-    int outgp;
-    bool requested;
-};
+namespace DirectNet {
+    struct outgc {
+        string outgh;
+        int outgp;
+        bool requested;
+    };
 
-void connect_act(dn_event_fd *ev, int cond);
+    void connect_act(dn_event_fd *ev, int cond);
 
-void async_establishClient(const string &destination, bool requested)
-{
-    int flags, ret;
-    struct hostent *he;
-    struct sockaddr_in addr;
-    //struct in_addr inIP;
-    string hostname;
-    int i, port, fd;
+    void async_establishClient(const string &destination, bool requested)
+    {
+        int flags, ret;
+        struct hostent *he;
+        struct sockaddr_in addr;
+        //struct in_addr inIP;
+        string hostname;
+        int i, port, fd;
 #ifdef __WIN32
-    unsigned long nblock;
+        unsigned long nblock;
 #endif
     
-    /* split 'destination' into 'hostname' and 'port' */
-    hostname = destination;
-    i = hostname.find_first_of(':');
-    if (i != string::npos) {
-        /* it has a port */
-        port = atoi(hostname.substr(i + 1).c_str());
-        hostname = hostname.substr(0, i);
-    } else {
-        port = 3447;
-    }
+        /* split 'destination' into 'hostname' and 'port' */
+        hostname = destination;
+        i = hostname.find_first_of(':');
+        if (i != string::npos) {
+            /* it has a port */
+            port = atoi(hostname.substr(i + 1).c_str());
+            hostname = hostname.substr(0, i);
+        } else {
+            port = 3447;
+        }
     
-    he = gethostbyname(hostname.c_str());
-    if (he == NULL) {
-        return;
-    }
+        he = gethostbyname(hostname.c_str());
+        if (he == NULL) {
+            return;
+        }
     
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd == -1) {
-        perror("socket");
-        return;
-    }
+        fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (fd == -1) {
+            perror("socket");
+            return;
+        }
 #ifndef __WIN32
-    flags = fcntl(fd, F_GETFL);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        flags = fcntl(fd, F_GETFL);
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 #else
-    nblock = 1;
-    ioctlsocket(fd, FIONBIO, &nblock);
+        nblock = 1;
+        ioctlsocket(fd, FIONBIO, &nblock);
 #endif
     
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr = *((struct in_addr *)he->h_addr);
-    /*inet_aton(hostname, &inIP);
-    addr.sin_addr = inIP;*/
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        addr.sin_addr = *((struct in_addr *)he->h_addr);
+        /*inet_aton(hostname, &inIP);
+        addr.sin_addr = inIP;*/
 #ifndef NESTEDVM
-    memset(&(addr.sin_zero), '\0', 8);
+        memset(&(addr.sin_zero), '\0', 8);
 #endif
     
-    ret = connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr));
+        ret = connect(fd, (struct sockaddr *)&addr, sizeof(struct sockaddr));
 #ifndef NESTEDVM
-    if (
+        if (
 #ifndef __WIN32
-        errno != EINPROGRESS
+            errno != EINPROGRESS
 #else
-        ret == 0 || WSAGetLastError() != WSAEWOULDBLOCK
+            ret == 0 || WSAGetLastError() != WSAEWOULDBLOCK
 #endif
-        ) {
-        perror("connect()");
-        close(fd);
-        return;
+            ) {
+            perror("connect()");
+            close(fd);
+            return;
+        }
+#endif
+    
+        outgc *ogc = new outgc;
+        ogc->outgh = hostname;
+        ogc->outgp = port;
+        ogc->requested = requested;
+    
+        dn_event_fd *ev = new dn_event_fd(fd, DN_EV_READ | DN_EV_WRITE, connect_act, (void*)ogc);
+        ev->activate();
     }
-#endif
-    
-    outgc *ogc = new outgc;
-    ogc->outgh = hostname;
-    ogc->outgp = port;
-    ogc->requested = requested;
-    
-    dn_event_fd *ev = new dn_event_fd(fd, DN_EV_READ | DN_EV_WRITE, connect_act, (void*)ogc);
-    ev->activate();
-}
 
-void connect_act(dn_event_fd *ev, int cond) {
-    int fd = ev->getFD();
-    outgc *ogc = (outgc *)ev->payload;
-    delete ev;
+    void connect_act(dn_event_fd *ev, int cond) {
+        int fd = ev->getFD();
+        outgc *ogc = (outgc *)ev->payload;
+        delete ev;
     
-    char dummy;
-    int ret;
+        char dummy;
+        int ret;
     
 #if 0
-    ret = recv(fd, &dummy, 0, 0);
-    if (ret < 0) {
-        perror("async connect");
-        close(fd);
-        return;
-    }
+        ret = recv(fd, &dummy, 0, 0);
+        if (ret < 0) {
+            perror("async connect");
+            close(fd);
+            return;
+        }
 #endif
     
-    conn_t *cs = init_comms(fd, &ogc->outgh, ogc->outgp);
-    if (cs)
-        cs->requested = ogc->requested;
-    delete ogc;
+        conn_t *cs = init_comms(fd, &ogc->outgh, ogc->outgp);
+        if (cs)
+            cs->requested = ogc->requested;
+        delete ogc;
+    }
 }

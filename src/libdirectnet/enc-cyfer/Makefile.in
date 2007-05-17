@@ -47,12 +47,18 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-LIBRARIES = $(noinst_LIBRARIES)
-ARFLAGS = cru
-libenc_a_AR = $(AR) $(ARFLAGS)
-libenc_a_LIBADD =
-am_libenc_a_OBJECTS = cyfer.$(OBJEXT)
-libenc_a_OBJECTS = $(am_libenc_a_OBJECTS)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(libdir)"
+libLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(lib_LTLIBRARIES)
+libdirectnet_enc_la_DEPENDENCIES =
+am_libdirectnet_enc_la_OBJECTS = cyfer.lo
+libdirectnet_enc_la_OBJECTS = $(am_libdirectnet_enc_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
 am__depfiles_maybe = depfiles
@@ -64,8 +70,8 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libenc_a_SOURCES)
-DIST_SOURCES = $(libenc_a_SOURCES)
+SOURCES = $(libdirectnet_enc_la_SOURCES)
+DIST_SOURCES = $(libdirectnet_enc_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -108,6 +114,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_UI_FALSE = @ENABLE_UI_FALSE@
+ENABLE_UI_TRUE = @ENABLE_UI_TRUE@
 ENC_CFLAGS = @ENC_CFLAGS@
 ENC_CPPFLAGS = @ENC_CPPFLAGS@
 ENC_CXXFLAGS = @ENC_CXXFLAGS@
@@ -120,11 +128,6 @@ FFLAGS = @FFLAGS@
 FLTK_CFLAGS = @FLTK_CFLAGS@
 FLTK_CONFIG = @FLTK_CONFIG@
 FLTK_LIBS = @FLTK_LIBS@
-GAIM_CFLAGS = @GAIM_CFLAGS@
-GAIM_LIBS = @GAIM_LIBS@
-GAIM_PLUGIN_DIR = @GAIM_PLUGIN_DIR@
-GAIM_PLUGIN_FALSE = @GAIM_PLUGIN_FALSE@
-GAIM_PLUGIN_TRUE = @GAIM_PLUGIN_TRUE@
 GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -147,7 +150,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -209,8 +211,10 @@ target_alias = @target_alias@
 SUBDIRS = cyfer
 AM_CXXFLAGS = @ENC_CFLAGS@ -I.. -Lcyfer/lib -Icyfer/include
 AM_LDFLAGS = @ENC_LDFLAGS@ -Lcyfer/lib
-noinst_LIBRARIES = libenc.a
-libenc_a_SOURCES = cyfer.cc
+lib_LTLIBRARIES = libdirectnet_enc.la
+libdirectnet_enc_la_SOURCES = cyfer.cc
+libdirectnet_enc_la_LDFLAGS = -static
+libdirectnet_enc_la_LIBADD = -Lcyfer/lib -ldirectnet_cyfer
 all: all-recursive
 
 .SUFFIXES:
@@ -244,13 +248,35 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
+	  else :; fi; \
+	done
 
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libenc.a: $(libenc_a_OBJECTS) $(libenc_a_DEPENDENCIES) 
-	-rm -f libenc.a
-	$(libenc_a_AR) libenc.a $(libenc_a_OBJECTS) $(libenc_a_LIBADD)
-	$(RANLIB) libenc.a
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libdirectnet_enc.la: $(libdirectnet_enc_la_OBJECTS) $(libdirectnet_enc_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(libdirectnet_enc_la_LDFLAGS) $(libdirectnet_enc_la_OBJECTS) $(libdirectnet_enc_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -258,7 +284,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cyfer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cyfer.Plo@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -467,9 +493,15 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LIBRARIES) all-local
+all-am: Makefile $(LTLIBRARIES)
 installdirs: installdirs-recursive
 installdirs-am:
+	for dir in "$(DESTDIR)$(libdir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
+	done
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
 uninstall: uninstall-recursive
 
 install-am: all-am
@@ -493,8 +525,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libtool clean-local \
-	clean-noinstLIBRARIES mostlyclean-am
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -514,7 +546,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-info: install-info-recursive
 
@@ -540,40 +572,25 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
-.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am all-local check \
-	check-am clean clean-generic clean-libtool clean-local \
-	clean-noinstLIBRARIES clean-recursive ctags ctags-recursive \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-recursive distclean-tags distdir \
-	dvi dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic \
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
+	clean clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-recursive distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-libLTLIBRARIES install-man \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-info-am
+	uninstall-info-am uninstall-libLTLIBRARIES
 
-
-all-local:
-	$(AR) x cyfer/lib/.libs/libcyfer.a
-
-clean-local:
-	-rm -f *.o
-
-install:
-	$(MAKE) install-recursive SUBDIRS=""
-
-install-exec:
-	$(MAKE) install-exec-recursive SUBDIRS=""
-
-install-data:
-	$(MAKE) install-data-recursive SUBDIRS=""
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -42,7 +42,6 @@ extern "C" {
 #include "directnet/globals.h"
 #include "directnet/message.h"
 #include "directnet/ui.h"
-using namespace DirectNet;
 
 namespace DirectNet {
     map<BinSeq, ChatInfo> dn_chats;

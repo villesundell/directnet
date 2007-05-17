@@ -1,5 +1,6 @@
-AM_CXXFLAGS=@ENC_CFLAGS@ -I..
-AM_LDFLAGS=@ENC_LDFLAGS@
+AM_CXXFLAGS=@AUTH_CFLAGS@ -I..
+AM_LDFLAGS=@AUTH_LDFLAGS@
 
-noinst_LIBRARIES=libauth.a
-libauth_a_SOURCES=gpg.cc
+lib_LTLIBRARIES=libdirectnet_auth.la
+libdirectnet_auth_la_SOURCES=gpg.cc
+libdirectnet_auth_la_LDFLAGS=-static

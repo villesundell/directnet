@@ -24,9 +24,6 @@
 /* Define to 1 if you have the `ftime' function. */
 #undef HAVE_FTIME
 
-/* Define if gaim-devel is available. */
-#undef HAVE_GAIM
-
 /* Define to 1 if you have the `getcwd' function. */
 #undef HAVE_GETCWD
 
@@ -47,9 +44,6 @@
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #undef HAVE_LIBNSL
-
-/* Define to 1 if you have the `slang' library (-lslang). */
-#undef HAVE_LIBSLANG
 
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET

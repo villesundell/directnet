@@ -48,7 +48,6 @@ extern "C" {
 #include "directnet/dnconfig.h"
 #include "directnet/globals.h"
 #include "directnet/ui.h"
-using namespace DirectNet;
 
 extern int errno;
 

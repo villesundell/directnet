@@ -33,16 +33,17 @@ using namespace std;
 #include <string.h>
 #include <unistd.h>
 
-#include "auth.h"
-#include "chat.h"
-#include "client.h"
-#include "connection.h"
-#include "dht.h"
-#include "directnet.h"
-#include "dnconfig.h"
-#include "enc.h"
-#include "ui.h"
-#include "dn_event.h"
+#include "directnet/auth.h"
+#include "directnet/chat.h"
+#include "directnet/client.h"
+#include "directnet/connection.h"
+#include "directnet/dht.h"
+#include "directnet/directnet.h"
+#include "directnet/dnconfig.h"
+#include "directnet/enc.h"
+#include "directnet/ui.h"
+#include "directnet/dn_event.h"
+using namespace DirectNet;
 
 #include <assert.h>
 
@@ -429,7 +430,7 @@ void handleAuto(vector<string> &params)
     }
 }
 
-void uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
+void DirectNet::uiDispMsg(const string &from, const string &msg, const string &authmsg, int away)
 {
     if (!hub) {
         cout << endl << from << " [" << authmsg << "]" << (away ? " [away" : "") <<
@@ -440,7 +441,7 @@ void uiDispMsg(const string &from, const string &msg, const string &authmsg, int
 
 void uiAskAuthImport2(const string &acpt);
 
-void uiAskAuthImport(const string &from, const string &msg, const string &sig)
+void DirectNet::uiAskAuthImport(const string &from, const string &msg, const string &sig)
 {
     if (!hub) {
         cout << endl << from << " has asked you to import the key '" << sig <<
@@ -467,7 +468,7 @@ void uiAskAuthImport2(const string &acpt)
     }
 }
 
-void uiDispChatMsg(const string &chat, const string &from, const string &msg)
+void DirectNet::uiDispChatMsg(const string &chat, const string &from, const string &msg)
 {
     if (!hub) {
         cout << endl << chat << ": " << from << ": " << msg << endl << currentPartner << "> ";
@@ -475,7 +476,7 @@ void uiDispChatMsg(const string &chat, const string &from, const string &msg)
     }
 }
 
-void uiDispChatJoin(const string &chat, const string &user)
+void DirectNet::uiDispChatJoin(const string &chat, const string &user)
 {
     if (!hub) {
         cout << endl << user << " has joined " << chat << endl << currentPartner << "> ";
@@ -483,7 +484,7 @@ void uiDispChatJoin(const string &chat, const string &user)
     }
 }
 
-void uiDispChatLeave(const string &chat, const string &user)
+void DirectNet::uiDispChatLeave(const string &chat, const string &user)
 {
     if (!hub) {
         cout << endl << user << " has left " << chat << endl << currentPartner << "> ";
@@ -491,7 +492,7 @@ void uiDispChatLeave(const string &chat, const string &user)
     }
 }
 
-void uiEstConn(const string &from)
+void DirectNet::uiEstConn(const string &from)
 {
     if (!hub) {
         cout << endl << from << ": Connection established." << endl << currentPartner << "> ";
@@ -499,7 +500,7 @@ void uiEstConn(const string &from)
     }
 }
 
-void uiEstRoute(const string &from)
+void DirectNet::uiEstRoute(const string &from)
 {
     if (!hub) {
         cout << endl << from << ": Route established." << endl << currentPartner << "> ";
@@ -507,7 +508,7 @@ void uiEstRoute(const string &from)
     }
 }
 
-void uiLoseConn(const string &from)
+void DirectNet::uiLoseConn(const string &from)
 {
     if (!hub) {
         cout << endl << from << ": Connection lost." << endl << currentPartner << "> ";
@@ -515,7 +516,7 @@ void uiLoseConn(const string &from)
     }
 }
 
-void uiLoseRoute(const string &from)
+void DirectNet::uiLoseRoute(const string &from)
 {
     if (!hub) {
         cout << endl << from << ": Route lost." << endl << currentPartner << "> ";
@@ -523,7 +524,7 @@ void uiLoseRoute(const string &from)
     }
 }
 
-void uiNoRoute(const string &to)
+void DirectNet::uiNoRoute(const string &to)
 {
     if (!hub) {
         cout << endl << to << ": No route to user." << endl << currentPartner << "> ";
@@ -533,7 +534,7 @@ void uiNoRoute(const string &to)
 
 /* Display the first-time question, block for a response
  * Returns: True or false for yes or no */
-bool uiFirstTime()
+bool DirectNet::uiFirstTime()
 {
     if (!hub) {
         char buf[1024];
@@ -547,14 +548,15 @@ bool uiFirstTime()
     }
 }
 
-class dn_event_private {
-    public:
-    struct event cevt;
-    dn_event *parent;
-};
+namespace DirectNet {
+    class dn_event_private {
+        public:
+        struct event cevt;
+        dn_event *parent;
+    };
 
-class dn_event_access {
-    public:
+    class dn_event_access {
+        public:
 
         static void callback(int fd, short cond, void *payload) {
             dn_event *ev = (dn_event *) payload;
@@ -577,58 +579,59 @@ class dn_event_access {
                 timer->trigger(timer);
             } else assert(0 == "bad event type");
         }
-};
+    };
 
-void dn_event_fd::activate() {
+    void dn_event_fd::activate() {
 
-    assert(!is_active);
+        assert(!is_active);
     
-    priv = new dn_event_private();
-    priv->parent = this;
+        priv = new dn_event_private();
+        priv->parent = this;
 
-    int cond = EV_PERSIST;
-    if (this->cond & DN_EV_READ)
-        cond |= EV_READ;
-    if (this->cond & DN_EV_WRITE)
-        cond |= EV_WRITE;
-    event_set(&priv->cevt, this->fd, cond, dn_event_access::callback, static_cast<dn_event *>(this));
-    event_add(&priv->cevt, NULL);
+        int cond = EV_PERSIST;
+        if (this->cond & DN_EV_READ)
+            cond |= EV_READ;
+        if (this->cond & DN_EV_WRITE)
+            cond |= EV_WRITE;
+        event_set(&priv->cevt, this->fd, cond, dn_event_access::callback, static_cast<dn_event *>(this));
+        event_add(&priv->cevt, NULL);
 
-    is_active = true;
-}
+        is_active = true;
+    }
 
-void dn_event_timer::activate() {
-    assert(!is_active);
+    void dn_event_timer::activate() {
+        assert(!is_active);
 
-    priv = new dn_event_private();
-    priv->parent = this;
+        priv = new dn_event_private();
+        priv->parent = this;
         
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    tv.tv_sec = this->tv.tv_sec - tv.tv_sec;
-    tv.tv_usec = this->tv.tv_usec - tv.tv_usec;
-    tv.tv_sec += tv.tv_usec / 1000000;
-    tv.tv_usec %= 1000000;
-    evtimer_set(&priv->cevt, dn_event_access::callback, static_cast<dn_event *>(this));
-    event_add(&priv->cevt, &tv);
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        tv.tv_sec = this->tv.tv_sec - tv.tv_sec;
+        tv.tv_usec = this->tv.tv_usec - tv.tv_usec;
+        tv.tv_sec += tv.tv_usec / 1000000;
+        tv.tv_usec %= 1000000;
+        evtimer_set(&priv->cevt, dn_event_access::callback, static_cast<dn_event *>(this));
+        event_add(&priv->cevt, &tv);
     
-    is_active = true;
-}
+        is_active = true;
+    }
 
-void dn_event_fd::deactivate() {
-    assert(is_active);
-    is_active = false;
-    if (priv == NULL) return;
-    event_del(&priv->cevt);
-    delete priv;
-    priv = NULL;
-}
+    void dn_event_fd::deactivate() {
+        assert(is_active);
+        is_active = false;
+        if (priv == NULL) return;
+        event_del(&priv->cevt);
+        delete priv;
+        priv = NULL;
+    }
 
-void dn_event_timer::deactivate() {
-    assert(is_active);
-    is_active = false;
-    if (priv == NULL) return;
-    event_del(&priv->cevt);
-    delete priv;
-    priv = NULL;
+    void dn_event_timer::deactivate() {
+        assert(is_active);
+        is_active = false;
+        if (priv == NULL) return;
+        event_del(&priv->cevt);
+        delete priv;
+        priv = NULL;
+    }
 }

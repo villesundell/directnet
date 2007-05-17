@@ -67,7 +67,6 @@ typedef int socklen_t;
 #include "directnet/enc.h"
 #include "directnet/message.h"
 #include "directnet/ui.h"
-using namespace DirectNet;
 
 #include <set>
 

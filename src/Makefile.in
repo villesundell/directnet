@@ -36,7 +36,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = directnet$(EXEEXT)
+@ENABLE_UI_TRUE@am__append_1 = @UI_DIR@
+@ENABLE_UI_TRUE@bin_PROGRAMS = directnet$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -51,7 +52,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_directnet_OBJECTS = directnet-empty.$(OBJEXT)
+am__directnet_SOURCES_DIST = empty.cc
+@ENABLE_UI_TRUE@am_directnet_OBJECTS = directnet-empty.$(OBJEXT)
 directnet_OBJECTS = $(am_directnet_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/scripts/depcomp
@@ -65,7 +67,7 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(directnet_SOURCES)
-DIST_SOURCES = $(directnet_SOURCES)
+DIST_SOURCES = $(am__directnet_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -74,7 +76,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = libdirectnet @UI_DIR@
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -108,6 +110,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_UI_FALSE = @ENABLE_UI_FALSE@
+ENABLE_UI_TRUE = @ENABLE_UI_TRUE@
 ENC_CFLAGS = @ENC_CFLAGS@
 ENC_CPPFLAGS = @ENC_CPPFLAGS@
 ENC_CXXFLAGS = @ENC_CXXFLAGS@
@@ -120,11 +124,6 @@ FFLAGS = @FFLAGS@
 FLTK_CFLAGS = @FLTK_CFLAGS@
 FLTK_CONFIG = @FLTK_CONFIG@
 FLTK_LIBS = @FLTK_LIBS@
-GAIM_CFLAGS = @GAIM_CFLAGS@
-GAIM_LIBS = @GAIM_LIBS@
-GAIM_PLUGIN_DIR = @GAIM_PLUGIN_DIR@
-GAIM_PLUGIN_FALSE = @GAIM_PLUGIN_FALSE@
-GAIM_PLUGIN_TRUE = @GAIM_PLUGIN_TRUE@
 GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -147,7 +146,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -206,14 +204,14 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = libdirectnet @UI_DIR@ @GAIM_PLUGIN_DIR@ 
-directnet_SOURCES = empty.cc
-directnet_CFLAGS = @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
-directnet_CXXFLAGS = @UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
-directnet_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
-directnet_DEPENDENCIES = @UI_DIR@/libui.a libdirectnet/libdirectnet.a
-directnet_LDADD = libdirectnet/libdirectnet.a @UI_DIR@/libui.a @UI_LIBS@ \
-  @ENC_LIBS@ @AUTH_LIBS@
+SUBDIRS = libdirectnet $(am__append_1)
+@ENABLE_UI_TRUE@directnet_SOURCES = empty.cc
+@ENABLE_UI_TRUE@directnet_CFLAGS = @UI_CFLAGS@ @ENC_CFLAGS@ @AUTH_CFLAGS@
+@ENABLE_UI_TRUE@directnet_CXXFLAGS = @UI_CXXFLAGS@ @ENC_CXXFLAGS@ @AUTH_CXXFLAGS@
+@ENABLE_UI_TRUE@directnet_LDFLAGS = @UI_LDFLAGS@ @ENC_LDFLAGS@ @AUTH_LDFLAGS@
+@ENABLE_UI_TRUE@directnet_DEPENDENCIES = @UI_DIR@/libui.a libdirectnet/libdirectnet.la
+@ENABLE_UI_TRUE@directnet_LDADD = @UI_DIR@/libui.a libdirectnet/libdirectnet.la @UI_LIBS@ \
+@ENABLE_UI_TRUE@  @ENC_LIBS@ @AUTH_LIBS@
 
 all: all-recursive
 
@@ -606,39 +604,6 @@ uninstall-info: uninstall-info-recursive
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-binPROGRAMS uninstall-info-am
 
-
-#if GAIM_PLUGIN
-#
-#gaimdir=$(libdir)/gaim
-#
-#gaim_LTLIBRARIES=libdirectnet_gaim.la
-#
-#libdirectnet_gaim_la_SOURCES=binseq.cc \
-#chat.cc \
-#client.cc \
-#connection.cc \
-#dht.cc \
-#directnet.cc \
-#dnconfig.cc \
-#message.cc \
-#route.cc \
-#server.cc \
-#whereami.cc
-#
-#if NO_GETTIMEOFDAY
-#libdirectnet_gaim_la_SOURCES+=compat/gettimeofday.c
-#endif
-#
-#libdirectnet_gaim_la_CFLAGS=@ENC_CFLAGS@ @AUTH_CFLAGS@ \
-# @GAIM_CFLAGS@ -DGAIM_PLUGIN -DGAIM_PLUGINS
-#libdirectnet_gaim_la_LDFLAGS=@ENC_LDFLAGS@ @AUTH_LDFLAGS@ \
-# -module -avoid-version -Wl,--export-dynamic
-#libdirectnet_gaim_la_DEPENDENCIES=@GAIM_PLUGIN_DIR@/libgaim_plugin.a \
-# @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a
-#libdirectnet_gaim_la_LIBADD=@GAIM_PLUGIN_DIR@/*.o \
-# @ENC_DIR@/libenc.a @AUTH_DIR@/libauth.a @ENC_LIBS@ @AUTH_LIBS@ @GAIM_LIBS@
-#
-#endif
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
