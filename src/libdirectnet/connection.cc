@@ -421,70 +421,7 @@ namespace DirectNet {
             REQ_PARAMS(1);
         
             disNode(msg.params[0]);
-        
-        } else if (CMD_IS("dcr", 1, 1) ||
-                   CMD_IS("dce", 1, 1)) {
-            // stub
-            return;
-            REQ_PARAMS(3);
-        
-            // This doesn't work on OSX or NESTEDVM
-#if !defined(__APPLE__) && !defined(NESTEDVM)
-            if (CMD_IS("dcr", 1, 1)) {
-                // dcr echos
-                Message nmsg(1, "dce", 1, 1);
-                stringstream ss;
-                
-                Route *route;
-                BinSeq first;
-                conn_t *firc;
-                int firfd, locip_len, gsnr;
-                struct sockaddr locip;
-                struct sockaddr_in *locip_i;
-                
-                // First, echo, then try to connect
-                if (dn_routes.find(msg.params[1]) == dn_routes.end()) return;
-                route = dn_routes[msg.params[1]];
-                nmsg.params.push_back(route->toBinSeq());
-                nmsg.params.push_back(dn_name);
-                
-                // grab before the first \n for the next name in the line
-                first = (*route)[0];
-                
-                // then get the fd
-                if (dn_conn.find(first) == dn_conn.end()) goto try_connect;
             
-                firc = (conn_t *) dn_conn[first];
-            
-                firfd = firc->fd;
-                
-                // then turn the fd into a sockaddr
-                locip_len = sizeof(struct sockaddr);
-#ifndef __WIN32
-                gsnr = getsockname(firfd, &locip, (unsigned int *) &locip_len);
-#else
-                gsnr = getsockname(firfd, &locip, (int *) &locip_len);
-#endif
-                if (gsnr == 0) {
-                    locip_i = (struct sockaddr_in *) &locip;
-                    ss.str("");
-                    ss << inet_ntoa(locip_i->sin_addr);
-                } else {
-                    goto try_connect;
-                }
-                ss << string(":") << serv_port;
-                nmsg.params.push_back(ss.str());
-                
-                handleRoutedMsg(nmsg);
-                
-                try_connect:
-                1;
-            }
-            
-            // Then, attempt the connection
-            async_establishClient(msg.params[2].c_str(), false);
-#endif
-
         } else if (CMD_IS("dni", 1, 1)) {
             REQ_PARAMS(2);
         
@@ -551,78 +488,7 @@ namespace DirectNet {
             if (conn && conn->outgoing && conn->outgh) {
                 addAutoReconnect(*(conn->outgh));
             }
-        
-        } else if (CMD_IS("fnd", 1, 1)) {
-            conn_t *remc;
-        
-            REQ_PARAMS(4);
-        
-            if (!handleNLUnroutedMsg(msg)) {
-                return;
-            }
-        
-            Route *nroute = new Route(msg.params[0]);
-        
-            // Am I this person?
-            if (!strcmp(msg.params[2].c_str(), dn_name)) {
-                recvFnd(nroute, msg.params[1], msg.params[3]);
-                delete nroute;
-                return;
-            }
-        
-            // Add myself to the route
-            *nroute += pukeyhash;
-        
-            Message omsg(0, "fnd", 1, 1);
-            omsg.params.push_back(nroute->toBinSeq());
-            omsg.params.push_back(msg.params[1]);
-            omsg.params.push_back(msg.params[2]);
-            omsg.params.push_back(msg.params[3]);
-        
-            delete nroute;
-        
-            // Do I have a connection to this person?
-            /*if (dn_conn.find(msg.params[2]) != dn_conn.end()) {
-            remc = (conn_t *) dn_conn[msg.params[2]];
-            sendCmd(remc, omsg);
-            return;
-            }*/
-        
-            // If all else fails, continue the chain
-            emitUnroutedMsg(conn, omsg);
-    
-        } else if (CMD_IS("fnr", 1, 1)) {
-            bool handleit;
-        
-            REQ_PARAMS(4);
-        
-            handleit = handleRoutedMsg(msg);
-        
-            if (handleit) {
-                // Hoorah, add a user
             
-                // 1) Route/name
-                Route *route = new Route(msg.params[2]);
-                route->push_back(encHashKey(msg.params[3]));
-                if (dn_routes.find(msg.params[3]) != dn_routes.end())
-                    delete dn_routes[msg.params[3]];
-                dn_routes[msg.params[3]] = route;
-            
-                dn_names[msg.params[3]] = msg.params[1];
-                dn_keys[msg.params[1]] = msg.params[3];
-                dn_kbh[encHashKey(msg.params[3])] = msg.params[3];
-            
-                // 2) Key
-                encImportKey(msg.params[1], msg.params[3]);
-            
-                uiEstRoute(msg.params[1]);
-            }
-    
-        } else if (CMD_IS("lst", 1, 1)) {
-            REQ_PARAMS(2);
-        
-            uiLoseRoute(msg.params[1].c_str());
-        
         } else if (CMD_IS("msg", 1, 1) ||
                    CMD_IS("msa", 1, 1)) {
             REQ_PARAMS(3);
@@ -888,56 +754,6 @@ namespace DirectNet {
         sce.params.push_back(route->toBinSeq());
         sce.params.push_back(Route().toBinSeq());
         handleRoutedMsg(sce);
-    
-        /* Send a dcr (direct connect request) (except on OSX where it doesn't work)
-#ifndef __APPLE__
-{
-Message nmsg(1, "dcr", 1, 1);
-stringstream ss;
-        
-Route *route;
-string first;
-conn_t *firc;
-int firfd, locip_len;
-struct sockaddr locip;
-struct sockaddr_in *locip_i;
-        
-// First, echo, then try to connect
-if (dn_routes->find(key) == dn_routes->end()) return;
-route = (*dn_routes)[key];
-nmsg.params.push_back(route->toBinSeq());
-nmsg.params.push_back(dn_name);
-        
-// grab before the first \n for the next name in the line
-first = (*route)[0];
-        
-// then get the fd
-if (dn_conn->find(first) == dn_conn->end()) return;
-        
-firc = (conn_t *) (*dn_conn)[first];
-        
-firfd = firc->fd;
-        
-// then turn the fd into a sockaddr
-locip_len = sizeof(struct sockaddr);
-#ifndef __WIN32
-int gsnr = getsockname(firfd, &locip, (unsigned int *) &locip_len);
-#else
-int gsnr = getsockname(firfd, &locip, (int *) &locip_len);
-#endif
-if (gsnr == 0) {
-locip_i = (struct sockaddr_in *) &locip;
-ss.str("");
-ss << inet_ntoa(locip_i->sin_addr);
-} else {
-return;
-}
-ss << string(":") << serv_port;
-nmsg.params.push_back(ss.str());
-        
-handleRoutedMsg(nmsg);
-}
-#endif*/
     }
 
     /* Commands used by the UI */
@@ -949,9 +765,9 @@ handleRoutedMsg(nmsg);
             char hostbuf[128], *ip;
             struct hostent *he;
             stringstream ss;
-        
-            // it's a user, send a dcr
-#ifndef NESTEDVM
+            
+            // it's a user, send a sce
+/* #ifndef NESTEDVM    FIXME
             Message omsg(1, "dcr", 1, 1);
             omsg.params.push_back(route->toBinSeq());
             omsg.params.push_back(dn_name);
@@ -966,7 +782,7 @@ handleRoutedMsg(nmsg);
             omsg.params.push_back(ss.str());
         
             handleRoutedMsg(omsg);
-#endif
+#endif */
         } else {
             // It's a hostname or IP
             async_establishClient(to);
